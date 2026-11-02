@@ -1,0 +1,34 @@
+{
+  "name": "codepulse-edu-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "模組化課程作業平台 — 結合基礎 Python (Pyodide + 即時編輯行為追蹤 + AI 助教) 與進階專題 (互動心智圖架構設計 + GitHub Repo 數據與檔案結構比對分析)",
+  "type": "module",
+  "packageManager": "pnpm@12.16.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm typecheck && vite build",
+    "preview": "vite preview",
+    "lint": "pnpm typecheck",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.tsx"
+  },
+  "dependencies": {
+    "lucide-react": "^0.454.0",
+    "pyodide": "0.26.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^5.4.10"
+  }
+}

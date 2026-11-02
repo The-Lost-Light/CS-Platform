@@ -1,0 +1,10 @@
+
+node_modules/
+dist/
+public/pyodide/pyodide.asm.js
+public/pyodide/pyodide.asm.wasm
+public/pyodide/python_stdlib.zip
+public/pyodide/pyodide-lock.json
+
+public/pyodide/pyodide.mjs
+public/pyodide/pyodide.mjs.map

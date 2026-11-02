@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo;
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+    background-color: #F0F4F9;
+    color: #1F1F1F;
+  }
+
+  code, pre, .font-mono-code {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F0F4F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #C4C7C5;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8E918F;
+}

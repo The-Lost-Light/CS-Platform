@@ -1,0 +1,5 @@
+- [ ] pyodide import
+- [ ] fix top bar scaling
+- [ ] fix react flow node position
+- [ ] fix react flow flicker
+- [ ] i18n using key instead of value

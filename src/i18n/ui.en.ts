@@ -131,5 +131,8 @@ export default {
   "c4.relationshipDescription": "Relationship description",
   "c4.protocol": "Technology / protocol",
   "c4.deleteRelationship": "Delete relationship",
+  "c4.readmeMode": "README display mode",
+  "c4.readmeReading": "Reading",
+  "c4.readmeSource": "Source",
   "c4.designDoc": "Project description · README.md"
 } satisfies Record<keyof typeof source, string>;

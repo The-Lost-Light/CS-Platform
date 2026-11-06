@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ReactFlow, Background, Controls, MiniMap, Handle, Position, MarkerType, type Node, type NodeProps } from '@xyflow/react';
 import { useI18n } from '../../i18n';
 import { parentKind, removeC4Nodes, visibleC4Nodes, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
@@ -28,6 +30,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 }) {
   const { t } = useI18n();
   const [designTab, setDesignTab] = useState<'readme' | C4Kind>('readme');
+  const [readmeMode, setReadmeMode] = useState<'reading' | 'source'>('reading');
   const [level, setLevel] = useState<C4Kind>('system');
   const [scopeId, setScopeId] = useState('');
   const [selectedId, setSelectedId] = useState('');
@@ -76,7 +79,18 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
       </div>
     </div>
     {designTab === 'readme' ? <div role="tabpanel" id="design-panel-readme" aria-labelledby="design-tab-readme" className={panelClass}>
-      {field(t('c4.designDoc'), <textarea rows={22} className={`${fieldClass} font-mono`} value={designDoc} onChange={event => onChangeDesignDoc(event.target.value)} />)}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white">{t('c4.designDoc')}</h4>
+        <button type="button"
+          onClick={() => setReadmeMode(mode => mode === 'reading' ? 'source' : 'reading')}
+          className="rounded-lg bg-blue-700 px-3 py-2 text-sm text-white hover:bg-blue-800">
+          {t(readmeMode === 'reading' ? 'c4.readmeSource' : 'c4.readmeReading')}
+        </button>
+      </div>
+      {readmeMode === 'source' ? <textarea aria-label={t('c4.designDoc')} rows={22} className={`${fieldClass} font-mono`} value={designDoc} onChange={event => onChangeDesignDoc(event.target.value)} />
+        : <article className="min-h-96 break-words text-sm leading-7 text-slate-800 dark:text-slate-200 [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-semibold [&_h1]:my-5 [&_h2]:my-4 [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-blue-600 [&_a]:underline dark:[&_a]:text-blue-300 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-100 dark:[&_pre]:bg-[#282A2F] [&_pre]:p-4 [&_code]:font-mono [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:p-2 [&_td]:border [&_td]:p-2 [&_hr]:my-5 [&_img]:max-w-full">
+          <Markdown remarkPlugins={[remarkGfm]}>{designDoc}</Markdown>
+        </article>}
     </div> : <div role="tabpanel" id="design-panel-diagram" aria-labelledby={`design-tab-${designTab}`} className="space-y-5">
     <div className={panelClass}>
       <p className="text-xs text-slate-500 dark:text-slate-300">{t('c4.levelsDescription')}</p>

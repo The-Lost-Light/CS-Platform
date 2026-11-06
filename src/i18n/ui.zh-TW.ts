@@ -129,5 +129,8 @@ export default {
   "c4.relationshipDescription": "關係描述",
   "c4.protocol": "通訊技術／協定",
   "c4.deleteRelationship": "刪除關係",
+  "c4.readmeMode": "README 顯示模式",
+  "c4.readmeReading": "閱讀",
+  "c4.readmeSource": "原始碼",
   "c4.designDoc": "專案說明 README.md"
 } satisfies Record<string, string>;

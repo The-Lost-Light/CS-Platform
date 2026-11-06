@@ -1,11 +1,66 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ADVANCED_PROJECTS } from '../src/data/assignmentsData';
-import { migrateC4Nodes, removeC4Nodes, visibleC4Nodes, type C4Node } from '../src/utils/c4Model';
+import { c4Drilldown, createC4NodeInScope, migrateC4Nodes, removeC4Nodes, visibleC4Nodes, type C4Node } from '../src/utils/c4Model';
 import { analyzeArchitectureAlignment } from '../src/utils/architectureAnalyzer';
 import { BUILTIN_REPO_SNAPSHOTS } from '../src/utils/githubService';
 
 const nodes = migrateC4Nodes(ADVANCED_PROJECTS[0].initialMindMapNodes);
+
+test('an empty node opens its own boundary and accepts its first child', () => {
+  const empty = c4Drilldown(nodes, 'node-db');
+  assert.equal(empty.scope?.id, 'node-db');
+  assert.deepEqual(empty.inside, []);
+  assert.deepEqual(empty.path.map(node => node.id), ['node-root', 'node-db']);
+  assert.ok(empty.outside.some(node => node.id === 'node-fe-core'));
+  const child = createC4NodeInScope(nodes, 'node-db', 'db-child', 'Database component')!;
+  assert.equal(child.kind, 'component');
+  const populated = c4Drilldown([...nodes, child], 'node-db');
+  assert.deepEqual(populated.inside.map(node => node.id), ['db-child']);
+  assert.deepEqual(populated.outside, empty.outside);
+});
+
+test('new nodes belong to the current scope and infer their C4 level', () => {
+  for (const [scopeId, kind] of [['', 'system'], ['node-root', 'container'], ['node-fe-core', 'component'], ['node-editor', 'code']]) {
+    const created = createC4NodeInScope(nodes, scopeId, 'new-node', 'New node')!;
+    assert.equal(created.kind, kind);
+    assert.equal(created.parentId, scopeId || null);
+    const view = c4Drilldown([...nodes, created], scopeId);
+    assert.ok(view.inside.some(node => node.id === created.id));
+    assert.ok(view.inside.filter(node => node.id !== created.id).every(node => node.y + 230 < created.y));
+  }
+  const created = createC4NodeInScope([], '', 'root', 'First system')!;
+  assert.equal(created.kind, 'system');
+  assert.equal(created.y, 0);
+  assert.equal(createC4NodeInScope(nodes, 'deleted', 'new', 'New'), undefined);
+  const leaf: C4Node = { ...created, kind: 'code' };
+  assert.equal(createC4NodeInScope([leaf], leaf.id, 'new', 'New'), undefined);
+});
+
+test('drilling down replaces only the expanded node and retains previous context outside its boundary', () => {
+  const person: C4Node = { ...nodes[0], id: 'user', kind: 'person', parentId: null };
+  const code: C4Node = { ...nodes[0], id: 'class', kind: 'code', parentId: 'node-editor' };
+  const all = [...nodes, person, code];
+  let previous = c4Drilldown(all, '');
+  for (const id of ['node-root', 'node-fe-core', 'node-editor']) {
+    const next = c4Drilldown(all, id);
+    assert.deepEqual(next.outside.map(node => node.id).sort(), previous.visible.filter(node => node.id !== id).map(node => node.id).sort());
+    assert.ok(next.inside.every(node => node.parentId === id));
+    assert.equal(next.scope?.id, id);
+    previous = next;
+  }
+  assert.deepEqual(previous.path.map(node => node.id), ['node-root', 'node-fe-core', 'node-editor']);
+  assert.deepEqual(previous.inside.map(node => node.id), ['class']);
+  assert.deepEqual(c4Drilldown(all, 'node-root').path.map(node => node.id), ['node-root']);
+});
+
+test('missing or deleted scope returns to context without stale boundary or breadcrumbs', () => {
+  const view = c4Drilldown(removeC4Nodes(nodes, ['node-fe-core']), 'node-editor');
+  assert.equal(view.scope, undefined);
+  assert.deepEqual(view.path, []);
+  assert.deepEqual(view.outside, []);
+  assert.ok(view.visible.every(node => !node.parentId));
+});
 test('legacy path mappings survive C4 migration and databases belong to the system', () => {
   assert.deepEqual(nodes.map(node => [node.id, node.expectedPath]), ADVANCED_PROJECTS[0].initialMindMapNodes.map(node => [node.id, node.expectedPath]));
   assert.equal(nodes.find(node => node.id === 'node-db')?.parentId, 'node-root');

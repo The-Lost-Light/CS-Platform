@@ -5,6 +5,39 @@ export type C4Node = MindMapNode & { kind: C4Kind; technology: string };
 export interface C4Relationship { id: string; source: string; target: string; label: string; technology: string }
 export const parentKind: Partial<Record<C4Kind, C4Kind>> = { container: 'system', component: 'container', code: 'component' };
 
+export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string, label: string): C4Node | undefined {
+  const scope = nodes.find(node => node.id === scopeId);
+  if (scopeId && !scope) return undefined;
+  const children: Partial<Record<C4Kind, C4Kind>> = { system: 'container', container: 'component', component: 'code' };
+  const kind = scope ? children[scope.kind] : 'system';
+  if (!kind) return undefined;
+  const parentId = scope?.id ?? null;
+  const siblings = nodes.filter(node => (node.parentId || null) === parentId);
+  // Place below existing siblings, including manually moved nodes, without overlapping them.
+  return { id, label, kind, category: kind, parentId, description: '', technology: '', expectedPath: '',
+    x: 0, y: siblings.length ? Math.max(...siblings.map(node => node.y)) + 280 : 0 };
+}
+
+/** Replace each ancestor by its children, preserving the surrounding context. */
+export function c4Drilldown(nodes: C4Node[], scopeId: string) {
+  const path: C4Node[] = [];
+  const seen = new Set<string>();
+  let current = nodes.find(node => node.id === scopeId);
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    path.unshift(current);
+    current = nodes.find(node => node.id === current?.parentId);
+  }
+  let visible = nodes.filter(node => !node.parentId);
+  for (const ancestor of path) {
+    visible = [...visible.filter(node => node.id !== ancestor.id), ...nodes.filter(node => node.parentId === ancestor.id)];
+  }
+  const scope = path.at(-1);
+  const inside = scope ? visible.filter(node => node.parentId === scope.id) : visible;
+  const outside = scope ? visible.filter(node => node.parentId !== scope.id) : [];
+  return { path, scope, inside, outside, visible };
+}
+
 /** Preserve the existing path mappings while introducing explicit C4 containment. */
 export function migrateC4Nodes(nodes: MindMapNode[]): C4Node[] {
   const root = nodes.find(node => !node.parentId);

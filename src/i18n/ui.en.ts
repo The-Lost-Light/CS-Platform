@@ -120,7 +120,6 @@ export default {
   "c4.title": "C4 model architecture",
   "c4.expandable": "Has details · click to explore",
   "c4.leaf": "No details yet · click to explore",
-  "c4.terminalLevel": "This node has no deeper content. The current C4 model does not support adding children within person or code nodes.",
   "c4.levelsDescription": "C1: people and systems. C2: applications and data stores within a system. C3: components within a container. C4: classes and functions within a component.",
   "c4.scope": "Scope / boundary",
   "c4.createParentFirst": "Create a parent element first",

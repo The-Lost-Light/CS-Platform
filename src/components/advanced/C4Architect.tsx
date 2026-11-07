@@ -3,36 +3,28 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps } from '@xyflow/react';
 import { useI18n } from '../../i18n';
-import { parentKind, removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
+import { removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
 import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
 
 const colors = { expandable: '#2563eb', leaf: '#64748b' };
-const boundaryId = '__c4_boundary__';
 type FlowNode = Node<{ title: string; kind: C4Kind; description: string; technology: string; status: string; expandable: boolean; onExplore: () => void }, 'c4'>;
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   const { t } = useI18n();
   const color = data.expandable ? colors.expandable : colors.leaf;
-  return <div style={{ width: 240, height: 230, borderColor: color, background: data.expandable ? '#eff6ff' : '#f8fafc' }} className={`rounded-xl border-2 bg-white p-4 text-slate-900 shadow-sm ${selected ? 'ring-4 ring-violet-300' : ''}`}>
+  return <div style={{ width: 280, minHeight: 230, borderColor: color, background: data.expandable ? '#eff6ff' : '#f8fafc' }} className={`rounded-xl border-2 bg-white p-4 text-slate-900 shadow-sm ${selected ? 'ring-4 ring-violet-300' : ''}`}>
     <Handle type="target" position={Position.Left} />
     <div className="text-[10px] uppercase tracking-widest" style={{ color: color }}>{data.kind}</div>
-    <div className="mt-1 font-bold break-words line-clamp-2">{data.title}</div>
-    {data.technology && <div className="mt-1 text-xs text-slate-500 truncate">[{data.technology}]</div>}
-    <p className="mt-2 text-xs text-slate-600 break-words whitespace-pre-wrap line-clamp-2">{data.description}</p>
-    {data.status && <p className="mt-3 border-t pt-2 text-[10px] text-slate-600 truncate">{data.status}</p>}
+    <div className="mt-1 font-bold break-words">{data.title}</div>
+    {data.technology && <div className="mt-1 text-xs text-slate-500 break-words break-words">[{data.technology}]</div>}
+    <p className="mt-2 text-xs text-slate-600 break-words whitespace-pre-wrap">{data.description}</p>
+    {data.status && <p className="mt-3 border-t pt-2 text-[10px] text-slate-600 break-words">{data.status}</p>}
     <button type="button" className="nodrag nopan mt-2 text-xs font-semibold underline" style={{ color }}
       onClick={event => { event.stopPropagation(); data.onExplore(); }}>{t(data.expandable ? 'c4.expandable' : 'c4.leaf')} →</button>
     <Handle type="source" position={Position.Right} />
   </div>;
 }
-type BoundaryNode = Node<{ title: string }, 'boundary'>;
-function C4Boundary({ data }: NodeProps<BoundaryNode>) {
-  return <div className="h-full w-full rounded-2xl border-2 border-dashed border-blue-400 bg-blue-50/40">
-    <div title={data.title} className="truncate px-5 py-3 text-sm font-bold text-blue-900">{data.title}</div>
-    <Handle type="target" position={Position.Left} /><Handle type="source" position={Position.Right} />
-  </div>;
-}
-const nodeTypes = { c4: C4Card, boundary: C4Boundary };
-type CanvasNode = FlowNode | BoundaryNode;
+const nodeTypes = { c4: C4Card };
+type CanvasNode = FlowNode;
 
 /** Keep measurements and live drag positions in React Flow; persist only completed moves. */
 function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<CanvasNode>) {
@@ -92,45 +84,24 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     } catch { setFileStatus('importError'); }
     finally { setImporting(false); }
   };
-  const { scope, path, inside, outside, visible } = c4Drilldown(nodes, scopeId);
+  const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
   const expandableIds = new Set(nodes.map(node => node.parentId).filter(Boolean));
   const visibleIds = new Set(visible.map(node => node.id));
   const selected = nodes.find(node => node.id === selectedId);
   const selectedEdge = relationships.find(edge => edge.id === edgeId);
-  // The coordinate origin must stay fixed while this scope is open, even when its leftmost node moves.
-  const [origin, setOrigin] = useState({ scopeId: scope?.id, x: 40 - Math.min(0, ...inside.map(node => node.x)), y: 70 - Math.min(0, ...inside.map(node => node.y)) });
-  let offset = origin;
-  if (origin.scopeId !== scope?.id) {
-    offset = { scopeId: scope?.id, x: 40 - Math.min(0, ...inside.map(node => node.x)), y: 70 - Math.min(0, ...inside.map(node => node.y)) };
-    setOrigin(offset);
-  }
-  const width = Math.max(380, ...inside.map(node => node.x + offset.x + 280));
-  const height = Math.max(350, ...inside.map(node => node.y + offset.y + 270));
-  const flowNodes: (FlowNode | BoundaryNode)[] = [
-    ...(scope ? [{ id: boundaryId, type: 'boundary' as const, position: { x: 0, y: 0 },
-      style: { width, height }, draggable: false, selectable: false, deletable: false,
-      data: { title: scope.label + ' [' + scope.kind + ']' } }] : []),
-    ...visible.map(node => {
-      const externalIndex = outside.findIndex(item => item.id === node.id);
-      const external = externalIndex >= 0;
-      return { id: node.id, type: 'c4' as const,
-        ...(scope && !external ? { parentId: boundaryId, extent: [[40, 70], [width - 40, height - 40]] as [[number, number], [number, number]] } : {}), draggable: !external,
-        position: external ? { x: width + 100 + Math.floor(externalIndex / 3) * 310, y: (externalIndex % 3) * 280 }
-          : { x: node.x + (scope ? offset.x : 0), y: node.y + (scope ? offset.y : 0) },
-        selected: node.id === selectedId,
-        ariaLabel: node.label + ': ' + t(expandableIds.has(node.id) ? 'c4.expandable' : 'c4.leaf'),
-        data: { title: node.label, kind: node.kind, description: node.description, technology: node.technology,
-          status: node.expectedPath, expandable: expandableIds.has(node.id),
-          onExplore: () => { setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); } } };
-    })];
-  const flowEdges = relationships.filter(edge => (visibleIds.has(edge.source) || edge.source === scope?.id) &&
-    (visibleIds.has(edge.target) || edge.target === scope?.id)).map(edge => ({ ...edge,
-    source: edge.source === scope?.id ? boundaryId : edge.source,
-    target: edge.target === scope?.id ? boundaryId : edge.target,
-    label: edge.label + (edge.technology ? ' [' + edge.technology + ']' : ''), selected: edge.id === edgeId,
-    markerEnd: { type: MarkerType.ArrowClosed }, style: { strokeWidth: 2 }, labelStyle: { fontSize: 12 } }));
+  const flowNodes: FlowNode[] = visible.map(node => ({
+    id: node.id, type: 'c4', position: { x: node.x, y: node.y }, selected: node.id === selectedId,
+    data: { title: node.label, kind: node.kind, description: node.description, technology: node.technology,
+      status: node.expectedPath, expandable: expandableIds.has(node.id),
+      onExplore: () => { setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); } }
+  }));
+  const flowEdges = relationships.filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target)).map(edge => ({ ...edge,
+    type: 'smoothstep', label: edge.label, selected: edge.id === edgeId,
+    markerEnd: { type: MarkerType.ArrowClosed, width: 22, height: 22 },
+    style: { strokeWidth: 2, stroke: '#475569' }, labelStyle: { fontSize: 12, fill: '#0f172a' },
+    labelBgStyle: { fill: '#fff', fillOpacity: 1 }, labelBgPadding: [8, 5] as [number, number], labelBgBorderRadius: 4
+  }));
   const navigate = (id: string) => { setScopeId(id); setSelectedId(''); setEdgeId(''); };
-  const realId = (id: string) => id === boundaryId ? scope!.id : id;
   const update = (patch: Partial<C4Node>) => onChangeNodes(nodes.map(node => node.id === selectedId ? { ...node, ...patch } : node));
   const remove = (ids: string[]) => {
     const remaining = removeC4Nodes(nodes, ids);
@@ -197,33 +168,33 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
         <div className="border-b p-3 text-xs text-slate-600">{scope ? scope.label : 'System Context'} · {t('c4.canvasInstructions')}</div>
         <div style={{ height: 600 }}>
           <C4Canvas key={`${importRevision}-${scope?.id || 'context'}`} nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} fitView minZoom={0.15} maxZoom={2}
-            onNodeClick={(_, node) => { if (node.id === boundaryId) return; setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); }}
+            onNodeClick={(_, node) => { setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); }}
             onEdgeClick={(_, edge) => { setEdgeId(edge.id); setSelectedId(''); }}
             onNodesChange={changes => {
               const positions = new Map(changes.flatMap(change => change.type === 'position' && change.position ? [[change.id, change] as const] : []));
               if (positions.size) onChangeNodes(nodes.map(node => { const change = positions.get(node.id); return change?.type === 'position' && change.position ? { ...node,
-                x: scope ? Math.max(40, change.position.x) - offset.x : change.position.x,
-                y: scope ? Math.max(70, change.position.y) - offset.y : change.position.y } : node; }));
+                x: change.position.x,
+                y: change.position.y } : node; }));
             }}
             onNodesDelete={deleted => remove(deleted.map(node => node.id))}
             onEdgesDelete={deleted => onChangeRelationships(relationships.filter(edge => !deleted.some(item => item.id === edge.id)))}
-            isValidConnection={connection => connection.source !== connection.target && !relationships.some(edge => edge.source === realId(connection.source) && edge.target === realId(connection.target))}
-            onConnect={connection => { const id = crypto.randomUUID(); onChangeRelationships([...relationships, { id, source: realId(connection.source), target: realId(connection.target), label: t('c4.uses'), technology: '' }]); setEdgeId(id); setSelectedId(''); }}>
-            <Background gap={24} /><Controls /><MiniMap nodeColor={node => node.type === 'boundary' ? '#dbeafe' : (node.data as FlowNode['data']).expandable ? colors.expandable : colors.leaf} pannable zoomable />
+            isValidConnection={connection => connection.source !== connection.target && !relationships.some(edge => edge.source === connection.source && edge.target === connection.target)}
+            onConnect={connection => { const id = crypto.randomUUID(); onChangeRelationships([...relationships, { id, source: connection.source, target: connection.target, label: t('c4.uses'), technology: '' }]); setEdgeId(id); setSelectedId(''); }}>
+            <Background gap={24} /><Controls /><MiniMap nodeColor={node => (node.data as FlowNode['data']).expandable ? colors.expandable : colors.leaf} pannable zoomable />
           </C4Canvas>
         </div>
-        {!inside.length && <p className="p-4 text-sm text-slate-600">{t(scope?.kind === 'person' || scope?.kind === 'code' ? 'c4.terminalLevel' : 'c4.emptyLevel')}</p>}
+        {!inside.length && <p className="p-4 text-sm text-slate-600">{t('c4.emptyLevel')}</p>}
       </div>
       <aside className="space-y-4">
         <div className={panelClass}>
           <h4 className="font-semibold dark:text-white">{t('c4.addTitle')}</h4>
-          <button className="rounded-lg bg-blue-700 px-4 py-2 text-sm text-white disabled:opacity-40" onClick={addNode} disabled={scope?.kind === 'person' || scope?.kind === 'code'}>{t('c4.addInCurrentLevel')}</button>
+          <button className="rounded-lg bg-blue-700 px-4 py-2 text-sm text-white disabled:opacity-40" onClick={addNode}>{t('c4.addInCurrentLevel')}</button>
         </div>
         {selected && <div className={panelClass}>
           <h4 className="font-semibold dark:text-white">{t('c4.editElement')} · {selected.kind}</h4>
           {field(t('c4.name'), <input className={fieldClass} value={selected.label} onChange={event => update({ label: event.target.value })} />)}
-          {parentKind[selected.kind] && field(t('c4.parentBoundary'), <select className={fieldClass} value={selected.parentId || ''} onChange={event => update({ parentId: event.target.value })}>{nodes.filter(node => node.kind === parentKind[selected.kind]).map(node => <option key={node.id} value={node.id}>{node.label}</option>)}</select>)}
-          {field(t('c4.technology'), <input className={fieldClass} value={selected.technology} onChange={event => update({ technology: event.target.value })} placeholder="React / REST / PostgreSQL" />)}
+          {selected.parentId && field(t('c4.parentBoundary'), <p className="text-sm">{nodes.find(node => node.id === selected.parentId)?.label}</p>)}
+          {field(t('c4.technology'), <input className={fieldClass} value={selected.technology} onChange={event => update({ technology: event.target.value })} placeholder="React / REST / MySQL" />)}
           {field(t('c4.responsibilities'), <textarea className={fieldClass} value={selected.description} onChange={event => update({ description: event.target.value })} />)}
           {field(t('c4.githubPath'), <input className={fieldClass} value={selected.expectedPath} onChange={event => update({ expectedPath: event.target.value })} placeholder="src/" />)}
           <button className="text-sm text-red-600" onClick={() => remove([selected.id])}>{t('c4.deleteElement')}</button>

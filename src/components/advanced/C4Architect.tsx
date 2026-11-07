@@ -1,9 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps } from '@xyflow/react';
 import { useI18n } from '../../i18n';
 import { parentKind, removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
+import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
 
 const colors = { expandable: '#2563eb', leaf: '#64748b' };
 const boundaryId = '__c4_boundary__';
@@ -59,6 +60,38 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
   const [scopeId, setScopeId] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [edgeId, setEdgeId] = useState('');
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [fileStatus, setFileStatus] = useState<'importSuccess' | 'importError' | 'fileTooLarge' | 'exportError' | null>(null);
+  const [importRevision, setImportRevision] = useState(0);
+  const exportModel = () => {
+    try {
+      const url = URL.createObjectURL(new Blob([serializeC4File(nodes, relationships)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'c4-model.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setFileStatus(null);
+    } catch { setFileStatus('exportError'); }
+  };
+  const importModel = async (file: File) => {
+    setFileStatus(null);
+    if (file.size > C4_FILE_MAX_BYTES) { setFileStatus('fileTooLarge'); return; }
+    setImporting(true);
+    try {
+      const model = parseC4File(await file.text());
+      onChangeNodes(model.nodes);
+      onChangeRelationships(model.relationships);
+      setScopeId(''); setSelectedId(''); setEdgeId('');
+      setImportRevision(value => value + 1);
+      setDesignTab('diagram');
+      setFileStatus('importSuccess');
+    } catch { setFileStatus('importError'); }
+    finally { setImporting(false); }
+  };
   const { scope, path, inside, outside, visible } = c4Drilldown(nodes, scopeId);
   const expandableIds = new Set(nodes.map(node => node.parentId).filter(Boolean));
   const visibleIds = new Set(visible.map(node => node.id));
@@ -121,6 +154,17 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
         <button type="button" role="tab" id="design-tab-diagram" aria-controls="design-panel-diagram" aria-selected={designTab === 'diagram'}
           onClick={() => setDesignTab('diagram')} className={designTab === 'diagram' ? 'rounded-lg px-3 py-2 text-sm bg-blue-700 text-white' : 'rounded-lg px-3 py-2 text-sm bg-slate-100 text-slate-700'}>C4 Model</button>
       </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={importing} onClick={() => fileInput.current?.click()} className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 disabled:opacity-40">{t(importing ? 'c4.importing' : 'c4.importModel')}</button>
+        <button type="button" disabled={importing} onClick={exportModel} className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 disabled:opacity-40">{t('c4.exportModel')}</button>
+        <input ref={fileInput} type="file" accept=".json,application/json" aria-label={t('c4.importModel')} className="hidden" onChange={event => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) void importModel(file);
+        }} />
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-300">{t('c4.fileHelp')}</p>
+      {fileStatus && <p role={fileStatus === 'importSuccess' ? 'status' : 'alert'} className={fileStatus === 'importSuccess' ? 'text-sm text-green-600' : 'text-sm text-red-600'}>{t(`c4.${fileStatus}`)}</p>}
     </div>
     {designTab === 'readme' ? <div role="tabpanel" id="design-panel-readme" aria-labelledby="design-tab-readme" className={panelClass}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -152,7 +196,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
         <div className="border-b p-3 text-xs text-slate-600">{scope ? scope.label : 'System Context'} · {t('c4.canvasInstructions')}</div>
         <div style={{ height: 600 }}>
-          <C4Canvas key={scope?.id || 'context'} nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} fitView minZoom={0.15} maxZoom={2}
+          <C4Canvas key={`${importRevision}-${scope?.id || 'context'}`} nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} fitView minZoom={0.15} maxZoom={2}
             onNodeClick={(_, node) => { if (node.id === boundaryId) return; setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); }}
             onEdgeClick={(_, edge) => { setEdgeId(edge.id); setSelectedId(''); }}
             onNodesChange={changes => {

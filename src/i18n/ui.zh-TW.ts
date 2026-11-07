@@ -118,7 +118,6 @@ export default {
   "c4.title": "C4 model 架構設計",
   "c4.expandable": "有深層圖 · 點擊展開",
   "c4.leaf": "尚無深層內容 · 點擊進入",
-  "c4.terminalLevel": "此節點尚無深層內容；目前 C4 模型不支援在 person 或 code 內新增子節點。",
   "c4.levelsDescription": "C1 呈現使用者與系統；C2 展開系統內的應用程式與資料庫；C3 展開容器內元件；C4 描述元件內的類別與函式。",
   "c4.scope": "檢視範圍／邊界",
   "c4.createParentFirst": "請先建立上一層元素",

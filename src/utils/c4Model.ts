@@ -8,7 +8,7 @@ export const parentKind: Partial<Record<C4Kind, C4Kind>> = { container: 'system'
 export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string, label: string): C4Node | undefined {
   const scope = nodes.find(node => node.id === scopeId);
   if (scopeId && !scope) return undefined;
-  const children: Partial<Record<C4Kind, C4Kind>> = { system: 'container', container: 'component', component: 'code' };
+  const children: Record<C4Kind, C4Kind> = { person: 'component', system: 'container', container: 'component', component: 'code', code: 'code' };
   const kind = scope ? children[scope.kind] : 'system';
   if (!kind) return undefined;
   const parentId = scope?.id ?? null;
@@ -18,7 +18,7 @@ export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string
     x: 0, y: siblings.length ? Math.max(...siblings.map(node => node.y)) + 280 : 0 };
 }
 
-/** Replace each ancestor by its children, preserving the surrounding context. */
+/** Display only direct children; retain ancestors solely for breadcrumb navigation. */
 export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   const path: C4Node[] = [];
   const seen = new Set<string>();
@@ -28,13 +28,10 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
     path.unshift(current);
     current = nodes.find(node => node.id === current?.parentId);
   }
-  let visible = nodes.filter(node => !node.parentId);
-  for (const ancestor of path) {
-    visible = [...visible.filter(node => node.id !== ancestor.id), ...nodes.filter(node => node.parentId === ancestor.id)];
-  }
   const scope = path.at(-1);
-  const inside = scope ? visible.filter(node => node.parentId === scope.id) : visible;
-  const outside = scope ? visible.filter(node => node.parentId !== scope.id) : [];
+  const inside = nodes.filter(node => scope ? node.parentId === scope.id : !node.parentId);
+  const outside: C4Node[] = [];
+  const visible = inside;
   return { path, scope, inside, outside, visible };
 }
 

@@ -47,6 +47,31 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 }) {
   const { t } = useI18n();
   const [designTab, setDesignTab] = useState<'readme' | 'diagram'>('readme');
+  const fullscreenRoot = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const exitFullscreen = () => {
+    if (document.fullscreenElement === fullscreenRoot.current) void document.exitFullscreen().catch(() => {});
+    setFullscreen(false);
+  };
+  const toggleFullscreen = async () => {
+    if (fullscreen) { exitFullscreen(); return; }
+    try { await fullscreenRoot.current?.requestFullscreen(); }
+    catch { /* Embedded browsers may block the API; use the viewport layout instead. */ }
+    setFullscreen(true);
+  };
+  useEffect(() => {
+    const sync = () => setFullscreen(document.fullscreenElement === fullscreenRoot.current);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+  useEffect(() => {
+    if (!fullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') exitFullscreen(); };
+    document.addEventListener('keydown', escape);
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', escape); };
+  }, [fullscreen]);
   const [readmeMode, setReadmeMode] = useState<'reading' | 'source'>('reading');
   const [scopeId, setScopeId] = useState('');
   const [selectedId, setSelectedId] = useState('');
@@ -117,11 +142,11 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     setSelectedId(node.id); setEdgeId('');
   };
   const field = (label: string, content: ReactNode) => <label className="block space-y-1 text-xs text-slate-600 dark:text-slate-300"><span>{label}</span>{content}</label>;
-  return <div className="space-y-3">
+  return <div ref={fullscreenRoot} className={fullscreen ? 'fixed inset-0 z-[100] flex h-dvh w-screen flex-col gap-2 overflow-hidden bg-slate-100 p-3 dark:bg-[#131418]' : 'space-y-3'}>
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:bg-[#1E1F23] dark:border-[#33353A]">
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('workspace.tabs.design')}>
-        <button type="button" role="tab" id="design-tab-readme" aria-controls="design-panel-readme" aria-selected={designTab === 'readme'} onClick={() => setDesignTab('readme')} className={`rounded-lg px-3 py-1.5 text-xs ${designTab === 'readme' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700'}`}>README.md</button>
+        <button type="button" role="tab" id="design-tab-readme" aria-controls="design-panel-readme" aria-selected={designTab === 'readme'} onClick={() => { exitFullscreen(); setDesignTab('readme'); }} className={`rounded-lg px-3 py-1.5 text-xs ${designTab === 'readme' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700'}`}>README.md</button>
         <button type="button" role="tab" id="design-tab-diagram" aria-controls="design-panel-diagram" aria-selected={designTab === 'diagram'}
           onClick={() => setDesignTab('diagram')} className={designTab === 'diagram' ? 'rounded-lg px-3 py-1.5 text-xs bg-blue-700 text-white' : 'rounded-lg px-3 py-1.5 text-xs bg-slate-100 text-slate-700'}>C4 Model</button>
       </div>
@@ -135,6 +160,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
         </span>)}
       </nav>
       <div className="ml-auto flex shrink-0 flex-wrap gap-2">
+        <button type="button" aria-pressed={fullscreen} onClick={() => void toggleFullscreen()} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-700">{t(fullscreen ? 'c4.exitFullscreen' : 'c4.fullscreen')}</button>
       <button type="button" className="rounded-lg bg-blue-700 px-3 py-1.5 text-xs text-white hover:bg-blue-800" onClick={addNode}>＋ {t('c4.addElement')}</button>
         <button type="button" disabled={importing} title={t('c4.fileHelp')} onClick={() => fileInput.current?.click()} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-700 disabled:opacity-40">{t(importing ? 'c4.importing' : 'c4.importModel')}</button>
         <button type="button" disabled={importing} onClick={exportModel} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-700 disabled:opacity-40">{t('c4.exportModel')}</button>
@@ -165,11 +191,11 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
         : <article className="min-h-96 break-words text-sm leading-7 text-slate-800 dark:text-slate-200 [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-semibold [&_h1]:my-5 [&_h2]:my-4 [&_h3]:my-3 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-blue-600 [&_a]:underline dark:[&_a]:text-blue-300 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-100 dark:[&_pre]:bg-[#282A2F] [&_pre]:p-4 [&_code]:font-mono [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-4 [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:p-2 [&_td]:border [&_td]:p-2 [&_hr]:my-5 [&_img]:max-w-full">
           <Markdown remarkPlugins={[remarkGfm]}>{designDoc}</Markdown>
         </article>}
-    </div> : <div role="tabpanel" id="design-panel-diagram" aria-labelledby="design-tab-diagram" className="space-y-5">
-    <div className="relative">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+    </div> : <div role="tabpanel" id="design-panel-diagram" aria-labelledby="design-tab-diagram" className={fullscreen ? 'flex min-h-0 flex-1 flex-col' : 'space-y-5'}>
+    <div className={fullscreen ? 'relative flex min-h-0 flex-1 flex-col' : 'relative'}>
+      <div className={`overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 ${fullscreen ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
         <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs text-slate-600"><span>{scope ? scope.label : 'System Context'}</span><details className="relative"><summary className="cursor-pointer">{t('c4.help')}</summary><div className="absolute right-0 top-6 z-30 w-72 rounded-lg border bg-white p-3 shadow-lg space-y-2"><p>{t('c4.canvasInstructions')}</p><p>{t('c4.levelsDescription')}</p><p className="text-blue-600">● {t('c4.expandable')}</p><p>● {t('c4.leaf')}</p><p>{t('c4.fileHelp')}</p></div></details></div>
-        <div style={{ height: 'max(600px, 72vh)' }}>
+        <div className={fullscreen ? 'min-h-0 flex-1' : ''} style={fullscreen ? undefined : { height: 'max(600px, 72vh)' }}>
           <C4Canvas key={`${importRevision}-${scope?.id || 'context'}`} nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} fitView minZoom={0.15} maxZoom={2}
             onNodeClick={(_, node) => { setSelectedId(node.id); setEdgeId(''); }}
             onNodeDoubleClick={(_, node) => navigate(node.id)}

@@ -117,6 +117,8 @@ export default {
   "c4.exportError": "匯出失敗，請重試。",
   "c4.closeEditor": "關閉編輯面板",
   "c4.help": "操作說明",
+  "c4.fullscreen": "全螢幕",
+  "c4.exitFullscreen": "退出全螢幕",
   "c4.title": "C4 model 架構設計",
   "c4.expandable": "有深層圖 · 雙擊展開",
   "c4.leaf": "尚無深層內容 · 雙擊進入",

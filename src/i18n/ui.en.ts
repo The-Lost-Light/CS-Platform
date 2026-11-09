@@ -119,6 +119,8 @@ export default {
   "c4.exportError": "Export failed. Please try again.",
   "c4.closeEditor": "Close editor",
   "c4.help": "Help",
+  "c4.fullscreen": "Fullscreen",
+  "c4.exitFullscreen": "Exit fullscreen",
   "c4.title": "C4 model architecture",
   "c4.expandable": "Has details · double-click to explore",
   "c4.leaf": "No details yet · double-click to explore",

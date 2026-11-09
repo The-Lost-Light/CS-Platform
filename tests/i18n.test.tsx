@@ -137,7 +137,7 @@ const analysis = analyzeArchitectureAlignment({ mindMapNodes: en.advancedProject
 const screens = {
   dashboard: <App />,
   login: <LoginView onLoginSuccess={noop} onChangeThemeMode={noop} />,
-  project: <AdvancedProjectWorkspace project={en.advancedProjects[0]} allAdvancedProjects={en.advancedProjects} onSelectProject={noop} onBackHome={noop} />,
+  project: <AdvancedProjectWorkspace project={en.advancedProjects[0]} />,
   comparison: <ArchitectureComparisonPanel analysis={analysis} />,
   github: <GitHubRepoDashboard repoBundle={bundle} />,
 };

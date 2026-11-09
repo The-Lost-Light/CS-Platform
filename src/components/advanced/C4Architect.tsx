@@ -7,11 +7,11 @@ import { removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4No
 import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
 
 const colors = { expandable: '#2563eb', leaf: '#64748b' };
-type FlowNode = Node<{ title: string; kind: C4Kind; description: string; technology: string; status: string; expandable: boolean; onExplore: () => void }, 'c4'>;
+type FlowNode = Node<{ title: string; kind: C4Kind; description: string; technology: string; status: string; expandable: boolean; onSelect: () => void; onExplore: () => void }, 'c4'>;
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   const color = data.expandable ? colors.expandable : colors.leaf;
   return <div role="button" tabIndex={0} aria-label={data.title} onKeyDown={event => {
-    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); data.onExplore(); }
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); if (event.key === 'Enter' && event.shiftKey) data.onExplore(); else data.onSelect(); }
   }} style={{ width: 280, minHeight: 230, borderColor: color, background: data.expandable ? '#eff6ff' : '#f8fafc' }} className={`rounded-xl border-2 bg-white p-4 text-slate-900 shadow-sm ${selected ? 'ring-4 ring-violet-300' : ''}`}>
     <Handle type="target" position={Position.Left} />
     <div className="text-[10px] uppercase tracking-widest" style={{ color: color }}>{data.kind}</div>
@@ -92,7 +92,8 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     id: node.id, type: 'c4', position: { x: node.x, y: node.y }, selected: node.id === selectedId,
     data: { title: node.label, kind: node.kind, description: node.description, technology: node.technology,
       status: node.expectedPath, expandable: expandableIds.has(node.id),
-      onExplore: () => { setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); } }
+      onSelect: () => { setSelectedId(node.id); setEdgeId(''); },
+      onExplore: () => { setScopeId(node.id); setSelectedId(''); setEdgeId(''); } }
   }));
   const flowEdges = relationships.filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target)).map(edge => ({ ...edge,
     type: 'smoothstep', label: edge.label, selected: edge.id === edgeId,
@@ -116,25 +117,40 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     setSelectedId(node.id); setEdgeId('');
   };
   const field = (label: string, content: ReactNode) => <label className="block space-y-1 text-xs text-slate-600 dark:text-slate-300"><span>{label}</span>{content}</label>;
-  return <div className="space-y-5">
-    <div className={panelClass}>
-      <h3 className="font-bold text-slate-900 dark:text-white">{t('c4.title')}</h3>
+  return <div className="space-y-3">
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:bg-[#1E1F23] dark:border-[#33353A]">
+
       <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('workspace.tabs.design')}>
-        <button type="button" role="tab" id="design-tab-readme" aria-controls="design-panel-readme" aria-selected={designTab === 'readme'} onClick={() => setDesignTab('readme')} className={`rounded-lg px-3 py-2 text-sm ${designTab === 'readme' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700'}`}>README.md</button>
+        <button type="button" role="tab" id="design-tab-readme" aria-controls="design-panel-readme" aria-selected={designTab === 'readme'} onClick={() => setDesignTab('readme')} className={`rounded-lg px-3 py-1.5 text-xs ${designTab === 'readme' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-700'}`}>README.md</button>
         <button type="button" role="tab" id="design-tab-diagram" aria-controls="design-panel-diagram" aria-selected={designTab === 'diagram'}
-          onClick={() => setDesignTab('diagram')} className={designTab === 'diagram' ? 'rounded-lg px-3 py-2 text-sm bg-blue-700 text-white' : 'rounded-lg px-3 py-2 text-sm bg-slate-100 text-slate-700'}>C4 Model</button>
+          onClick={() => setDesignTab('diagram')} className={designTab === 'diagram' ? 'rounded-lg px-3 py-1.5 text-xs bg-blue-700 text-white' : 'rounded-lg px-3 py-1.5 text-xs bg-slate-100 text-slate-700'}>C4 Model</button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={importing} onClick={() => fileInput.current?.click()} className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 disabled:opacity-40">{t(importing ? 'c4.importing' : 'c4.importModel')}</button>
-        <button type="button" disabled={importing} onClick={exportModel} className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 disabled:opacity-40">{t('c4.exportModel')}</button>
+      {designTab === 'diagram' && <div className="mt-2 border-t border-slate-200 pt-2 dark:border-[#33353A]">
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+      <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto whitespace-nowrap py-1 text-xs">
+        <button type="button" onClick={() => navigate('')} aria-current={!scope ? 'page' : undefined} className="text-blue-700 underline aria-[current=page]:font-bold dark:text-blue-300">C1 · Context</button>
+        {path.map((node, index) => <span key={node.id} className="flex shrink-0 items-center gap-2">
+          <span aria-hidden="true">/</span><button type="button" onClick={() => navigate(node.id)} aria-current={node.id === scope?.id ? 'page' : undefined} className="text-blue-700 underline aria-[current=page]:font-bold dark:text-blue-300">C{index + 2} · {node.label}</button>
+        </span>)}
+      </nav>
+      <div className="ml-auto flex shrink-0 flex-wrap gap-2">
+      <button type="button" className="rounded-lg bg-blue-700 px-3 py-1.5 text-xs text-white hover:bg-blue-800" onClick={addNode}>＋ {t('c4.addElement')}</button>
+        <button type="button" disabled={importing} title={t('c4.fileHelp')} onClick={() => fileInput.current?.click()} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-700 disabled:opacity-40">{t(importing ? 'c4.importing' : 'c4.importModel')}</button>
+        <button type="button" disabled={importing} onClick={exportModel} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs text-slate-700 disabled:opacity-40">{t('c4.exportModel')}</button>
         <input ref={fileInput} type="file" accept=".json,application/json" aria-label={t('c4.importModel')} className="hidden" onChange={event => {
           const file = event.target.files?.[0];
           event.target.value = '';
           if (file) void importModel(file);
         }} />
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-300">{t('c4.fileHelp')}</p>
+      </div>
+
+
       {fileStatus && <p role={fileStatus === 'importSuccess' ? 'status' : 'alert'} className={fileStatus === 'importSuccess' ? 'text-sm text-green-600' : 'text-sm text-red-600'}>{t(`c4.${fileStatus}`)}</p>}
+
+
+      </div>}
     </div>
     {designTab === 'readme' ? <div role="tabpanel" id="design-panel-readme" aria-labelledby="design-tab-readme" className={panelClass}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -150,24 +166,14 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
           <Markdown remarkPlugins={[remarkGfm]}>{designDoc}</Markdown>
         </article>}
     </div> : <div role="tabpanel" id="design-panel-diagram" aria-labelledby="design-tab-diagram" className="space-y-5">
-    <div className={panelClass}>
-      <p className="text-xs text-slate-500 dark:text-slate-300">{t('c4.levelsDescription')}</p>
-      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm">
-        <button type="button" onClick={() => navigate('')} aria-current={!scope ? 'page' : undefined} className="text-blue-700 underline aria-[current=page]:font-bold dark:text-blue-300">C1 · Context</button>
-        {path.map((node, index) => <span key={node.id} className="flex items-center gap-2">
-          <span aria-hidden="true">/</span><button type="button" onClick={() => navigate(node.id)} aria-current={node.id === scope?.id ? 'page' : undefined} className="text-blue-700 underline aria-[current=page]:font-bold dark:text-blue-300">C{index + 2} · {node.label}</button>
-        </span>)}
-      </nav>
-      <div className="flex flex-wrap gap-4 text-xs">
-        <span className="text-blue-600">● {t('c4.expandable')}</span><span className="text-slate-500">● {t('c4.leaf')}</span>
-      </div>
-    </div>
-    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-5">
+    <div className="relative">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-        <div className="border-b p-3 text-xs text-slate-600">{scope ? scope.label : 'System Context'} · {t('c4.canvasInstructions')}</div>
-        <div style={{ height: 600 }}>
+        <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs text-slate-600"><span>{scope ? scope.label : 'System Context'}</span><details className="relative"><summary className="cursor-pointer">{t('c4.help')}</summary><div className="absolute right-0 top-6 z-30 w-72 rounded-lg border bg-white p-3 shadow-lg space-y-2"><p>{t('c4.canvasInstructions')}</p><p>{t('c4.levelsDescription')}</p><p className="text-blue-600">● {t('c4.expandable')}</p><p>● {t('c4.leaf')}</p><p>{t('c4.fileHelp')}</p></div></details></div>
+        <div style={{ height: 'max(600px, 72vh)' }}>
           <C4Canvas key={`${importRevision}-${scope?.id || 'context'}`} nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} fitView minZoom={0.15} maxZoom={2}
-            onNodeClick={(_, node) => { setScopeId(node.id); setSelectedId(node.id); setEdgeId(''); }}
+            onNodeClick={(_, node) => { setSelectedId(node.id); setEdgeId(''); }}
+            onNodeDoubleClick={(_, node) => navigate(node.id)}
+            zoomOnDoubleClick={false}
             onEdgeClick={(_, edge) => { setEdgeId(edge.id); setSelectedId(''); }}
             onNodesChange={changes => {
               const positions = new Map(changes.flatMap(change => change.type === 'position' && change.position ? [[change.id, change] as const] : []));
@@ -184,11 +190,8 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
         </div>
         {!inside.length && <p className="p-4 text-sm text-slate-600">{t('c4.emptyLevel')}</p>}
       </div>
-      <aside className="space-y-4">
-        <div className={panelClass}>
-          <h4 className="font-semibold dark:text-white">{t('c4.addTitle')}</h4>
-          <button className="rounded-lg bg-blue-700 px-4 py-2 text-sm text-white disabled:opacity-40" onClick={addNode}>{t('c4.addInCurrentLevel')}</button>
-        </div>
+      {(selected || selectedEdge) && <aside aria-label={t(selected ? 'c4.editElement' : 'c4.editRelationship')} className="absolute right-3 top-14 z-20 w-80 max-w-[calc(100%-1.5rem)] max-h-[calc(100%-5rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-[#33353A] dark:bg-[#1E1F23]" onKeyDown={event => { if (event.key === 'Escape') { setSelectedId(''); setEdgeId(''); } }}>
+        <div className="flex justify-end"><button type="button" aria-label={t('c4.closeEditor')} className="rounded-lg px-3 py-1 text-xl text-slate-500 hover:bg-slate-100" onClick={() => { setSelectedId(''); setEdgeId(''); }}>×</button></div>
         {selected && <div className={panelClass}>
           <h4 className="font-semibold dark:text-white">{t('c4.editElement')} · {selected.kind}</h4>
           {field(t('c4.name'), <input className={fieldClass} value={selected.label} onChange={event => update({ label: event.target.value })} />)}
@@ -205,7 +208,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
           {field(t('c4.protocol'), <input className={fieldClass} value={selectedEdge.technology} onChange={event => onChangeRelationships(relationships.map(edge => edge.id === edgeId ? { ...edge, technology: event.target.value } : edge))} />)}
           <button className="text-sm text-red-600" onClick={() => onChangeRelationships(relationships.filter(edge => edge.id !== edgeId))}>{t('c4.deleteRelationship')}</button>
         </div>}
-      </aside>
+      </aside>}
     </div>
     </div>}
   </div>;

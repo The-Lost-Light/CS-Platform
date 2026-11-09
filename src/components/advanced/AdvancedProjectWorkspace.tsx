@@ -4,7 +4,6 @@ import type { AdvancedProject, RepoBundle } from '../../types';
 import { useState, useEffect, useRef } from 'react';
 import { updateLocalizedProjectDraft } from '../../data/localizedAssignments';
 import {
-  ArrowLeft,
   FolderGit2,
   RefreshCw,
   KeyRound,
@@ -16,10 +15,7 @@ import { GitHubRepoDashboard } from './GitHubRepoDashboard';
 
 export function AdvancedProjectWorkspace({
   project,
-  allAdvancedProjects = [],
-  onSelectProject,
-  onBackHome,
-}: { project: AdvancedProject; allAdvancedProjects?: AdvancedProject[]; onSelectProject: (project: AdvancedProject) => void; onBackHome: () => void }) {
+}: { project: AdvancedProject }) {
   const { t } = useI18n();
   const [repoUrlInput, setRepoUrlInput] = useState(
     project.defaultRepoUrl || 'https://github.com/student-team/course-oj-platform'
@@ -70,118 +66,6 @@ export function AdvancedProjectWorkspace({
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-5 space-y-6">
-      {/* Top Bar: Project Switcher & GitHub Repo URL Input */}
-      <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={onBackHome}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD] text-[#1F1F1F] dark:text-[#E3E2E6] text-xs font-medium border border-slate-300 dark:border-[#444746] transition"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{t('common.backHome')}</span>
-            </button>
-
-            {allAdvancedProjects.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => onSelectProject(p)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition ${
-                  p.id === project.id
-                    ? 'bg-[#6750A4] text-white shadow-md shadow-purple-600/25'
-                    : 'bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#F0F4F9] dark:bg-[#282A2F] text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:text-[#E3E2E6] border border-slate-200 dark:border-[#33353A]'
-                }`}
-              >
-                {p.codeName}: {p.title.slice(0, 16)}…
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowTokenInput(!showTokenInput)}
-              className="px-3 py-1.5 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD] text-[#1F1F1F] dark:text-[#E3E2E6] border border-slate-300 dark:border-[#444746] text-xs font-medium inline-flex items-center gap-1.5"
-            >
-              <KeyRound className="w-3.5 h-3.5 text-[#B06000]" />
-              <span>{t('workspace.githubToken')}</span>
-            </button>
-          </div>
-        </div>
-
-        {showTokenInput && (
-          <div className="p-3 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-200 dark:border-[#33353A] flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs">
-            <span className="text-[#444746] dark:text-[#C4C7C5] shrink-0">Personal Access Token:</span>
-            <input
-              type="password"
-              value={githubToken}
-              onChange={(e) => setGithubToken(e.target.value)}
-              placeholder={t('workspace.tokenPlaceholder')}
-              className="flex-1 px-3 py-1.5 bg-white dark:bg-[#1E1F23] border border-slate-300 dark:border-[#444746] rounded-lg text-[#1F1F1F] dark:text-[#E3E2E6] font-mono"
-            />
-          </div>
-        )}
-
-        {/* GitHub Repo URL Search Bar & Presets */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleLoadRepo(repoUrlInput);
-          }}
-          className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1"
-        >
-          <div className="relative flex-1">
-            <FolderGit2 className="w-4 h-4 text-[#6750A4] absolute left-3.5 top-2.5" />
-            <input
-              type="text"
-              value={repoUrlInput}
-              onChange={(e) => setRepoUrlInput(e.target.value)}
-              placeholder={t('workspace.repoPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-300 dark:border-[#444746] rounded-xl text-xs sm:text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-mono focus:outline-hidden focus:ring-2 focus:ring-purple-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoadingRepo}
-            className="px-5 py-2 rounded-xl bg-[#6750A4] hover:bg-[#4F378B] text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 shadow-xs shadow-purple-600/25 transition shrink-0"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoadingRepo ? 'animate-spin' : ''}`} />
-            <span>{t('workspace.sync')}</span>
-          </button>
-        </form>
-
-        {repoError && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{'key' in repoError ? t(repoError.key) : repoError.message}</p>}
-        {/* Quick Repo Preset Switcher */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#444746] dark:text-[#C4C7C5] pt-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span>{t('workspace.sampleRepos')}</span>
-            <button
-              type="button"
-              onClick={() => {
-                const u = 'https://github.com/student-team/course-oj-platform';
-                setRepoUrlInput(u);
-                handleLoadRepo(u);
-              }}
-              className="px-2.5 py-1 rounded-md bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#EADDFF]/60 text-[#6750A4] border border-purple-500/30 font-mono"
-            >{t('workspace.studentRepo')}</button>
-            <button
-              type="button"
-              onClick={() => {
-                const u = 'https://github.com/facebook/react';
-                setRepoUrlInput(u);
-                handleLoadRepo(u);
-              }}
-              className="px-2.5 py-1 rounded-md bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD]/50 text-[#0B57D0] border border-indigo-500/30 font-mono"
-            >
-              facebook/react
-            </button>
-          </div>
-
-        </div>
-      </div>
       <div role="tablist" aria-label={t('workspace.tabs.design')} className="flex gap-2 border-b border-slate-200 dark:border-[#33353A]">
         {(['design', 'github'] as const).map(tab => <button key={tab} type="button" role="tab"
           id={`workspace-tab-${tab}`} aria-controls={`workspace-panel-${tab}`} aria-selected={activeTab === tab}
@@ -202,7 +86,90 @@ export function AdvancedProjectWorkspace({
           onChangeDesignDoc={setDesignDoc}
         />
       </div>
-      <div role="tabpanel" id="workspace-panel-github" aria-labelledby="workspace-tab-github" hidden={activeTab !== 'github'}>
+      <div role="tabpanel" id="workspace-panel-github" aria-labelledby="workspace-tab-github" className="space-y-6" hidden={activeTab !== 'github'}>
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowTokenInput(!showTokenInput)}
+              className="px-3 py-1.5 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD] text-[#1F1F1F] dark:text-[#E3E2E6] border border-slate-300 dark:border-[#444746] text-xs font-medium inline-flex items-center gap-1.5"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#B06000]" />
+              <span>{t('workspace.githubToken')}</span>
+            </button>
+          </div>
+
+          {showTokenInput && (
+            <div className="p-3 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-200 dark:border-[#33353A] flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs">
+              <span className="text-[#444746] dark:text-[#C4C7C5] shrink-0">Personal Access Token:</span>
+              <input
+                type="password"
+                value={githubToken}
+                onChange={(e) => setGithubToken(e.target.value)}
+                placeholder={t('workspace.tokenPlaceholder')}
+                className="flex-1 px-3 py-1.5 bg-white dark:bg-[#1E1F23] border border-slate-300 dark:border-[#444746] rounded-lg text-[#1F1F1F] dark:text-[#E3E2E6] font-mono"
+              />
+            </div>
+          )}
+
+          {/* GitHub Repo URL Search Bar & Presets */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLoadRepo(repoUrlInput);
+            }}
+            className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1"
+          >
+            <div className="relative flex-1">
+              <FolderGit2 className="w-4 h-4 text-[#6750A4] absolute left-3.5 top-2.5" />
+              <input
+                type="text"
+                value={repoUrlInput}
+                onChange={(e) => setRepoUrlInput(e.target.value)}
+                placeholder={t('workspace.repoPlaceholder')}
+                className="w-full pl-10 pr-4 py-2 bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-300 dark:border-[#444746] rounded-xl text-xs sm:text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-mono focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoadingRepo}
+              className="px-5 py-2 rounded-xl bg-[#6750A4] hover:bg-[#4F378B] text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 shadow-xs shadow-purple-600/25 transition shrink-0"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoadingRepo ? 'animate-spin' : ''}`} />
+              <span>{t('workspace.sync')}</span>
+            </button>
+          </form>
+
+          {repoError && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{'key' in repoError ? t(repoError.key) : repoError.message}</p>}
+          {/* Quick Repo Preset Switcher */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#444746] dark:text-[#C4C7C5] pt-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span>{t('workspace.sampleRepos')}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const u = 'https://github.com/student-team/course-oj-platform';
+                  setRepoUrlInput(u);
+                  handleLoadRepo(u);
+                }}
+                className="px-2.5 py-1 rounded-md bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#EADDFF]/60 text-[#6750A4] border border-purple-500/30 font-mono"
+              >{t('workspace.studentRepo')}</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const u = 'https://github.com/facebook/react';
+                  setRepoUrlInput(u);
+                  handleLoadRepo(u);
+                }}
+                className="px-2.5 py-1 rounded-md bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD]/50 text-[#0B57D0] border border-indigo-500/30 font-mono"
+              >
+                facebook/react
+              </button>
+            </div>
+
+          </div>
+        </div>
         <GitHubRepoDashboard repoBundle={repoBundle} />
       </div>
     </div>

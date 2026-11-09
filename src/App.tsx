@@ -102,9 +102,6 @@ export default function App() {
               {activeView === "project" && (
                 <AdvancedProjectWorkspace
                   project={selectedAdvanced}
-                  allAdvancedProjects={advancedProjects}
-                  onSelectProject={(proj) => setSelectedAdvancedId(proj.id)}
-                  onBackHome={() => setActiveView("home")}
                 />
               )}
             </main>

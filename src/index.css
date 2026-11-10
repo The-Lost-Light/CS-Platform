@@ -14,9 +14,66 @@
     color: #1F1F1F;
   }
 
+  .dark body {
+    background-color: #121316;
+    color: #E3E2E6;
+  }
+
   code, pre, .font-mono-code {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
+}
+
+/* Material Design 3 React Flow Controls & MiniMap Unification */
+.react-flow__controls {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid #E2E8F0 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark .react-flow__controls {
+  border-color: #33353A !important;
+  background-color: #1E1F23 !important;
+}
+
+.react-flow__controls-button {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  fill: #444746 !important;
+  color: #444746 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #F3EDF7 !important;
+  fill: #6750A4 !important;
+}
+
+.dark .react-flow__controls-button {
+  background-color: #1E1F23 !important;
+  border-bottom-color: #33353A !important;
+  fill: #C4C7C5 !important;
+  color: #C4C7C5 !important;
+}
+
+.dark .react-flow__controls-button:hover {
+  background-color: #282A2F !important;
+  fill: #D0BCFF !important;
+}
+
+.react-flow__minimap {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid #E2E8F0 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark .react-flow__minimap {
+  border-color: #33353A !important;
+  background-color: #1E1F23 !important;
 }
 
 ::-webkit-scrollbar {
@@ -26,9 +83,15 @@
 ::-webkit-scrollbar-track {
   background: #F0F4F9;
 }
+.dark ::-webkit-scrollbar-track {
+  background: #121316;
+}
 ::-webkit-scrollbar-thumb {
   background: #C4C7C5;
-  border-radius: 4px;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #444746;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #8E918F;

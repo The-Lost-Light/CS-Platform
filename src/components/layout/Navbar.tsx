@@ -103,7 +103,7 @@ export function Navbar({
               onClick={() => onChangeThemeMode?.('system')}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
                 themeMode === 'system'
-                  ? 'bg-white dark:bg-[#282A2F] text-[#0B57D0] dark:text-[#A8C7FA] shadow-2xs'
+                  ? 'bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] shadow-2xs'
                   : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-white'
               }`}
               title={t('theme.systemDescription')}
@@ -117,7 +117,7 @@ export function Navbar({
               onClick={() => onChangeThemeMode?.('light')}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
                 themeMode === 'light'
-                  ? 'bg-white text-[#0B57D0] shadow-2xs'
+                  ? 'bg-[#D3E3FD] text-[#041E49] shadow-2xs'
                   : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-white'
               }`}
               title={t('theme.lightDescription')}
@@ -131,7 +131,7 @@ export function Navbar({
               onClick={() => onChangeThemeMode?.('dark')}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
                 themeMode === 'dark'
-                  ? 'bg-[#282A2F] text-[#A8C7FA] shadow-2xs'
+                  ? 'bg-[#004A77] text-[#C2E7FF] shadow-2xs'
                   : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-white'
               }`}
               title={t('theme.darkDescription')}
@@ -156,7 +156,7 @@ export function Navbar({
               <button
                 type="button"
                 onClick={onLogout}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white dark:bg-[#282A2F] hover:bg-[#FAD2CF]/60 dark:hover:bg-[#8C1D18]/40 text-[#444746] dark:text-[#E3E2E6] hover:text-[#B3261E] dark:hover:text-[#F2B8B5] border border-slate-300 dark:border-[#444746] text-xs font-semibold transition"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F0F4F9] dark:bg-[#121316] hover:bg-[#FAD2CF]/70 dark:hover:bg-[#8C1D18]/40 text-[#444746] dark:text-[#E3E2E6] hover:text-[#B3261E] dark:hover:text-[#F2B8B5] border border-slate-200 dark:border-[#33353A] text-xs font-bold transition"
                 title={t('auth.signOutDescription')}
               >
                 <LogOut className="w-3.5 h-3.5" />

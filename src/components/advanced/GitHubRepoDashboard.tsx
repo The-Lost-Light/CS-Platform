@@ -53,60 +53,60 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
     <div className="space-y-6">
       {/* KPI Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl p-3.5">
-          <div className="text-xs text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-2xl p-4 shadow-xs transition-colors">
+          <div className="text-xs font-medium text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
             <span>{t('github.stars')}</span>
-            <Star className="w-3.5 h-3.5 text-[#B06000]" />
+            <Star className="w-3.5 h-3.5 text-[#B06000] dark:text-[#FDD663]" />
           </div>
           <div className="text-lg font-bold text-[#1F1F1F] dark:text-[#E3E2E6] font-mono mt-1">
             {repo.stargazers_count?.toLocaleString(locale) || 0}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl p-3.5">
-          <div className="text-xs text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-2xl p-4 shadow-xs transition-colors">
+          <div className="text-xs font-medium text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
             <span>{t('github.forks')}</span>
-            <GitFork className="w-3.5 h-3.5 text-sky-400" />
+            <GitFork className="w-3.5 h-3.5 text-[#0B57D0] dark:text-[#A8C7FA]" />
           </div>
           <div className="text-lg font-bold text-[#1F1F1F] dark:text-[#E3E2E6] font-mono mt-1">
             {repo.forks_count?.toLocaleString(locale) || 0}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl p-3.5">
-          <div className="text-xs text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-2xl p-4 shadow-xs transition-colors">
+          <div className="text-xs font-medium text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
             <span>{t('github.openIssues')}</span>
-            <AlertCircle className="w-3.5 h-3.5 text-[#C5221F]" />
+            <AlertCircle className="w-3.5 h-3.5 text-[#C5221F] dark:text-[#F2B8B5]" />
           </div>
           <div className="text-lg font-bold text-[#1F1F1F] dark:text-[#E3E2E6] font-mono mt-1">
             {repo.open_issues_count?.toLocaleString(locale) || 0}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl p-3.5">
-          <div className="text-xs text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-2xl p-4 shadow-xs transition-colors">
+          <div className="text-xs font-medium text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
             <span>{t('github.branches')}</span>
-            <GitBranch className="w-3.5 h-3.5 text-[#137333]" />
+            <GitBranch className="w-3.5 h-3.5 text-[#137333] dark:text-[#81C995]" />
           </div>
           <div className="text-lg font-bold text-[#1F1F1F] dark:text-[#E3E2E6] font-mono mt-1">
             {branches.length}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl p-3.5">
-          <div className="text-xs text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-2xl p-4 shadow-xs transition-colors">
+          <div className="text-xs font-medium text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
             <span>{t('github.totalFiles')}</span>
-            <FolderTree className="w-3.5 h-3.5 text-[#0B57D0]" />
+            <FolderTree className="w-3.5 h-3.5 text-[#0B57D0] dark:text-[#A8C7FA]" />
           </div>
           <div className="text-lg font-bold text-[#1F1F1F] dark:text-[#E3E2E6] font-mono mt-1">
             {fileTree.length}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl p-3.5">
-          <div className="text-xs text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-2xl p-4 shadow-xs transition-colors">
+          <div className="text-xs font-medium text-[#444746] dark:text-[#C4C7C5] flex items-center justify-between">
             <span>{t('github.primaryLanguage')}</span>
-            <Code2 className="w-3.5 h-3.5 text-[#6750A4]" />
+            <Code2 className="w-3.5 h-3.5 text-[#6750A4] dark:text-[#D0BCFF]" />
           </div>
           <div className="text-lg font-bold text-[#1F1F1F] dark:text-[#E3E2E6] mt-1 truncate">
             {repo.language || 'TypeScript'}
@@ -116,12 +116,12 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
 
       {/* Language Breakdown Bar */}
       {langEntries.length > 0 && (
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-2xl p-4 space-y-2">
-          <div className="text-xs font-semibold text-[#303030] dark:text-[#C4C7C5]">{t('github.languageDistribution')}</div>
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-[24px] p-5 space-y-2.5 shadow-xs transition-colors">
+          <div className="text-xs font-bold text-[#1F1F1F] dark:text-[#E3E2E6]">{t('github.languageDistribution')}</div>
           <div className="w-full h-2.5 rounded-full bg-[#F0F4F9] dark:bg-[#282A2F] overflow-hidden flex">
             {langEntries.map(([lang, bytes], idx) => {
               const pct = Math.max(2, (bytes / totalBytes) * 100).toFixed(1);
-              const colors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#38bdf8'];
+              const colors = ['#0B57D0', '#6750A4', '#137333', '#B06000', '#006A60'];
               return (
                 <div
                   key={lang}
@@ -145,14 +145,15 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
       {/* Two-Column Explorer: Left = Actual GitHub File Tree (5 cols), Right = Commits & Code Diff Viewer (7 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Actual Repository File Structure Tree */}
-        <div className="lg:col-span-5 bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-2xl p-4 space-y-3 shadow-xs">
+        <div className="lg:col-span-5 bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-[24px] p-5 space-y-3.5 shadow-xs transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-[#137333]" />
-              <h3 className="text-sm font-bold text-[#1F1F1F] dark:text-[#E3E2E6]">{t('github.fileTree', { count: fileTree.length })}
+              <FolderTree className="w-4 h-4 text-[#137333] dark:text-[#81C995]" />
+              <h3 className="text-sm font-bold text-[#1F1F1F] dark:text-[#E3E2E6]">
+                {t('github.fileTree', { count: fileTree.length })}
               </h3>
             </div>
-            <span className="px-2 py-0.5 rounded bg-[#F0F4F9] dark:bg-[#282A2F] font-mono text-[11px] text-[#0D652D]">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#CEEAD6] dark:bg-[#0F5223]/50 font-mono text-[11px] font-bold text-[#0D652D] dark:text-[#C4EED0]">
               {t('github.branchLabel')}{selectedBranch}
             </span>
           </div>
@@ -162,17 +163,17 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
             value={fileTreeSearch}
             onChange={(e) => setFileTreeSearch(e.target.value)}
             placeholder={t('github.filterPaths')}
-            className="w-full px-3 py-1.5 bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-200 dark:border-[#33353A] rounded-xl text-xs text-[#1F1F1F] dark:text-[#E3E2E6] font-mono placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3.5 py-2 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-xl text-xs text-[#1F1F1F] dark:text-[#E3E2E6] font-mono placeholder-[#5E5E5E] dark:placeholder-[#8E918F] focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA] transition"
           />
 
-          <div className="max-h-[460px] overflow-y-auto space-y-1 pr-1 font-mono text-xs">
+          <div className="max-h-[460px] overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
             {filteredTree.map((item) => (
               <div
                 key={item.path}
-                className="px-3 py-1.5 rounded-lg bg-[#F8FAFD] dark:bg-[#121316] hover:bg-[#F0F4F9] dark:bg-[#282A2F]/80 border border-slate-200 dark:border-[#33353A] flex items-center justify-between gap-2 text-[#1F1F1F] dark:text-[#E3E2E6]"
+                className="px-3 py-2 rounded-xl bg-[#F8FAFD] dark:bg-[#121316] hover:bg-[#F3EDF7]/60 dark:hover:bg-[#282A2F] border border-slate-200/80 dark:border-[#33353A] flex items-center justify-between gap-2 text-[#1F1F1F] dark:text-[#E3E2E6] transition"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <FileCode2 className="w-3.5 h-3.5 text-[#0B57D0] shrink-0" />
+                  <FileCode2 className="w-3.5 h-3.5 text-[#0B57D0] dark:text-[#A8C7FA] shrink-0" />
                   <span className="truncate">{item.path}</span>
                 </div>
                 {item.size !== undefined && (
@@ -186,10 +187,10 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
         </div>
 
         {/* Right: Branch Switcher, Commit History & Code Diff Inspector */}
-        <div className="lg:col-span-7 bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-2xl p-4 space-y-4 shadow-xs">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-[#33353A] pb-3">
+        <div className="lg:col-span-7 bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-[24px] p-5 space-y-4 shadow-xs transition-colors">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-[#33353A] pb-3.5">
             <div className="flex items-center gap-2">
-              <GitCommit className="w-4 h-4 text-[#0B57D0]" />
+              <GitCommit className="w-4 h-4 text-[#0B57D0] dark:text-[#A8C7FA]" />
               <h3 className="text-sm font-bold text-[#1F1F1F] dark:text-[#E3E2E6]">{t('github.commitHistory')}</h3>
             </div>
 
@@ -197,7 +198,7 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
               <select
                 value={selectedBranch}
                 onChange={(e) => setSelectedBranch(e.target.value)}
-                className="px-2.5 py-1 bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-300 dark:border-[#444746] rounded-lg text-xs font-mono text-[#0B57D0]"
+                className="px-3 py-1 bg-[#F0F4F9] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-full text-xs font-mono font-bold text-[#0B57D0] dark:text-[#A8C7FA] focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA]"
               >
                 {branches.map((b) => (
                   <option key={b.name} value={b.name}>
@@ -206,12 +207,14 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                 ))}
               </select>
 
-              <div className="inline-flex rounded-lg bg-[#F0F4F9] dark:bg-[#282A2F] p-0.5 border border-slate-200 dark:border-[#33353A] text-[11px]">
+              <div className="inline-flex rounded-full bg-[#F0F4F9] dark:bg-[#121316] p-1 border border-slate-200 dark:border-[#33353A] text-[11px] font-bold">
                 <button
                   type="button"
                   onClick={() => setDiffMode('unified')}
-                  className={`px-2 py-0.5 rounded ${
-                    diffMode === 'unified' ? 'bg-[#0B57D0] text-white' : 'text-[#444746] dark:text-[#C4C7C5]'
+                  className={`px-2.5 py-0.5 rounded-full transition ${
+                    diffMode === 'unified'
+                      ? 'bg-[#0B57D0] dark:bg-[#A8C7FA] text-white dark:text-[#041E49] shadow-2xs'
+                      : 'text-[#444746] dark:text-[#C4C7C5]'
                   }`}
                 >
                   {t('github.diff.unified')}
@@ -219,8 +222,10 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                 <button
                   type="button"
                   onClick={() => setDiffMode('split')}
-                  className={`px-2 py-0.5 rounded ${
-                    diffMode === 'split' ? 'bg-[#0B57D0] text-white' : 'text-[#444746] dark:text-[#C4C7C5]'
+                  className={`px-2.5 py-0.5 rounded-full transition ${
+                    diffMode === 'split'
+                      ? 'bg-[#0B57D0] dark:bg-[#A8C7FA] text-white dark:text-[#041E49] shadow-2xs'
+                      : 'text-[#444746] dark:text-[#C4C7C5]'
                   }`}
                 >
                   {t('github.diff.split')}
@@ -240,30 +245,31 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
               return (
                 <div
                   key={c.sha}
-                  className="rounded-xl bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] overflow-hidden"
+                  className="rounded-2xl bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] overflow-hidden"
                 >
                   <button
                     type="button"
                     onClick={() => setExpandedCommitSha(isExpanded ? null : c.sha)}
-                    className="w-full p-3.5 text-left flex items-start justify-between gap-3 hover:bg-white dark:bg-[#1E1F23] transition"
+                    className="w-full p-3.5 text-left flex items-start justify-between gap-3 hover:bg-[#F3EDF7]/50 dark:hover:bg-[#282A2F] transition"
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2 py-0.5 rounded bg-[#D3E3FD] text-[#041E49] font-bold font-mono text-[11px]">
+                        <span className="px-2 py-0.5 rounded-md bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] font-bold font-mono text-[11px]">
                           {c.sha.slice(0, 7)}
                         </span>
                         {c.prInfo?.merge_method_key && (
-                          <span className="px-2 py-0.5 rounded bg-[#EADDFF] text-[#4F378B] font-bold text-[10px]">
+                          <span className="px-2 py-0.5 rounded-md bg-[#EADDFF] dark:bg-[#4F378B] text-[#4F378B] dark:text-[#EADDFF] font-bold text-[10px]">
                             {t(c.prInfo.merge_method_key)}
                           </span>
                         )}
                         <span className="text-xs font-bold text-[#1F1F1F] dark:text-[#E3E2E6] truncate">{title}</span>
                       </div>
-                      <div className="text-[11px] text-[#444746] dark:text-[#C4C7C5]">{t('github.authorLabel')}{author}{t('github.dateLabel')}{dateStr}
+                      <div className="text-[11px] text-[#444746] dark:text-[#C4C7C5]">
+                        {t('github.authorLabel')}{author}{t('github.dateLabel')}{dateStr}
                         {c.stats && (
                           <span className="ml-2 font-mono">
-                            <span className="text-[#137333]">+{c.stats.additions}</span>{' '}
-                            <span className="text-[#C5221F]">-{c.stats.deletions}</span>
+                            <span className="text-[#137333] dark:text-[#81C995]">+{c.stats.additions}</span>{' '}
+                            <span className="text-[#C5221F] dark:text-[#F2B8B5]">-{c.stats.deletions}</span>
                           </span>
                         )}
                       </div>
@@ -282,26 +288,26 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                         return (
                           <div
                             key={f.filename}
-                            className="rounded-lg border border-slate-200 dark:border-[#33353A] overflow-hidden"
+                            className="rounded-xl border border-slate-200 dark:border-[#33353A] overflow-hidden bg-white dark:bg-[#1E1F23]"
                           >
-                            <div className="px-3 py-1.5 bg-white dark:bg-[#1E1F23] flex items-center justify-between text-xs font-mono">
+                            <div className="px-3 py-1.5 bg-[#F8FAFD] dark:bg-[#121316] border-b border-slate-200 dark:border-[#33353A] flex items-center justify-between text-xs font-mono">
                               <span className="text-[#1F1F1F] dark:text-[#E3E2E6] truncate">{f.filename}</span>
                               <span className="shrink-0">
-                                <span className="text-[#137333]">+{f.additions}</span>{' '}
-                                <span className="text-[#C5221F]">-{f.deletions}</span>
+                                <span className="text-[#137333] dark:text-[#81C995]">+{f.additions}</span>{' '}
+                                <span className="text-[#C5221F] dark:text-[#F2B8B5]">-{f.deletions}</span>
                               </span>
                             </div>
                             <div className="p-2 font-mono text-[11px] overflow-x-auto space-y-0.5">
                               {lines.map((l) => (
                                 <div
                                   key={l.id}
-                                  className={`px-2 py-0.5 whitespace-pre ${
+                                  className={`px-2 py-0.5 rounded-xs whitespace-pre ${
                                     l.type === 'add'
-                                      ? 'bg-emerald-500/15 text-[#0D652D] border-l-2 border-emerald-400'
+                                      ? 'bg-[#CEEAD6]/60 dark:bg-[#0F5223]/40 text-[#0D652D] dark:text-[#C4EED0] border-l-2 border-[#137333]'
                                       : l.type === 'del'
-                                      ? 'bg-rose-500/15 text-[#B3261E] border-l-2 border-rose-400'
+                                      ? 'bg-[#FAD2CF]/60 dark:bg-[#8C1D18]/40 text-[#B3261E] dark:text-[#F2B8B5] border-l-2 border-[#C5221F]'
                                       : l.type === 'hunk'
-                                      ? 'bg-[#D3E3FD] text-[#041E49] font-bold'
+                                      ? 'bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] font-bold'
                                       : 'text-[#444746] dark:text-[#C4C7C5]'
                                   }`}
                                 >

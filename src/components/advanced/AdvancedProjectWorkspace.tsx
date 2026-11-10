@@ -7,6 +7,9 @@ import {
   FolderGit2,
   RefreshCw,
   KeyRound,
+  Compass,
+  GitBranch,
+  AlertCircle,
 } from 'lucide-react';
 import { fetchGitHubProjectBundle } from '../../utils/githubService';
 import { C4Architect } from './C4Architect';
@@ -65,15 +68,61 @@ export function AdvancedProjectWorkspace({
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-5 space-y-6">
-      <div role="tablist" aria-label={t('workspace.tabs.design')} className="flex gap-2 border-b border-slate-200 dark:border-[#33353A]">
-        {(['design', 'github'] as const).map(tab => <button key={tab} type="button" role="tab"
-          id={`workspace-tab-${tab}`} aria-controls={`workspace-panel-${tab}`} aria-selected={activeTab === tab}
-          onClick={() => setActiveTab(tab)}
-          className={`px-5 py-3 text-sm font-semibold border-b-2 transition ${activeTab === tab ? 'border-[#6750A4] text-[#6750A4] dark:text-[#D0BCFF]' : 'border-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#282A2F]'}`}>
-          {t(tab === 'design' ? 'workspace.tabs.design' : 'workspace.tabs.github')}
-        </button>)}
-      </div>
+    <div className="max-w-5xl xl:max-w-[1440px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Material Design 3 Project Overview & Segmented View Switcher Banner */}
+      <section className="bg-white dark:bg-[#1E1F23] rounded-[24px] border border-slate-200/90 dark:border-[#33353A] p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-[#6750A4] dark:bg-[#D0BCFF] text-white dark:text-[#381E72] flex items-center justify-center shadow-2xs shrink-0">
+            <FolderGit2 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-lg bg-[#EADDFF] dark:bg-[#4F378B] text-[#4F378B] dark:text-[#EADDFF] font-mono text-xs font-bold">
+                {project.codeName}
+              </span>
+              <h1 className="text-base sm:text-xl font-bold text-[#1F1F1F] dark:text-[#E3E2E6] truncate">
+                {project.title}
+              </h1>
+            </div>
+            <p className="text-xs text-[#444746] dark:text-[#C4C7C5] mt-1 line-clamp-1">
+              {project.summary}
+            </p>
+          </div>
+        </div>
+
+        <div
+          role="tablist"
+          aria-label={t('workspace.tabs.design')}
+          className="inline-flex items-center gap-1 bg-[#F0F4F9] dark:bg-[#121316] p-1 rounded-full border border-slate-200 dark:border-[#33353A] self-start sm:self-auto shrink-0"
+        >
+          {(['design', 'github'] as const).map(tab => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              id={`workspace-tab-${tab}`}
+              aria-controls={`workspace-panel-${tab}`}
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+              className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition ${
+                activeTab === tab
+                  ? tab === 'design'
+                    ? 'bg-[#6750A4] dark:bg-[#D0BCFF] text-white dark:text-[#381E72] shadow-2xs'
+                    : 'bg-[#0B57D0] dark:bg-[#A8C7FA] text-white dark:text-[#041E49] shadow-2xs'
+                  : 'text-[#444746] dark:text-[#C4C7C5] hover:bg-white dark:hover:bg-[#282A2F] hover:text-[#1F1F1F] dark:hover:text-[#E3E2E6]'
+              }`}
+            >
+              {tab === 'design' ? (
+                <Compass className="w-3.5 h-3.5" />
+              ) : (
+                <GitBranch className="w-3.5 h-3.5" />
+              )}
+              <span>{t(tab === 'design' ? 'workspace.tabs.design' : 'workspace.tabs.github')}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* Step 1: Mind Map & Written Architecture Design */}
       <div role="tabpanel" id="workspace-panel-design" aria-labelledby="workspace-tab-design" hidden={activeTab !== 'design'}>
         <C4Architect
@@ -86,28 +135,30 @@ export function AdvancedProjectWorkspace({
           onChangeDesignDoc={setDesignDoc}
         />
       </div>
+
+      {/* Step 2: GitHub Repository Explorer */}
       <div role="tabpanel" id="workspace-panel-github" aria-labelledby="workspace-tab-github" className="space-y-6" hidden={activeTab !== 'github'}>
-        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
-          <div className="flex items-center gap-2">
+        <div className="bg-white dark:bg-[#1E1F23] border border-slate-200/90 dark:border-[#33353A] rounded-[24px] p-5 sm:p-6 space-y-4 shadow-xs transition-colors">
+          <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setShowTokenInput(!showTokenInput)}
-              className="px-3 py-1.5 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD] text-[#1F1F1F] dark:text-[#E3E2E6] border border-slate-300 dark:border-[#444746] text-xs font-medium inline-flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-full bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD] dark:hover:bg-[#004A77] text-[#1F1F1F] dark:text-[#E3E2E6] hover:text-[#041E49] dark:hover:text-[#C2E7FF] border border-slate-200 dark:border-[#33353A] text-xs font-semibold inline-flex items-center gap-1.5 transition"
             >
-              <KeyRound className="w-3.5 h-3.5 text-[#B06000]" />
+              <KeyRound className="w-3.5 h-3.5 text-[#B06000] dark:text-[#FDD663]" />
               <span>{t('workspace.githubToken')}</span>
             </button>
           </div>
 
           {showTokenInput && (
-            <div className="p-3 rounded-xl bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-200 dark:border-[#33353A] flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs">
-              <span className="text-[#444746] dark:text-[#C4C7C5] shrink-0">Personal Access Token:</span>
+            <div className="p-3.5 rounded-2xl bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">
+              <span className="font-semibold text-[#444746] dark:text-[#C4C7C5] shrink-0">Personal Access Token:</span>
               <input
                 type="password"
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
                 placeholder={t('workspace.tokenPlaceholder')}
-                className="flex-1 px-3 py-1.5 bg-white dark:bg-[#1E1F23] border border-slate-300 dark:border-[#444746] rounded-lg text-[#1F1F1F] dark:text-[#E3E2E6] font-mono"
+                className="flex-1 px-3 py-2 bg-white dark:bg-[#1E1F23] border border-slate-200 dark:border-[#33353A] rounded-xl text-[#1F1F1F] dark:text-[#E3E2E6] font-mono focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA]"
               />
             </div>
           )}
@@ -121,31 +172,40 @@ export function AdvancedProjectWorkspace({
             className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1"
           >
             <div className="relative flex-1">
-              <FolderGit2 className="w-4 h-4 text-[#6750A4] absolute left-3.5 top-2.5" />
+              <FolderGit2 className="w-4 h-4 text-[#6750A4] dark:text-[#D0BCFF] absolute left-3.5 top-3" />
               <input
                 type="text"
                 value={repoUrlInput}
                 onChange={(e) => setRepoUrlInput(e.target.value)}
                 placeholder={t('workspace.repoPlaceholder')}
-                className="w-full pl-10 pr-4 py-2 bg-[#F0F4F9] dark:bg-[#282A2F] border border-slate-300 dark:border-[#444746] rounded-xl text-xs sm:text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-mono focus:outline-hidden focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-xl text-xs sm:text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-mono focus:outline-hidden focus:ring-2 focus:ring-[#6750A4] dark:focus:ring-[#D0BCFF] transition"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoadingRepo}
-              className="px-5 py-2 rounded-xl bg-[#6750A4] hover:bg-[#4F378B] text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 shadow-xs shadow-purple-600/25 transition shrink-0"
+              className="px-5 py-2.5 rounded-xl bg-[#6750A4] hover:bg-[#4F378B] dark:bg-[#D0BCFF] dark:hover:bg-[#EADDFF] text-white dark:text-[#381E72] text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-2 shadow-xs transition shrink-0 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingRepo ? 'animate-spin' : ''}`} />
               <span>{t('workspace.sync')}</span>
             </button>
           </form>
 
-          {repoError && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{'key' in repoError ? t(repoError.key) : repoError.message}</p>}
+          {repoError && (
+            <div
+              role="alert"
+              className="p-3.5 rounded-xl bg-[#FAD2CF] dark:bg-[#8C1D18]/40 border border-[#F28B82] dark:border-[#8C1D18] text-[#B3261E] dark:text-[#F2B8B5] text-xs font-semibold flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{'key' in repoError ? t(repoError.key) : repoError.message}</span>
+            </div>
+          )}
+
           {/* Quick Repo Preset Switcher */}
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#444746] dark:text-[#C4C7C5] pt-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span>{t('workspace.sampleRepos')}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold">{t('workspace.sampleRepos')}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -153,8 +213,10 @@ export function AdvancedProjectWorkspace({
                   setRepoUrlInput(u);
                   handleLoadRepo(u);
                 }}
-                className="px-2.5 py-1 rounded-md bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#EADDFF]/60 text-[#6750A4] border border-purple-500/30 font-mono"
-              >{t('workspace.studentRepo')}</button>
+                className="px-3 py-1 rounded-full bg-[#F3EDF7] dark:bg-[#4F378B]/40 hover:bg-[#EADDFF] dark:hover:bg-[#4F378B]/70 text-[#4F378B] dark:text-[#EADDFF] border border-[#EADDFF] dark:border-[#6750A4]/50 font-mono font-semibold transition"
+              >
+                {t('workspace.studentRepo')}
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -162,12 +224,11 @@ export function AdvancedProjectWorkspace({
                   setRepoUrlInput(u);
                   handleLoadRepo(u);
                 }}
-                className="px-2.5 py-1 rounded-md bg-[#F0F4F9] dark:bg-[#282A2F] hover:bg-[#D3E3FD]/50 text-[#0B57D0] border border-indigo-500/30 font-mono"
+                className="px-3 py-1 rounded-full bg-[#D3E3FD]/60 dark:bg-[#004A77]/40 hover:bg-[#D3E3FD] dark:hover:bg-[#004A77]/70 text-[#041E49] dark:text-[#C2E7FF] border border-[#A8C7FA] dark:border-[#004A77] font-mono font-semibold transition"
               >
                 facebook/react
               </button>
             </div>
-
           </div>
         </div>
         <GitHubRepoDashboard repoBundle={repoBundle} />

@@ -85,44 +85,50 @@ export function LoginView({
   return (
     <div className="min-h-screen bg-[#F0F4F9] dark:bg-[#121316] text-[#1F1F1F] dark:text-[#E3E2E6] flex flex-col justify-center items-center p-4 sm:p-6 relative transition-colors">
       {/* Top-Right Theme Mode Switcher on Login Screen */}
-      <div className="self-end mb-6 flex flex-wrap items-center gap-1 bg-white dark:bg-[#1E1F23] p-1 rounded-full border border-slate-200 dark:border-[#33353A] shadow-xs">
+      <div className="self-end mb-6 flex flex-wrap items-center gap-1.5 bg-white dark:bg-[#1E1F23] p-1.5 rounded-full border border-slate-200/90 dark:border-[#33353A] shadow-xs">
         <LanguageSwitcher />
-        <button
-          type="button"
-          onClick={() => onChangeThemeMode?.('system')}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition ${
-            themeMode === 'system'
-              ? 'bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF]'
-              : 'text-[#444746] dark:text-[#C4C7C5]'
-          }`}
+        <div
+          className="inline-flex items-center bg-[#F0F4F9] dark:bg-[#121316] p-1 rounded-full border border-slate-200 dark:border-[#33353A]"
+          role="group"
+          aria-label={t('theme.label')}
         >
-          <Monitor className="w-3.5 h-3.5" />
-          <span>{t('common.auto')}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onChangeThemeMode?.('light')}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition ${
-            themeMode === 'light'
-              ? 'bg-[#D3E3FD] text-[#041E49]'
-              : 'text-[#444746] dark:text-[#C4C7C5]'
-          }`}
-        >
-          <Sun className="w-3.5 h-3.5" />
-          <span>{t('theme.light')}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onChangeThemeMode?.('dark')}
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition ${
-            themeMode === 'dark'
-              ? 'bg-[#004A77] text-[#C2E7FF]'
-              : 'text-[#444746] dark:text-[#C4C7C5]'
-          }`}
-        >
-          <Moon className="w-3.5 h-3.5" />
-          <span>{t('theme.dark')}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => onChangeThemeMode?.('system')}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition ${
+              themeMode === 'system'
+                ? 'bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] shadow-2xs'
+                : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-[#E3E2E6]'
+            }`}
+          >
+            <Monitor className="w-3.5 h-3.5" />
+            <span>{t('common.auto')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeThemeMode?.('light')}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition ${
+              themeMode === 'light'
+                ? 'bg-[#D3E3FD] text-[#041E49] shadow-2xs'
+                : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-[#E3E2E6]'
+            }`}
+          >
+            <Sun className="w-3.5 h-3.5" />
+            <span>{t('theme.light')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeThemeMode?.('dark')}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition ${
+              themeMode === 'dark'
+                ? 'bg-[#004A77] text-[#C2E7FF] shadow-2xs'
+                : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-[#E3E2E6]'
+            }`}
+          >
+            <Moon className="w-3.5 h-3.5" />
+            <span>{t('theme.dark')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Material 3 Split Card */}
@@ -134,23 +140,25 @@ export function LoginView({
               <Code2 className="w-7 h-7 text-white" />
             </div>
             <div className="space-y-2">
-              <span className="inline-block px-3 py-1 rounded-full bg-white/15 text-xs font-medium tracking-wide">
+              <span className="inline-block px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">
                 Material Design 3 Edition
               </span>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-snug">
                 CodePulse Edu
-                <br />{t('app.title')}</h1>
-              <p className="text-sm text-blue-100 leading-relaxed">{t('auth.intro')}</p>
+                <br />
+                {t('app.title')}
+              </h1>
+              <p className="text-sm text-[#D3E3FD] leading-relaxed">{t('auth.intro')}</p>
             </div>
           </div>
 
-          <div className="pt-8 space-y-3 border-t border-white/15 text-xs text-blue-100">
+          <div className="pt-8 space-y-3 border-t border-white/15 text-xs text-[#D3E3FD]">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#81C995] shrink-0" />
               <span>{t('auth.features.design')}</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#81C995] shrink-0" />
               <span>{t('auth.features.comparison')}</span>
             </div>
           </div>
@@ -175,13 +183,13 @@ export function LoginView({
                 <div>
                   <label className="block text-xs font-semibold text-[#444746] dark:text-[#C4C7C5] mb-1.5">{t('auth.accountLabel')}</label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <User className="w-4 h-4 text-[#5E5E5E] dark:text-[#8E918F] absolute left-3.5 top-3" />
                     <input
                       type="text"
                       value={accountInput}
                       onChange={(e) => setAccountInput(e.target.value)}
                       placeholder={t('auth.accountPlaceholder')}
-                      className="w-full pl-10 pr-3.5 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-300 dark:border-[#444746] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0]"
+                      className="w-full pl-10 pr-3.5 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA] transition"
                     />
                   </div>
                 </div>
@@ -193,7 +201,7 @@ export function LoginView({
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     placeholder={t('auth.namePlaceholder')}
-                    className="w-full px-3.5 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-300 dark:border-[#444746] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0]"
+                    className="w-full px-3.5 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA] transition"
                   />
                 </div>
               </div>
@@ -202,18 +210,18 @@ export function LoginView({
                 <div>
                   <label className="block text-xs font-semibold text-[#444746] dark:text-[#C4C7C5] mb-1.5">{t('auth.passwordLabel')}</label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <Lock className="w-4 h-4 text-[#5E5E5E] dark:text-[#8E918F] absolute left-3.5 top-3" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder={t('auth.passwordPlaceholder')}
-                      className="w-full pl-10 pr-10 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-300 dark:border-[#444746] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0]"
+                      className="w-full pl-10 pr-10 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA] transition"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-800"
+                      className="absolute right-3 top-2.5 text-[#5E5E5E] dark:text-[#8E918F] hover:text-[#1F1F1F] dark:hover:text-[#E3E2E6] transition"
                       title={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -226,7 +234,7 @@ export function LoginView({
                   <select
                     value={roleInput}
                     onChange={(e) => setRoleInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-300 dark:border-[#444746] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0]"
+                    className="w-full px-3.5 py-2.5 bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] rounded-xl text-sm text-[#1F1F1F] dark:text-[#E3E2E6] font-medium focus:outline-hidden focus:ring-2 focus:ring-[#0B57D0] dark:focus:ring-[#A8C7FA] transition"
                   >
                     <option value="學生 (Student)">{t('auth.roles.student')}</option>
                     <option value="專題組長 (Team Lead)">{t('auth.roles.teamLead')}</option>
@@ -238,7 +246,7 @@ export function LoginView({
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3 px-6 rounded-full bg-[#0B57D0] hover:bg-[#0842A0] text-white font-semibold text-sm shadow-xs hover:shadow-md flex items-center justify-center gap-2 transition"
+                  className="w-full py-3 px-6 rounded-full bg-[#0B57D0] hover:bg-[#0842A0] dark:bg-[#A8C7FA] dark:hover:bg-[#D3E3FD] text-white dark:text-[#041E49] font-semibold text-sm shadow-xs hover:shadow-md flex items-center justify-center gap-2 transition"
                 >
                   <span>{t('auth.submit')}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -261,7 +269,7 @@ export function LoginView({
                     className={`p-2.5 rounded-2xl border text-left transition flex items-center gap-2.5 ${
                       accountInput === acct.studentId
                         ? 'bg-[#D3E3FD]/60 dark:bg-[#004A77]/60 border-[#0B57D0] dark:border-[#A8C7FA] text-[#041E49] dark:text-[#C2E7FF]'
-                        : 'bg-[#F8FAFD] dark:bg-[#121316] hover:bg-slate-100 dark:hover:bg-[#282A2F] border-slate-200 dark:border-[#33353A] text-[#1F1F1F] dark:text-[#E3E2E6]'
+                        : 'bg-[#F8FAFD] dark:bg-[#121316] hover:bg-[#F3EDF7]/60 dark:hover:bg-[#282A2F] border-slate-200 dark:border-[#33353A] text-[#1F1F1F] dark:text-[#E3E2E6]'
                     }`}
                   >
                     <div

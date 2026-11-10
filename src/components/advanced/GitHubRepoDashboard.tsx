@@ -1,6 +1,7 @@
 import { useI18n } from '../../i18n';
 import type { RepoBundle } from '../../types';
 import { useState } from 'react';
+import { RepoDiff, type DiffMode } from './RepoDiff';
 import {
   GitBranch,
   GitCommit,
@@ -30,7 +31,7 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
   const [expandedCommitSha, setExpandedCommitSha] = useState(
     repoBundle?.commits?.[0]?.sha || null
   );
-  const [diffMode, setDiffMode] = useState('unified'); // 'unified' | 'split'
+  const [diffMode, setDiffMode] = useState<DiffMode>('unified');
   const [fileTreeSearch, setFileTreeSearch] = useState('');
 
   if (!repoBundle || !repoBundle.repo) return null;
@@ -43,19 +44,6 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
   const filteredTree = fileTree.filter((item) =>
     item.path.toLowerCase().includes(fileTreeSearch.trim().toLowerCase())
   );
-
-  const parsePatch = (patchStr = '') => {
-    return patchStr.split('\n').map((line, i) => {
-      const type = line.startsWith('@@')
-        ? 'hunk'
-        : line.startsWith('+')
-        ? 'add'
-        : line.startsWith('-')
-        ? 'del'
-        : 'ctx';
-      return { id: i, type, text: line };
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -160,9 +148,19 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                 {t('github.fileTree', { count: fileTree.length })}
               </h3>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-success-container font-mono text-[11px] font-bold text-on-success-container">
-              {t('github.branchLabel')}{selectedBranch}
-            </span>
+            <label className="flex min-w-0 max-w-[60%] items-center gap-1 px-2.5 py-0.5 rounded-full bg-success-container font-mono text-[11px] font-bold text-on-success-container">
+              <GitBranch className="w-3.5 h-3.5 shrink-0" />
+              <span className="shrink-0">{t('github.branchLabel')}</span>
+              <select
+                aria-label={t('github.branchLabel')}
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="min-w-0 cursor-pointer bg-transparent rounded-full focus:outline-hidden focus:ring-2 focus:ring-success"
+              >
+                {!branches.some(b => b.name === selectedBranch) && <option value={selectedBranch}>{selectedBranch}</option>}
+                {branches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+              </select>
+            </label>
           </div>
 
           <input
@@ -193,8 +191,8 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
           </div>
         </div>
 
-        {/* Right: Branch Switcher, Commit History & Code Diff Inspector */}
-        <div className="lg:col-span-7 ui-card p-5 space-y-4">
+        {/* Right: Commit History & Code Diff Inspector */}
+        <div className="lg:col-span-7 min-w-0 ui-card p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline pb-3.5">
             <div className="flex items-center gap-2">
               <GitCommit className="w-4 h-4 text-secondary" />
@@ -202,22 +200,11 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
             </div>
 
             <div className="flex items-center gap-2">
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="px-3 py-1 bg-surface-container border border-outline rounded-full text-xs font-mono font-bold text-secondary focus:outline-hidden focus:ring-2 focus:ring-secondary"
-              >
-                {branches.map((b) => (
-                  <option key={b.name} value={b.name}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-
               <div className="ui-pill-group text-[11px] font-bold">
                 <button
                   type="button"
                   onClick={() => setDiffMode('unified')}
+                  aria-pressed={diffMode === 'unified'}
                   className={`px-2.5 py-0.5 rounded-full transition ${
                     diffMode === 'unified'
                       ? 'bg-secondary text-on-secondary shadow-2xs'
@@ -229,6 +216,7 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                 <button
                   type="button"
                   onClick={() => setDiffMode('split')}
+                  aria-pressed={diffMode === 'split'}
                   className={`px-2.5 py-0.5 rounded-full transition ${
                     diffMode === 'split'
                       ? 'bg-secondary text-on-secondary shadow-2xs'
@@ -291,7 +279,6 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                   {isExpanded && c.files && (
                     <div className="p-3 border-t border-outline space-y-2.5 bg-surface-high">
                       {c.files.map((f) => {
-                        const lines = parsePatch(f.patch || '');
                         return (
                           <div
                             key={f.filename}
@@ -304,24 +291,7 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
                                 <span className="text-danger">-{f.deletions}</span>
                               </span>
                             </div>
-                            <div className="p-2 font-mono text-[11px] overflow-x-auto space-y-0.5">
-                              {lines.map((l) => (
-                                <div
-                                  key={l.id}
-                                  className={`px-2 py-0.5 rounded-xs whitespace-pre ${
-                                    l.type === 'add'
-                                      ? 'bg-success-container/60 text-on-success-container border-l-2 border-success'
-                                      : l.type === 'del'
-                                      ? 'bg-danger-container/60 text-on-danger-container border-l-2 border-danger'
-                                      : l.type === 'hunk'
-                                      ? 'bg-secondary-container text-on-secondary-container font-bold'
-                                      : 'text-on-muted'
-                                  }`}
-                                >
-                                  {l.text}
-                                </div>
-                              ))}
-                            </div>
+                            <RepoDiff patch={f.patch || ''} mode={diffMode} />
                           </div>
                         );
                       })}

@@ -17,7 +17,7 @@ test('an empty node opens its own boundary and accepts its first child', () => {
   assert.equal(empty.scope?.id, 'node-db');
   assert.deepEqual(empty.inside, []);
   assert.deepEqual(empty.path.map(node => node.id), ['node-root', 'node-db']);
-  assert.deepEqual(empty.outside, []);
+  assert.ok(empty.outside.some(node => node.id === 'node-fe-core'));
   const child = createC4NodeInScope(nodes, 'node-db', 'db-child', 'Database component')!;
   assert.equal(child.kind, 'component');
   const populated = c4Drilldown([...nodes, child], 'node-db');
@@ -44,28 +44,25 @@ test('new nodes belong to the current scope and infer their C4 level', () => {
   assert.equal(createC4NodeInScope([person], person.id, 'child', 'New')?.parentId, person.id);
 });
 
-test('drilling down shows only current children while retaining the full breadcrumb', () => {
+test('drilldown retains enclosing peers outside the boundary and hides ancestors', () => {
   const person: C4Node = { ...nodes[0], id: 'user', kind: 'person', parentId: null };
   const code: C4Node = { ...nodes[0], id: 'class', kind: 'code', parentId: 'node-editor' };
   const all = [...nodes, person, code];
-  let previous = c4Drilldown(all, '');
+  const root = c4Drilldown(all, '');
+  assert.deepEqual(root.outside, []);
+  assert.deepEqual(root.visible.map(node => node.id), ['node-root', 'user']);
   for (const id of ['node-root', 'node-fe-core', 'node-editor']) {
     const next = c4Drilldown(all, id);
-    assert.deepEqual(next.outside.map(node => node.id).sort(), []);
     assert.ok(next.inside.every(node => node.parentId === id));
-    assert.equal(next.scope?.id, id);
-    previous = next;
+    assert.ok(next.outside.some(node => node.id === 'user'));
+    assert.ok(next.outside.every(node => !next.path.some(ancestor => ancestor.id === node.id)));
+    assert.equal(new Set(next.visible.map(node => node.id)).size, next.visible.length);
   }
-  assert.deepEqual(previous.path.map(node => node.id), ['node-root', 'node-fe-core', 'node-editor']);
-  assert.deepEqual(previous.inside.map(node => node.id), ['class']);
-  assert.deepEqual(previous.outside, []);
-  assert.deepEqual(previous.visible.map(node => node.id), ['class']);
-  assert.ok(!previous.visible.some(node => ['user', 'node-root', 'node-api', 'node-db', 'node-fe-core'].includes(node.id)));
-  const back = c4Drilldown(all, 'node-fe-core');
-  assert.deepEqual(back.outside, []);
-  assert.deepEqual(c4Drilldown(all, 'node-root').outside, []);
-  assert.deepEqual(c4Drilldown(all, '').visible.map(node => node.id), ['node-root', 'user']);
-  assert.deepEqual(c4Drilldown(all, 'node-root').path.map(node => node.id), ['node-root']);
+  const deep = c4Drilldown(all, 'node-editor');
+  assert.deepEqual(deep.inside.map(node => node.id), ['class']);
+  assert.ok(deep.outside.some(node => node.id === 'node-db'));
+  assert.ok(deep.outside.some(node => node.id === 'node-api'));
+  assert.deepEqual(deep.path.map(node => node.id), ['node-root', 'node-fe-core', 'node-editor']);
 });
 
 test('missing or deleted scope returns to context without stale boundary or breadcrumbs', () => {

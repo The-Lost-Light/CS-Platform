@@ -37,8 +37,23 @@ export function parseC4File(text: string): C4File {
       if (typeof size !== 'number' || !Number.isFinite(size) || size <= 0) return invalid();
       dimensions[key] = size;
     }
+    const layout: Pick<C4Node, 'boundary' | 'contextPositions'> = {};
+    if (value.boundary !== undefined) {
+      if (!object(value.boundary)) return invalid();
+      const { x, y, width, height } = value.boundary;
+      if (![x, y, width, height].every(n => typeof n === 'number' && Number.isFinite(n)) || (width as number) <= 0 || (height as number) <= 0) return invalid();
+      layout.boundary = { x: x as number, y: y as number, width: width as number, height: height as number };
+    }
+    if (value.contextPositions !== undefined) {
+      if (!object(value.contextPositions)) return invalid();
+      layout.contextPositions = Object.create(null);
+      for (const [key, position] of Object.entries(value.contextPositions)) {
+        if (!object(position) || typeof position.x !== 'number' || !Number.isFinite(position.x) || typeof position.y !== 'number' || !Number.isFinite(position.y)) return invalid();
+        layout.contextPositions![key] = { x: position.x, y: position.y };
+      }
+    }
     ids.add(id);
-    return { id, kind: kind as C4Kind, label, category, parentId, description, technology, expectedPath, x, y, ...dimensions, ...(value.external === undefined ? {} : { external: value.external as boolean }) };
+    return { id, kind: kind as C4Kind, label, category, parentId, description, technology, expectedPath, x, y, ...dimensions, ...layout, ...(value.external === undefined ? {} : { external: value.external as boolean }) };
   });
   const byId = new Map(nodes.map(node => [node.id, node]));
   if (nodes.some(node => node.parentId && byId.get(node.parentId)?.external)) return invalid();

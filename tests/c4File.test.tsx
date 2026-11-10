@@ -8,6 +8,20 @@ const nodes = migrateC4Nodes(ADVANCED_PROJECTS[0].initialMindMapNodes);
 const relationships = [{ id: 'edge', source: nodes[0].id, target: nodes[1].id, label: '使用 → API', technology: 'HTTPS' }];
 const fixture = () => JSON.parse(serializeC4File(nodes, relationships));
 
+test('scope boundaries and independent context positions survive export and import', () => {
+  const file = fixture();
+  file.nodes[0].boundary = { x: -120, y: 80, width: 950, height: 720 };
+  file.nodes[0].contextPositions = { peer: { x: 1100, y: -60 } };
+  const restored = parseC4File(JSON.stringify(file));
+  assert.deepEqual(restored.nodes[0].boundary, file.nodes[0].boundary);
+  assert.deepEqual(restored.nodes[0].contextPositions?.peer, { x: 1100, y: -60 });
+  file.nodes[0].boundary.width = -1;
+  assert.throws(() => parseC4File(JSON.stringify(file)));
+  file.nodes[0].boundary.width = 950;
+  file.nodes[0].contextPositions.peer.x = 'invalid';
+  assert.throws(() => parseC4File(JSON.stringify(file)));
+});
+
 test('C4 JSON round trip preserves all levels, positions, metadata and directed relationships', () => {
   const moved = nodes.map((node, index) => ({ ...node, x: (index + 1) * -12.5, y: index * 37.25 }));
   const result = parseC4File('\uFEFF' + serializeC4File(moved, relationships));

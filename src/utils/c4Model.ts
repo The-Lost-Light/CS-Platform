@@ -1,7 +1,7 @@
 import type { MindMapNode } from '../types';
 
 export type C4Kind = 'person' | 'system' | 'container' | 'component' | 'code';
-export type C4Node = MindMapNode & { kind: C4Kind; external?: boolean; technology: string; width?: number; height?: number };
+export type C4Node = MindMapNode & { kind: C4Kind; external?: boolean; technology: string; width?: number; height?: number; boundary?: { x: number; y: number; width: number; height: number }; contextPositions?: Record<string, { x: number; y: number }> };
 export interface C4Relationship { id: string; source: string; target: string; label: string; technology: string }
 export const parentKind: Partial<Record<C4Kind, C4Kind>> = { container: 'system', component: 'container', code: 'component' };
 
@@ -18,7 +18,7 @@ export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string
     x: 0, y: siblings.length ? Math.max(...siblings.map(node => node.y + (node.height ?? 230))) + 50 : 0 };
 }
 
-/** Display only direct children; retain ancestors solely for breadcrumb navigation. */
+/** Show children with peers from enclosing scopes for cross-boundary relationships. */
 export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   const path: C4Node[] = [];
   const seen = new Set<string>();
@@ -30,8 +30,8 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   }
   const scope = path.at(-1);
   const inside = nodes.filter(node => scope ? node.parentId === scope.id : !node.parentId);
-  const outside: C4Node[] = [];
-  const visible = inside;
+  const outside = scope ? nodes.filter(node => !seen.has(node.id) && path.some(ancestor => (ancestor.parentId || null) === (node.parentId || null))) : [];
+  const visible = [...inside, ...outside];
   return { path, scope, inside, outside, visible };
 }
 

@@ -103,8 +103,15 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
   );
 }
 
-const nodeTypes = { c4: C4Card };
-type CanvasNode = FlowNode;
+type BoundaryNode = Node<{ title: string }, 'boundary'>;
+function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
+  return <div className="h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5">
+    <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
+    <div className="c4-boundary-title px-4 py-3 text-sm font-bold text-primary cursor-move">{data.title}</div>
+  </div>;
+}
+const nodeTypes = { c4: C4Card, boundary: C4BoundaryCard };
+type CanvasNode = FlowNode | BoundaryNode;
 
 /** Keep measurements local; persist user resizes and completed moves. */
 function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<CanvasNode>) {
@@ -122,6 +129,7 @@ function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<Canvas
 }
 
 const fieldClass = 'ui-input px-3 py-2';
+const NODE_SINGLE_CLICK_DELAY_MS = 350;
 
 export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelationships, designDoc, onChangeDesignDoc }: {
   nodes: C4Node[]; onChangeNodes: (nodes: C4Node[]) => void;
@@ -138,6 +146,17 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
   const [importing, setImporting] = useState(false);
   const [fileStatus, setFileStatus] = useState<'importSuccess' | 'importError' | 'fileTooLarge' | 'exportError' | null>(null);
   const [importRevision, setImportRevision] = useState(0);
+  const nodeClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelNodeClick = () => {
+    if (nodeClickTimer.current !== null) {
+      clearTimeout(nodeClickTimer.current);
+      nodeClickTimer.current = null;
+    }
+  };
+  useEffect(() => {
+    // Discard pending selections when leaving or replacing the canvas.
+    return () => cancelNodeClick();
+  }, [designTab, scopeId, importRevision]);
 
   const exportModel = () => {
     try {
@@ -169,20 +188,34 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     finally { setImporting(false); }
   };
 
-  const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
+  const { scope, path, inside, outside, visible } = c4Drilldown(nodes, scopeId);
   const expandableIds = new Set(nodes.map(node => node.parentId).filter(Boolean));
   const visibleIds = new Set(visible.map(node => node.id));
   const selected = nodes.find(node => node.id === selectedId);
   const selectedEdge = relationships.find(edge => edge.id === edgeId);
 
-  const flowNodes: FlowNode[] = visible.map(node => ({
-    id: node.id, type: 'c4', position: { x: node.x, y: node.y }, selected: node.id === selectedId,
+  const boundaryId = '__c4_boundary__';
+  const boundary = scope?.boundary ?? { x: -40, y: -70,
+    width: Math.max(600, ...inside.map(node => node.x + (node.width ?? 280) + 80)),
+    height: Math.max(360, ...inside.map(node => node.y + (node.height ?? 230) + 110)) };
+  const insideIds = new Set(inside.map(node => node.id));
+  const flowNodes: CanvasNode[] = visible.map(node => ({
+    id: node.id, type: 'c4',
+    position: !scope ? { x: node.x, y: node.y } : insideIds.has(node.id)
+      ? { x: node.x + 40, y: node.y + 70 }
+      : scope.contextPositions?.[node.id] ?? { x: boundary.x + boundary.width + 100, y: outside.findIndex(item => item.id === node.id) * 300 },
+    ...(scope && insideIds.has(node.id) ? { parentId: boundaryId } : {}),
+    zIndex: 1, selected: node.id === selectedId,
     style: { width: node.width ?? 280, height: node.height ?? 230 },
     data: { title: node.label, external: !!node.external, boundaryLabel: t(node.external ? 'c4.external' : 'c4.internal'), kind: node.kind, description: node.description, technology: node.technology,
       status: node.expectedPath, expandable: expandableIds.has(node.id),
-      onSelect: () => { setSelectedId(node.id); setEdgeId(''); },
+      onSelect: () => { cancelNodeClick(); setSelectedId(node.id); setEdgeId(''); },
       onExplore: () => navigate(node.id) }
   }));
+
+  if (scope) flowNodes.unshift({ id: boundaryId, type: 'boundary', position: { x: boundary.x, y: boundary.y },
+    style: { width: boundary.width, height: boundary.height }, data: { title: scope.label },
+    selected: selectedId === boundaryId, deletable: false, connectable: false, dragHandle: '.c4-boundary-title', zIndex: -1 });
 
   const flowEdges = relationships.filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target)).map(edge => ({
     ...edge,
@@ -197,7 +230,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     labelBgBorderRadius: 8,
   }));
 
-  const navigate = (id: string) => { if (nodes.find(node => node.id === id)?.external) return; setScopeId(id); setSelectedId(''); setEdgeId(''); };
+  const navigate = (id: string) => { cancelNodeClick(); if (nodes.find(node => node.id === id)?.external) return; setScopeId(id); setSelectedId(''); setEdgeId(''); };
   const update = (patch: Partial<C4Node>) => {
     if (patch.external && expandableIds.has(selectedId)) return;
     onChangeNodes(nodes.map(node => node.id === selectedId ? { ...node, ...patch } : node));
@@ -461,23 +494,47 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   fitView
                   minZoom={0.15}
                   maxZoom={2}
-                  onNodeClick={(_, node) => {
-                    setSelectedId(node.id);
-                    setEdgeId('');
+                  onNodeClick={(event, node) => {
+                    cancelNodeClick();
+                    if (event.detail > 1) return;
+                    nodeClickTimer.current = setTimeout(() => {
+                      nodeClickTimer.current = null;
+                      setSelectedId(node.id);
+                      setEdgeId('');
+                    }, NODE_SINGLE_CLICK_DELAY_MS);
                   }}
-                  onNodeDoubleClick={(_, node) => navigate(node.id)}
+                  onNodeDoubleClick={(_, node) => {
+                    cancelNodeClick();
+                    if (node.type !== 'boundary') navigate(node.id);
+                  }}
                   zoomOnDoubleClick={false}
+                  onPaneClick={cancelNodeClick}
+                  onNodeDragStart={cancelNodeClick}
                   onEdgeClick={(_, edge) => {
+                    cancelNodeClick();
                     setEdgeId(edge.id);
                     setSelectedId('');
                   }}
                   onNodesChange={changes => {
                     onChangeNodes(nodes.map(node => {
                       let updated = node;
+                      if (scope && node.id === scope.id) {
+                        updated = { ...node, boundary: { ...boundary }, contextPositions: Object.fromEntries(outside.map(item => [item.id, scope.contextPositions?.[item.id] ?? { x: boundary.x + boundary.width + 100, y: outside.indexOf(item) * 300 }])) };
+                        for (const change of changes) {
+                          if (!('id' in change)) continue;
+                          if (change.id === boundaryId) {
+                            if (change.type === 'position' && change.position) Object.assign(updated.boundary!, change.position);
+                            if (change.type === 'dimensions' && change.dimensions) Object.assign(updated.boundary!, change.dimensions);
+                          } else if (!insideIds.has(change.id) && change.type === 'position' && change.position) {
+                            updated.contextPositions![change.id] = change.position;
+                          }
+                        }
+                      }
+                      if (scope && !insideIds.has(node.id)) return updated;
                       for (const change of changes) {
                         if (!('id' in change) || change.id !== node.id) continue;
                         if (change.type === 'position' && change.position)
-                          updated = { ...updated, x: change.position.x, y: change.position.y };
+                          updated = { ...updated, x: change.position.x - (scope ? 40 : 0), y: change.position.y - (scope ? 70 : 0) };
                         if (change.type === 'dimensions' && change.dimensions)
                           updated = { ...updated, width: change.dimensions.width, height: change.dimensions.height };
                       }

@@ -45,3 +45,26 @@ test('import strips unrelated object properties', () => {
   file.nodes[0].data = { onExplore: 'untrusted' };
   assert.deepEqual(parseC4File(JSON.stringify(file)).nodes, nodes);
 });
+
+test('C4 dimensions survive export and import while legacy nodes remain unchanged', () => {
+  const resized = nodes.map((node, index) => index === 0 ? { ...node, width: 412.5, height: 360 } : node);
+  assert.deepEqual(parseC4File(serializeC4File(resized, relationships)).nodes, resized);
+  for (const key of ['width', 'height']) {
+    for (const value of [0, -1, null, '300', Infinity]) {
+      const file = fixture();
+      file.nodes[0][key] = value;
+      assert.throws(() => parseC4File(JSON.stringify(file)));
+    }
+  }
+});
+
+test('external flags round trip and external boundaries reject children', () => {
+  const external = [{ ...nodes[0], external: true }];
+  assert.deepEqual(parseC4File(serializeC4File(external, [])).nodes, external);
+  assert.throws(() => parseC4File(serializeC4File([{ ...nodes[0], external: true }, ...nodes.slice(1)], relationships)));
+  for (const value of ['true', 1, null]) {
+    const file = fixture();
+    file.nodes[0].external = value;
+    assert.throws(() => parseC4File(JSON.stringify(file)));
+  }
+});

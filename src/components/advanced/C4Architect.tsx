@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps } from '@xyflow/react';
+import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, NodeResizer, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps } from '@xyflow/react';
 import {
   FileText,
   Network,
@@ -20,8 +20,8 @@ import { useI18n } from '../../i18n';
 import { removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
 import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
 
-const colors = { expandable: 'var(--c4-expandable-border)', leaf: 'var(--c4-edge)' };
-type FlowNode = Node<{ title: string; kind: C4Kind; description: string; technology: string; status: string; expandable: boolean; onSelect: () => void; onExplore: () => void }, 'c4'>;
+const colors = { internal: 'var(--c4-internal-bg)', external: 'var(--c4-external-bg)' };
+type FlowNode = Node<{ title: string; external: boolean; boundaryLabel: string; kind: C4Kind; description: string; technology: string; status: string; expandable: boolean; onSelect: () => void; onExplore: () => void }, 'c4'>;
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
@@ -38,27 +38,29 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         }
       }}
       style={{
-        width: 280,
-        minHeight: 230,
-        backgroundColor: data.expandable ? 'var(--c4-expandable-bg)' : 'var(--c4-leaf-bg)',
+        width: '100%',
+        height: '100%',
+        minHeight: 160,
+        backgroundColor: data.external ? 'var(--c4-external-bg)' : 'var(--c4-internal-bg)',
         borderColor: selected
           ? 'var(--primary)'
           : data.expandable
           ? 'var(--c4-expandable-border)'
           : 'var(--c4-leaf-border)',
       }}
-      className={`rounded-2xl border-2 p-4 shadow-xs transition-all flex flex-col justify-between text-on-surface ${
+      className={`rounded-2xl border-2 p-4 shadow-xs transition-colors flex flex-col justify-between text-on-surface ${
         selected
           ? 'ring-4 ring-primary/30 shadow-md'
           : 'hover:shadow-md'
       }`}
     >
+      <NodeResizer isVisible={selected} minWidth={200} minHeight={160} color="var(--primary)" />
       <Handle
         type="target"
         position={Position.Left}
         className="!w-3 !h-3 !bg-secondary !border-2 !border-surface"
       />
-      <div>
+      <div className="min-h-0 overflow-y-auto nowheel">
         <div className="flex items-center justify-between gap-2">
           <span
             className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono ${
@@ -67,7 +69,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
                 : 'bg-primary-container text-on-primary-container'
             }`}
           >
-            {data.kind}
+            {data.kind} · {data.boundaryLabel}
           </span>
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
@@ -88,7 +90,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         </p>
       </div>
       {data.status && (
-        <p className="mt-3 border-t border-outline pt-2 text-[11px] font-mono text-secondary break-words">
+        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline pt-2 text-[11px] font-mono text-secondary break-words">
           {data.status}
         </p>
       )}
@@ -104,7 +106,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
 const nodeTypes = { c4: C4Card };
 type CanvasNode = FlowNode;
 
-/** Keep measurements and live drag positions in React Flow; persist only completed moves. */
+/** Keep measurements local; persist user resizes and completed moves. */
 function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<CanvasNode>) {
   const [canvasNodes, setCanvasNodes] = useState(nodes);
   useEffect(() => {
@@ -112,7 +114,9 @@ function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<Canvas
   }, [nodes]);
   return <ReactFlow<CanvasNode> {...props} nodes={canvasNodes} onNodesChange={changes => {
     setCanvasNodes(previous => applyNodeChanges(changes, previous));
-    const completedMoves = changes.filter(change => change.type === 'position' && change.position && change.dragging !== true);
+    const completedMoves = changes.filter(change =>
+      (change.type === 'position' && change.position && change.dragging !== true) ||
+      (change.type === 'dimensions' && change.dimensions && change.setAttributes));
     if (completedMoves.length) onNodesChange?.(completedMoves);
   }} />;
 }
@@ -173,10 +177,11 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 
   const flowNodes: FlowNode[] = visible.map(node => ({
     id: node.id, type: 'c4', position: { x: node.x, y: node.y }, selected: node.id === selectedId,
-    data: { title: node.label, kind: node.kind, description: node.description, technology: node.technology,
+    style: { width: node.width ?? 280, height: node.height ?? 230 },
+    data: { title: node.label, external: !!node.external, boundaryLabel: t(node.external ? 'c4.external' : 'c4.internal'), kind: node.kind, description: node.description, technology: node.technology,
       status: node.expectedPath, expandable: expandableIds.has(node.id),
       onSelect: () => { setSelectedId(node.id); setEdgeId(''); },
-      onExplore: () => { setScopeId(node.id); setSelectedId(''); setEdgeId(''); } }
+      onExplore: () => navigate(node.id) }
   }));
 
   const flowEdges = relationships.filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target)).map(edge => ({
@@ -192,8 +197,11 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     labelBgBorderRadius: 8,
   }));
 
-  const navigate = (id: string) => { setScopeId(id); setSelectedId(''); setEdgeId(''); };
-  const update = (patch: Partial<C4Node>) => onChangeNodes(nodes.map(node => node.id === selectedId ? { ...node, ...patch } : node));
+  const navigate = (id: string) => { if (nodes.find(node => node.id === id)?.external) return; setScopeId(id); setSelectedId(''); setEdgeId(''); };
+  const update = (patch: Partial<C4Node>) => {
+    if (patch.external && expandableIds.has(selectedId)) return;
+    onChangeNodes(nodes.map(node => node.id === selectedId ? { ...node, ...patch } : node));
+  };
   const remove = (ids: string[]) => {
     const remaining = removeC4Nodes(nodes, ids);
     const remainingIds = new Set(remaining.map(node => node.id));
@@ -296,6 +304,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                 <button
                   type="button"
                   onClick={addNode}
+                  disabled={!!scope?.external}
                   className="ui-btn-primary px-3.5 py-1.5 text-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -427,6 +436,8 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                     <p className="leading-relaxed">{t('c4.canvasInstructions')}</p>
                     <p className="leading-relaxed">{t('c4.levelsDescription')}</p>
                     <div className="pt-1 border-t border-outline space-y-1">
+                      <p className="flex items-center gap-2"><span className="h-3 w-3 rounded border border-outline" style={{ backgroundColor: colors.internal }} />{t('c4.internal')}</p>
+                      <p className="flex items-center gap-2"><span className="h-3 w-3 rounded border border-outline" style={{ backgroundColor: colors.external }} />{t('c4.external')}</p>
                       <p className="font-semibold text-secondary">
                         ● {t('c4.expandable')}
                       </p>
@@ -461,24 +472,17 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                     setSelectedId('');
                   }}
                   onNodesChange={changes => {
-                    const positions = new Map(
-                      changes.flatMap(change =>
-                        change.type === 'position' && change.position ? [[change.id, change] as const] : []
-                      )
-                    );
-                    if (positions.size)
-                      onChangeNodes(
-                        nodes.map(node => {
-                          const change = positions.get(node.id);
-                          return change?.type === 'position' && change.position
-                            ? {
-                                ...node,
-                                x: change.position.x,
-                                y: change.position.y,
-                              }
-                            : node;
-                        })
-                      );
+                    onChangeNodes(nodes.map(node => {
+                      let updated = node;
+                      for (const change of changes) {
+                        if (!('id' in change) || change.id !== node.id) continue;
+                        if (change.type === 'position' && change.position)
+                          updated = { ...updated, x: change.position.x, y: change.position.y };
+                        if (change.type === 'dimensions' && change.dimensions)
+                          updated = { ...updated, width: change.dimensions.width, height: change.dimensions.height };
+                      }
+                      return updated;
+                    }));
                   }}
                   onNodesDelete={deleted => remove(deleted.map(node => node.id))}
                   onEdgesDelete={deleted =>
@@ -512,7 +516,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   <Controls />
                   <MiniMap
                     nodeColor={node =>
-                      (node.data as FlowNode['data']).expandable ? colors.expandable : colors.leaf
+                      (node.data as FlowNode['data']).external ? colors.external : colors.internal
                     }
                     pannable
                     zoomable
@@ -565,6 +569,18 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                         onChange={event => update({ label: event.target.value })}
                       />
                     )}
+                    <div className="space-y-1.5">
+                      <label className="flex items-center justify-between gap-3 text-xs font-semibold text-on-surface">
+                        <span>{t('c4.external')}</span>
+                        <input type="checkbox" role="switch" className="h-4 w-4 accent-primary"
+                          checked={!!selected.external} disabled={expandableIds.has(selected.id)}
+                          aria-describedby="c4-external-help"
+                          onChange={event => update({ external: event.target.checked })} />
+                      </label>
+                      <p id="c4-external-help" className="text-xs text-on-muted">
+                        {t(expandableIds.has(selected.id) ? 'c4.externalBlocked' : 'c4.externalHelp')}
+                      </p>
+                    </div>
                     {selected.parentId &&
                       field(
                         t('c4.parentBoundary'),

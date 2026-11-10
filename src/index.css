@@ -63,6 +63,8 @@
   --c4-system-bg: #FFFFFF;
   --c4-container-bg: #F8FAFD;
   --c4-component-bg: #F8FAFD;
+  --c4-internal-bg: #E4EAFE;
+  --c4-external-bg: #E4E5E9;
   --c4-expandable-bg: #FFFFFF;
   --c4-expandable-border: #0B57D0;
   --c4-leaf-bg: #F8FAFD;
@@ -144,6 +146,8 @@
   --c4-system-bg: #1E1F23;
   --c4-container-bg: #121316;
   --c4-component-bg: #121316;
+  --c4-internal-bg: #293550;
+  --c4-external-bg: #36373D;
   --c4-expandable-bg: #1E1F23;
   --c4-expandable-border: #A8C7FA;
   --c4-leaf-bg: #121316;

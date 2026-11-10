@@ -1,13 +1,13 @@
 import type { MindMapNode } from '../types';
 
 export type C4Kind = 'person' | 'system' | 'container' | 'component' | 'code';
-export type C4Node = MindMapNode & { kind: C4Kind; technology: string };
+export type C4Node = MindMapNode & { kind: C4Kind; external?: boolean; technology: string; width?: number; height?: number };
 export interface C4Relationship { id: string; source: string; target: string; label: string; technology: string }
 export const parentKind: Partial<Record<C4Kind, C4Kind>> = { container: 'system', component: 'container', code: 'component' };
 
 export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string, label: string): C4Node | undefined {
   const scope = nodes.find(node => node.id === scopeId);
-  if (scopeId && !scope) return undefined;
+  if (scope?.external || (scopeId && !scope)) return undefined;
   const children: Record<C4Kind, C4Kind> = { person: 'component', system: 'container', container: 'component', component: 'code', code: 'code' };
   const kind = scope ? children[scope.kind] : 'system';
   if (!kind) return undefined;
@@ -15,7 +15,7 @@ export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string
   const siblings = nodes.filter(node => (node.parentId || null) === parentId);
   // Place below existing siblings, including manually moved nodes, without overlapping them.
   return { id, label, kind, category: kind, parentId, description: '', technology: '', expectedPath: '',
-    x: 0, y: siblings.length ? Math.max(...siblings.map(node => node.y)) + 280 : 0 };
+    x: 0, y: siblings.length ? Math.max(...siblings.map(node => node.y + (node.height ?? 230))) + 50 : 0 };
 }
 
 /** Display only direct children; retain ancestors solely for breadcrumb navigation. */

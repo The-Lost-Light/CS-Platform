@@ -29,10 +29,19 @@ export function parseC4File(text: string): C4File {
       !(parentId === null || typeof parentId === 'string' && !!parentId.trim()) ||
       typeof description !== 'string' || typeof technology !== 'string' || typeof expectedPath !== 'string' ||
       typeof x !== 'number' || !Number.isFinite(x) || typeof y !== 'number' || !Number.isFinite(y)) return invalid();
+    if (value.external !== undefined && typeof value.external !== 'boolean') return invalid();
+    const dimensions: Pick<C4Node, 'width' | 'height'> = {};
+    for (const key of ['width', 'height'] as const) {
+      const size = value[key];
+      if (size === undefined) continue;
+      if (typeof size !== 'number' || !Number.isFinite(size) || size <= 0) return invalid();
+      dimensions[key] = size;
+    }
     ids.add(id);
-    return { id, kind: kind as C4Kind, label, category, parentId, description, technology, expectedPath, x, y };
+    return { id, kind: kind as C4Kind, label, category, parentId, description, technology, expectedPath, x, y, ...dimensions, ...(value.external === undefined ? {} : { external: value.external as boolean }) };
   });
   const byId = new Map(nodes.map(node => [node.id, node]));
+  if (nodes.some(node => node.parentId && byId.get(node.parentId)?.external)) return invalid();
   const checked = new Set<string>();
   for (const node of nodes) {
     const path = new Set<string>();

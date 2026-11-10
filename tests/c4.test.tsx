@@ -7,6 +7,11 @@ import { BUILTIN_REPO_SNAPSHOTS } from '../src/utils/githubService';
 
 const nodes = migrateC4Nodes(ADVANCED_PROJECTS[0].initialMindMapNodes);
 
+test('new nodes are placed below the full height of resized siblings', () => {
+  const siblings = [{ ...nodes[0], y: 100, height: 600 }, { ...nodes[0], id: 'other', y: 400, height: 160 }];
+  assert.equal(createC4NodeInScope(siblings, '', 'new', 'New')?.y, 750);
+});
+
 test('an empty node opens its own boundary and accepts its first child', () => {
   const empty = c4Drilldown(nodes, 'node-db');
   assert.equal(empty.scope?.id, 'node-db');
@@ -98,4 +103,10 @@ test('people and external systems without paths do not lower file alignment', ()
   const withPerson = analyzeArchitectureAlignment({ mindMapNodes: [...nodes, person], repoBundle });
   assert.equal(withPerson.alignmentScore, base.alignmentScore);
   assert.equal(withPerson.nodeEvaluations.at(-1)?.status, 'unmapped');
+});
+
+test('external elements cannot receive children, but can become internal again', () => {
+  const external = { ...nodes[0], external: true };
+  assert.equal(createC4NodeInScope([external], external.id, 'child', 'Child'), undefined);
+  assert.equal(createC4NodeInScope([{ ...external, external: false }], external.id, 'child', 'Child')?.parentId, external.id);
 });

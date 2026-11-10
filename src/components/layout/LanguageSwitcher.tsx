@@ -47,13 +47,13 @@ export function LanguageSwitcher() {
             setOpen(true);
           }
         }}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0B57D0] dark:focus-visible:ring-[#A8C7FA] ${
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-secondary ${
           open
-            ? 'border-[#0B57D0] bg-[#D3E3FD] text-[#041E49] dark:border-[#A8C7FA] dark:bg-[#004A77] dark:text-[#C2E7FF] shadow-2xs'
-            : 'border-slate-200 dark:border-[#33353A] bg-[#F0F4F9] dark:bg-[#121316] text-[#444746] dark:text-[#C4C7C5] hover:bg-white dark:hover:bg-[#282A2F] hover:text-[#1F1F1F] dark:hover:text-[#E3E2E6]'
+            ? 'border-secondary bg-secondary-container text-on-secondary-container shadow-2xs'
+            : 'border-outline bg-surface-container text-on-muted hover:bg-surface-hover hover:text-on-surface'
         }`}
       >
-        <Languages className="h-3.5 w-3.5 text-[#0B57D0] dark:text-[#A8C7FA]" aria-hidden="true" />
+        <Languages className="h-3.5 w-3.5 text-secondary" aria-hidden="true" />
         <span>{options[selected].label}</span>
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
@@ -62,7 +62,7 @@ export function LanguageSwitcher() {
           id={menuId}
           role="menu"
           aria-label={t('language.label')}
-          className="absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 dark:border-[#33353A] bg-white dark:bg-[#1E1F23] p-1.5 text-[#1F1F1F] dark:text-[#E3E2E6] shadow-xl"
+          className="absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-2xl border border-outline bg-surface p-1.5 text-on-surface shadow-xl"
           onKeyDown={event => {
             const index = items.current.indexOf(document.activeElement as HTMLButtonElement);
             if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
@@ -87,14 +87,14 @@ export function LanguageSwitcher() {
               onClick={() => choose(option.value)}
               className={`flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3.5 py-2 text-left text-xs font-semibold transition-colors focus:outline-hidden ${
                 preference === option.value
-                  ? 'bg-[#D3E3FD] text-[#041E49] dark:bg-[#004A77] dark:text-[#C2E7FF] font-bold'
-                  : 'text-[#444746] dark:text-[#C4C7C5] hover:bg-[#F0F4F9] dark:hover:bg-[#282A2F] focus:bg-[#F0F4F9] dark:focus:bg-[#282A2F]'
+                  ? 'bg-secondary-container text-on-secondary-container font-bold'
+                  : 'text-on-muted hover:bg-surface-high focus:bg-surface-high'
               }`}
             >
               {option.value === 'auto' ? (
-                <Monitor className="h-4 w-4 shrink-0 text-[#0B57D0] dark:text-[#A8C7FA]" aria-hidden="true" />
+                <Monitor className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
               ) : (
-                <Languages className="h-4 w-4 shrink-0 text-[#6750A4] dark:text-[#D0BCFF]" aria-hidden="true" />
+                <Languages className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               )}
               <span className="flex-1" lang={option.value === 'auto' ? undefined : option.value}>
                 {option.label}

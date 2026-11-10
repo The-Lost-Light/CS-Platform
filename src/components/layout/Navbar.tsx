@@ -1,4 +1,5 @@
 import { useI18n } from '../../i18n';
+import { useTheme, type ThemeMode } from '../../theme';
 import type { AdvancedProject, User } from '../../types';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import {
@@ -18,12 +19,25 @@ export function Navbar({
   onSelectProjectDefault,
   currentUser,
   onLogout,
-  themeMode = 'system',
-  onChangeThemeMode,
-}: { activeView: 'home' | 'project'; selectedProject: AdvancedProject | null; onNavigateHome: () => void; onSelectProjectDefault: () => void; currentUser: User; onLogout: () => void; themeMode?: string; onChangeThemeMode: (mode: string) => void }) {
+}: {
+  activeView: 'home' | 'project';
+  selectedProject: AdvancedProject | null;
+  onNavigateHome: () => void;
+  onSelectProjectDefault: () => void;
+  currentUser: User;
+  onLogout: () => void;
+}) {
   const { t } = useI18n();
+  const { mode, setMode } = useTheme();
+
+  const themeOptions: { value: ThemeMode; label: string; title: string; Icon: typeof Monitor }[] = [
+    { value: 'system', label: t('common.auto'), title: t('theme.systemDescription'), Icon: Monitor },
+    { value: 'light', label: t('theme.light'), title: t('theme.lightDescription'), Icon: Sun },
+    { value: 'dark', label: t('theme.dark'), title: t('theme.darkDescription'), Icon: Moon },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 bg-white dark:bg-[#1E1F23] border-b border-slate-200 dark:border-[#33353A] shadow-xs transition-colors">
+    <header className="sticky top-0 z-40 bg-surface border-b border-outline shadow-xs transition-colors">
       <div className="w-full px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2">
         {/* Left: Material Design 3 Brand & Active Breadcrumb */}
         <div className="flex items-center gap-2.5">
@@ -32,15 +46,15 @@ export function Navbar({
             onClick={onNavigateHome}
             className="flex items-center gap-2 text-left group focus:outline-hidden"
           >
-            <div className="w-9 h-9 rounded-xl bg-[#0B57D0] dark:bg-[#A8C7FA] flex items-center justify-center text-white dark:text-[#041E49] shadow-xs group-hover:opacity-90 transition">
+            <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center text-on-secondary shadow-xs group-hover:opacity-90 transition">
               <Code2 className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-bold tracking-tight text-[#1F1F1F] dark:text-[#E3E2E6]">
+                <span className="text-base font-bold tracking-tight text-on-surface">
                   CodePulse Edu
                 </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF]">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container">
                   Material Design
                 </span>
               </div>
@@ -48,13 +62,11 @@ export function Navbar({
           </button>
 
           {selectedProject && activeView === 'project' && (
-            <div className="hidden xl:flex items-center gap-2 pl-2.5 ml-1 border-l border-slate-200 dark:border-[#33353A] text-xs">
-              <span
-                className="px-2 py-0.5 rounded-full font-mono font-bold bg-[#EADDFF] dark:bg-[#4F378B] text-[#4F378B] dark:text-[#EADDFF]"
-              >
+            <div className="hidden xl:flex items-center gap-2 pl-2.5 ml-1 border-l border-outline text-xs">
+              <span className="px-2 py-0.5 rounded-full font-mono font-bold bg-primary-container text-on-primary-container">
                 {selectedProject.codeName}
               </span>
-              <span className="text-[#1F1F1F] dark:text-[#E3E2E6] font-semibold truncate max-w-[240px]">
+              <span className="text-on-surface font-semibold truncate max-w-[240px]">
                 {selectedProject.title}
               </span>
             </div>
@@ -63,14 +75,14 @@ export function Navbar({
 
         {/* Right: Navigation Pills + Theme Switcher (System / Light / Dark) + Account Logout */}
         <div className="flex flex-wrap items-center gap-2">
-          <nav className="flex max-w-full flex-wrap items-center gap-1 bg-[#F0F4F9] dark:bg-[#121316] p-1 rounded-2xl sm:rounded-full border border-slate-200 dark:border-[#33353A]">
+          <nav className="flex max-w-full flex-wrap items-center gap-1 bg-surface-container p-1 rounded-2xl sm:rounded-full border border-outline">
             <button
               type="button"
               onClick={onNavigateHome}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
                 activeView === 'home'
-                  ? 'bg-[#0B57D0] dark:bg-[#A8C7FA] text-white dark:text-[#041E49] shadow-xs'
-                  : 'text-[#444746] dark:text-[#C4C7C5] hover:bg-white dark:hover:bg-[#282A2F] hover:text-[#1F1F1F] dark:hover:text-white'
+                  ? 'bg-secondary text-on-secondary shadow-xs'
+                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
               }`}
             >
               <Home className="w-3.5 h-3.5" />
@@ -82,8 +94,8 @@ export function Navbar({
               onClick={onSelectProjectDefault}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
                 activeView === 'project'
-                  ? 'bg-[#6750A4] dark:bg-[#D0BCFF] text-white dark:text-[#381E72] shadow-xs'
-                  : 'text-[#444746] dark:text-[#C4C7C5] hover:bg-white dark:hover:bg-[#282A2F] hover:text-[#1F1F1F] dark:hover:text-white'
+                  ? 'bg-primary text-on-primary shadow-xs'
+                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
               }`}
             >
               <FolderGit2 className="w-3.5 h-3.5" />
@@ -92,63 +104,39 @@ export function Navbar({
           </nav>
 
           <LanguageSwitcher />
+
           {/* Theme Switcher: 自動 (System) / 淺色 (Light) / 深色 (Dark) */}
           <div
-            className="inline-flex items-center bg-[#F0F4F9] dark:bg-[#121316] p-1 rounded-full border border-slate-200 dark:border-[#33353A]"
+            className="ui-pill-group"
             role="group"
             aria-label={t('theme.label')}
           >
-            <button
-              type="button"
-              onClick={() => onChangeThemeMode?.('system')}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
-                themeMode === 'system'
-                  ? 'bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] shadow-2xs'
-                  : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-white'
-              }`}
-              title={t('theme.systemDescription')}
-            >
-              <Monitor className="w-3.5 h-3.5" />
-              <span>{t('common.auto')}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onChangeThemeMode?.('light')}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
-                themeMode === 'light'
-                  ? 'bg-[#D3E3FD] text-[#041E49] shadow-2xs'
-                  : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-white'
-              }`}
-              title={t('theme.lightDescription')}
-            >
-              <Sun className="w-3.5 h-3.5" />
-              <span>{t('theme.light')}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onChangeThemeMode?.('dark')}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
-                themeMode === 'dark'
-                  ? 'bg-[#004A77] text-[#C2E7FF] shadow-2xs'
-                  : 'text-[#444746] dark:text-[#C4C7C5] hover:text-[#1F1F1F] dark:hover:text-white'
-              }`}
-              title={t('theme.darkDescription')}
-            >
-              <Moon className="w-3.5 h-3.5" />
-              <span>{t('theme.dark')}</span>
-            </button>
+            {themeOptions.map(({ value, label, title, Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
+                  mode === value
+                    ? 'bg-secondary-container text-on-secondary-container shadow-2xs'
+                    : 'text-on-muted hover:text-on-surface'
+                }`}
+                title={title}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
 
           {/* Current Logged-in Student Badge & Logout */}
           {currentUser && (
-            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-[#33353A]">
-              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F8FAFD] dark:bg-[#121316] border border-slate-200 dark:border-[#33353A] text-xs">
-                <div className="w-5 h-5 rounded-full bg-[#0B57D0] dark:bg-[#A8C7FA] text-white dark:text-[#041E49] text-[11px] font-bold flex items-center justify-center">
+            <div className="flex items-center gap-1.5 pl-2 border-l border-outline">
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-sunken border border-outline text-xs">
+                <div className="w-5 h-5 rounded-full bg-secondary text-on-secondary text-[11px] font-bold flex items-center justify-center">
                   {currentUser.name?.slice(0, 1) || 'S'}
                 </div>
-                <span className="font-bold text-[#1F1F1F] dark:text-[#E3E2E6]">
+                <span className="font-bold text-on-surface">
                   {currentUser.name}
                 </span>
               </div>
@@ -156,7 +144,7 @@ export function Navbar({
               <button
                 type="button"
                 onClick={onLogout}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F0F4F9] dark:bg-[#121316] hover:bg-[#FAD2CF]/70 dark:hover:bg-[#8C1D18]/40 text-[#444746] dark:text-[#E3E2E6] hover:text-[#B3261E] dark:hover:text-[#F2B8B5] border border-slate-200 dark:border-[#33353A] text-xs font-bold transition"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container hover:bg-danger-container text-on-muted hover:text-on-danger-container border border-outline text-xs font-bold transition"
                 title={t('auth.signOutDescription')}
               >
                 <LogOut className="w-3.5 h-3.5" />

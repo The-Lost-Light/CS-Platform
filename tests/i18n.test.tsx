@@ -3,6 +3,7 @@ import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import App from '../src/App';
 import { I18nProvider } from '../src/i18n';
+import { ThemeProvider, isThemeMode, resolveTheme } from '../src/theme';
 import { createTranslator, englishMessages, isMessageKey, resolveLocale, traditionalChineseMessages, type MessageKey } from '../src/i18n/messages';
 import { getLocalizedAssignments, updateLocalizedProjectDraft } from '../src/data/localizedAssignments';
 import { analyzeArchitectureAlignment } from '../src/utils/architectureAnalyzer';
@@ -25,6 +26,17 @@ test('saved language takes priority; unsupported values fall back to browser lan
   assert.equal(resolveLocale(null, ['zh-Hant-TW']), 'zh-TW');
   assert.equal(resolveLocale(null, ['ja-JP']), 'zh-TW');
   assert.equal(resolveLocale(null), 'zh-TW');
+});
+
+test('theme mode validation and resolution follow system preference or explicit override', () => {
+  assert.equal(isThemeMode('system'), true);
+  assert.equal(isThemeMode('light'), true);
+  assert.equal(isThemeMode('dark'), true);
+  assert.equal(isThemeMode('invalid'), false);
+  assert.equal(resolveTheme('system', false), 'light');
+  assert.equal(resolveTheme('system', true), 'dark');
+  assert.equal(resolveTheme('light', true), 'light');
+  assert.equal(resolveTheme('dark', false), 'dark');
 });
 
 test('semantic keys resolve in both languages and interpolation preserves literal code', () => {
@@ -120,7 +132,13 @@ const noop = () => {};
 
 test('dashboard lists every project and uses project-only navigation in both languages', () => {
   for (const locale of ['zh-TW', 'en'] as const) {
-    const html = renderToStaticMarkup(<I18nProvider initialLanguage={locale}><App /></I18nProvider>);
+    const html = renderToStaticMarkup(
+      <ThemeProvider>
+        <I18nProvider initialLanguage={locale}>
+          <App />
+        </I18nProvider>
+      </ThemeProvider>
+    );
     const visibleText = html.replace(/<[^>]*>/g, '');
     const { advancedProjects } = getLocalizedAssignments(locale);
     for (const project of advancedProjects) {
@@ -136,7 +154,7 @@ test('dashboard lists every project and uses project-only navigation in both lan
 const analysis = analyzeArchitectureAlignment({ mindMapNodes: en.advancedProjects[0].initialMindMapNodes, repoBundle: bundle }, t);
 const screens = {
   dashboard: <App />,
-  login: <LoginView onLoginSuccess={noop} onChangeThemeMode={noop} />,
+  login: <LoginView onLoginSuccess={noop} />,
   project: <AdvancedProjectWorkspace project={en.advancedProjects[0]} />,
   comparison: <ArchitectureComparisonPanel analysis={analysis} />,
   github: <GitHubRepoDashboard repoBundle={bundle} />,
@@ -144,7 +162,11 @@ const screens = {
 
 for (const [name, screen] of Object.entries(screens)) {
   test(`${name} renders English UI without untranslated Chinese labels`, () => {
-    const html = renderToStaticMarkup(<I18nProvider initialLanguage="en">{screen}</I18nProvider>);
+    const html = renderToStaticMarkup(
+      <ThemeProvider>
+        <I18nProvider initialLanguage="en">{screen}</I18nProvider>
+      </ThemeProvider>
+    );
     // Names and the native-language option are intentionally preserved; input values are user data.
     const visibleText = html.replace(/<[^>]*>/g, '').replaceAll('繁體中文', '').replaceAll('陳宥軒 (資工三甲)', '').replaceAll('林博宇 (資工三乙)', '').replaceAll('張簡助教 (Course TA)', '').replace(/[陳林張]/g, '');
     assert.equal(han.test(visibleText), false, visibleText.match(/.{0,30}[\u3400-\u9fff].{0,60}/g)?.join('\n') ?? '');

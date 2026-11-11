@@ -8,6 +8,13 @@ const nodes = migrateC4Nodes(ADVANCED_PROJECTS[0].initialMindMapNodes);
 const relationships = [{ id: 'edge', source: nodes[0].id, target: nodes[1].id, label: '使用 → API', technology: 'HTTPS' }];
 const fixture = () => JSON.parse(serializeC4File(nodes, relationships));
 
+test('import accepts four levels and rejects a fifth regardless of node kinds or order', () => {
+  const chain = Array.from({ length: 5 }, (_, index) => ({ ...nodes[0], id: `level-${index}`, parentId: index ? `level-${index - 1}` : null }));
+  assert.equal(parseC4File(serializeC4File(chain.slice(0, 4), [])).nodes.length, 4);
+  assert.throws(() => parseC4File(serializeC4File(chain, [])));
+  assert.throws(() => parseC4File(serializeC4File([...chain].reverse(), [])));
+});
+
 test('scope boundaries and independent context positions survive export and import', () => {
   const file = fixture();
   file.nodes[0].boundary = { x: -120, y: 80, width: 950, height: 720 };

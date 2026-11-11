@@ -39,9 +39,24 @@ test('new nodes belong to the current scope and infer their C4 level', () => {
   assert.equal(created.y, 0);
   assert.equal(createC4NodeInScope(nodes, 'deleted', 'new', 'New'), undefined);
   const leaf: C4Node = { ...created, kind: 'code' };
-  assert.equal(createC4NodeInScope([leaf], leaf.id, 'new', 'New')?.parentId, leaf.id);
+  assert.equal(createC4NodeInScope([leaf], leaf.id, 'new', 'New'), undefined);
   const person = { ...leaf, kind: 'person' as const };
   assert.equal(createC4NodeInScope([person], person.id, 'child', 'New')?.parentId, person.id);
+});
+
+test('creation preserves the requested position and stops at four levels regardless of kind', () => {
+  const chain: C4Node[] = [];
+  for (let depth = 0; depth < 4; depth++) {
+    const node = createC4NodeInScope(chain, chain.at(-1)?.id ?? '', `level-${depth}`, 'Node', { x: -120.5, y: 88 })!;
+    assert.ok(node);
+    assert.equal(node.x, -120.5);
+    assert.equal(node.y, 88);
+    chain.push(node);
+  }
+  assert.equal(createC4NodeInScope(chain, chain[3].id, 'fifth', 'Node'), undefined);
+  const wrongKinds = chain.map(node => ({ ...node, kind: 'system' as const }));
+  assert.equal(createC4NodeInScope(wrongKinds, chain[3].id, 'fifth', 'Node'), undefined);
+  assert.equal(c4Drilldown(chain, chain[3].id).path.length, 3);
 });
 
 test('drilldown hides enclosing peers by default and keeps them available for manual addition', () => {

@@ -1,4 +1,5 @@
 import type { C4Kind, C4Node, C4Relationship } from './c4Model';
+import { c4NodeDepth, C4_MAX_LEVELS } from './c4Model';
 
 export interface C4File {
   format: 'codepulse-c4';
@@ -70,6 +71,8 @@ export function parseC4File(text: string): C4File {
     path.forEach(id => checked.add(id));
   }
   const edgeIds = new Set<string>();
+  if (nodes.some(node => c4NodeDepth(nodes, node.id) > C4_MAX_LEVELS ||
+    (node.parentId && byId.get(node.parentId)?.kind === 'code'))) return invalid();
   const relationships = data.relationships.map((value: unknown): C4Relationship => {
     if (!object(value)) return invalid();
     const { id, source, target, label, technology } = value;

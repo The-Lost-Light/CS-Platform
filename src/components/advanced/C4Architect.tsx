@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, NodeResizer, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps } from '@xyflow/react';
+import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, NodeResizer, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps, type ReactFlowInstance } from '@xyflow/react';
 import {
   FileText,
   Network,
-  Plus,
   Upload,
   Download,
   HelpCircle,
@@ -17,7 +16,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useI18n } from '../../i18n';
-import { overlapsC4Boundary, removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
+import { canExploreC4Node, overlapsC4Boundary, removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
 import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
 
 const colors = { internal: 'var(--c4-internal-bg)', external: 'var(--c4-external-bg)' };
@@ -162,7 +161,10 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
   const [scopeId, setScopeId] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [edgeId, setEdgeId] = useState('');
+  const drawStart = useRef<{ x: number; y: number } | null>(null);
+  const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const flowInstance = useRef<ReactFlowInstance<CanvasNode> | null>(null);
   const [importing, setImporting] = useState(false);
   const [fileStatus, setFileStatus] = useState<'importSuccess' | 'importError' | 'fileTooLarge' | 'exportError' | null>(null);
   const [importRevision, setImportRevision] = useState(0);
@@ -247,7 +249,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     labelBgBorderRadius: 8,
   }));
 
-  const navigate = (id: string) => { cancelNodeClick(); if (nodes.find(node => node.id === id)?.external) return; setScopeId(id); setSelectedId(''); setEdgeId(''); };
+  const navigate = (id: string) => { cancelNodeClick(); if (id && !canExploreC4Node(nodes, id)) return; setScopeId(id); setSelectedId(''); setEdgeId(''); };
   const update = (patch: Partial<C4Node>) => {
     if (patch.external && expandableIds.has(selectedId)) return;
     onChangeNodes(nodes.map(node => node.id === selectedId ? { ...node, ...patch } : node));
@@ -260,10 +262,11 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     onChangeNodes(remaining);
     onChangeRelationships(relationships.filter(edge => remainingIds.has(edge.source) && remainingIds.has(edge.target)));
   };
-  const addNode = () => {
-    const node = createC4NodeInScope(nodes, scope?.id || '', crypto.randomUUID(), t('c4.newElement'));
+  const addNode = (position: { x: number; y: number }, size?: { width: number; height: number }) => {
+    cancelNodeClick();
+    const node = createC4NodeInScope(nodes, scope?.id || '', crypto.randomUUID(), t('c4.newElement'), { x: position.x - (scope ? 40 : 0), y: position.y - (scope ? 70 : 0) });
     if (!node) return;
-    onChangeNodes([...nodes, node]);
+    onChangeNodes([...nodes, { ...node, ...size }]);
     setDesignTab('diagram');
     setSelectedId(node.id); setEdgeId('');
   };
@@ -353,15 +356,6 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 
               {/* Material Design 3 Action Buttons */}
               <div className="ml-auto flex shrink-0 flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={addNode}
-                  disabled={!!scope?.external}
-                  className="ui-btn-primary px-3.5 py-1.5 text-xs"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{t('c4.addElement')}</span>
-                </button>
                 <button
                   type="button"
                   disabled={importing}
@@ -504,13 +498,57 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                 </details>
               </div>
 
-              <div style={{ height: 'max(600px, 72vh)' }}>
+              <div
+                style={{ height: 'max(600px, 72vh)', overscrollBehavior: 'contain', position: 'relative' }}
+                onContextMenu={event => event.preventDefault()}
+                onPointerDownCapture={event => {
+                  if (event.button !== 2) return;
+                  const target = event.target as HTMLElement;
+                  if (!target.closest('.react-flow__pane, .react-flow__node-boundary') || target.closest('.react-flow__node-c4, .react-flow__controls, .react-flow__minimap')) return;
+                  event.preventDefault();
+                  drawStart.current = { x: event.clientX, y: event.clientY };
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                }}
+                onPointerMove={event => {
+                  const start = drawStart.current;
+                  if (!start) return;
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  setDrawPreview({ x: Math.min(start.x, event.clientX) - rect.left, y: Math.min(start.y, event.clientY) - rect.top,
+                    width: Math.abs(event.clientX - start.x), height: Math.abs(event.clientY - start.y) });
+                }}
+                onPointerUp={event => {
+                  const start = drawStart.current;
+                  if (!start || event.button !== 2) return;
+                  drawStart.current = null;
+                  setDrawPreview(null);
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+                  const flow = flowInstance.current;
+                  if (!flow) return;
+                  const from = flow.screenToFlowPosition(start);
+                  const to = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+                  if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) addNode(from);
+                  else addNode({ x: Math.min(from.x, to.x), y: Math.min(from.y, to.y) },
+                    { width: Math.max(200, Math.abs(to.x - from.x)), height: Math.max(160, Math.abs(to.y - from.y)) });
+                }}
+                onLostPointerCapture={() => { drawStart.current = null; setDrawPreview(null); }}
+                onPointerCancel={() => { drawStart.current = null; setDrawPreview(null); }}
+                onMouseDownCapture={event => {
+                  // Cancel browser middle-button autoscroll without stopping React Flow's pan handler.
+                  if (event.button === 1) event.preventDefault();
+                }}
+                onAuxClickCapture={event => {
+                  if (event.button === 1) event.preventDefault();
+                }}
+              >
                 <C4Canvas
                   key={`${importRevision}-${scope?.id || 'context'}`}
                   nodes={flowNodes}
                   edges={flowEdges}
                   nodeTypes={nodeTypes}
                   fitView
+                  onInit={instance => { flowInstance.current = instance; }}
+                  panOnDrag={[1]}
+                  panActivationKeyCode={null}
                   minZoom={0.15}
                   maxZoom={2}
                   onNodeClick={(event, node) => {
@@ -596,6 +634,9 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                     zoomable
                   />
                 </C4Canvas>
+                {drawPreview && <div aria-hidden="true" style={{ position: 'absolute', left: drawPreview.x, top: drawPreview.y,
+                  width: drawPreview.width, height: drawPreview.height, pointerEvents: 'none', zIndex: 10 }}
+                  className="border-2 border-dashed border-primary bg-primary/10 rounded-2xl" />}
               </div>
               {!inside.length && (
                 <p className="p-4 text-xs sm:text-sm font-medium text-on-muted bg-surface border-t border-outline">

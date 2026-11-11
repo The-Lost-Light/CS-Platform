@@ -18,7 +18,7 @@ export function createC4NodeInScope(nodes: C4Node[], scopeId: string, id: string
     x: 0, y: siblings.length ? Math.max(...siblings.map(node => node.y + (node.height ?? 230))) + 50 : 0 };
 }
 
-/** Show children with peers from enclosing scopes for cross-boundary relationships. */
+/** Show only elements created at the current level. */
 export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   const path: C4Node[] = [];
   const seen = new Set<string>();
@@ -30,8 +30,8 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   }
   const scope = path.at(-1);
   const inside = nodes.filter(node => scope ? node.parentId === scope.id : !node.parentId);
-  const outside = scope ? nodes.filter(node => !seen.has(node.id) && path.some(ancestor => (ancestor.parentId || null) === (node.parentId || null))) : [];
-  const visible = [...inside, ...outside];
+  const outside: C4Node[] = [];
+  const visible = inside;
   return { path, scope, inside, outside, visible };
 }
 
@@ -66,13 +66,12 @@ export function removeC4Nodes(nodes: C4Node[], ids: string[]) {
 
 export function visibleC4Nodes(nodes: C4Node[], level: C4Kind, scope: string): C4Node[] {
   if (level === 'system') return nodes.filter(node => node.kind === 'person' || node.kind === 'system');
-  const ancestors = new Set<string>();
-  let current = nodes.find(node => node.id === scope);
-  while (current && !ancestors.has(current.id)) {
-    ancestors.add(current.id);
-    current = nodes.find(node => node.id === current?.parentId);
-  }
-  return nodes.filter(node => node.kind === 'person' || (node.kind === 'system' && !ancestors.has(node.id)) ||
-    (level === 'component' && node.kind === 'container' && node.id !== scope) ||
-    (node.kind === level && node.parentId === scope));
+  const view = c4Drilldown(nodes, scope);
+  return [...view.inside.filter(node => node.kind === level), ...view.outside];
+}
+
+/** Membership is determined geometrically at the start of a boundary drag. */
+export function overlapsC4Boundary(node: { x: number; y: number; width: number; height: number }, boundary: { x: number; y: number; width: number; height: number }): boolean {
+  return node.x < boundary.x + boundary.width && node.x + node.width > boundary.x &&
+    node.y < boundary.y + boundary.height && node.y + node.height > boundary.y;
 }

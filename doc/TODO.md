@@ -2,3 +2,6 @@
 - [ ] fix react flow node position
 - [ ] fix react flow flicker
 - [ ] i18n using key instead of value
+- [ ] C4 model only 4 layers
+- [ ] middle button move
+- [ ] multi-select

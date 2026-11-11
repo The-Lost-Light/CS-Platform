@@ -129,7 +129,7 @@ export default {
   "c4.levelsDescription": "C1: people and systems. C2: applications and data stores within a system. C3: components within a container. C4: classes and functions within a component.",
   "c4.scope": "Scope / boundary",
   "c4.createParentFirst": "Create a parent element first",
-  "c4.canvasInstructions": "Click to select and edit; double-click to enter the next level. Enter/Space selects; Shift+Enter enters. Drag nodes to move; drag the border or corners of a selected node to resize. Connect handles to create relationships.",
+  "c4.canvasInstructions": "Click to select and edit; double-click to enter the next level. Enter/Space selects; Shift+Enter enters. Drag nodes to move; drag the border or corners of a selected node to resize. Connect handles to create relationships. Inner levels show only their own elements by default; create new elements manually when needed.",
   "c4.uses": "Uses",
   "c4.emptyLevel": "No elements at this level. Use the add button below the breadcrumb.",
   "c4.addInCurrentLevel": "Add node at current level",

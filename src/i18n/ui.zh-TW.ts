@@ -127,7 +127,7 @@ export default {
   "c4.levelsDescription": "C1 呈現使用者與系統；C2 展開系統內的應用程式與資料庫；C3 展開容器內元件；C4 描述元件內的類別與函式。",
   "c4.scope": "檢視範圍／邊界",
   "c4.createParentFirst": "請先建立上一層元素",
-  "c4.canvasInstructions": "單擊選取並編輯，雙擊進入下一層。Enter／空白鍵選取，Shift+Enter 進入。拖曳節點移動；選取後拖曳邊框或角落調整大小。連接接點建立關係。",
+  "c4.canvasInstructions": "單擊選取並編輯，雙擊進入下一層。Enter／空白鍵選取，Shift+Enter 進入。拖曳節點移動；選取後拖曳邊框或角落調整大小。連接接點建立關係。 內層預設僅顯示當層元素，需要時可手動新增節點。",
   "c4.uses": "使用",
   "c4.emptyLevel": "此層級尚無元素，請使用 Breadcrumb 下方的新增按鈕。",
   "c4.addInCurrentLevel": "在目前層新增節點",

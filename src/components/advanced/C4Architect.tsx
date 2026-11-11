@@ -17,7 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useI18n } from '../../i18n';
-import { removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
+import { overlapsC4Boundary, removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
 import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
 
 const colors = { internal: 'var(--c4-internal-bg)', external: 'var(--c4-external-bg)' };
@@ -116,10 +116,30 @@ type CanvasNode = FlowNode | BoundaryNode;
 /** Keep measurements local; persist user resizes and completed moves. */
 function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<CanvasNode>) {
   const [canvasNodes, setCanvasNodes] = useState(nodes);
+  const movingIds = useRef<string[] | null>(null);
   useEffect(() => {
     setCanvasNodes(previous => nodes.map(node => ({ ...previous.find(item => item.id === node.id), ...node })));
   }, [nodes]);
   return <ReactFlow<CanvasNode> {...props} nodes={canvasNodes} onNodesChange={changes => {
+    const boundaryMove = changes.find(change => change.type === 'position' && change.id === '__c4_boundary__' && change.position);
+    if (boundaryMove?.type === 'position' && boundaryMove.position) {
+      const frame = canvasNodes.find(node => node.id === boundaryMove.id);
+      if (frame) {
+        const width = Number(frame.style?.width ?? 600);
+        const height = Number(frame.style?.height ?? 360);
+        movingIds.current ??= canvasNodes.filter(node => node.type !== 'boundary' &&
+          overlapsC4Boundary({ ...node.position, width: Number(node.style?.width ?? 280), height: Number(node.style?.height ?? 230) },
+            { ...frame.position, width, height })
+        ).map(node => node.id);
+        const dx = boundaryMove.position.x - frame.position.x;
+        const dy = boundaryMove.position.y - frame.position.y;
+        changes = [...changes, ...canvasNodes.filter(node => movingIds.current!.includes(node.id)).map(node => ({
+          id: node.id, type: 'position' as const, dragging: boundaryMove.dragging,
+          position: { x: node.position.x + dx, y: node.position.y + dy },
+        }))];
+        if (boundaryMove.dragging !== true) movingIds.current = null;
+      }
+    }
     setCanvasNodes(previous => applyNodeChanges(changes, previous));
     const completedMoves = changes.filter(change =>
       (change.type === 'position' && change.position && change.dragging !== true) ||
@@ -188,7 +208,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
     finally { setImporting(false); }
   };
 
-  const { scope, path, inside, outside, visible } = c4Drilldown(nodes, scopeId);
+  const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
   const expandableIds = new Set(nodes.map(node => node.parentId).filter(Boolean));
   const visibleIds = new Set(visible.map(node => node.id));
   const selected = nodes.find(node => node.id === selectedId);
@@ -201,10 +221,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
   const insideIds = new Set(inside.map(node => node.id));
   const flowNodes: CanvasNode[] = visible.map(node => ({
     id: node.id, type: 'c4',
-    position: !scope ? { x: node.x, y: node.y } : insideIds.has(node.id)
-      ? { x: node.x + 40, y: node.y + 70 }
-      : scope.contextPositions?.[node.id] ?? { x: boundary.x + boundary.width + 100, y: outside.findIndex(item => item.id === node.id) * 300 },
-    ...(scope && insideIds.has(node.id) ? { parentId: boundaryId } : {}),
+    position: { x: node.x + (scope ? 40 : 0), y: node.y + (scope ? 70 : 0) },
     zIndex: 1, selected: node.id === selectedId,
     style: { width: node.width ?? 280, height: node.height ?? 230 },
     data: { title: node.label, external: !!node.external, boundaryLabel: t(node.external ? 'c4.external' : 'c4.internal'), kind: node.kind, description: node.description, technology: node.technology,
@@ -237,6 +254,8 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
   };
   const remove = (ids: string[]) => {
     const remaining = removeC4Nodes(nodes, ids);
+    setSelectedId('');
+    setEdgeId('');
     const remainingIds = new Set(remaining.map(node => node.id));
     onChangeNodes(remaining);
     onChangeRelationships(relationships.filter(edge => remainingIds.has(edge.source) && remainingIds.has(edge.target)));
@@ -519,14 +538,12 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                     onChangeNodes(nodes.map(node => {
                       let updated = node;
                       if (scope && node.id === scope.id) {
-                        updated = { ...node, boundary: { ...boundary }, contextPositions: Object.fromEntries(outside.map(item => [item.id, scope.contextPositions?.[item.id] ?? { x: boundary.x + boundary.width + 100, y: outside.indexOf(item) * 300 }])) };
+                        updated = { ...node, boundary: { ...boundary } };
                         for (const change of changes) {
                           if (!('id' in change)) continue;
                           if (change.id === boundaryId) {
                             if (change.type === 'position' && change.position) Object.assign(updated.boundary!, change.position);
                             if (change.type === 'dimensions' && change.dimensions) Object.assign(updated.boundary!, change.dimensions);
-                          } else if (!insideIds.has(change.id) && change.type === 'position' && change.position) {
-                            updated.contextPositions![change.id] = change.position;
                           }
                         }
                       }
@@ -638,13 +655,6 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                         {t(expandableIds.has(selected.id) ? 'c4.externalBlocked' : 'c4.externalHelp')}
                       </p>
                     </div>
-                    {selected.parentId &&
-                      field(
-                        t('c4.parentBoundary'),
-                        <p className="px-3 py-1.5 rounded-xl bg-surface-high text-xs font-semibold text-on-surface">
-                          {nodes.find(node => node.id === selected.parentId)?.label}
-                        </p>
-                      )}
                     {field(
                       t('c4.technology'),
                       <input

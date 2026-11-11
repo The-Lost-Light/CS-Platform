@@ -2,5 +2,6 @@ pnpm-lock.yaml
 .pnpm-store/
 node_modules/
 dist/
+tmp/
 
 examples/

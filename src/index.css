@@ -3,271 +3,285 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  color-scheme: light;
+    color-scheme: light;
 
-  /* 背景與容器層級 (Canvas & Surface Tokens) */
-  --bg-canvas: #F0F4F9;
-  --surface: #FFFFFF;
-  --surface-sunken: #F8FAFD;
-  --surface-container: #F0F4F9;
-  --surface-container-high: #F0F4F9;
-  --surface-hover: rgba(243, 237, 247, 0.6);
-  --surface-tonal: #F3EDF7;
+    /* 背景與容器層級 (Canvas & Surface Tokens) */
+    --bg-canvas: #f0f4f9;
+    --surface: #ffffff;
+    --surface-sunken: #f8fafd;
+    --surface-container: #f0f4f9;
+    --surface-container-high: #f0f4f9;
+    --surface-hover: rgba(243, 237, 247, 0.6);
+    --surface-tonal: #f3edf7;
 
-  /* 文字與圖示層級 (Typography & Iconography Tokens) */
-  --on-surface: #1F1F1F;
-  --on-surface-muted: #444746;
-  --on-surface-subtle: #5E5E5E;
+    /* 文字與圖示層級 (Typography & Iconography Tokens) */
+    --on-surface: #1f1f1f;
+    --on-surface-muted: #444746;
+    --on-surface-subtle: #5e5e5e;
 
-  /* 邊框與分隔線 (Outline & Divider Tokens) */
-  --outline: #E2E8F0;
-  --outline-subtle: rgba(226, 232, 240, 0.9);
-  --outline-tonal: #EADDFF;
+    /* 邊框與分隔線 (Outline & Divider Tokens) */
+    --outline: #e2e8f0;
+    --outline-subtle: rgba(226, 232, 240, 0.9);
+    --outline-tonal: #eaddff;
 
-  /* 主強調色：Material 3 Purple (Primary Accent Tokens) */
-  --primary: #6750A4;
-  --primary-hover: #4F378B;
-  --on-primary: #FFFFFF;
-  --primary-container: #EADDFF;
-  --on-primary-container: #4F378B;
-  --primary-outline: #EADDFF;
+    /* 主強調色：Material 3 Purple (Primary Accent Tokens) */
+    --primary: #6750a4;
+    --primary-hover: #4f378b;
+    --on-primary: #ffffff;
+    --primary-container: #eaddff;
+    --on-primary-container: #4f378b;
+    --primary-outline: #eaddff;
 
-  /* 次強調色：Material 3 Blue (Secondary / Info Accent Tokens) */
-  --secondary: #0B57D0;
-  --secondary-hover: #0842A0;
-  --on-secondary: #FFFFFF;
-  --secondary-container: #D3E3FD;
-  --on-secondary-container: #041E49;
-  --secondary-outline: #A8C7FA;
-  --brand-banner: #0B57D0;
-  --on-brand-banner-muted: #D3E3FD;
+    /* 次強調色：Material 3 Blue (Secondary / Info Accent Tokens) */
+    --secondary: #0b57d0;
+    --secondary-hover: #0842a0;
+    --on-secondary: #ffffff;
+    --secondary-container: #d3e3fd;
+    --on-secondary-container: #041e49;
+    --secondary-outline: #a8c7fa;
+    --brand-banner: #0b57d0;
+    --on-brand-banner-muted: #d3e3fd;
 
-  /* 語意狀態色：成功 / 警告 / 錯誤 (Semantic Status Tokens) */
-  --success: #137333;
-  --success-container: #CEEAD6;
-  --on-success-container: #0D652D;
-  --success-outline: #81C995;
+    /* 語意狀態色：成功 / 警告 / 錯誤 (Semantic Status Tokens) */
+    --success: #137333;
+    --success-container: #ceead6;
+    --on-success-container: #0d652d;
+    --success-outline: #81c995;
 
-  --warning: #B06000;
-  --warning-container: #FEF7E0;
-  --on-warning-container: #B06000;
-  --warning-outline: #FDD663;
+    --warning: #b06000;
+    --warning-container: #fef7e0;
+    --on-warning-container: #b06000;
+    --warning-outline: #fdd663;
 
-  --danger: #C5221F;
-  --danger-container: #FAD2CF;
-  --on-danger-container: #B3261E;
-  --danger-outline: #F28B82;
+    --danger: #c5221f;
+    --danger-container: #fad2cf;
+    --on-danger-container: #b3261e;
+    --danger-outline: #f28b82;
 
-  /* C4 架構圖與視覺化統計圖表專用變數 (C4 & Visualization Tokens) */
-  --c4-person-bg: #FFFFFF;
-  --c4-system-bg: #FFFFFF;
-  --c4-container-bg: #F8FAFD;
-  --c4-component-bg: #F8FAFD;
-  --c4-internal-bg: #E4EAFE;
-  --c4-external-bg: #E4E5E9;
-  --c4-expandable-bg: #FFFFFF;
-  --c4-expandable-border: #0B57D0;
-  --c4-leaf-bg: #F8FAFD;
-  --c4-leaf-border: rgba(103, 80, 164, 0.6);
-  --c4-edge: #6750A4;
-  --c4-edge-selected: #0B57D0;
-  --c4-edge-label-bg: #F3EDF7;
-  --c4-grid: #94A3B8;
+    /* C4 架構圖與視覺化統計圖表專用變數 (C4 & Visualization Tokens) */
+    --c4-person-bg: #ffffff;
+    --c4-system-bg: #ffffff;
+    --c4-container-bg: #f8fafd;
+    --c4-component-bg: #f8fafd;
+    --c4-internal-bg: #e4eafe;
+    --c4-external-bg: #e4e5e9;
+    --c4-expandable-bg: #ffffff;
+    --c4-expandable-border: #0b57d0;
+    --c4-leaf-bg: #f8fafd;
+    --c4-leaf-border: rgba(103, 80, 164, 0.6);
+    --c4-edge: #6750a4;
+    --c4-edge-selected: #0b57d0;
+    --c4-edge-label-bg: #f3edf7;
+    --c4-grid: #94a3b8;
 
-  --chart-1: #0B57D0;
-  --chart-2: #6750A4;
-  --chart-3: #137333;
-  --chart-4: #B06000;
-  --chart-5: #006A60;
+    --chart-1: #0b57d0;
+    --chart-2: #6750a4;
+    --chart-3: #137333;
+    --chart-4: #b06000;
+    --chart-5: #006a60;
 
-  /* 捲軸色票 (Scrollbar Tokens) */
-  --scrollbar-thumb: #C4C7C5;
-  --scrollbar-thumb-hover: #8E918F;
+    /* 捲軸色票 (Scrollbar Tokens) */
+    --scrollbar-thumb: #c4c7c5;
+    --scrollbar-thumb-hover: #8e918f;
 }
 
 .dark {
-  color-scheme: dark;
+    color-scheme: dark;
 
-  /* 背景與容器層級 */
-  --bg-canvas: #121316;
-  --surface: #1E1F23;
-  --surface-sunken: #121316;
-  --surface-container: #121316;
-  --surface-container-high: #282A2F;
-  --surface-hover: #282A2F;
-  --surface-tonal: rgba(79, 55, 139, 0.4);
+    /* 背景與容器層級 */
+    --bg-canvas: #121316;
+    --surface: #1e1f23;
+    --surface-sunken: #121316;
+    --surface-container: #121316;
+    --surface-container-high: #282a2f;
+    --surface-hover: #282a2f;
+    --surface-tonal: rgba(79, 55, 139, 0.4);
 
-  /* 文字與圖示層級 */
-  --on-surface: #E3E2E6;
-  --on-surface-muted: #C4C7C5;
-  --on-surface-subtle: #8E918F;
+    /* 文字與圖示層級 */
+    --on-surface: #e3e2e6;
+    --on-surface-muted: #c4c7c5;
+    --on-surface-subtle: #8e918f;
 
-  /* 邊框與分隔線 */
-  --outline: #33353A;
-  --outline-subtle: #33353A;
-  --outline-tonal: rgba(103, 80, 164, 0.5);
+    /* 邊框與分隔線 */
+    --outline: #33353a;
+    --outline-subtle: #33353a;
+    --outline-tonal: rgba(103, 80, 164, 0.5);
 
-  /* 主強調色：Material 3 Purple */
-  --primary: #D0BCFF;
-  --primary-hover: #EADDFF;
-  --on-primary: #381E72;
-  --primary-container: #4F378B;
-  --on-primary-container: #EADDFF;
-  --primary-outline: #6750A4;
+    /* 主強調色：Material 3 Purple */
+    --primary: #d0bcff;
+    --primary-hover: #eaddff;
+    --on-primary: #381e72;
+    --primary-container: #4f378b;
+    --on-primary-container: #eaddff;
+    --primary-outline: #6750a4;
 
-  /* 次強調色：Material 3 Blue */
-  --secondary: #A8C7FA;
-  --secondary-hover: #D3E3FD;
-  --on-secondary: #041E49;
-  --secondary-container: #004A77;
-  --on-secondary-container: #C2E7FF;
-  --secondary-outline: #004A77;
-  --brand-banner: #0842A0;
-  --on-brand-banner-muted: #D3E3FD;
+    /* 次強調色：Material 3 Blue */
+    --secondary: #a8c7fa;
+    --secondary-hover: #d3e3fd;
+    --on-secondary: #041e49;
+    --secondary-container: #004a77;
+    --on-secondary-container: #c2e7ff;
+    --secondary-outline: #004a77;
+    --brand-banner: #0842a0;
+    --on-brand-banner-muted: #d3e3fd;
 
-  /* 語意狀態色：成功 / 警告 / 錯誤 */
-  --success: #81C995;
-  --success-container: rgba(15, 82, 35, 0.5);
-  --on-success-container: #C4EED0;
-  --success-outline: #137333;
+    /* 語意狀態色：成功 / 警告 / 錯誤 */
+    --success: #81c995;
+    --success-container: rgba(15, 82, 35, 0.5);
+    --on-success-container: #c4eed0;
+    --success-outline: #137333;
 
-  --warning: #FDD663;
-  --warning-container: rgba(89, 67, 0, 0.5);
-  --on-warning-container: #FCE8B2;
-  --warning-outline: #B06000;
+    --warning: #fdd663;
+    --warning-container: rgba(89, 67, 0, 0.5);
+    --on-warning-container: #fce8b2;
+    --warning-outline: #b06000;
 
-  --danger: #F2B8B5;
-  --danger-container: rgba(140, 29, 24, 0.4);
-  --on-danger-container: #F2B8B5;
-  --danger-outline: #8C1D18;
+    --danger: #f2b8b5;
+    --danger-container: rgba(140, 29, 24, 0.4);
+    --on-danger-container: #f2b8b5;
+    --danger-outline: #8c1d18;
 
-  /* C4 架構圖與視覺化統計圖表專用變數 */
-  --c4-person-bg: #1E1F23;
-  --c4-system-bg: #1E1F23;
-  --c4-container-bg: #121316;
-  --c4-component-bg: #121316;
-  --c4-internal-bg: #293550;
-  --c4-external-bg: #36373D;
-  --c4-expandable-bg: #1E1F23;
-  --c4-expandable-border: #A8C7FA;
-  --c4-leaf-bg: #121316;
-  --c4-leaf-border: rgba(208, 188, 255, 0.6);
-  --c4-edge: #D0BCFF;
-  --c4-edge-selected: #A8C7FA;
-  --c4-edge-label-bg: #282A2F;
-  --c4-grid: #33353A;
+    /* C4 架構圖與視覺化統計圖表專用變數 */
+    --c4-person-bg: #1e1f23;
+    --c4-system-bg: #1e1f23;
+    --c4-container-bg: #121316;
+    --c4-component-bg: #121316;
+    --c4-internal-bg: #293550;
+    --c4-external-bg: #36373d;
+    --c4-expandable-bg: #1e1f23;
+    --c4-expandable-border: #a8c7fa;
+    --c4-leaf-bg: #121316;
+    --c4-leaf-border: rgba(208, 188, 255, 0.6);
+    --c4-edge: #d0bcff;
+    --c4-edge-selected: #a8c7fa;
+    --c4-edge-label-bg: #282a2f;
+    --c4-grid: #33353a;
 
-  --chart-1: #0B57D0;
-  --chart-2: #6750A4;
-  --chart-3: #137333;
-  --chart-4: #B06000;
-  --chart-5: #006A60;
+    --chart-1: #0b57d0;
+    --chart-2: #6750a4;
+    --chart-3: #137333;
+    --chart-4: #b06000;
+    --chart-5: #006a60;
 
-  /* 捲軸色票 */
-  --scrollbar-thumb: #444746;
-  --scrollbar-thumb-hover: #8E918F;
+    /* 捲軸色票 */
+    --scrollbar-thumb: #444746;
+    --scrollbar-thumb-hover: #8e918f;
 }
 
 @theme {
-  --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo;
+    --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo;
 
-  /* 映射語意化 CSS Variables 為原生 Tailwind 工具類別 */
-  --color-canvas: var(--bg-canvas);
-  --color-surface: var(--surface);
-  --color-surface-sunken: var(--surface-sunken);
-  --color-surface-container: var(--surface-container);
-  --color-surface-high: var(--surface-container-high);
-  --color-surface-hover: var(--surface-hover);
-  --color-surface-tonal: var(--surface-tonal);
+    /* 映射語意化 CSS Variables 為原生 Tailwind 工具類別 */
+    --color-canvas: var(--bg-canvas);
+    --color-surface: var(--surface);
+    --color-surface-sunken: var(--surface-sunken);
+    --color-surface-container: var(--surface-container);
+    --color-surface-high: var(--surface-container-high);
+    --color-surface-hover: var(--surface-hover);
+    --color-surface-tonal: var(--surface-tonal);
 
-  --color-on-surface: var(--on-surface);
-  --color-on-muted: var(--on-surface-muted);
-  --color-on-subtle: var(--on-surface-subtle);
+    --color-on-surface: var(--on-surface);
+    --color-on-muted: var(--on-surface-muted);
+    --color-on-subtle: var(--on-surface-subtle);
 
-  --color-outline: var(--outline);
-  --color-outline-subtle: var(--outline-subtle);
-  --color-outline-tonal: var(--outline-tonal);
+    --color-outline: var(--outline);
+    --color-outline-subtle: var(--outline-subtle);
+    --color-outline-tonal: var(--outline-tonal);
 
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-on-primary: var(--on-primary);
-  --color-primary-container: var(--primary-container);
-  --color-on-primary-container: var(--on-primary-container);
-  --color-primary-outline: var(--primary-outline);
+    --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --color-on-primary: var(--on-primary);
+    --color-primary-container: var(--primary-container);
+    --color-on-primary-container: var(--on-primary-container);
+    --color-primary-outline: var(--primary-outline);
 
-  --color-secondary: var(--secondary);
-  --color-secondary-hover: var(--secondary-hover);
-  --color-on-secondary: var(--on-secondary);
-  --color-secondary-container: var(--secondary-container);
-  --color-on-secondary-container: var(--on-secondary-container);
-  --color-secondary-outline: var(--secondary-outline);
-  --color-brand-banner: var(--brand-banner);
-  --color-on-brand-banner-muted: var(--on-brand-banner-muted);
+    --color-secondary: var(--secondary);
+    --color-secondary-hover: var(--secondary-hover);
+    --color-on-secondary: var(--on-secondary);
+    --color-secondary-container: var(--secondary-container);
+    --color-on-secondary-container: var(--on-secondary-container);
+    --color-secondary-outline: var(--secondary-outline);
+    --color-brand-banner: var(--brand-banner);
+    --color-on-brand-banner-muted: var(--on-brand-banner-muted);
 
-  --color-success: var(--success);
-  --color-success-container: var(--success-container);
-  --color-on-success-container: var(--on-success-container);
-  --color-success-outline: var(--success-outline);
+    --color-success: var(--success);
+    --color-success-container: var(--success-container);
+    --color-on-success-container: var(--on-success-container);
+    --color-success-outline: var(--success-outline);
 
-  --color-warning: var(--warning);
-  --color-warning-container: var(--warning-container);
-  --color-on-warning-container: var(--on-warning-container);
-  --color-warning-outline: var(--warning-outline);
+    --color-warning: var(--warning);
+    --color-warning-container: var(--warning-container);
+    --color-on-warning-container: var(--on-warning-container);
+    --color-warning-outline: var(--warning-outline);
 
-  --color-danger: var(--danger);
-  --color-danger-container: var(--danger-container);
-  --color-on-danger-container: var(--on-danger-container);
-  --color-danger-outline: var(--danger-outline);
+    --color-danger: var(--danger);
+    --color-danger-container: var(--danger-container);
+    --color-on-danger-container: var(--on-danger-container);
+    --color-danger-outline: var(--danger-outline);
 }
 
 @layer base {
-  body {
-    font-family: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
-    background-color: var(--bg-canvas);
-    color: var(--on-surface);
-  }
+    body {
+        font-family:
+            "Inter",
+            "Noto Sans TC",
+            system-ui,
+            -apple-system,
+            sans-serif;
+        background-color: var(--bg-canvas);
+        color: var(--on-surface);
+    }
 
-  code, pre, .font-mono-code {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
+    ::selection {
+        background-color: var(--secondary);
+        color: var(--on-secondary);
+    }
+
+    code,
+    pre,
+    .font-mono-code {
+        font-family:
+            "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+            Consolas, monospace;
+    }
 }
 
 @layer components {
-  .ui-card {
-    @apply bg-surface text-on-surface border border-outline-subtle rounded-[24px] shadow-xs transition-colors;
-  }
+    .ui-card {
+        @apply bg-surface text-on-surface border border-outline-subtle rounded-3xl shadow-xs transition-colors;
+    }
 
-  .ui-card-sm {
-    @apply bg-surface text-on-surface border border-outline-subtle rounded-2xl p-4 shadow-xs transition-colors;
-  }
+    .ui-card-sm {
+        @apply bg-surface text-on-surface border border-outline-subtle rounded-2xl p-4 shadow-xs transition-colors;
+    }
 
-  .ui-panel {
-    @apply bg-surface-sunken text-on-surface border border-outline rounded-2xl transition-colors;
-  }
+    .ui-panel {
+        @apply bg-surface-sunken text-on-surface border border-outline rounded-2xl transition-colors;
+    }
 
-  .ui-card-header {
-    @apply px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
-  }
+    .ui-card-header {
+        @apply px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
+    }
 
-  .ui-pill-group {
-    @apply inline-flex items-center bg-surface-container p-1 rounded-full border border-outline;
-  }
+    .ui-pill-group {
+        @apply inline-flex items-center bg-surface-container p-1 rounded-full border border-outline;
+    }
 
-  .ui-input {
-    @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2 text-xs sm:text-sm text-on-surface placeholder-on-subtle focus:outline-hidden focus:ring-2 focus:ring-secondary transition;
-  }
+    .ui-input {
+        @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2 text-xs sm:text-sm text-on-surface placeholder-on-subtle focus:outline-hidden focus:ring-2 focus:ring-secondary transition;
+    }
 
-  .ui-btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-2xs transition disabled:opacity-50;
-  }
+    .ui-btn-primary {
+        @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-2xs transition disabled:opacity-50;
+    }
 
-  .ui-btn-tonal {
-    @apply inline-flex items-center gap-1.5 rounded-xl bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40;
-  }
+    .ui-btn-tonal {
+        @apply inline-flex items-center gap-1.5 rounded-xl bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40;
+    }
 
-  .ui-markdown {
-    @apply min-h-96 break-words text-sm leading-7 text-on-surface
+    .ui-markdown {
+        @apply min-h-96 wrap-break-words text-sm leading-7 text-on-surface
       [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg
       [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-semibold
       [&_h1]:text-on-surface [&_h2]:text-on-surface
@@ -283,50 +297,50 @@
       [&_td]:border [&_td]:border-outline [&_td]:p-2.5
       [&_hr]:my-5 [&_hr]:border-outline
       [&_img]:max-w-full;
-  }
+    }
 }
 
 /* Material Design 3 React Flow Controls & MiniMap Unification (Driven by Semantic CSS Variables) */
 .react-flow__controls {
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  border: 1px solid var(--outline) !important;
-  background-color: var(--surface) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--outline) !important;
+    background-color: var(--surface) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
 }
 
 .react-flow__controls-button {
-  background-color: var(--surface) !important;
-  border-bottom: 1px solid var(--outline) !important;
-  fill: var(--on-surface-muted) !important;
-  color: var(--on-surface-muted) !important;
-  transition: background-color 0.15s ease !important;
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--outline) !important;
+    fill: var(--on-surface-muted) !important;
+    color: var(--on-surface-muted) !important;
+    transition: background-color 0.15s ease !important;
 }
 
 .react-flow__controls-button:hover {
-  background-color: var(--surface-hover) !important;
-  fill: var(--primary) !important;
+    background-color: var(--surface-hover) !important;
+    fill: var(--primary) !important;
 }
 
 .react-flow__minimap {
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  border: 1px solid var(--outline) !important;
-  background-color: var(--surface) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--outline) !important;
+    background-color: var(--surface) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-canvas);
+    background: var(--bg-canvas);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 9999px;
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+    background: var(--scrollbar-thumb-hover);
 }

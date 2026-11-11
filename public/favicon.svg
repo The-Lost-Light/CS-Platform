@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6750A4" />
+      <stop offset="100%" stop-color="#0B57D0" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="32" height="32" rx="7" fill="url(#primary-grad)" />
+
+  <!-- Architecture Hierarchy / C4 Node Structure & Code Bracket Icon -->
+  <g filter="url(#shadow)" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Connecting network lines -->
+    <path d="M11 11L21 11M16 11L16 21M11 21L21 21" stroke-width="1.5" stroke-opacity="0.75" />
+
+    <!-- Top System Node -->
+    <rect x="7" y="7" width="8" height="8" rx="2" fill="#FFFFFF" stroke="none" />
+    <circle cx="11" cy="11" r="1.5" fill="#6750A4" stroke="none" />
+
+    <!-- Top Right Component Node -->
+    <rect x="17" y="7" width="8" height="8" rx="2" fill="#EADDFF" stroke="#FFFFFF" stroke-width="1" />
+
+    <!-- Bottom Left Container Node -->
+    <rect x="7" y="17" width="8" height="8" rx="2" fill="#D3E3FD" stroke="#FFFFFF" stroke-width="1" />
+
+    <!-- Bottom Right Highlight Node (Active target) -->
+    <rect x="17" y="17" width="8" height="8" rx="2" fill="#FFFFFF" stroke="none" />
+    <path d="M19.5 19.5L22.5 22.5M22.5 19.5L19.5 22.5" stroke="#0B57D0" stroke-width="1.4" />
+  </g>
+</svg>

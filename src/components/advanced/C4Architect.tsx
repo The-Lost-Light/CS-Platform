@@ -104,9 +104,9 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
 
 type BoundaryNode = Node<{ title: string }, 'boundary'>;
 function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
-  return <div className="h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5">
+  return <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 cursor-move">
     <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
-    <div className="c4-boundary-title px-4 py-3 text-sm font-bold text-primary cursor-move">{data.title}</div>
+    <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
   </div>;
 }
 const nodeTypes = { c4: C4Card, boundary: C4BoundaryCard };
@@ -234,7 +234,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 
   if (scope) flowNodes.unshift({ id: boundaryId, type: 'boundary', position: { x: boundary.x, y: boundary.y },
     style: { width: boundary.width, height: boundary.height }, data: { title: scope.label },
-    selected: selectedId === boundaryId, deletable: false, connectable: false, dragHandle: '.c4-boundary-title', zIndex: -1 });
+    selected: selectedId === boundaryId, deletable: false, connectable: false, dragHandle: '.c4-boundary-drag', zIndex: -1 });
 
   const flowEdges = relationships.filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target)).map(edge => ({
     ...edge,
@@ -545,6 +545,8 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   nodes={flowNodes}
                   edges={flowEdges}
                   nodeTypes={nodeTypes}
+                  // Keep the selected boundary behind its contents so nodes remain clickable.
+                  elevateNodesOnSelect={false}
                   fitView
                   onInit={instance => { flowInstance.current = instance; }}
                   panOnDrag={[1]}

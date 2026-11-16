@@ -2,16 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import App from "../src/App";
+import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
+import { demoAuthService } from "../src/auth/demoAuthService";
 import { ArchitectureComparisonPanel } from "../src/components/advanced/ArchitectureComparisonPanel";
 import { GitHubRepoDashboard } from "../src/components/advanced/GitHubRepoDashboard";
 import { ProjectWorkspace } from "../src/components/advanced/ProjectWorkspace";
 import { LoginView } from "../src/components/auth/LoginView";
 import { HomeDashboard } from "../src/components/home/HomeDashboard";
 import { Navbar } from "../src/components/layout/Navbar";
-import { demoAuthService } from "../src/auth/demoAuthService";
-import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
 import {
-  getLocalizedAssignments,
+  getLocalizedProjects,
   updateLocalizedProjectDraft,
 } from "../src/data/localizedAssignments";
 import { I18nProvider } from "../src/i18n";
@@ -30,8 +30,8 @@ import {
   fetchGitHubProjectBundle,
 } from "../src/utils/githubService";
 
-const zh = getLocalizedAssignments("zh-TW");
-const en = getLocalizedAssignments("en");
+const zh = getLocalizedProjects("zh-TW");
+const en = getLocalizedProjects("en");
 const t = createTranslator("en");
 const han = /[\u3400-\u9fff]/;
 const bundle = {
@@ -220,7 +220,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
             onLogout={noop}
           />
           <HomeDashboard
-            projects={getLocalizedAssignments(locale).projects}
+            projects={getLocalizedProjects(locale).projects}
             currentUser={DEMO_ACCOUNTS[0]}
             onOpenProject={noop}
           />
@@ -228,7 +228,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
       </ThemeProvider>,
     );
     const visibleText = html.replace(/<[^>]*>/g, "");
-    const { projects: advancedProjects } = getLocalizedAssignments(locale);
+    const { projects: advancedProjects } = getLocalizedProjects(locale);
     for (const project of advancedProjects) {
       assert.ok(visibleText.includes(project.codeName));
       assert.ok(
@@ -263,7 +263,13 @@ const analysis = analyzeArchitectureAlignment(
 );
 const screens = {
   app: <App />,
-  dashboard: <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />,
+  dashboard: (
+    <HomeDashboard
+      projects={en.projects}
+      currentUser={DEMO_ACCOUNTS[0]}
+      onOpenProject={noop}
+    />
+  ),
   login: <LoginView onLogin={demoAuthService.login} />,
   project: <ProjectWorkspace project={en.projects[0]} />,
   comparison: <ArchitectureComparisonPanel analysis={analysis} />,

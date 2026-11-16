@@ -1,7 +1,7 @@
 import { createTranslator, type Locale } from "../i18n/messages";
 import { createProjects, type Project } from "./assignmentsData";
 
-export function getLocalizedAssignments(locale: Locale) {
+export function getLocalizedProjects(locale: Locale) {
   const t = createTranslator(locale);
   return {
     projects: createProjects(t),

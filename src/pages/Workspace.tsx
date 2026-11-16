@@ -2,9 +2,9 @@ import type { AuthenticatedSession } from "@/auth/AuthGate";
 import { ProjectWorkspace } from "@/components/advanced/ProjectWorkspace";
 import { HomeDashboard } from "@/components/home/HomeDashboard";
 import { Navbar } from "@/components/layout/Navbar";
-import { usePageNavigation } from "./usePageNavigation";
+import { usePageNavigation } from "./navigation";
 
-export function PageManager({ currentUser, logout }: AuthenticatedSession) {
+export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
   const {
     activeView,
     projects,

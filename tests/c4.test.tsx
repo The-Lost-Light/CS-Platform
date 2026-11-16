@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PROJECTS } from "../src/data/assignmentsData";
-import { analyzeArchitectureAlignment } from "../src/utils/architectureAnalyzer";
 import {
   c4Drilldown,
   createC4NodeInScope,
@@ -11,7 +10,6 @@ import {
   visibleC4Nodes,
   type C4Node,
 } from "../src/utils/c4Model";
-import { BUILTIN_REPO_SNAPSHOTS } from "../src/utils/githubService";
 
 const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
 
@@ -208,31 +206,6 @@ test("removing a system recursively removes descendants including code elements"
   );
   assert.ok(remaining.some((node) => node.id === "node-api"));
 });
-test("people and external systems without paths do not lower file alignment", () => {
-  const repoBundle = {
-    ...BUILTIN_REPO_SNAPSHOTS["student-team/course-oj-platform"],
-    sourceType: "snapshot",
-    rateLimit: "",
-  };
-  const base = analyzeArchitectureAlignment({
-    mindMapNodes: nodes,
-    repoBundle,
-  });
-  const person: C4Node = {
-    ...nodes[0],
-    id: "user",
-    kind: "person",
-    expectedPath: "",
-    parentId: null,
-  };
-  const withPerson = analyzeArchitectureAlignment({
-    mindMapNodes: [...nodes, person],
-    repoBundle,
-  });
-  assert.equal(withPerson.alignmentScore, base.alignmentScore);
-  assert.equal(withPerson.nodeEvaluations.at(-1)?.status, "unmapped");
-});
-
 test("external elements cannot receive children, but can become internal again", () => {
   const external = { ...nodes[0], external: true };
   assert.equal(

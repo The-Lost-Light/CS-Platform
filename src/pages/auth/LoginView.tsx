@@ -45,7 +45,7 @@ export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-success-outline shrink-0" />
-                <span>{t('auth.features.comparison')}</span>
+                <span>{t('auth.features.github')}</span>
               </div>
             </div>
           </div>

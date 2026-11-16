@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import App from "../src/App";
+import { AuthGate } from "../src/pages/auth/AuthGate";
+import { WorkSpace } from "../src/pages/Workspace";
 import { AuthProvider, useAuth } from "../src/auth/AuthProvider";
 import {
   DEFAULT_LOGIN_CREDENTIALS,
@@ -131,12 +132,14 @@ test("using authentication outside its provider reports the missing boundary", (
   assert.throws(() => renderToStaticMarkup(<SessionStatus />), /AuthProvider/);
 });
 
-test("App initially presents login and hides authenticated navigation and dashboard", () => {
+test("AuthGate initially presents login and hides authenticated navigation and dashboard", () => {
   const t = createTranslator("en");
   const html = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
-        <App />
+        <AuthProvider>
+          <AuthGate>{(session) => <WorkSpace {...session} />}</AuthGate>
+        </AuthProvider>
       </I18nProvider>
     </ThemeProvider>,
   );

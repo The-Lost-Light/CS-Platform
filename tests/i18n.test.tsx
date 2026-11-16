@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import App from "../src/App";
+import { AuthProvider } from "../src/auth/AuthProvider";
+import { AuthGate } from "../src/pages/auth/AuthGate";
+import { WorkSpace } from "../src/pages/Workspace";
 import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
 import { demoAuthService } from "../src/auth/demoAuthService";
-import { ArchitectureComparisonPanel } from "../src/pages/advanced/ArchitectureComparisonPanel";
 import { GitHubRepoDashboard } from "../src/pages/advanced/GitHubRepoDashboard";
 import { ProjectWorkspace } from "../src/pages/advanced/ProjectWorkspace";
 import { LoginView } from "../src/pages/auth/LoginView";
@@ -24,7 +25,6 @@ import {
   type MessageKey,
 } from "../src/i18n/messages";
 import { ThemeProvider, isThemeMode, resolveTheme } from "../src/theme";
-import { analyzeArchitectureAlignment } from "../src/utils/architectureAnalyzer";
 import {
   BUILTIN_REPO_SNAPSHOTS,
   fetchGitHubProjectBundle,
@@ -180,30 +180,6 @@ test("language changes preserve custom nodes, edited fields, deleted nodes, path
   assert.equal(roundTrip.designDoc, doc);
 });
 
-test("architecture analysis localizes messages without changing scores or matches", () => {
-  const analyze = (
-    project: (typeof en.projects)[number],
-    locale: "en" | "zh-TW",
-  ) =>
-    analyzeArchitectureAlignment(
-      {
-        mindMapNodes: project.initialMindMapNodes,
-        designDoc: project.initialDesignDoc,
-        repoBundle: bundle,
-      },
-      createTranslator(locale),
-    );
-  const english = analyze(en.projects[0], "en");
-  const chinese = analyze(zh.projects[0], "zh-TW");
-  assert.equal(english.alignmentScore, chinese.alignmentScore);
-  assert.deepEqual(english.docPathAudit, chinese.docPathAudit);
-  assert.deepEqual(
-    english.nodeEvaluations.map((node) => node.matchedFiles),
-    chinese.nodeEvaluations.map((node) => node.matchedFiles),
-  );
-  assert.equal(han.test(JSON.stringify(english)), false);
-});
-
 const noop = () => {};
 
 test("dashboard lists every project and uses project-only navigation in both languages", () => {
@@ -254,15 +230,12 @@ test("dashboard lists every project and uses project-only navigation in both lan
   }
 });
 
-const analysis = analyzeArchitectureAlignment(
-  {
-    mindMapNodes: en.projects[0].initialMindMapNodes,
-    repoBundle: bundle,
-  },
-  t,
-);
 const screens = {
-  app: <App />,
+  authGate: (
+    <AuthProvider>
+      <AuthGate>{(session) => <WorkSpace {...session} />}</AuthGate>
+    </AuthProvider>
+  ),
   dashboard: (
     <HomeDashboard
       projects={en.projects}
@@ -272,7 +245,6 @@ const screens = {
   ),
   login: <LoginView onLogin={demoAuthService.login} />,
   project: <ProjectWorkspace project={en.projects[0]} />,
-  comparison: <ArchitectureComparisonPanel analysis={analysis} />,
   github: <GitHubRepoDashboard repoBundle={bundle} />,
 };
 

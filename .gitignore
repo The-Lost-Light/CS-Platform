@@ -3,6 +3,6 @@ pnpm-lock.yaml
 node_modules/
 node-compile-cache/
 dist/
-tmp/
 
+.test/
 examples/

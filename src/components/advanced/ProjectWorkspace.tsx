@@ -1,56 +1,65 @@
-import { useI18n } from '../../i18n';
-import { isMessageKey, type MessageKey } from '../../i18n/messages';
-import type { AdvancedProject, RepoBundle } from '../../types';
-import { useState, useEffect, useRef } from 'react';
-import { updateLocalizedProjectDraft } from '../../data/localizedAssignments';
 import {
-  FolderGit2,
-  RefreshCw,
-  KeyRound,
-  Compass,
-  GitBranch,
   AlertCircle,
-} from 'lucide-react';
-import { fetchGitHubProjectBundle } from '../../utils/githubService';
-import { C4Architect } from './C4Architect';
-import { migrateC4Nodes, type C4Relationship } from '../../utils/c4Model';
-import { GitHubRepoDashboard } from './GitHubRepoDashboard';
+  Compass,
+  FolderGit2,
+  GitBranch,
+  KeyRound,
+  RefreshCw,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { updateLocalizedProjectDraft } from "../../data/localizedAssignments";
+import { useI18n } from "../../i18n";
+import { isMessageKey, type MessageKey } from "../../i18n/messages";
+import type { Project, RepoBundle } from "../../types";
+import { migrateC4Nodes, type C4Relationship } from "../../utils/c4Model";
+import { fetchGitHubProjectBundle } from "../../utils/githubService";
+import { C4Architect } from "./C4Architect";
+import { GitHubRepoDashboard } from "./GitHubRepoDashboard";
 
-export function AdvancedProjectWorkspace({
-  project,
-}: {
-  project: AdvancedProject;
-}) {
+export function ProjectWorkspace({ project }: { project: Project }) {
   const { t } = useI18n();
   const [repoUrlInput, setRepoUrlInput] = useState(
-    project.defaultRepoUrl || 'https://github.com/student-team/course-oj-platform'
+    project.defaultRepoUrl ||
+      "https://github.com/student-team/course-oj-platform",
   );
-  const [githubToken, setGithubToken] = useState('');
+  const [githubToken, setGithubToken] = useState("");
   const [showTokenInput, setShowTokenInput] = useState(false);
-  const [mindMapNodes, setMindMapNodes] = useState(() => migrateC4Nodes(project.initialMindMapNodes || []));
+  const [mindMapNodes, setMindMapNodes] = useState(() =>
+    migrateC4Nodes(project.initialMindMapNodes || []),
+  );
   const [relationships, setRelationships] = useState<C4Relationship[]>([]);
-  const [designDoc, setDesignDoc] = useState(project.initialDesignDoc || '');
+  const [designDoc, setDesignDoc] = useState(project.initialDesignDoc || "");
   const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(null);
   const [isLoadingRepo, setIsLoadingRepo] = useState(false);
-  const [repoError, setRepoError] = useState<{ key: MessageKey } | { message: string } | null>(null);
+  const [repoError, setRepoError] = useState<
+    { key: MessageKey } | { message: string } | null
+  >(null);
   const previousProject = useRef(project);
-  const [activeTab, setActiveTab] = useState<'design' | 'github'>('design');
+  const [activeTab, setActiveTab] = useState<"design" | "github">("design");
 
   useEffect(() => {
     const previous = previousProject.current;
     previousProject.current = project;
     if (previous.id === project.id && previous !== project) {
-      setMindMapNodes(nodes => {
-        const localized = updateLocalizedProjectDraft(nodes, '', previous, project).nodes;
+      setMindMapNodes((nodes) => {
+        const localized = updateLocalizedProjectDraft(
+          nodes,
+          "",
+          previous,
+          project,
+        ).nodes;
         return nodes.map((node, index) => ({ ...node, ...localized[index] }));
       });
-      setDesignDoc(doc => updateLocalizedProjectDraft([], doc, previous, project).designDoc);
+      setDesignDoc(
+        (doc) =>
+          updateLocalizedProjectDraft([], doc, previous, project).designDoc,
+      );
       return;
     }
     setRepoUrlInput(project.defaultRepoUrl);
     setMindMapNodes(migrateC4Nodes(project.initialMindMapNodes || []));
     setRelationships([]);
-    setDesignDoc(project.initialDesignDoc || '');
+    setDesignDoc(project.initialDesignDoc || "");
     handleLoadRepo(project.defaultRepoUrl);
   }, [project]);
 
@@ -61,9 +70,13 @@ export function AdvancedProjectWorkspace({
       const bundle = await fetchGitHubProjectBundle(targetUrl, githubToken);
       setRepoBundle(bundle);
     } catch (err) {
-      setRepoError(err instanceof Error
-        ? isMessageKey(err.message) ? { key: err.message } : { message: err.message }
-        : { key: 'workspace.errors.syncFailed' });
+      setRepoError(
+        err instanceof Error
+          ? isMessageKey(err.message)
+            ? { key: err.message }
+            : { message: err.message }
+          : { key: "workspace.errors.syncFailed" },
+      );
     } finally {
       setIsLoadingRepo(false);
     }
@@ -94,10 +107,10 @@ export function AdvancedProjectWorkspace({
 
         <div
           role="tablist"
-          aria-label={t('workspace.tabs.design')}
+          aria-label={t("workspace.tabs.design")}
           className="ui-pill-group gap-1 self-start sm:self-auto shrink-0"
         >
-          {(['design', 'github'] as const).map(tab => (
+          {(["design", "github"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -108,25 +121,36 @@ export function AdvancedProjectWorkspace({
               onClick={() => setActiveTab(tab)}
               className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition ${
                 activeTab === tab
-                  ? tab === 'design'
-                    ? 'bg-primary text-on-primary shadow-2xs'
-                    : 'bg-secondary text-on-secondary shadow-2xs'
-                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
+                  ? tab === "design"
+                    ? "bg-primary text-on-primary shadow-2xs"
+                    : "bg-secondary text-on-secondary shadow-2xs"
+                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
               }`}
             >
-              {tab === 'design' ? (
+              {tab === "design" ? (
                 <Compass className="w-3.5 h-3.5" />
               ) : (
                 <GitBranch className="w-3.5 h-3.5" />
               )}
-              <span>{t(tab === 'design' ? 'workspace.tabs.design' : 'workspace.tabs.github')}</span>
+              <span>
+                {t(
+                  tab === "design"
+                    ? "workspace.tabs.design"
+                    : "workspace.tabs.github",
+                )}
+              </span>
             </button>
           ))}
         </div>
       </section>
 
       {/* Step 1: Mind Map & Written Architecture Design */}
-      <div role="tabpanel" id="workspace-panel-design" aria-labelledby="workspace-tab-design" hidden={activeTab !== 'design'}>
+      <div
+        role="tabpanel"
+        id="workspace-panel-design"
+        aria-labelledby="workspace-tab-design"
+        hidden={activeTab !== "design"}
+      >
         <C4Architect
           key={project.id}
           relationships={relationships}
@@ -139,7 +163,13 @@ export function AdvancedProjectWorkspace({
       </div>
 
       {/* Step 2: GitHub Repository Explorer */}
-      <div role="tabpanel" id="workspace-panel-github" aria-labelledby="workspace-tab-github" className="space-y-6" hidden={activeTab !== 'github'}>
+      <div
+        role="tabpanel"
+        id="workspace-panel-github"
+        aria-labelledby="workspace-tab-github"
+        className="space-y-6"
+        hidden={activeTab !== "github"}
+      >
         <div className="ui-card p-5 sm:p-6 space-y-4">
           <div className="flex items-center justify-between gap-2">
             <button
@@ -148,18 +178,20 @@ export function AdvancedProjectWorkspace({
               className="px-3.5 py-1.5 rounded-full bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline text-xs font-semibold inline-flex items-center gap-1.5 transition"
             >
               <KeyRound className="w-3.5 h-3.5 text-warning" />
-              <span>{t('workspace.githubToken')}</span>
+              <span>{t("workspace.githubToken")}</span>
             </button>
           </div>
 
           {showTokenInput && (
             <div className="ui-panel p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">
-              <span className="font-semibold text-on-muted shrink-0">Personal Access Token:</span>
+              <span className="font-semibold text-on-muted shrink-0">
+                Personal Access Token:
+              </span>
               <input
                 type="password"
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
-                placeholder={t('workspace.tokenPlaceholder')}
+                placeholder={t("workspace.tokenPlaceholder")}
                 className="flex-1 px-3 py-2 bg-surface border border-outline rounded-xl text-on-surface font-mono focus:outline-hidden focus:ring-2 focus:ring-secondary"
               />
             </div>
@@ -179,7 +211,7 @@ export function AdvancedProjectWorkspace({
                 type="text"
                 value={repoUrlInput}
                 onChange={(e) => setRepoUrlInput(e.target.value)}
-                placeholder={t('workspace.repoPlaceholder')}
+                placeholder={t("workspace.repoPlaceholder")}
                 className="ui-input pl-10 pr-4 py-2.5 font-mono focus:ring-primary"
               />
             </div>
@@ -189,8 +221,10 @@ export function AdvancedProjectWorkspace({
               disabled={isLoadingRepo}
               className="ui-btn-primary px-5 py-2.5 text-xs sm:text-sm shrink-0"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoadingRepo ? 'animate-spin' : ''}`} />
-              <span>{t('workspace.sync')}</span>
+              <RefreshCw
+                className={`w-4 h-4 ${isLoadingRepo ? "animate-spin" : ""}`}
+              />
+              <span>{t("workspace.sync")}</span>
             </button>
           </form>
 
@@ -200,29 +234,34 @@ export function AdvancedProjectWorkspace({
               className="p-3.5 rounded-xl bg-danger-container border border-danger-outline text-on-danger-container text-xs font-semibold flex items-center gap-2"
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{'key' in repoError ? t(repoError.key) : repoError.message}</span>
+              <span>
+                {"key" in repoError ? t(repoError.key) : repoError.message}
+              </span>
             </div>
           )}
 
           {/* Quick Repo Preset Switcher */}
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-on-muted pt-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold">{t('workspace.sampleRepos')}</span>
+              <span className="font-semibold">
+                {t("workspace.sampleRepos")}
+              </span>
               <button
                 type="button"
                 onClick={() => {
-                  const u = 'https://github.com/student-team/course-oj-platform';
+                  const u =
+                    "https://github.com/student-team/course-oj-platform";
                   setRepoUrlInput(u);
                   handleLoadRepo(u);
                 }}
                 className="px-3 py-1 rounded-full bg-surface-tonal hover:bg-primary-container text-on-primary-container border border-outline-tonal font-mono font-semibold transition"
               >
-                {t('workspace.studentRepo')}
+                {t("workspace.studentRepo")}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  const u = 'https://github.com/facebook/react';
+                  const u = "https://github.com/facebook/react";
                   setRepoUrlInput(u);
                   handleLoadRepo(u);
                 }}

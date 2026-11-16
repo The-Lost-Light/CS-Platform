@@ -1,16 +1,16 @@
-import { useI18n } from '../../i18n';
-import { useTheme, type ThemeMode } from '../../theme';
-import type { AdvancedProject, User } from '../../types';
-import { LanguageSwitcher } from './LanguageSwitcher';
 import {
   Code2,
-  Home,
   FolderGit2,
+  Home,
   LogOut,
-  Sun,
-  Moon,
   Monitor,
-} from 'lucide-react';
+  Moon,
+  Sun,
+} from "lucide-react";
+import { useI18n } from "../../i18n";
+import { useTheme, type ThemeMode } from "../../theme";
+import type { Project, User } from "../../types";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Navbar({
   activeView,
@@ -20,8 +20,8 @@ export function Navbar({
   currentUser,
   onLogout,
 }: {
-  activeView: 'home' | 'project';
-  selectedProject: AdvancedProject | null;
+  activeView: "home" | "project";
+  selectedProject: Project | null;
   onNavigateHome: () => void;
   onSelectProjectDefault: () => void;
   currentUser: User;
@@ -30,10 +30,30 @@ export function Navbar({
   const { t } = useI18n();
   const { mode, setMode } = useTheme();
 
-  const themeOptions: { value: ThemeMode; label: string; title: string; Icon: typeof Monitor }[] = [
-    { value: 'system', label: t('common.auto'), title: t('theme.systemDescription'), Icon: Monitor },
-    { value: 'light', label: t('theme.light'), title: t('theme.lightDescription'), Icon: Sun },
-    { value: 'dark', label: t('theme.dark'), title: t('theme.darkDescription'), Icon: Moon },
+  const themeOptions: {
+    value: ThemeMode;
+    label: string;
+    title: string;
+    Icon: typeof Monitor;
+  }[] = [
+    {
+      value: "system",
+      label: t("common.auto"),
+      title: t("theme.systemDescription"),
+      Icon: Monitor,
+    },
+    {
+      value: "light",
+      label: t("theme.light"),
+      title: t("theme.lightDescription"),
+      Icon: Sun,
+    },
+    {
+      value: "dark",
+      label: t("theme.dark"),
+      title: t("theme.darkDescription"),
+      Icon: Moon,
+    },
   ];
 
   return (
@@ -61,7 +81,7 @@ export function Navbar({
             </div>
           </button>
 
-          {selectedProject && activeView === 'project' && (
+          {selectedProject && activeView === "project" && (
             <div className="hidden xl:flex items-center gap-2 pl-2.5 ml-1 border-l border-outline text-xs">
               <span className="px-2 py-0.5 rounded-full font-mono font-bold bg-primary-container text-on-primary-container">
                 {selectedProject.codeName}
@@ -80,26 +100,26 @@ export function Navbar({
               type="button"
               onClick={onNavigateHome}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
-                activeView === 'home'
-                  ? 'bg-secondary text-on-secondary shadow-xs'
-                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
+                activeView === "home"
+                  ? "bg-secondary text-on-secondary shadow-xs"
+                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
               }`}
             >
               <Home className="w-3.5 h-3.5" />
-              <span>{t('nav.home')}</span>
+              <span>{t("nav.home")}</span>
             </button>
 
             <button
               type="button"
               onClick={onSelectProjectDefault}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
-                activeView === 'project'
-                  ? 'bg-primary text-on-primary shadow-xs'
-                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
+                activeView === "project"
+                  ? "bg-primary text-on-primary shadow-xs"
+                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
               }`}
             >
               <FolderGit2 className="w-3.5 h-3.5" />
-              <span>{t('common.projects')}</span>
+              <span>{t("common.projects")}</span>
             </button>
           </nav>
 
@@ -109,7 +129,7 @@ export function Navbar({
           <div
             className="ui-pill-group"
             role="group"
-            aria-label={t('theme.label')}
+            aria-label={t("theme.label")}
           >
             {themeOptions.map(({ value, label, title, Icon }) => (
               <button
@@ -118,8 +138,8 @@ export function Navbar({
                 onClick={() => setMode(value)}
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
                   mode === value
-                    ? 'bg-secondary-container text-on-secondary-container shadow-2xs'
-                    : 'text-on-muted hover:text-on-surface'
+                    ? "bg-secondary-container text-on-secondary-container shadow-2xs"
+                    : "text-on-muted hover:text-on-surface"
                 }`}
                 title={title}
               >
@@ -134,7 +154,7 @@ export function Navbar({
             <div className="flex items-center gap-1.5 pl-2 border-l border-outline">
               <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-sunken border border-outline text-xs">
                 <div className="w-5 h-5 rounded-full bg-secondary text-on-secondary text-[11px] font-bold flex items-center justify-center">
-                  {currentUser.name?.slice(0, 1) || 'S'}
+                  {currentUser.name?.slice(0, 1) || "S"}
                 </div>
                 <span className="font-bold text-on-surface">
                   {currentUser.name}
@@ -145,10 +165,10 @@ export function Navbar({
                 type="button"
                 onClick={onLogout}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container hover:bg-danger-container text-on-muted hover:text-on-danger-container border border-outline text-xs font-bold transition"
-                title={t('auth.signOutDescription')}
+                title={t("auth.signOutDescription")}
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>{t('auth.signOut')}</span>
+                <span>{t("auth.signOut")}</span>
               </button>
             </div>
           )}

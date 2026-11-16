@@ -6,9 +6,9 @@ import {
   KeyRound,
   RefreshCw,
 } from "lucide-react";
+import { useProjectWorkspace } from "../../hooks/useProjectWorkspace";
 import { useI18n } from "../../i18n";
 import type { Project } from "../../types";
-import { useProjectWorkspace } from "../../hooks/useProjectWorkspace";
 import { C4Architect } from "./C4Architect";
 import { GitHubRepoDashboard } from "./GitHubRepoDashboard";
 
@@ -36,7 +36,7 @@ export function ProjectWorkspace({ project }: { project: Project }) {
   } = useProjectWorkspace(project);
 
   return (
-    <div className="max-w-5xl xl:max-w-[1440px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Material Design 3 Project Overview & Segmented View Switcher Banner */}
       <section className="ui-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 min-w-0">

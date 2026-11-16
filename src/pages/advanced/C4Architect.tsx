@@ -1,26 +1,70 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { ReactFlow, applyNodeChanges, Background, Controls, MiniMap, Handle, NodeResizer, Position, MarkerType, type Node, type NodeProps, type ReactFlowProps, type ReactFlowInstance } from '@xyflow/react';
 import {
-  FileText,
-  Network,
-  Upload,
-  Download,
-  HelpCircle,
-  Eye,
-  Code2,
-  Trash2,
-  X,
-  Layers,
+  applyNodeChanges,
+  Background,
+  Controls,
+  Handle,
+  MarkerType,
+  MiniMap,
+  NodeResizer,
+  Position,
+  ReactFlow,
+  type Node,
+  type NodeProps,
+  type ReactFlowInstance,
+  type ReactFlowProps,
+} from "@xyflow/react";
+import {
   ChevronRight,
-} from 'lucide-react';
-import { useI18n } from '../../i18n';
-import { canExploreC4Node, overlapsC4Boundary, removeC4Nodes, c4Drilldown, createC4NodeInScope, type C4Kind, type C4Node, type C4Relationship } from '../../utils/c4Model';
-import { C4_FILE_MAX_BYTES, parseC4File, serializeC4File } from '../../utils/c4File';
+  Code2,
+  Download,
+  Eye,
+  FileText,
+  HelpCircle,
+  Layers,
+  Network,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useI18n } from "../../i18n";
+import {
+  C4_FILE_MAX_BYTES,
+  parseC4File,
+  serializeC4File,
+} from "../../utils/c4File";
+import {
+  c4Drilldown,
+  canExploreC4Node,
+  createC4NodeInScope,
+  overlapsC4Boundary,
+  removeC4Nodes,
+  type C4Kind,
+  type C4Node,
+  type C4Relationship,
+} from "../../utils/c4Model";
 
-const colors = { internal: 'var(--c4-internal-bg)', external: 'var(--c4-external-bg)' };
-type FlowNode = Node<{ title: string; external: boolean; boundaryLabel: string; kind: C4Kind; description: string; technology: string; status: string; expandable: boolean; onSelect: () => void; onExplore: () => void }, 'c4'>;
+const colors = {
+  internal: "var(--c4-internal-bg)",
+  external: "var(--c4-external-bg)",
+};
+type FlowNode = Node<
+  {
+    title: string;
+    external: boolean;
+    boundaryLabel: string;
+    kind: C4Kind;
+    description: string;
+    technology: string;
+    status: string;
+    expandable: boolean;
+    onSelect: () => void;
+    onExplore: () => void;
+  },
+  "c4"
+>;
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
@@ -28,145 +72,222 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
       role="button"
       tabIndex={0}
       aria-label={data.title}
-      onKeyDown={event => {
-        if (event.key === 'Enter' || event.key === ' ') {
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           event.stopPropagation();
-          if (event.key === 'Enter' && event.shiftKey) data.onExplore();
+          if (event.key === "Enter" && event.shiftKey) data.onExplore();
           else data.onSelect();
         }
       }}
       style={{
-        width: '100%',
-        height: '100%',
+        width: "100%",
+        height: "100%",
         minHeight: 160,
-        backgroundColor: data.external ? 'var(--c4-external-bg)' : 'var(--c4-internal-bg)',
+        backgroundColor: data.external
+          ? "var(--c4-external-bg)"
+          : "var(--c4-internal-bg)",
         borderColor: selected
-          ? 'var(--primary)'
+          ? "var(--primary)"
           : data.expandable
-          ? 'var(--c4-expandable-border)'
-          : 'var(--c4-leaf-border)',
+            ? "var(--c4-expandable-border)"
+            : "var(--c4-leaf-border)",
       }}
       className={`rounded-2xl border-2 p-4 shadow-xs transition-colors flex flex-col justify-between text-on-surface ${
-        selected
-          ? 'ring-4 ring-primary/30 shadow-md'
-          : 'hover:shadow-md'
+        selected ? "ring-4 ring-primary/30 shadow-md" : "hover:shadow-md"
       }`}
     >
-      <NodeResizer isVisible={selected} minWidth={200} minHeight={160} color="var(--primary)" />
+      <NodeResizer
+        isVisible={selected}
+        minWidth={200}
+        minHeight={160}
+        color="var(--primary)"
+      />
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-3 !h-3 !bg-secondary !border-2 !border-surface"
+        className="w-3! h-3! bg-secondary! border-2! border-surface!"
       />
       <div className="min-h-0 overflow-y-auto nowheel">
         <div className="flex items-center justify-between gap-2">
           <span
             className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono ${
               data.expandable
-                ? 'bg-secondary-container text-on-secondary-container'
-                : 'bg-primary-container text-on-primary-container'
+                ? "bg-secondary-container text-on-secondary-container"
+                : "bg-primary-container text-on-primary-container"
             }`}
           >
             {data.kind} · {data.boundaryLabel}
           </span>
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
-              data.expandable ? 'bg-secondary' : 'bg-primary'
+              data.expandable ? "bg-secondary" : "bg-primary"
             }`}
           />
         </div>
-        <div className="mt-2 text-sm font-bold text-on-surface break-words">
+        <div className="mt-2 text-sm font-bold text-on-surface wrap-break-word">
           {data.title}
         </div>
         {data.technology && (
-          <div className="mt-1.5 inline-block px-2 py-0.5 rounded-md bg-surface-high text-[11px] font-mono text-primary break-words">
+          <div className="mt-1.5 inline-block px-2 py-0.5 rounded-md bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
             [{data.technology}]
           </div>
         )}
-        <p className="mt-2 text-xs text-on-muted break-words whitespace-pre-wrap leading-relaxed">
+        <p className="mt-2 text-xs text-on-muted wrap-break-word whitespace-pre-wrap leading-relaxed">
           {data.description}
         </p>
       </div>
       {data.status && (
-        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline pt-2 text-[11px] font-mono text-secondary break-words">
+        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline pt-2 text-[11px] font-mono text-secondary wrap-break-word">
           {data.status}
         </p>
       )}
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-primary !border-2 !border-surface"
+        className="w-3! h-3! bg-primary! border-2! border-surface!"
       />
     </div>
   );
 }
 
-type BoundaryNode = Node<{ title: string }, 'boundary'>;
+type BoundaryNode = Node<{ title: string }, "boundary">;
 function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
-  return <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 cursor-move">
-    <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
-    <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
-  </div>;
+  return (
+    <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 cursor-move">
+      <NodeResizer
+        isVisible={selected}
+        minWidth={360}
+        minHeight={260}
+        color="var(--primary)"
+      />
+      <div className="px-4 py-3 text-sm font-bold text-primary">
+        {data.title}
+      </div>
+    </div>
+  );
 }
 const nodeTypes = { c4: C4Card, boundary: C4BoundaryCard };
 type CanvasNode = FlowNode | BoundaryNode;
 
 /** Keep measurements local; persist user resizes and completed moves. */
-function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<CanvasNode>) {
+function C4Canvas({
+  nodes = [],
+  onNodesChange,
+  ...props
+}: ReactFlowProps<CanvasNode>) {
   const [canvasNodes, setCanvasNodes] = useState(nodes);
   const movingIds = useRef<string[] | null>(null);
   useEffect(() => {
-    setCanvasNodes(previous => nodes.map(node => ({ ...previous.find(item => item.id === node.id), ...node })));
+    setCanvasNodes((previous) =>
+      nodes.map((node) => ({
+        ...previous.find((item) => item.id === node.id),
+        ...node,
+      })),
+    );
   }, [nodes]);
-  return <ReactFlow<CanvasNode> {...props} nodes={canvasNodes} onNodesChange={changes => {
-    const boundaryMove = changes.find(change => change.type === 'position' && change.id === '__c4_boundary__' && change.position);
-    if (boundaryMove?.type === 'position' && boundaryMove.position) {
-      const frame = canvasNodes.find(node => node.id === boundaryMove.id);
-      if (frame) {
-        const width = Number(frame.style?.width ?? 600);
-        const height = Number(frame.style?.height ?? 360);
-        movingIds.current ??= canvasNodes.filter(node => node.type !== 'boundary' &&
-          overlapsC4Boundary({ ...node.position, width: Number(node.style?.width ?? 280), height: Number(node.style?.height ?? 230) },
-            { ...frame.position, width, height })
-        ).map(node => node.id);
-        const dx = boundaryMove.position.x - frame.position.x;
-        const dy = boundaryMove.position.y - frame.position.y;
-        changes = [...changes, ...canvasNodes.filter(node => movingIds.current!.includes(node.id)).map(node => ({
-          id: node.id, type: 'position' as const, dragging: boundaryMove.dragging,
-          position: { x: node.position.x + dx, y: node.position.y + dy },
-        }))];
-        if (boundaryMove.dragging !== true) movingIds.current = null;
-      }
-    }
-    setCanvasNodes(previous => applyNodeChanges(changes, previous));
-    const completedMoves = changes.filter(change =>
-      (change.type === 'position' && change.position && change.dragging !== true) ||
-      (change.type === 'dimensions' && change.dimensions && change.setAttributes));
-    if (completedMoves.length) onNodesChange?.(completedMoves);
-  }} />;
+  return (
+    <ReactFlow<CanvasNode>
+      {...props}
+      nodes={canvasNodes}
+      onNodesChange={(changes) => {
+        const boundaryMove = changes.find(
+          (change) =>
+            change.type === "position" &&
+            change.id === "__c4_boundary__" &&
+            change.position,
+        );
+        if (boundaryMove?.type === "position" && boundaryMove.position) {
+          const frame = canvasNodes.find((node) => node.id === boundaryMove.id);
+          if (frame) {
+            const width = Number(frame.style?.width ?? 600);
+            const height = Number(frame.style?.height ?? 360);
+            movingIds.current ??= canvasNodes
+              .filter(
+                (node) =>
+                  node.type !== "boundary" &&
+                  overlapsC4Boundary(
+                    {
+                      ...node.position,
+                      width: Number(node.style?.width ?? 280),
+                      height: Number(node.style?.height ?? 230),
+                    },
+                    { ...frame.position, width, height },
+                  ),
+              )
+              .map((node) => node.id);
+            const dx = boundaryMove.position.x - frame.position.x;
+            const dy = boundaryMove.position.y - frame.position.y;
+            changes = [
+              ...changes,
+              ...canvasNodes
+                .filter((node) => movingIds.current!.includes(node.id))
+                .map((node) => ({
+                  id: node.id,
+                  type: "position" as const,
+                  dragging: boundaryMove.dragging,
+                  position: {
+                    x: node.position.x + dx,
+                    y: node.position.y + dy,
+                  },
+                })),
+            ];
+            if (boundaryMove.dragging !== true) movingIds.current = null;
+          }
+        }
+        setCanvasNodes((previous) => applyNodeChanges(changes, previous));
+        const completedMoves = changes.filter(
+          (change) =>
+            (change.type === "position" &&
+              change.position &&
+              change.dragging !== true) ||
+            (change.type === "dimensions" &&
+              change.dimensions &&
+              change.setAttributes),
+        );
+        if (completedMoves.length) onNodesChange?.(completedMoves);
+      }}
+    />
+  );
 }
 
-const fieldClass = 'ui-input px-3 py-2';
+const fieldClass = "ui-input px-3 py-2";
 const NODE_SINGLE_CLICK_DELAY_MS = 350;
 
-export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelationships, designDoc, onChangeDesignDoc }: {
-  nodes: C4Node[]; onChangeNodes: (nodes: C4Node[]) => void;
-  relationships: C4Relationship[]; onChangeRelationships: (edges: C4Relationship[]) => void;
-  designDoc: string; onChangeDesignDoc: (doc: string) => void;
+export function C4Architect({
+  nodes,
+  onChangeNodes,
+  relationships,
+  onChangeRelationships,
+  designDoc,
+  onChangeDesignDoc,
+}: {
+  nodes: C4Node[];
+  onChangeNodes: (nodes: C4Node[]) => void;
+  relationships: C4Relationship[];
+  onChangeRelationships: (edges: C4Relationship[]) => void;
+  designDoc: string;
+  onChangeDesignDoc: (doc: string) => void;
 }) {
   const { t } = useI18n();
-  const [designTab, setDesignTab] = useState<'readme' | 'diagram'>('readme');
-  const [readmeMode, setReadmeMode] = useState<'reading' | 'source'>('reading');
-  const [scopeId, setScopeId] = useState('');
-  const [selectedId, setSelectedId] = useState('');
-  const [edgeId, setEdgeId] = useState('');
+  const [designTab, setDesignTab] = useState<"readme" | "diagram">("readme");
+  const [readmeMode, setReadmeMode] = useState<"reading" | "source">("reading");
+  const [scopeId, setScopeId] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [edgeId, setEdgeId] = useState("");
   const drawStart = useRef<{ x: number; y: number } | null>(null);
-  const [drawPreview, setDrawPreview] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [drawPreview, setDrawPreview] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const flowInstance = useRef<ReactFlowInstance<CanvasNode> | null>(null);
   const [importing, setImporting] = useState(false);
-  const [fileStatus, setFileStatus] = useState<'importSuccess' | 'importError' | 'fileTooLarge' | 'exportError' | null>(null);
+  const [fileStatus, setFileStatus] = useState<
+    "importSuccess" | "importError" | "fileTooLarge" | "exportError" | null
+  >(null);
   const [importRevision, setImportRevision] = useState(0);
   const nodeClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelNodeClick = () => {
@@ -182,93 +303,180 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 
   const exportModel = () => {
     try {
-      const url = URL.createObjectURL(new Blob([serializeC4File(nodes, relationships)], { type: 'application/json' }));
-      const link = document.createElement('a');
+      const url = URL.createObjectURL(
+        new Blob([serializeC4File(nodes, relationships)], {
+          type: "application/json",
+        }),
+      );
+      const link = document.createElement("a");
       link.href = url;
-      link.download = 'c4-model.json';
+      link.download = "c4-model.json";
       document.body.appendChild(link);
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       setFileStatus(null);
-    } catch { setFileStatus('exportError'); }
+    } catch {
+      setFileStatus("exportError");
+    }
   };
 
   const importModel = async (file: File) => {
     setFileStatus(null);
-    if (file.size > C4_FILE_MAX_BYTES) { setFileStatus('fileTooLarge'); return; }
+    if (file.size > C4_FILE_MAX_BYTES) {
+      setFileStatus("fileTooLarge");
+      return;
+    }
     setImporting(true);
     try {
       const model = parseC4File(await file.text());
       onChangeNodes(model.nodes);
       onChangeRelationships(model.relationships);
-      setScopeId(''); setSelectedId(''); setEdgeId('');
-      setImportRevision(value => value + 1);
-      setDesignTab('diagram');
-      setFileStatus('importSuccess');
-    } catch { setFileStatus('importError'); }
-    finally { setImporting(false); }
+      setScopeId("");
+      setSelectedId("");
+      setEdgeId("");
+      setImportRevision((value) => value + 1);
+      setDesignTab("diagram");
+      setFileStatus("importSuccess");
+    } catch {
+      setFileStatus("importError");
+    } finally {
+      setImporting(false);
+    }
   };
 
   const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
-  const expandableIds = new Set(nodes.map(node => node.parentId).filter(Boolean));
-  const visibleIds = new Set(visible.map(node => node.id));
-  const selected = nodes.find(node => node.id === selectedId);
-  const selectedEdge = relationships.find(edge => edge.id === edgeId);
+  const expandableIds = new Set(
+    nodes.map((node) => node.parentId).filter(Boolean),
+  );
+  const visibleIds = new Set(visible.map((node) => node.id));
+  const selected = nodes.find((node) => node.id === selectedId);
+  const selectedEdge = relationships.find((edge) => edge.id === edgeId);
 
-  const boundaryId = '__c4_boundary__';
-  const boundary = scope?.boundary ?? { x: -40, y: -70,
-    width: Math.max(600, ...inside.map(node => node.x + (node.width ?? 280) + 80)),
-    height: Math.max(360, ...inside.map(node => node.y + (node.height ?? 230) + 110)) };
-  const insideIds = new Set(inside.map(node => node.id));
-  const flowNodes: CanvasNode[] = visible.map(node => ({
-    id: node.id, type: 'c4',
+  const boundaryId = "__c4_boundary__";
+  const boundary = scope?.boundary ?? {
+    x: -40,
+    y: -70,
+    width: Math.max(
+      600,
+      ...inside.map((node) => node.x + (node.width ?? 280) + 80),
+    ),
+    height: Math.max(
+      360,
+      ...inside.map((node) => node.y + (node.height ?? 230) + 110),
+    ),
+  };
+  const insideIds = new Set(inside.map((node) => node.id));
+  const flowNodes: CanvasNode[] = visible.map((node) => ({
+    id: node.id,
+    type: "c4",
     position: { x: node.x + (scope ? 40 : 0), y: node.y + (scope ? 70 : 0) },
-    zIndex: 1, selected: node.id === selectedId,
+    zIndex: 1,
+    selected: node.id === selectedId,
     style: { width: node.width ?? 280, height: node.height ?? 230 },
-    data: { title: node.label, external: !!node.external, boundaryLabel: t(node.external ? 'c4.external' : 'c4.internal'), kind: node.kind, description: node.description, technology: node.technology,
-      status: node.expectedPath, expandable: expandableIds.has(node.id),
-      onSelect: () => { cancelNodeClick(); setSelectedId(node.id); setEdgeId(''); },
-      onExplore: () => navigate(node.id) }
+    data: {
+      title: node.label,
+      external: !!node.external,
+      boundaryLabel: t(node.external ? "c4.external" : "c4.internal"),
+      kind: node.kind,
+      description: node.description,
+      technology: node.technology,
+      status: node.expectedPath,
+      expandable: expandableIds.has(node.id),
+      onSelect: () => {
+        cancelNodeClick();
+        setSelectedId(node.id);
+        setEdgeId("");
+      },
+      onExplore: () => navigate(node.id),
+    },
   }));
 
-  if (scope) flowNodes.unshift({ id: boundaryId, type: 'boundary', position: { x: boundary.x, y: boundary.y },
-    style: { width: boundary.width, height: boundary.height }, data: { title: scope.label },
-    selected: selectedId === boundaryId, deletable: false, connectable: false, dragHandle: '.c4-boundary-drag', zIndex: -1 });
+  if (scope)
+    flowNodes.unshift({
+      id: boundaryId,
+      type: "boundary",
+      position: { x: boundary.x, y: boundary.y },
+      style: { width: boundary.width, height: boundary.height },
+      data: { title: scope.label },
+      selected: selectedId === boundaryId,
+      deletable: false,
+      connectable: false,
+      dragHandle: ".c4-boundary-drag",
+      zIndex: -1,
+    });
 
-  const flowEdges = relationships.filter(edge => visibleIds.has(edge.source) && visibleIds.has(edge.target)).map(edge => ({
-    ...edge,
-    type: 'smoothstep',
-    label: edge.label,
-    selected: edge.id === edgeId,
-    markerEnd: { type: MarkerType.ArrowClosed, width: 20, height: 20, color: 'var(--c4-edge)' },
-    style: { strokeWidth: 2, stroke: edge.id === edgeId ? 'var(--c4-edge-selected)' : 'var(--c4-edge)' },
-    labelStyle: { fontSize: 11, fontWeight: 600, fill: 'var(--on-surface)' },
-    labelBgStyle: { fill: 'var(--c4-edge-label-bg)', fillOpacity: 0.95 },
-    labelBgPadding: [8, 4] as [number, number],
-    labelBgBorderRadius: 8,
-  }));
+  const flowEdges = relationships
+    .filter(
+      (edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target),
+    )
+    .map((edge) => ({
+      ...edge,
+      type: "smoothstep",
+      label: edge.label,
+      selected: edge.id === edgeId,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: "var(--c4-edge)",
+      },
+      style: {
+        strokeWidth: 2,
+        stroke:
+          edge.id === edgeId ? "var(--c4-edge-selected)" : "var(--c4-edge)",
+      },
+      labelStyle: { fontSize: 11, fontWeight: 600, fill: "var(--on-surface)" },
+      labelBgStyle: { fill: "var(--c4-edge-label-bg)", fillOpacity: 0.95 },
+      labelBgPadding: [8, 4] as [number, number],
+      labelBgBorderRadius: 8,
+    }));
 
-  const navigate = (id: string) => { cancelNodeClick(); if (id && !canExploreC4Node(nodes, id)) return; setScopeId(id); setSelectedId(''); setEdgeId(''); };
+  const navigate = (id: string) => {
+    cancelNodeClick();
+    if (id && !canExploreC4Node(nodes, id)) return;
+    setScopeId(id);
+    setSelectedId("");
+    setEdgeId("");
+  };
   const update = (patch: Partial<C4Node>) => {
     if (patch.external && expandableIds.has(selectedId)) return;
-    onChangeNodes(nodes.map(node => node.id === selectedId ? { ...node, ...patch } : node));
+    onChangeNodes(
+      nodes.map((node) =>
+        node.id === selectedId ? { ...node, ...patch } : node,
+      ),
+    );
   };
   const remove = (ids: string[]) => {
     const remaining = removeC4Nodes(nodes, ids);
-    setSelectedId('');
-    setEdgeId('');
-    const remainingIds = new Set(remaining.map(node => node.id));
+    setSelectedId("");
+    setEdgeId("");
+    const remainingIds = new Set(remaining.map((node) => node.id));
     onChangeNodes(remaining);
-    onChangeRelationships(relationships.filter(edge => remainingIds.has(edge.source) && remainingIds.has(edge.target)));
+    onChangeRelationships(
+      relationships.filter(
+        (edge) =>
+          remainingIds.has(edge.source) && remainingIds.has(edge.target),
+      ),
+    );
   };
-  const addNode = (position: { x: number; y: number }, size?: { width: number; height: number }) => {
+  const addNode = (
+    position: { x: number; y: number },
+    size?: { width: number; height: number },
+  ) => {
     cancelNodeClick();
-    const node = createC4NodeInScope(nodes, scope?.id || '', crypto.randomUUID(), t('c4.newElement'), { x: position.x - (scope ? 40 : 0), y: position.y - (scope ? 70 : 0) });
+    const node = createC4NodeInScope(
+      nodes,
+      scope?.id || "",
+      crypto.randomUUID(),
+      t("c4.newElement"),
+      { x: position.x - (scope ? 40 : 0), y: position.y - (scope ? 70 : 0) },
+    );
     if (!node) return;
     onChangeNodes([...nodes, { ...node, ...size }]);
-    setDesignTab('diagram');
-    setSelectedId(node.id); setEdgeId('');
+    setDesignTab("diagram");
+    setSelectedId(node.id);
+    setEdgeId("");
   };
 
   const field = (label: string, content: ReactNode) => (
@@ -286,19 +494,19 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
           <div
             className="ui-pill-group gap-1"
             role="tablist"
-            aria-label={t('workspace.tabs.design')}
+            aria-label={t("workspace.tabs.design")}
           >
             <button
               type="button"
               role="tab"
               id="design-tab-readme"
               aria-controls="design-panel-readme"
-              aria-selected={designTab === 'readme'}
-              onClick={() => setDesignTab('readme')}
+              aria-selected={designTab === "readme"}
+              onClick={() => setDesignTab("readme")}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                designTab === 'readme'
-                  ? 'bg-secondary text-on-secondary shadow-2xs'
-                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
+                designTab === "readme"
+                  ? "bg-secondary text-on-secondary shadow-2xs"
+                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -309,12 +517,12 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
               role="tab"
               id="design-tab-diagram"
               aria-controls="design-panel-diagram"
-              aria-selected={designTab === 'diagram'}
-              onClick={() => setDesignTab('diagram')}
+              aria-selected={designTab === "diagram"}
+              onClick={() => setDesignTab("diagram")}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                designTab === 'diagram'
-                  ? 'bg-primary text-on-primary shadow-2xs'
-                  : 'text-on-muted hover:bg-surface-hover hover:text-on-surface'
+                designTab === "diagram"
+                  ? "bg-primary text-on-primary shadow-2xs"
+                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
               }`}
             >
               <Network className="w-3.5 h-3.5" />
@@ -323,7 +531,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
           </div>
         </div>
 
-        {designTab === 'diagram' && (
+        {designTab === "diagram" && (
           <div className="border-t border-outline pt-3.5 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Material Design 3 Tonal Breadcrumb Pills */}
@@ -333,19 +541,25 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
               >
                 <button
                   type="button"
-                  onClick={() => navigate('')}
-                  aria-current={!scope ? 'page' : undefined}
+                  onClick={() => navigate("")}
+                  aria-current={!scope ? "page" : undefined}
                   className="px-3 py-1 rounded-full font-mono text-xs transition border border-outline bg-surface-sunken text-secondary hover:bg-secondary-container/60 aria-[current=page]:bg-secondary-container aria-[current=page]:text-on-secondary-container aria-[current=page]:border-secondary aria-[current=page]:font-bold"
                 >
                   C1 · Context
                 </button>
                 {path.map((node, index) => (
-                  <span key={node.id} className="flex shrink-0 items-center gap-1.5">
-                    <ChevronRight className="w-3.5 h-3.5 text-on-subtle" aria-hidden="true" />
+                  <span
+                    key={node.id}
+                    className="flex shrink-0 items-center gap-1.5"
+                  >
+                    <ChevronRight
+                      className="w-3.5 h-3.5 text-on-subtle"
+                      aria-hidden="true"
+                    />
                     <button
                       type="button"
                       onClick={() => navigate(node.id)}
-                      aria-current={node.id === scope?.id ? 'page' : undefined}
+                      aria-current={node.id === scope?.id ? "page" : undefined}
                       className="px-3 py-1 rounded-full font-mono text-xs transition border border-outline bg-surface-sunken text-primary hover:bg-primary-container/60 aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary aria-[current=page]:font-bold"
                     >
                       C{index + 2} · {node.label}
@@ -359,12 +573,14 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                 <button
                   type="button"
                   disabled={importing}
-                  title={t('c4.fileHelp')}
+                  title={t("c4.fileHelp")}
                   onClick={() => fileInput.current?.click()}
                   className="ui-btn-tonal"
                 >
                   <Upload className="w-3.5 h-3.5 text-secondary" />
-                  <span>{t(importing ? 'c4.importing' : 'c4.importModel')}</span>
+                  <span>
+                    {t(importing ? "c4.importing" : "c4.importModel")}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -373,17 +589,17 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   className="ui-btn-tonal"
                 >
                   <Download className="w-3.5 h-3.5 text-primary" />
-                  <span>{t('c4.exportModel')}</span>
+                  <span>{t("c4.exportModel")}</span>
                 </button>
                 <input
                   ref={fileInput}
                   type="file"
                   accept=".json,application/json"
-                  aria-label={t('c4.importModel')}
+                  aria-label={t("c4.importModel")}
                   className="hidden"
-                  onChange={event => {
+                  onChange={(event) => {
                     const file = event.target.files?.[0];
-                    event.target.value = '';
+                    event.target.value = "";
                     if (file) void importModel(file);
                   }}
                 />
@@ -392,11 +608,11 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
 
             {fileStatus && (
               <p
-                role={fileStatus === 'importSuccess' ? 'status' : 'alert'}
+                role={fileStatus === "importSuccess" ? "status" : "alert"}
                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold border ${
-                  fileStatus === 'importSuccess'
-                    ? 'bg-success-container border-success-outline text-on-success-container'
-                    : 'bg-danger-container border-danger-outline text-on-danger-container'
+                  fileStatus === "importSuccess"
+                    ? "bg-success-container border-success-outline text-on-success-container"
+                    : "bg-danger-container border-danger-outline text-on-danger-container"
                 }`}
               >
                 {t(`c4.${fileStatus}`)}
@@ -407,7 +623,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
       </div>
 
       {/* Main Content Area: README Panel or C4 Diagram Panel */}
-      {designTab === 'readme' ? (
+      {designTab === "readme" ? (
         <div
           role="tabpanel"
           id="design-panel-readme"
@@ -420,31 +636,41 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                 <FileText className="w-4 h-4" />
               </div>
               <h4 className="text-sm sm:text-base font-bold text-on-primary-container">
-                {t('c4.designDoc')}
+                {t("c4.designDoc")}
               </h4>
             </div>
             <button
               type="button"
-              onClick={() => setReadmeMode(mode => (mode === 'reading' ? 'source' : 'reading'))}
+              onClick={() =>
+                setReadmeMode((mode) =>
+                  mode === "reading" ? "source" : "reading",
+                )
+              }
               className="inline-flex items-center gap-1.5 rounded-full bg-surface hover:bg-primary-container text-primary hover:text-on-primary-container border border-primary-outline px-3.5 py-1.5 text-xs font-bold shadow-2xs transition"
             >
-              {readmeMode === 'reading' ? (
+              {readmeMode === "reading" ? (
                 <Code2 className="w-3.5 h-3.5" />
               ) : (
                 <Eye className="w-3.5 h-3.5" />
               )}
-              <span>{t(readmeMode === 'reading' ? 'c4.readmeSource' : 'c4.readmeReading')}</span>
+              <span>
+                {t(
+                  readmeMode === "reading"
+                    ? "c4.readmeSource"
+                    : "c4.readmeReading",
+                )}
+              </span>
             </button>
           </div>
 
           <div className="p-6">
-            {readmeMode === 'source' ? (
+            {readmeMode === "source" ? (
               <textarea
-                aria-label={t('c4.designDoc')}
+                aria-label={t("c4.designDoc")}
                 rows={22}
                 className={`${fieldClass} font-mono`}
                 value={designDoc}
-                onChange={event => onChangeDesignDoc(event.target.value)}
+                onChange={(event) => onChangeDesignDoc(event.target.value)}
               />
             ) : (
               <article className="ui-markdown">
@@ -461,7 +687,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
           className="space-y-5"
         >
           <div className="relative">
-            <div className="overflow-hidden rounded-[24px] border border-outline-subtle bg-surface-sunken shadow-xs transition-colors">
+            <div className="overflow-hidden rounded-3xl border border-outline-subtle bg-surface-sunken shadow-xs transition-colors">
               {/* Material Design 3 Tonal Canvas Header Bar */}
               <div className="flex items-center justify-between border-b border-outline-tonal bg-surface-tonal px-5 py-3 text-xs">
                 <div className="flex items-center gap-2">
@@ -469,54 +695,86 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                     <Layers className="w-3.5 h-3.5" />
                   </div>
                   <span className="font-bold text-on-primary-container">
-                    {scope ? scope.label : 'System Context'}
+                    {scope ? scope.label : "System Context"}
                   </span>
                 </div>
 
                 <details className="relative group">
                   <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface text-primary border border-primary-outline font-bold hover:bg-primary-container/50 transition">
                     <HelpCircle className="w-3.5 h-3.5" />
-                    <span>{t('c4.help')}</span>
+                    <span>{t("c4.help")}</span>
                   </summary>
                   <div className="absolute right-0 top-9 z-30 w-80 rounded-2xl border border-outline bg-surface p-4 shadow-xl space-y-2.5 text-xs text-on-muted">
-                    <p className="leading-relaxed">{t('c4.canvasInstructions')}</p>
-                    <p className="leading-relaxed">{t('c4.levelsDescription')}</p>
+                    <p className="leading-relaxed">
+                      {t("c4.canvasInstructions")}
+                    </p>
+                    <p className="leading-relaxed">
+                      {t("c4.levelsDescription")}
+                    </p>
                     <div className="pt-1 border-t border-outline space-y-1">
-                      <p className="flex items-center gap-2"><span className="h-3 w-3 rounded border border-outline" style={{ backgroundColor: colors.internal }} />{t('c4.internal')}</p>
-                      <p className="flex items-center gap-2"><span className="h-3 w-3 rounded border border-outline" style={{ backgroundColor: colors.external }} />{t('c4.external')}</p>
+                      <p className="flex items-center gap-2">
+                        <span
+                          className="h-3 w-3 rounded border border-outline"
+                          style={{ backgroundColor: colors.internal }}
+                        />
+                        {t("c4.internal")}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span
+                          className="h-3 w-3 rounded border border-outline"
+                          style={{ backgroundColor: colors.external }}
+                        />
+                        {t("c4.external")}
+                      </p>
                       <p className="font-semibold text-secondary">
-                        ● {t('c4.expandable')}
+                        ● {t("c4.expandable")}
                       </p>
                       <p className="font-semibold text-primary">
-                        ● {t('c4.leaf')}
+                        ● {t("c4.leaf")}
                       </p>
                     </div>
                     <p className="text-[11px] text-on-subtle pt-1 border-t border-outline">
-                      {t('c4.fileHelp')}
+                      {t("c4.fileHelp")}
                     </p>
                   </div>
                 </details>
               </div>
 
               <div
-                style={{ height: 'max(600px, 72vh)', overscrollBehavior: 'contain', position: 'relative' }}
-                onContextMenu={event => event.preventDefault()}
-                onPointerDownCapture={event => {
+                style={{
+                  height: "max(600px, 72vh)",
+                  overscrollBehavior: "contain",
+                  position: "relative",
+                }}
+                onContextMenu={(event) => event.preventDefault()}
+                onPointerDownCapture={(event) => {
                   if (event.button !== 2) return;
                   const target = event.target as HTMLElement;
-                  if (!target.closest('.react-flow__pane, .react-flow__node-boundary') || target.closest('.react-flow__node-c4, .react-flow__controls, .react-flow__minimap')) return;
+                  if (
+                    !target.closest(
+                      ".react-flow__pane, .react-flow__node-boundary",
+                    ) ||
+                    target.closest(
+                      ".react-flow__node-c4, .react-flow__controls, .react-flow__minimap",
+                    )
+                  )
+                    return;
                   event.preventDefault();
                   drawStart.current = { x: event.clientX, y: event.clientY };
                   event.currentTarget.setPointerCapture(event.pointerId);
                 }}
-                onPointerMove={event => {
+                onPointerMove={(event) => {
                   const start = drawStart.current;
                   if (!start) return;
                   const rect = event.currentTarget.getBoundingClientRect();
-                  setDrawPreview({ x: Math.min(start.x, event.clientX) - rect.left, y: Math.min(start.y, event.clientY) - rect.top,
-                    width: Math.abs(event.clientX - start.x), height: Math.abs(event.clientY - start.y) });
+                  setDrawPreview({
+                    x: Math.min(start.x, event.clientX) - rect.left,
+                    y: Math.min(start.y, event.clientY) - rect.top,
+                    width: Math.abs(event.clientX - start.x),
+                    height: Math.abs(event.clientY - start.y),
+                  });
                 }}
-                onPointerUp={event => {
+                onPointerUp={(event) => {
                   const start = drawStart.current;
                   if (!start || event.button !== 2) return;
                   drawStart.current = null;
@@ -525,30 +783,53 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   const flow = flowInstance.current;
                   if (!flow) return;
                   const from = flow.screenToFlowPosition(start);
-                  const to = flow.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-                  if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) addNode(from);
-                  else addNode({ x: Math.min(from.x, to.x), y: Math.min(from.y, to.y) },
-                    { width: Math.max(200, Math.abs(to.x - from.x)), height: Math.max(160, Math.abs(to.y - from.y)) });
+                  const to = flow.screenToFlowPosition({
+                    x: event.clientX,
+                    y: event.clientY,
+                  });
+                  if (
+                    Math.hypot(
+                      event.clientX - start.x,
+                      event.clientY - start.y,
+                    ) < 5
+                  )
+                    addNode(from);
+                  else
+                    addNode(
+                      { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y) },
+                      {
+                        width: Math.max(200, Math.abs(to.x - from.x)),
+                        height: Math.max(160, Math.abs(to.y - from.y)),
+                      },
+                    );
                 }}
-                onLostPointerCapture={() => { drawStart.current = null; setDrawPreview(null); }}
-                onPointerCancel={() => { drawStart.current = null; setDrawPreview(null); }}
-                onMouseDownCapture={event => {
+                onLostPointerCapture={() => {
+                  drawStart.current = null;
+                  setDrawPreview(null);
+                }}
+                onPointerCancel={() => {
+                  drawStart.current = null;
+                  setDrawPreview(null);
+                }}
+                onMouseDownCapture={(event) => {
                   // Cancel browser middle-button autoscroll without stopping React Flow's pan handler.
                   if (event.button === 1) event.preventDefault();
                 }}
-                onAuxClickCapture={event => {
+                onAuxClickCapture={(event) => {
                   if (event.button === 1) event.preventDefault();
                 }}
               >
                 <C4Canvas
-                  key={`${importRevision}-${scope?.id || 'context'}`}
+                  key={`${importRevision}-${scope?.id || "context"}`}
                   nodes={flowNodes}
                   edges={flowEdges}
                   nodeTypes={nodeTypes}
                   // Keep the selected boundary behind its contents so nodes remain clickable.
                   elevateNodesOnSelect={false}
                   fitView
-                  onInit={instance => { flowInstance.current = instance; }}
+                  onInit={(instance) => {
+                    flowInstance.current = instance;
+                  }}
                   panOnDrag={[0, 1]}
                   panActivationKeyCode={null}
                   minZoom={0.15}
@@ -559,12 +840,12 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                     nodeClickTimer.current = setTimeout(() => {
                       nodeClickTimer.current = null;
                       setSelectedId(node.id);
-                      setEdgeId('');
+                      setEdgeId("");
                     }, NODE_SINGLE_CLICK_DELAY_MS);
                   }}
                   onNodeDoubleClick={(_, node) => {
                     cancelNodeClick();
-                    if (node.type !== 'boundary') navigate(node.id);
+                    if (node.type !== "boundary") navigate(node.id);
                   }}
                   zoomOnDoubleClick={false}
                   onPaneClick={cancelNodeClick}
@@ -572,45 +853,73 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   onEdgeClick={(_, edge) => {
                     cancelNodeClick();
                     setEdgeId(edge.id);
-                    setSelectedId('');
+                    setSelectedId("");
                   }}
-                  onNodesChange={changes => {
-                    onChangeNodes(nodes.map(node => {
-                      let updated = node;
-                      if (scope && node.id === scope.id) {
-                        updated = { ...node, boundary: { ...boundary } };
-                        for (const change of changes) {
-                          if (!('id' in change)) continue;
-                          if (change.id === boundaryId) {
-                            if (change.type === 'position' && change.position) Object.assign(updated.boundary!, change.position);
-                            if (change.type === 'dimensions' && change.dimensions) Object.assign(updated.boundary!, change.dimensions);
+                  onNodesChange={(changes) => {
+                    onChangeNodes(
+                      nodes.map((node) => {
+                        let updated = node;
+                        if (scope && node.id === scope.id) {
+                          updated = { ...node, boundary: { ...boundary } };
+                          for (const change of changes) {
+                            if (!("id" in change)) continue;
+                            if (change.id === boundaryId) {
+                              if (change.type === "position" && change.position)
+                                Object.assign(
+                                  updated.boundary!,
+                                  change.position,
+                                );
+                              if (
+                                change.type === "dimensions" &&
+                                change.dimensions
+                              )
+                                Object.assign(
+                                  updated.boundary!,
+                                  change.dimensions,
+                                );
+                            }
                           }
                         }
-                      }
-                      if (scope && !insideIds.has(node.id)) return updated;
-                      for (const change of changes) {
-                        if (!('id' in change) || change.id !== node.id) continue;
-                        if (change.type === 'position' && change.position)
-                          updated = { ...updated, x: change.position.x - (scope ? 40 : 0), y: change.position.y - (scope ? 70 : 0) };
-                        if (change.type === 'dimensions' && change.dimensions)
-                          updated = { ...updated, width: change.dimensions.width, height: change.dimensions.height };
-                      }
-                      return updated;
-                    }));
+                        if (scope && !insideIds.has(node.id)) return updated;
+                        for (const change of changes) {
+                          if (!("id" in change) || change.id !== node.id)
+                            continue;
+                          if (change.type === "position" && change.position)
+                            updated = {
+                              ...updated,
+                              x: change.position.x - (scope ? 40 : 0),
+                              y: change.position.y - (scope ? 70 : 0),
+                            };
+                          if (change.type === "dimensions" && change.dimensions)
+                            updated = {
+                              ...updated,
+                              width: change.dimensions.width,
+                              height: change.dimensions.height,
+                            };
+                        }
+                        return updated;
+                      }),
+                    );
                   }}
-                  onNodesDelete={deleted => remove(deleted.map(node => node.id))}
-                  onEdgesDelete={deleted =>
+                  onNodesDelete={(deleted) =>
+                    remove(deleted.map((node) => node.id))
+                  }
+                  onEdgesDelete={(deleted) =>
                     onChangeRelationships(
-                      relationships.filter(edge => !deleted.some(item => item.id === edge.id))
+                      relationships.filter(
+                        (edge) => !deleted.some((item) => item.id === edge.id),
+                      ),
                     )
                   }
-                  isValidConnection={connection =>
+                  isValidConnection={(connection) =>
                     connection.source !== connection.target &&
                     !relationships.some(
-                      edge => edge.source === connection.source && edge.target === connection.target
+                      (edge) =>
+                        edge.source === connection.source &&
+                        edge.target === connection.target,
                     )
                   }
-                  onConnect={connection => {
+                  onConnect={(connection) => {
                     const id = crypto.randomUUID();
                     onChangeRelationships([
                       ...relationships,
@@ -618,31 +927,45 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                         id,
                         source: connection.source,
                         target: connection.target,
-                        label: t('c4.uses'),
-                        technology: '',
+                        label: t("c4.uses"),
+                        technology: "",
                       },
                     ]);
                     setEdgeId(id);
-                    setSelectedId('');
+                    setSelectedId("");
                   }}
                 >
                   <Background gap={24} color="var(--c4-grid)" />
                   <Controls />
                   <MiniMap
-                    nodeColor={node =>
-                      (node.data as FlowNode['data']).external ? colors.external : colors.internal
+                    nodeColor={(node) =>
+                      (node.data as FlowNode["data"]).external
+                        ? colors.external
+                        : colors.internal
                     }
                     pannable
                     zoomable
                   />
                 </C4Canvas>
-                {drawPreview && <div aria-hidden="true" style={{ position: 'absolute', left: drawPreview.x, top: drawPreview.y,
-                  width: drawPreview.width, height: drawPreview.height, pointerEvents: 'none', zIndex: 10 }}
-                  className="border-2 border-dashed border-primary bg-primary/10 rounded-2xl" />}
+                {drawPreview && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      left: drawPreview.x,
+                      top: drawPreview.y,
+                      width: drawPreview.width,
+                      height: drawPreview.height,
+                      pointerEvents: "none",
+                      zIndex: 10,
+                    }}
+                    className="border-2 border-dashed border-primary bg-primary/10 rounded-2xl"
+                  />
+                )}
               </div>
               {!inside.length && (
                 <p className="p-4 text-xs sm:text-sm font-medium text-on-muted bg-surface border-t border-outline">
-                  {t('c4.emptyLevel')}
+                  {t("c4.emptyLevel")}
                 </p>
               )}
             </div>
@@ -650,26 +973,30 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
             {/* Material Design 3 Floating Inspector Drawer */}
             {(selected || selectedEdge) && (
               <aside
-                aria-label={t(selected ? 'c4.editElement' : 'c4.editRelationship')}
-                className="absolute right-4 top-16 z-20 w-80 max-w-[calc(100%-2rem)] max-h-[calc(100%-5rem)] overflow-y-auto rounded-[24px] border border-outline bg-surface p-4 shadow-xl"
-                onKeyDown={event => {
-                  if (event.key === 'Escape') {
-                    setSelectedId('');
-                    setEdgeId('');
+                aria-label={t(
+                  selected ? "c4.editElement" : "c4.editRelationship",
+                )}
+                className="absolute right-4 top-16 z-20 w-80 max-w-[calc(100%-2rem)] max-h-[calc(100%-5rem)] overflow-y-auto rounded-3xl border border-outline bg-surface p-4 shadow-xl"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setSelectedId("");
+                    setEdgeId("");
                   }
                 }}
               >
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-outline">
                   <span className="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-mono text-xs font-bold">
-                    {selected ? `${t('c4.editElement')} · ${selected.kind}` : t('c4.editRelationship')}
+                    {selected
+                      ? `${t("c4.editElement")} · ${selected.kind}`
+                      : t("c4.editRelationship")}
                   </span>
                   <button
                     type="button"
-                    aria-label={t('c4.closeEditor')}
+                    aria-label={t("c4.closeEditor")}
                     className="w-7 h-7 rounded-full inline-flex items-center justify-center text-on-muted hover:bg-surface-high transition"
                     onClick={() => {
-                      setSelectedId('');
-                      setEdgeId('');
+                      setSelectedId("");
+                      setEdgeId("");
                     }}
                   >
                     <X className="w-4 h-4" />
@@ -679,51 +1006,73 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                 {selected && (
                   <div className="space-y-3.5">
                     {field(
-                      t('c4.name'),
+                      t("c4.name"),
                       <input
                         className={fieldClass}
                         value={selected.label}
-                        onChange={event => update({ label: event.target.value })}
-                      />
+                        onChange={(event) =>
+                          update({ label: event.target.value })
+                        }
+                      />,
                     )}
                     <div className="space-y-1.5">
                       <label className="flex items-center justify-between gap-3 text-xs font-semibold text-on-surface">
-                        <span>{t('c4.external')}</span>
-                        <input type="checkbox" role="switch" className="h-4 w-4 accent-primary"
-                          checked={!!selected.external} disabled={expandableIds.has(selected.id)}
+                        <span>{t("c4.external")}</span>
+                        <input
+                          type="checkbox"
+                          role="switch"
+                          className="h-4 w-4 accent-primary"
+                          checked={!!selected.external}
+                          disabled={expandableIds.has(selected.id)}
                           aria-describedby="c4-external-help"
-                          onChange={event => update({ external: event.target.checked })} />
+                          onChange={(event) =>
+                            update({ external: event.target.checked })
+                          }
+                        />
                       </label>
-                      <p id="c4-external-help" className="text-xs text-on-muted">
-                        {t(expandableIds.has(selected.id) ? 'c4.externalBlocked' : 'c4.externalHelp')}
+                      <p
+                        id="c4-external-help"
+                        className="text-xs text-on-muted"
+                      >
+                        {t(
+                          expandableIds.has(selected.id)
+                            ? "c4.externalBlocked"
+                            : "c4.externalHelp",
+                        )}
                       </p>
                     </div>
                     {field(
-                      t('c4.technology'),
+                      t("c4.technology"),
                       <input
                         className={`${fieldClass} font-mono`}
                         value={selected.technology}
-                        onChange={event => update({ technology: event.target.value })}
+                        onChange={(event) =>
+                          update({ technology: event.target.value })
+                        }
                         placeholder="React / REST / MySQL"
-                      />
+                      />,
                     )}
                     {field(
-                      t('c4.responsibilities'),
+                      t("c4.responsibilities"),
                       <textarea
                         rows={3}
                         className={fieldClass}
                         value={selected.description}
-                        onChange={event => update({ description: event.target.value })}
-                      />
+                        onChange={(event) =>
+                          update({ description: event.target.value })
+                        }
+                      />,
                     )}
                     {field(
-                      t('c4.githubPath'),
+                      t("c4.githubPath"),
                       <input
                         className={`${fieldClass} font-mono`}
                         value={selected.expectedPath}
-                        onChange={event => update({ expectedPath: event.target.value })}
+                        onChange={(event) =>
+                          update({ expectedPath: event.target.value })
+                        }
                         placeholder="src/"
-                      />
+                      />,
                     )}
                     <button
                       type="button"
@@ -731,7 +1080,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                       onClick={() => remove([selected.id])}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>{t('c4.deleteElement')}</span>
+                      <span>{t("c4.deleteElement")}</span>
                     </button>
                   </div>
                 )}
@@ -739,46 +1088,59 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                 {selectedEdge && (
                   <div className="space-y-3.5">
                     <p className="px-3 py-1.5 rounded-xl bg-surface-high text-xs font-mono font-semibold text-secondary">
-                      {nodes.find(node => node.id === selectedEdge.source)?.label} →{' '}
-                      {nodes.find(node => node.id === selectedEdge.target)?.label}
+                      {
+                        nodes.find((node) => node.id === selectedEdge.source)
+                          ?.label
+                      }{" "}
+                      →{" "}
+                      {
+                        nodes.find((node) => node.id === selectedEdge.target)
+                          ?.label
+                      }
                     </p>
                     {field(
-                      t('c4.relationshipDescription'),
+                      t("c4.relationshipDescription"),
                       <input
                         className={fieldClass}
                         value={selectedEdge.label}
-                        onChange={event =>
+                        onChange={(event) =>
                           onChangeRelationships(
-                            relationships.map(edge =>
-                              edge.id === edgeId ? { ...edge, label: event.target.value } : edge
-                            )
+                            relationships.map((edge) =>
+                              edge.id === edgeId
+                                ? { ...edge, label: event.target.value }
+                                : edge,
+                            ),
                           )
                         }
-                      />
+                      />,
                     )}
                     {field(
-                      t('c4.protocol'),
+                      t("c4.protocol"),
                       <input
                         className={`${fieldClass} font-mono`}
                         value={selectedEdge.technology}
-                        onChange={event =>
+                        onChange={(event) =>
                           onChangeRelationships(
-                            relationships.map(edge =>
-                              edge.id === edgeId ? { ...edge, technology: event.target.value } : edge
-                            )
+                            relationships.map((edge) =>
+                              edge.id === edgeId
+                                ? { ...edge, technology: event.target.value }
+                                : edge,
+                            ),
                           )
                         }
-                      />
+                      />,
                     )}
                     <button
                       type="button"
                       className="w-full mt-2 px-3.5 py-2 rounded-xl bg-danger-container/60 hover:bg-danger-container text-on-danger-container border border-danger-outline text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition"
                       onClick={() =>
-                        onChangeRelationships(relationships.filter(edge => edge.id !== edgeId))
+                        onChangeRelationships(
+                          relationships.filter((edge) => edge.id !== edgeId),
+                        )
                       }
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>{t('c4.deleteRelationship')}</span>
+                      <span>{t("c4.deleteRelationship")}</span>
                     </button>
                   </div>
                 )}

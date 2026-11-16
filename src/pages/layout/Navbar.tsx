@@ -86,7 +86,7 @@ export function Navbar({
               <span className="px-2 py-0.5 rounded-full font-mono font-bold bg-primary-container text-on-primary-container">
                 {selectedProject.codeName}
               </span>
-              <span className="text-on-surface font-semibold truncate max-w-[240px]">
+              <span className="text-on-surface font-semibold truncate max-w-60">
                 {selectedProject.title}
               </span>
             </div>

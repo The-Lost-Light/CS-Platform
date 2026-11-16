@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PROJECTS } from "../src/data/assignmentsData";
+import { PROJECTS } from "../src/data/projectsData";
 import {
   c4Drilldown,
   createC4NodeInScope,

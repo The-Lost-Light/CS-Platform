@@ -17,7 +17,7 @@ export interface MindMapNode {
 
 export interface Project {
   id: string;
-  type: "advanced";
+  type: "project";
   codeName: string;
   title: string;
   difficulty: string;
@@ -58,8 +58,8 @@ type ProjectTemplate = Omit<
 /** Stable template IDs and paths are independent of translated text. */
 const PROJECT_TEMPLATES = [
   {
-    id: "adv-fullstack-web",
-    type: "advanced",
+    id: "project-fullstack-web",
+    type: "project",
     codeName: "PROJ-01",
     difficultyColor: "indigo",
     dueDate: "2026-11-25 23:59",
@@ -157,8 +157,8 @@ const PROJECT_TEMPLATES = [
     initialDesignDocKey: "courses.fullstack.designDoc",
   },
   {
-    id: "adv-ai-rag-agent",
-    type: "advanced",
+    id: "project-ai-rag-agent",
+    type: "project",
     codeName: "PROJ-02",
     difficultyColor: "rose",
     dueDate: "2026-12-18 23:59",

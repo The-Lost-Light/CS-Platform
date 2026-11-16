@@ -1,5 +1,5 @@
 import type { AuthenticatedSession } from "@/auth/types";
-import { ProjectWorkspace } from "@/pages/advanced/ProjectWorkspace";
+import { ProjectWorkspace } from "@/pages/project/ProjectWorkspace";
 import { HomeDashboard } from "@/pages/home/HomeDashboard";
 import { Navbar } from "@/pages/layout/Navbar";
 import { usePageNavigation } from "../hooks/usePageNavigation";

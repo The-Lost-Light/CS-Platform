@@ -1,4 +1,4 @@
-import type { MindMapNode, Project } from "./data/assignmentsData";
+import type { MindMapNode, Project } from "./data/projectsData";
 export type { MindMapNode, Project };
 export type { User } from './auth/types';
 export type RepoSnapshot =

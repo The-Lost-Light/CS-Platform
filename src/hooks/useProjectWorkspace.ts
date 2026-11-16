@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { updateLocalizedProjectDraft } from "../data/localizedAssignments";
+import { updateLocalizedProjectDraft } from "../data/localizedProjects";
 import { isMessageKey, type MessageKey } from "../i18n/messages";
 import type { Project, RepoBundle } from "../types";
 import { migrateC4Nodes, type C4Relationship } from "../utils/c4Model";

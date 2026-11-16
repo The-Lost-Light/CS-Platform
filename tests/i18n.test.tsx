@@ -6,15 +6,15 @@ import { AuthGate } from "../src/pages/auth/AuthGate";
 import { WorkSpace } from "../src/pages/Workspace";
 import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
 import { demoAuthService } from "../src/auth/demoAuthService";
-import { GitHubRepoDashboard } from "../src/pages/advanced/GitHubRepoDashboard";
-import { ProjectWorkspace } from "../src/pages/advanced/ProjectWorkspace";
+import { GitHubRepoDashboard } from "../src/pages/project/GitHubRepoDashboard";
+import { ProjectWorkspace } from "../src/pages/project/ProjectWorkspace";
 import { LoginView } from "../src/pages/auth/LoginView";
 import { HomeDashboard } from "../src/pages/home/HomeDashboard";
 import { Navbar } from "../src/pages/layout/Navbar";
 import {
   getLocalizedProjects,
   updateLocalizedProjectDraft,
-} from "../src/data/localizedAssignments";
+} from "../src/data/localizedProjects";
 import { I18nProvider } from "../src/i18n";
 import {
   createTranslator,
@@ -204,8 +204,8 @@ test("dashboard lists every project and uses project-only navigation in both lan
       </ThemeProvider>,
     );
     const visibleText = html.replace(/<[^>]*>/g, "");
-    const { projects: advancedProjects } = getLocalizedProjects(locale);
-    for (const project of advancedProjects) {
+    const { projects } = getLocalizedProjects(locale);
+    for (const project of projects) {
       assert.ok(visibleText.includes(project.codeName));
       assert.ok(
         visibleText.includes(renderToStaticMarkup(<>{project.title}</>)),
@@ -223,8 +223,8 @@ test("dashboard lists every project and uses project-only navigation in both lan
     assert.ok(
       visibleText.includes(
         locale === "en"
-          ? `Projects: ${advancedProjects.length}`
-          : `專案數：${advancedProjects.length}`,
+          ? `Projects: ${projects.length}`
+          : `專案數：${projects.length}`,
       ),
     );
   }

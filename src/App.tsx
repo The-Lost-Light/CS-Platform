@@ -1,7 +1,6 @@
 import { ProjectWorkspace } from "@/components/advanced/ProjectWorkspace";
-import { AuthProvider, useAuth } from "@/auth/AuthProvider";
-import type { LoginCredentials } from "@/auth/types";
-import { LoginView } from "@/components/auth/LoginView";
+import { AuthProvider } from "@/auth/AuthProvider";
+import { AuthGate, type AuthenticatedSession } from "@/auth/AuthGate";
 import { HomeDashboard } from "@/components/home/HomeDashboard";
 import { Navbar } from "@/components/layout/Navbar";
 import { PROJECTS } from "@/data/assignmentsData";
@@ -13,13 +12,14 @@ import { useMemo, useState } from "react";
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <div className="min-h-screen flex flex-col bg-canvas text-on-surface transition-colors duration-200">
+        <AuthGate>{session => <AppContent {...session} />}</AuthGate>
+      </div>
     </AuthProvider>
   );
 }
 
-function AppContent() {
-  const { currentUser, login, logout } = useAuth();
+function AppContent({ currentUser, logout }: AuthenticatedSession) {
   const { locale } = useI18n();
   const { projects: projects } = useMemo(
     () => getLocalizedAssignments(locale),
@@ -36,42 +36,30 @@ function AppContent() {
     setActiveView("project");
   };
 
-  const handleLogin = (credentials: LoginCredentials) => {
-    const result = login(credentials);
-    if (result.ok) setActiveView("home");
-    return result;
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-canvas text-on-surface transition-colors duration-200">
-      {!currentUser ? (
-        <LoginView onLogin={handleLogin} />
-      ) : (
-        <>
-          <Navbar
-            activeView={activeView}
-            selectedProject={activeView === "project" ? selectedProject : null}
-            onNavigateHome={() => setActiveView("home")}
-            onSelectProjectDefault={() => setActiveView("project")}
-            currentUser={currentUser}
-            onLogout={logout}
-          />
+  <>
+    <Navbar
+      activeView={activeView}
+      selectedProject={activeView === "project" ? selectedProject : null}
+      onNavigateHome={() => setActiveView("home")}
+      onSelectProjectDefault={() => setActiveView("project")}
+      currentUser={currentUser}
+      onLogout={logout}
+    />
 
-          <main className="flex-1">
-            {activeView === "home" && (
-              <HomeDashboard
-                projects={projects}
-                onOpenProject={handleOpenProject}
-                currentUser={currentUser}
-              />
-            )}
-
-            {activeView === "project" && (
-              <ProjectWorkspace project={selectedProject} />
-            )}
-          </main>
-        </>
+    <main className="flex-1">
+      {activeView === "home" && (
+        <HomeDashboard
+          projects={projects}
+          onOpenProject={handleOpenProject}
+          currentUser={currentUser}
+        />
       )}
-    </div>
+
+      {activeView === "project" && (
+        <ProjectWorkspace project={selectedProject} />
+      )}
+    </main>
+  </>
   );
 }

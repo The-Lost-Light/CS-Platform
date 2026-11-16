@@ -55,7 +55,7 @@ pnpm build
 
 `src/auth/` 管理身分資料與登入狀態。`AuthService` 定義登入請求與結果，`demoAuthService` 負責帳號／密碼必填檢查與使用者資料正規化；錯誤以代碼回傳，由介面翻譯。`AuthProvider` 統一管理 `currentUser`、`login`、`logout`，元件透過 `useAuth()` 存取；可用 `service` 屬性注入其他符合介面的實作。共用的 `src/types.ts` 保留 `User` 型別轉出。
 
-`src/components/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號，`useLoginForm` 管理欄位、密碼顯示與錯誤訊息。登入請求經 `App` 交給 Provider，成功後回到首頁；登出後回到登入頁。
+`src/components/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號，`useLoginForm` 管理欄位、密碼顯示與錯誤訊息。`AuthGate` 在模組內處理登入入口與狀態判斷，將登入請求交給 Provider；登入成功後掛載應用內容，登出時卸載，讓下一次登入從首頁開始。`App` 僅組合驗證入口並管理首頁與專案導覽。
 
 目前維持前端示範模式：任意非空白帳號與密碼皆可登入，角色由表單選擇，沒有後端密碼驗證或權限控管。登入狀態僅存在記憶體，重新整理後需再次登入，密碼不會放入使用者狀態或瀏覽器儲存空間。串接真實後端時，需另外設計非同步服務、伺服器端驗證與工作階段管理。
 

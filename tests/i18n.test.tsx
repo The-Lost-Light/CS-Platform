@@ -26,7 +26,6 @@ import {
 } from "../src/i18n/messages";
 import { ThemeProvider, isThemeMode, resolveTheme } from "../src/theme";
 import {
-  BUILTIN_REPO_SNAPSHOTS,
   fetchGitHubProjectBundle,
 } from "../src/utils/githubService";
 
@@ -34,11 +33,7 @@ const zh = getLocalizedProjects("zh-TW");
 const en = getLocalizedProjects("en");
 const t = createTranslator("en");
 const han = /[\u3400-\u9fff]/;
-const bundle = {
-  ...BUILTIN_REPO_SNAPSHOTS["student-team/course-oj-platform"],
-  sourceType: "snapshot",
-  rateLimit: "",
-};
+const bundle = await fetchGitHubProjectBundle("student-team/course-oj-platform");
 
 test("saved language takes priority; unsupported values fall back to browser languages or Traditional Chinese", () => {
   assert.equal(resolveLocale("zh-TW", ["en-US"]), "zh-TW");

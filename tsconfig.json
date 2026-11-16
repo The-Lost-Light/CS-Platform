@@ -9,6 +9,7 @@
     /* Modules & Resolution */
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
     "paths": {

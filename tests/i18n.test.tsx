@@ -6,6 +6,10 @@ import { ArchitectureComparisonPanel } from "../src/components/advanced/Architec
 import { GitHubRepoDashboard } from "../src/components/advanced/GitHubRepoDashboard";
 import { ProjectWorkspace } from "../src/components/advanced/ProjectWorkspace";
 import { LoginView } from "../src/components/auth/LoginView";
+import { HomeDashboard } from "../src/components/home/HomeDashboard";
+import { Navbar } from "../src/components/layout/Navbar";
+import { demoAuthService } from "../src/auth/demoAuthService";
+import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
 import {
   getLocalizedAssignments,
   updateLocalizedProjectDraft,
@@ -207,7 +211,19 @@ test("dashboard lists every project and uses project-only navigation in both lan
     const html = renderToStaticMarkup(
       <ThemeProvider>
         <I18nProvider initialLanguage={locale}>
-          <App />
+          <Navbar
+            activeView="home"
+            selectedProject={null}
+            onNavigateHome={noop}
+            onSelectProjectDefault={noop}
+            currentUser={DEMO_ACCOUNTS[0]}
+            onLogout={noop}
+          />
+          <HomeDashboard
+            projects={getLocalizedAssignments(locale).projects}
+            currentUser={DEMO_ACCOUNTS[0]}
+            onOpenProject={noop}
+          />
         </I18nProvider>
       </ThemeProvider>,
     );
@@ -246,8 +262,9 @@ const analysis = analyzeArchitectureAlignment(
   t,
 );
 const screens = {
-  dashboard: <App />,
-  login: <LoginView onLoginSuccess={noop} />,
+  app: <App />,
+  dashboard: <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />,
+  login: <LoginView onLogin={demoAuthService.login} />,
   project: <ProjectWorkspace project={en.projects[0]} />,
   comparison: <ArchitectureComparisonPanel analysis={analysis} />,
   github: <GitHubRepoDashboard repoBundle={bundle} />,

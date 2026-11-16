@@ -14,7 +14,12 @@
 
 ```text
 src/
-├── App.tsx                          # 登入狀態與首頁／專案切換
+├── App.tsx                          # 登入入口與首頁／專案切換
+├── auth/
+│   ├── types.ts                    # 使用者、登入請求／結果與服務介面
+│   ├── AuthProvider.tsx            # 登入狀態與 useAuth hook
+│   ├── demoAuthService.ts          # 示範登入驗證
+│   └── demoAccounts.ts             # 示範帳號與表單預設資料
 ├── data/
 │   ├── assignmentsData.ts           # 專案題庫與架構設計範本
 │   └── localizedAssignments.ts      # 專案翻譯與草稿語言更新
@@ -24,7 +29,7 @@ src/
 │   ├── githubService.ts             # GitHub API 與教學快照
 │   └── architectureAnalyzer.ts      # 架構契合度分析
 └── components/
-    ├── auth/LoginView.tsx
+    ├── auth/                        # 登入頁、表單、示範帳號選擇與表單 hook
     ├── layout/                      # 導覽列與語言選單
     ├── home/HomeDashboard.tsx        # 專案總覽首頁
     └── advanced/                    # 專案工作區（沿用既有目錄名稱）
@@ -45,6 +50,14 @@ pnpm build
 ```
 
 `pnpm build` 包含 TypeScript strict 型別檢查與正式建置；`pnpm preview` 可預覽建置結果。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/index.css`。
+
+## 登入與身分驗證模組
+
+`src/auth/` 管理身分資料與登入狀態。`AuthService` 定義登入請求與結果，`demoAuthService` 負責帳號／密碼必填檢查與使用者資料正規化；錯誤以代碼回傳，由介面翻譯。`AuthProvider` 統一管理 `currentUser`、`login`、`logout`，元件透過 `useAuth()` 存取；可用 `service` 屬性注入其他符合介面的實作。共用的 `src/types.ts` 保留 `User` 型別轉出。
+
+`src/components/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號，`useLoginForm` 管理欄位、密碼顯示與錯誤訊息。登入請求經 `App` 交給 Provider，成功後回到首頁；登出後回到登入頁。
+
+目前維持前端示範模式：任意非空白帳號與密碼皆可登入，角色由表單選擇，沒有後端密碼驗證或權限控管。登入狀態僅存在記憶體，重新整理後需再次登入，密碼不會放入使用者狀態或瀏覽器儲存空間。串接真實後端時，需另外設計非同步服務、伺服器端驗證與工作階段管理。
 
 ## 多國語言
 

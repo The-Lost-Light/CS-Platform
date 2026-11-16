@@ -549,7 +549,7 @@ export function C4Architect({ nodes, onChangeNodes, relationships, onChangeRelat
                   elevateNodesOnSelect={false}
                   fitView
                   onInit={instance => { flowInstance.current = instance; }}
-                  panOnDrag={[1]}
+                  panOnDrag={[0, 1]}
                   panActivationKeyCode={null}
                   minZoom={0.15}
                   maxZoom={2}

@@ -129,7 +129,7 @@ export default {
   "c4.levelsDescription": "C1: people and systems. C2: applications and data stores within a system. C3: components within a container. C4: classes and functions within a component.",
   "c4.scope": "Scope / boundary",
   "c4.createParentFirst": "Create a parent element first",
-  "c4.canvasInstructions": "Drag with the middle mouse button to pan. Right-click empty canvas to add an element at the pointer; right-drag to set its position and size. Click to edit; double-click to explore (C1–C4 only). Enter/Space selects; Shift+Enter explores. Drag nodes to move; drag selected borders or corners to resize. Connect handles to create relationships.",
+  "c4.canvasInstructions": "Drag empty canvas with the left or middle mouse button to pan. Right-click empty canvas to add an element at the pointer; right-drag to set its position and size. Click to edit; double-click to explore (C1–C4 only). Enter/Space selects; Shift+Enter explores. Drag nodes to move; drag selected borders or corners to resize. Connect handles to create relationships.",
   "c4.uses": "Uses",
   "c4.emptyLevel": "No elements at this level. Right-click the canvas to add one.",
   "c4.addInCurrentLevel": "Add node at current level",

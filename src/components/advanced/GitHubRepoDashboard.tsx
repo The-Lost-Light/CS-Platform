@@ -2,6 +2,7 @@ import { useI18n } from '../../i18n';
 import type { RepoBundle } from '../../types';
 import { useState } from 'react';
 import { RepoDiff, type DiffMode } from './RepoDiff';
+import { RepoFileTree } from './RepoFileTree';
 import {
   GitBranch,
   GitCommit,
@@ -12,7 +13,6 @@ import {
   Code2,
   ChevronDown,
   ChevronRight,
-  FileCode2,
 } from 'lucide-react';
 
 const LANG_CHART_COLORS = [
@@ -40,10 +40,6 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
 
   const langEntries = Object.entries(languages as Record<string, number>).sort((a, b) => b[1] - a[1]);
   const totalBytes = langEntries.reduce((acc, [, b]) => acc + b, 0) || 1;
-
-  const filteredTree = fileTree.filter((item) =>
-    item.path.toLowerCase().includes(fileTreeSearch.trim().toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
@@ -172,22 +168,7 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
           />
 
           <div className="max-h-[460px] overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
-            {filteredTree.map((item) => (
-              <div
-                key={item.path}
-                className="px-3 py-2 rounded-xl bg-surface-sunken hover:bg-surface-hover border border-outline flex items-center justify-between gap-2 text-on-surface transition"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <FileCode2 className="w-3.5 h-3.5 text-secondary shrink-0" />
-                  <span className="truncate">{item.path}</span>
-                </div>
-                {item.size !== undefined && (
-                  <span className="text-[10px] text-on-subtle shrink-0">
-                    {(item.size / 1024).toFixed(1)} KB
-                  </span>
-                )}
-              </div>
-            ))}
+            <RepoFileTree key={repo.full_name} files={fileTree} search={fileTreeSearch} />
           </div>
         </div>
 

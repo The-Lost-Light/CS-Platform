@@ -281,7 +281,7 @@
     }
 
     .ui-markdown {
-        @apply min-h-96 wrap-break-words text-sm leading-7 text-on-surface
+        @apply min-h-96 wrap-break-word text-sm leading-7 text-on-surface
       [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg
       [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-semibold
       [&_h1]:text-on-surface [&_h2]:text-on-surface

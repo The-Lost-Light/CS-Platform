@@ -1,7 +1,7 @@
 import { ArrowRight, Eye, EyeOff, Lock, User } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { DemoAccountPicker } from './DemoAccountPicker';
-import { useLoginForm, type LoginHandler } from './useLoginForm';
+import { useLoginForm, type LoginHandler } from '../../auth/useLoginForm';
 
 export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
   const { t } = useI18n();

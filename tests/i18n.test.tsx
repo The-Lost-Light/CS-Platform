@@ -4,12 +4,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import App from "../src/App";
 import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
 import { demoAuthService } from "../src/auth/demoAuthService";
-import { ArchitectureComparisonPanel } from "../src/components/advanced/ArchitectureComparisonPanel";
-import { GitHubRepoDashboard } from "../src/components/advanced/GitHubRepoDashboard";
-import { ProjectWorkspace } from "../src/components/advanced/ProjectWorkspace";
-import { LoginView } from "../src/components/auth/LoginView";
-import { HomeDashboard } from "../src/components/home/HomeDashboard";
-import { Navbar } from "../src/components/layout/Navbar";
+import { ArchitectureComparisonPanel } from "../src/pages/advanced/ArchitectureComparisonPanel";
+import { GitHubRepoDashboard } from "../src/pages/advanced/GitHubRepoDashboard";
+import { ProjectWorkspace } from "../src/pages/advanced/ProjectWorkspace";
+import { LoginView } from "../src/pages/auth/LoginView";
+import { HomeDashboard } from "../src/pages/home/HomeDashboard";
+import { Navbar } from "../src/pages/layout/Navbar";
 import {
   getLocalizedProjects,
   updateLocalizedProjectDraft,

@@ -17,3 +17,8 @@ export type LoginResult =
 export interface AuthService {
   login(credentials: LoginCredentials): LoginResult;
 }
+
+export interface AuthenticatedSession {
+  currentUser: User;
+  logout: () => void;
+}

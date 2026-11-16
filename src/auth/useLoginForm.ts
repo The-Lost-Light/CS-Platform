@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { DEFAULT_LOGIN_CREDENTIALS, getDemoCredentials } from '../../auth/demoAccounts';
-import type { LoginCredentials, LoginResult, User } from '../../auth/types';
-import type { MessageKey } from '../../i18n';
+import { DEFAULT_LOGIN_CREDENTIALS, getDemoCredentials } from './demoAccounts';
+import type { LoginCredentials, LoginResult, User } from './types';
+import type { MessageKey } from '../i18n';
 
 export type LoginHandler = (credentials: LoginCredentials) => LoginResult;
 

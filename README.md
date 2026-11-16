@@ -14,29 +14,23 @@
 
 ```text
 src/
-├── App.tsx                          # 登入入口與首頁／專案切換
-├── auth/
-│   ├── types.ts                    # 使用者、登入請求／結果與服務介面
-│   ├── AuthProvider.tsx            # 登入狀態與 useAuth hook
-│   ├── demoAuthService.ts          # 示範登入驗證
-│   └── demoAccounts.ts             # 示範帳號與表單預設資料
-├── data/
-│   ├── assignmentsData.ts           # 專案題庫與架構設計範本
-│   └── localizedAssignments.ts      # 專案翻譯與草稿語言更新
-├── i18n/                            # 介面、題庫與診斷訊息翻譯
-├── utils/
-│   ├── c4Model.ts                   # C4 節點與層級模型
-│   ├── githubService.ts             # GitHub API 與教學快照
-│   └── architectureAnalyzer.ts      # 架構契合度分析
-└── components/
-    ├── auth/                        # 登入頁、表單、示範帳號選擇與表單 hook
-    ├── layout/                      # 導覽列與語言選單
-    ├── home/HomeDashboard.tsx        # 專案總覽首頁
-    └── advanced/                    # 專案工作區（沿用既有目錄名稱）
-        ├── AdvancedProjectWorkspace.tsx
-        ├── C4Architect.tsx
-        ├── ArchitectureComparisonPanel.tsx
-        └── GitHubRepoDashboard.tsx
+├── App.tsx                          # 組合 Provider 與應用畫面入口
+├── auth/                            # 登入型別、服務、狀態與 useLoginForm
+├── hooks/
+│   ├── usePageNavigation.ts         # 首頁／專案導覽狀態
+│   └── useProjectWorkspace.ts       # 專案草稿、語言更新與倉庫載入
+├── data/                            # 專案題庫、翻譯與草稿語言更新
+├── i18n/                            # 翻譯內容與語言狀態
+├── theme/                           # 主題狀態與偏好儲存
+├── utils/                           # C4 模型、GitHub 服務、分析、Diff 與檔案樹處理
+└── pages/                           # 所有畫面元件與樣式
+    ├── Application.tsx              # 應用版面與登入入口組合
+    ├── Workspace.tsx                # 首頁／專案畫面組合
+    ├── auth/                       # AuthGate、登入頁、表單與示範帳號選擇
+    ├── layout/                     # 導覽列、語言與主題切換
+    ├── home/                       # 專案總覽首頁
+    ├── advanced/                   # 專案工作區、C4、GitHub 與架構比對畫面
+    └── styles/                     # 全域樣式、主題色彩與字型
 ```
 
 ## 開發與驗證
@@ -49,13 +43,15 @@ pnpm typecheck
 pnpm build
 ```
 
-`pnpm build` 包含 TypeScript strict 型別檢查與正式建置；`pnpm preview` 可預覽建置結果。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/index.css`。
+`pnpm build` 包含 TypeScript strict 型別檢查與正式建置；`pnpm preview` 可預覽建置結果。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/index.css`。
 
 ## 登入與身分驗證模組
 
 `src/auth/` 管理身分資料與登入狀態。`AuthService` 定義登入請求與結果，`demoAuthService` 負責帳號／密碼必填檢查與使用者資料正規化；錯誤以代碼回傳，由介面翻譯。`AuthProvider` 統一管理 `currentUser`、`login`、`logout`，元件透過 `useAuth()` 存取；可用 `service` 屬性注入其他符合介面的實作。共用的 `src/types.ts` 保留 `User` 型別轉出。
 
-`src/components/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號，`useLoginForm` 管理欄位、密碼顯示與錯誤訊息。`AuthGate` 在模組內處理登入入口與狀態判斷，將登入請求交給 Provider；登入成功後掛載應用內容，登出時卸載，讓下一次登入從首頁開始。`App` 僅組合驗證入口並管理首頁與專案導覽。
+`src/pages/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號。`src/auth/useLoginForm.ts` 管理欄位、密碼顯示與錯誤訊息。`AuthGate` 根據 Provider 狀態顯示登入頁或應用內容；登出時卸載工作區，讓下一次登入從首頁開始。`App` 組合 Provider 與 `pages/Application`，導覽狀態由 `hooks/usePageNavigation` 管理。
+
+畫面與樣式集中於 `pages`；共用狀態、服務、資料處理與可重用 hooks 放在畫面目錄外，且不依賴 `pages`。僅供畫面使用的互動狀態（例如分頁、選單、畫布選取）可留在元件內。
 
 目前維持前端示範模式：任意非空白帳號與密碼皆可登入，角色由表單選擇，沒有後端密碼驗證或權限控管。登入狀態僅存在記憶體，重新整理後需再次登入，密碼不會放入使用者狀態或瀏覽器儲存空間。串接真實後端時，需另外設計非同步服務、伺服器端驗證與工作階段管理。
 

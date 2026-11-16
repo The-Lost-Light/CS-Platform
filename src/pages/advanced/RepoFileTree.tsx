@@ -1,13 +1,7 @@
 import { ChevronRight, FileCode2, Folder } from 'lucide-react';
 import type { RepoBundle } from '../../types';
 
-interface TreeNode {
-  name: string;
-  path: string;
-  directory: boolean;
-  size?: number;
-  children: Map<string, TreeNode>;
-}
+import { buildRepoFileTree, type TreeNode } from '../../utils/repoFileTree';
 
 function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searching: boolean }) {
   const sorted = [...nodes.values()].sort((a, b) =>
@@ -50,25 +44,7 @@ function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searc
 }
 
 export function RepoFileTree({ files, search }: { files: RepoBundle['fileTree']; search: string }) {
-  const query = search.trim().toLowerCase();
-  const roots = new Map<string, TreeNode>();
-
-  for (const file of files) {
-    if (!file.path.toLowerCase().includes(query)) continue;
-    const parts = file.path.split('/').filter(Boolean);
-    let siblings = roots;
-    parts.forEach((name, index) => {
-      const directory = index < parts.length - 1 || file.type === 'tree';
-      let node = siblings.get(name);
-      if (!node) {
-        node = { name, path: parts.slice(0, index + 1).join('/'), directory, children: new Map() };
-        siblings.set(name, node);
-      }
-      node.directory ||= directory;
-      if (!directory) node.size = file.size;
-      siblings = node.children;
-    });
-  }
+  const { roots, query } = buildRepoFileTree(files, search);
 
   return <TreeEntries key={query} nodes={roots} searching={Boolean(query)} />;
 }

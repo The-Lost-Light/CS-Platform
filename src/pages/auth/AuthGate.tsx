@@ -1,12 +1,7 @@
 import type { ReactNode } from 'react';
-import { LoginView } from '../components/auth/LoginView';
-import { useAuth } from './AuthProvider';
-import type { User } from './types';
-
-export interface AuthenticatedSession {
-  currentUser: User;
-  logout: () => void;
-}
+import { LoginView } from './LoginView';
+import { useAuth } from '../../auth/AuthProvider';
+import type { AuthenticatedSession } from '../../auth/types';
 
 export function AuthGate({ children }: {
   children: (session: AuthenticatedSession) => ReactNode;

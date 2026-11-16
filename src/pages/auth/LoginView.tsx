@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n';
 import { LanguageSwitcher } from '../layout/LanguageSwitcher';
 import { ThemeSwitcher } from '../layout/ThemeSwitcher';
 import { LoginForm } from './LoginForm';
-import type { LoginHandler } from './useLoginForm';
+import type { LoginHandler } from '../../auth/useLoginForm';
 
 export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
   const { t } = useI18n();

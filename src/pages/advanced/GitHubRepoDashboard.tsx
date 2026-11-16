@@ -1,7 +1,8 @@
 import { useI18n } from '../../i18n';
 import type { RepoBundle } from '../../types';
 import { useState } from 'react';
-import { RepoDiff, type DiffMode } from './RepoDiff';
+import { RepoDiff } from './RepoDiff';
+import type { DiffMode } from '../../utils/repoDiff';
 import { RepoFileTree } from './RepoFileTree';
 import {
   GitBranch,

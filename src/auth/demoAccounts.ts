@@ -1,4 +1,4 @@
-import type { LoginCredentials, User } from './types';
+import type { LoginCredentials, User } from '@auth/types';
 
 export interface DemoAccount extends User {
   id: string;

@@ -1,7 +1,7 @@
 import { Trash2, X } from "lucide-react";
 import type { ReactNode } from "react";
-import type { C4ArchitectProps } from "./types";
-import type { useC4Editor } from "./useC4Editor";
+import type { C4ArchitectProps } from "@pages/project/c4/types";
+import type { useC4Editor } from "@pages/project/c4/useC4Editor";
 const fieldClass = "ui-input px-3 py-2";
 
 export function C4Inspector({

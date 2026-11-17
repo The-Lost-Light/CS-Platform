@@ -12,9 +12,9 @@ import {
   resolveTheme,
   type ResolvedTheme,
   type ThemeMode,
-} from "./model";
-export { isThemeMode, resolveTheme, SUPPORTED_THEME_MODES } from "./model";
-export type { ResolvedTheme, ThemeMode } from "./model";
+} from "@theme/model";
+export { isThemeMode, resolveTheme, SUPPORTED_THEME_MODES } from "@theme/model";
+export type { ResolvedTheme, ThemeMode } from "@theme/model";
 const THEME_STORAGE_KEY = "codepulse.themeMode";
 
 function initialThemeMode(): ThemeMode {

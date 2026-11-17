@@ -1,17 +1,17 @@
-import { downloadC4Model } from "../../../services/c4Download";
+import { downloadC4Model } from "@services/c4Download";
 import { useEffect, useRef, useState } from "react";
 import { MarkerType, type ReactFlowInstance } from "@xyflow/react";
-import { useI18n } from "../../../i18n";
-import { C4_FILE_MAX_BYTES, parseC4File } from "../../../domain/c4File";
+import { useI18n } from "@i18n";
+import { C4_FILE_MAX_BYTES, parseC4File } from "@domain/c4File";
 import {
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
   removeC4Nodes,
   type C4Node,
-} from "../../../domain/c4";
-import type { CanvasNode } from "./flowTypes";
-import type { C4ArchitectProps } from "./types";
+} from "@domain/c4";
+import type { CanvasNode } from "@pages/project/c4/flowTypes";
+import type { C4ArchitectProps } from "@pages/project/c4/types";
 
 export function useC4Editor({
   nodes,

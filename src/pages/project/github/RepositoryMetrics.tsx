@@ -1,5 +1,5 @@
-import { useI18n } from "../../../i18n";
-import type { RepoBundle } from "../../../domain/repository";
+import { useI18n } from "@i18n";
+import type { RepoBundle } from "@domain/repository";
 import {
   Star,
   GitFork,

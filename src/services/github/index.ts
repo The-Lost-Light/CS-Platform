@@ -1,8 +1,8 @@
-import type { RepoBundle, RepoSnapshot } from "../../domain/repository";
-import { fetchLiveRepoBundle } from "./client";
-import { parseGitHubRepoUrl } from "./repoUrl";
-import { loadBuiltinRepoSnapshot } from "./snapshots";
-export { parseGitHubRepoUrl } from "./repoUrl";
+import type { RepoBundle, RepoSnapshot } from "@domain/repository";
+import { fetchLiveRepoBundle } from "@services/github/client";
+import { parseGitHubRepoUrl } from "@services/github/repoUrl";
+import { loadBuiltinRepoSnapshot } from "@services/github/snapshots";
+export { parseGitHubRepoUrl } from "@services/github/repoUrl";
 
 export interface GitHubServiceDependencies {
   fetch?: typeof globalThis.fetch;

@@ -1,10 +1,10 @@
-import { RepositoryConnection } from "./github/RepositoryConnection";
+import { RepositoryConnection } from "@pages/project/github/RepositoryConnection";
 import { Compass, FolderGit2, GitBranch } from "lucide-react";
-import { useProjectWorkspace } from "../../hooks/useProjectWorkspace";
-import { useI18n } from "../../i18n";
-import type { Project } from "../../domain/project";
-import { C4Architect } from "./C4Architect";
-import { GitHubRepoDashboard } from "./GitHubRepoDashboard";
+import { useProjectWorkspace } from "@hooks/useProjectWorkspace";
+import { useI18n } from "@i18n";
+import type { Project } from "@domain/project";
+import { C4Architect } from "@pages/project/C4Architect";
+import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
 
 export function ProjectWorkspace({ project }: { project: Project }) {
   const { t } = useI18n();

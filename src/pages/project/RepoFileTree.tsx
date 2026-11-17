@@ -1,7 +1,7 @@
 import { ChevronRight, FileCode2, Folder } from "lucide-react";
-import type { RepoBundle } from "../../domain/repository";
+import type { RepoBundle } from "@domain/repository";
 
-import { buildRepoFileTree, type TreeNode } from "../../domain/fileTree";
+import { buildRepoFileTree, type TreeNode } from "@domain/fileTree";
 
 function TreeEntries({
   nodes,

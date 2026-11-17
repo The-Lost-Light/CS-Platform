@@ -1,4 +1,4 @@
-import type source from '../en/courses';
+import type source from '@i18n/en/courses';
 
 export default {
   "courses.fullstack.title": "期中軟體工程專題：模組化全端專案架構設計與 GitHub 開發檢核",

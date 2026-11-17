@@ -1,21 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AuthProvider } from "../src/auth/AuthProvider";
-import { AuthGate } from "../src/pages/auth/AuthGate";
-import { WorkSpace } from "../src/pages/Workspace";
-import { DEMO_ACCOUNTS } from "../src/auth/demoAccounts";
-import { demoAuthService } from "../src/auth/demoAuthService";
-import { GitHubRepoDashboard } from "../src/pages/project/GitHubRepoDashboard";
-import { ProjectWorkspace } from "../src/pages/project/ProjectWorkspace";
-import { LoginView } from "../src/pages/auth/LoginView";
-import { HomeDashboard } from "../src/pages/home/HomeDashboard";
-import { Navbar } from "../src/pages/layout/Navbar";
+import { AuthProvider } from "@auth/AuthProvider";
+import { AuthGate } from "@pages/auth/AuthGate";
+import { WorkSpace } from "@pages/Workspace";
+import { DEMO_ACCOUNTS } from "@auth/demoAccounts";
+import { demoAuthService } from "@auth/demoAuthService";
+import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
+import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
+import { LoginView } from "@pages/auth/LoginView";
+import { HomeDashboard } from "@pages/home/HomeDashboard";
+import { Navbar } from "@pages/layout/Navbar";
 import {
   getLocalizedProjects,
   updateLocalizedProjectDraft,
-} from "../src/data/localizedProjects";
-import { I18nProvider } from "../src/i18n";
+} from "@data/localizedProjects";
+import { I18nProvider } from "@i18n";
 import {
   createTranslator,
   englishMessages,
@@ -23,11 +23,11 @@ import {
   resolveLocale,
   traditionalChineseMessages,
   type MessageKey,
-} from "../src/i18n/messages";
-import { ThemeProvider, isThemeMode, resolveTheme } from "../src/theme";
+} from "@i18n/messages";
+import { ThemeProvider, isThemeMode, resolveTheme } from "@theme";
 import {
   fetchGitHubProjectBundle,
-} from "../src/services/github";
+} from "@services/github";
 
 const en = getLocalizedProjects("en");
 const zh = getLocalizedProjects("zh-TW");

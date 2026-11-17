@@ -1,5 +1,5 @@
-import type { C4Kind, C4Node, C4Relationship } from './c4';
-import { c4NodeDepth, C4_MAX_LEVELS } from './c4';
+import type { C4Kind, C4Node, C4Relationship } from '@domain/c4';
+import { c4NodeDepth, C4_MAX_LEVELS } from '@domain/c4';
 
 export interface C4File {
   format: 'codepulse-c4';

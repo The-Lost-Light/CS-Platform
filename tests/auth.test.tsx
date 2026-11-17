@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AuthGate } from "../src/pages/auth/AuthGate";
-import { WorkSpace } from "../src/pages/Workspace";
-import { AuthProvider, useAuth } from "../src/auth/AuthProvider";
+import { AuthGate } from "@pages/auth/AuthGate";
+import { WorkSpace } from "@pages/Workspace";
+import { AuthProvider, useAuth } from "@auth/AuthProvider";
 import {
   DEFAULT_LOGIN_CREDENTIALS,
   DEMO_ACCOUNTS,
   getDemoCredentials,
-} from "../src/auth/demoAccounts";
-import { demoAuthService } from "../src/auth/demoAuthService";
-import type { LoginCredentials } from "../src/auth/types";
-import { I18nProvider } from "../src/i18n";
-import { createTranslator } from "../src/i18n/messages";
-import { ThemeProvider } from "../src/theme";
+} from "@auth/demoAccounts";
+import { demoAuthService } from "@auth/demoAuthService";
+import type { LoginCredentials } from "@auth/types";
+import { I18nProvider } from "@i18n";
+import { createTranslator } from "@i18n/messages";
+import { ThemeProvider } from "@theme";
 
 function credentials(overrides: Partial<LoginCredentials> = {}): LoginCredentials {
   return {

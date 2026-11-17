@@ -1,4 +1,4 @@
-import type { AuthService } from './types';
+import type { AuthService } from '@auth/types';
 
 // Frontend demonstration only: this checks required fields, not an account store.
 export const demoAuthService: AuthService = {

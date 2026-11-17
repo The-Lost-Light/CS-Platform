@@ -1,4 +1,4 @@
-import type source from '../en/runtime';
+import type source from '@i18n/en/runtime';
 
 export default {
   "github.merge.squash": "Squash and Merge (壓縮合併)",

@@ -1,10 +1,10 @@
-import type { RepoBundle } from "../../domain/repository";
+import type { RepoBundle } from "@domain/repository";
 import { useState } from "react";
-import type { DiffMode } from "../../domain/diff";
-import { RepositoryMetrics } from "./github/RepositoryMetrics";
-import { RepositoryLanguages } from "./github/RepositoryLanguages";
-import { RepositoryTree } from "./github/RepositoryTree";
-import { CommitHistory } from "./github/CommitHistory";
+import type { DiffMode } from "@domain/diff";
+import { RepositoryMetrics } from "@pages/project/github/RepositoryMetrics";
+import { RepositoryLanguages } from "@pages/project/github/RepositoryLanguages";
+import { RepositoryTree } from "@pages/project/github/RepositoryTree";
+import { CommitHistory } from "@pages/project/github/CommitHistory";
 
 export function GitHubRepoDashboard({
   repoBundle,

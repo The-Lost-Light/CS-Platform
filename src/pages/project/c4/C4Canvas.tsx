@@ -1,6 +1,5 @@
-import type { FlowNode, BoundaryNode, CanvasNode } from "./flowTypes";
+import type { FlowNode, BoundaryNode, CanvasNode } from "@pages/project/c4/flowTypes";
 import {
-  applyNodeChanges,
   Handle,
   NodeResizer,
   Position,
@@ -9,7 +8,7 @@ import {
   type ReactFlowProps,
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
-import { overlapsC4Boundary } from "../../../domain/c4";
+import { prepareC4CanvasChanges } from "@pages/project/c4/canvasChanges";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
@@ -134,61 +133,16 @@ export function C4Canvas({
       {...props}
       nodes={canvasNodes}
       onNodesChange={(changes) => {
-        const boundaryMove = changes.find(
-          (change) =>
-            change.type === "position" &&
-            change.id === "__c4_boundary__" &&
-            change.position,
+        const update = prepareC4CanvasChanges(
+          changes,
+          canvasNodes,
+          movingIds.current,
         );
-        if (boundaryMove?.type === "position" && boundaryMove.position) {
-          const frame = canvasNodes.find((node) => node.id === boundaryMove.id);
-          if (frame) {
-            const width = Number(frame.style?.width ?? 600);
-            const height = Number(frame.style?.height ?? 360);
-            movingIds.current ??= canvasNodes
-              .filter(
-                (node) =>
-                  node.type !== "boundary" &&
-                  overlapsC4Boundary(
-                    {
-                      ...node.position,
-                      width: Number(node.style?.width ?? 280),
-                      height: Number(node.style?.height ?? 230),
-                    },
-                    { ...frame.position, width, height },
-                  ),
-              )
-              .map((node) => node.id);
-            const dx = boundaryMove.position.x - frame.position.x;
-            const dy = boundaryMove.position.y - frame.position.y;
-            changes = [
-              ...changes,
-              ...canvasNodes
-                .filter((node) => movingIds.current!.includes(node.id))
-                .map((node) => ({
-                  id: node.id,
-                  type: "position" as const,
-                  dragging: boundaryMove.dragging,
-                  position: {
-                    x: node.position.x + dx,
-                    y: node.position.y + dy,
-                  },
-                })),
-            ];
-            if (boundaryMove.dragging !== true) movingIds.current = null;
-          }
+        movingIds.current = update.movingIds;
+        setCanvasNodes((previous) => update.changes.applyTo(previous));
+        if (update.completedMoves.toArray().length) {
+          onNodesChange?.(update.completedMoves);
         }
-        setCanvasNodes((previous) => applyNodeChanges(changes, previous));
-        const completedMoves = changes.filter(
-          (change) =>
-            (change.type === "position" &&
-              change.position &&
-              change.dragging !== true) ||
-            (change.type === "dimensions" &&
-              change.dimensions &&
-              change.setAttributes),
-        );
-        if (completedMoves.length) onNodesChange?.(completedMoves);
       }}
     />
   );

@@ -3,7 +3,7 @@ import {
   splitPatch,
   type DiffMode,
   type PatchLine,
-} from "../../domain/diff";
+} from "@domain/diff";
 
 function lineClass(line: PatchLine | null) {
   const color =

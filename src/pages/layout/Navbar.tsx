@@ -7,11 +7,11 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
-import { useI18n } from "../../i18n";
-import { useTheme, type ThemeMode } from "../../theme";
-import type { Project } from "../../domain/project";
-import type { User } from "../../auth/types";
-import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useI18n } from "@i18n";
+import { useTheme, type ThemeMode } from "@theme";
+import type { Project } from "@domain/project";
+import type { User } from "@auth/types";
+import { LanguageSwitcher } from "@pages/layout/LanguageSwitcher";
 
 export function Navbar({
   activeView,

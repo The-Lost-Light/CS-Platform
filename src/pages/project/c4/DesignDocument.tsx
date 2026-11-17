@@ -2,7 +2,7 @@ import { Code2, Eye, FileText } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useI18n } from "../../../i18n";
+import { useI18n } from "@i18n";
 const fieldClass = "ui-input px-3 py-2";
 
 export function DesignDocument({

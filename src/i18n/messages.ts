@@ -1,9 +1,9 @@
-import uiEn from './en/ui';
-import coursesEn from './en/courses';
-import runtimeEn from './en/runtime';
-import uiZh from './zh-TW/ui';
-import coursesZh from './zh-TW/courses';
-import runtimeZh from './zh-TW/runtime';
+import uiEn from '@i18n/en/ui';
+import coursesEn from '@i18n/en/courses';
+import runtimeEn from '@i18n/en/runtime';
+import uiZh from '@i18n/zh-TW/ui';
+import coursesZh from '@i18n/zh-TW/courses';
+import runtimeZh from '@i18n/zh-TW/runtime';
 
 export const englishMessages = { ...uiEn, ...coursesEn, ...runtimeEn };
 export type MessageKey = keyof typeof englishMessages;

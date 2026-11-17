@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PROJECTS } from "../src/data/projectsData";
+import { PROJECTS } from "@data/projectsData";
 import {
   c4Drilldown,
   createC4NodeInScope,
@@ -9,7 +9,7 @@ import {
   removeC4Nodes,
   visibleC4Nodes,
   type C4Node,
-} from "../src/domain/c4";
+} from "@domain/c4";
 
 const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
 

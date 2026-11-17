@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { isMessageKey, type MessageKey } from '../i18n/messages';
-import type { RepoBundle } from '../domain/repository';
-import { fetchGitHubProjectBundle, type GitHubProjectLoader } from '../services/github';
+import { isMessageKey, type MessageKey } from '@i18n/messages';
+import type { RepoBundle } from '@domain/repository';
+import { fetchGitHubProjectBundle, type GitHubProjectLoader } from '@services/github';
 
 export function useRepository(defaultRepoUrl: string, loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle) {
   const [repoUrlInput, setRepoUrlInput] = useState(

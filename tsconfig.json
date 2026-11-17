@@ -14,6 +14,16 @@
     "isolatedModules": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@auth/*": ["./src/auth/*"],
+      "@data/*": ["./src/data/*"],
+      "@domain/*": ["./src/domain/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@i18n": ["./src/i18n/index.tsx"],
+      "@i18n/*": ["./src/i18n/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@services/*": ["./src/services/*"],
+      "@theme": ["./src/theme/index.tsx"],
+      "@theme/*": ["./src/theme/*"],
     },
     "types": ["vite/client", "node"],
 

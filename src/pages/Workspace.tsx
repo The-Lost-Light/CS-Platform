@@ -1,8 +1,8 @@
-import type { AuthenticatedSession } from "@/auth/types";
-import { HomeDashboard } from "@/pages/home/HomeDashboard";
-import { Navbar } from "@/pages/layout/Navbar";
-import { ProjectWorkspace } from "@/pages/project/ProjectWorkspace";
-import { usePageNavigation } from "../hooks/usePageNavigation";
+import type { AuthenticatedSession } from "@auth/types";
+import { HomeDashboard } from "@pages/home/HomeDashboard";
+import { Navbar } from "@pages/layout/Navbar";
+import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
+import { usePageNavigation } from "@hooks/usePageNavigation";
 
 export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
   const {

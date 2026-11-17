@@ -1,4 +1,4 @@
-import type { MindMapNode } from './project';
+import type { MindMapNode } from '@domain/project';
 
 export type C4Kind = 'person' | 'system' | 'container' | 'component' | 'code';
 export type C4Node = MindMapNode & { kind: C4Kind; external?: boolean; technology: string; width?: number; height?: number; boundary?: { x: number; y: number; width: number; height: number }; contextPositions?: Record<string, { x: number; y: number }> };

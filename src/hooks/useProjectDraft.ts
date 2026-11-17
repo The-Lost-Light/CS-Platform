@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { updateLocalizedProjectDraft } from '../data/localizedProjects';
-import type { Project } from '../domain/project';
-import { migrateC4Nodes, type C4Relationship } from '../domain/c4';
+import { updateLocalizedProjectDraft } from '@data/localizedProjects';
+import type { Project } from '@domain/project';
+import { migrateC4Nodes, type C4Relationship } from '@domain/c4';
 
 /** Locale updates merge untouched template fields; project changes reset the draft. */
 export function useProjectDraft(project: Project, onProjectChange: (url: string) => void) {

@@ -4,6 +4,11 @@ import path from 'node:path';
 import test from 'node:test';
 
 const root = path.resolve('src');
+const moduleAliases = new Set(
+  readdirSync(root, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => `@${entry.name}`),
+);
 function files(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
     const file = path.join(directory, entry.name);
@@ -17,8 +22,11 @@ for (const file of sources) {
   // Scan module specifiers only; includes static, re-export and dynamic imports.
   const imports = readFileSync(file, 'utf8').matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)["']([^"']+)["']/g);
   for (const [, name] of imports) {
-    if (name.startsWith('.') || name.startsWith('@/')) {
-      const base = name.startsWith('@/') ? path.resolve(root, name.slice(2)) : path.resolve(path.dirname(file), name);
+    const isModuleAlias = moduleAliases.has(name.split('/')[0]);
+    if (name.startsWith('.') || name.startsWith('@/') || isModuleAlias) {
+      const base = isModuleAlias
+        ? path.resolve(root, name.slice(1))
+        : name.startsWith('@/') ? path.resolve(root, name.slice(2)) : path.resolve(path.dirname(file), name);
       const resolved = [base, base + '.ts', base + '.tsx', path.join(base, 'index.ts'), path.join(base, 'index.tsx')].find(candidate => existsSync(candidate) && statSync(candidate).isFile());
       assert.ok(resolved, `${file}: unresolved ${name}`);
       dependencies.push(resolved);

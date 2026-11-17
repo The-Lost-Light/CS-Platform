@@ -1,10 +1,10 @@
 import { Background, Controls, MiniMap } from "@xyflow/react";
 import { HelpCircle, Layers } from "lucide-react";
-import { C4Canvas, nodeTypes } from "./C4Canvas";
-import type { FlowNode } from "./flowTypes";
-import { C4Inspector } from "./C4Inspector";
-import type { useC4Editor } from "./useC4Editor";
-import type { C4ArchitectProps } from "./types";
+import { C4Canvas, nodeTypes } from "@pages/project/c4/C4Canvas";
+import type { FlowNode } from "@pages/project/c4/flowTypes";
+import { C4Inspector } from "@pages/project/c4/C4Inspector";
+import type { useC4Editor } from "@pages/project/c4/useC4Editor";
+import type { C4ArchitectProps } from "@pages/project/c4/types";
 const colors = {
   internal: "var(--c4-internal-bg)",
   external: "var(--c4-external-bg)",

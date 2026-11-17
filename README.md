@@ -38,6 +38,8 @@ src/
     └── styles/                     # index 組合 tokens/base/components/c4/scrollbars 與字型
 ```
 
+模組匯入統一使用 `@auth/*`、`@data/*`、`@domain/*`、`@hooks/*`、`@i18n/*`、`@pages/*`、`@services/*` 與 `@theme/*`；`@i18n`、`@theme` 可直接匯入各自的入口。別名同步設定於 `tsconfig.json` 與 `vite.config.ts`，並保留 `@/*` 作為 `src/*` 的通用別名。
+
 ## 開發與驗證
 
 ```bash
@@ -60,7 +62,7 @@ pnpm build
 - `pages` 負責畫面與畫面專用互動。`useC4Editor` 保留在 C4 畫面模組，管理 React Flow 轉換、選取、導覽與匯入狀態；畫布尺寸量測留在 C4Canvas。README 模式由父層保存，切換分頁不重設。GitHub 分支、搜尋、展開提交與 Diff 模式也仍由原本父層持有。
 - 程式與測試直接匯入所屬模組：專案型別使用 `domain/project`、倉庫型別使用 `domain/repository`、使用者型別使用 `auth/types`；C4、Diff 與檔案樹使用 `domain` 中的模組，GitHub 服務使用 `services/github`。舊的 `src/utils/*`、`src/types.ts` 及 `projectsData` 的型別轉出已移除；`projectsData` 僅保留題庫資料與建立函式。
 
-`tests/architecture.test.tsx` 檢查相對路徑與 `@/` 匯入的分層邊界、路徑解析及循環相依；`tests/githubService.test.tsx` 以注入的 HTTP 實作驗證授權標頭、分支編碼、250 筆檔案上限、部分端點失敗與快照備援，不發出真實網路請求。既有測試繼續涵蓋登入、多語系、草稿保留、C4 編輯規則與檔案往返、Diff 及畫面渲染。
+`tests/architecture.test.tsx` 檢查相對路徑、`@/` 與各模組別名匯入的分層邊界、路徑解析及循環相依；`tests/githubService.test.tsx` 以注入的 HTTP 實作驗證授權標頭、分支編碼、250 筆檔案上限、部分端點失敗與快照備援，不發出真實網路請求。既有測試繼續涵蓋登入、多語系、草稿保留、C4 編輯規則與檔案往返、Diff 及畫面渲染。
 
 本次重構另以 Git 原始版本進行 24 組初始畫面的 HTML 逐字比對，涵蓋兩種語言、淺深色主題、所有專案、首頁、登入、GitHub 與空資料狀態。此比對驗證初始渲染一致，不取代瀏覽器中的拖曳、縮放與檔案選取互動測試。
 

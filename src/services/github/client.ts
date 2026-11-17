@@ -1,5 +1,5 @@
-import type { RepoBundle } from "../../domain/repository";
-import type { parseGitHubRepoUrl } from "./repoUrl";
+import type { RepoBundle } from "@domain/repository";
+import type { parseGitHubRepoUrl } from "@services/github/repoUrl";
 
 export async function fetchLiveRepoBundle(
   parsed: NonNullable<ReturnType<typeof parseGitHubRepoUrl>>,

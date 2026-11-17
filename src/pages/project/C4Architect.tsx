@@ -5,10 +5,10 @@ import {
   Network,
   Upload,
 } from "lucide-react";
-import { C4Diagram } from "./c4/C4Diagram";
-import { DesignDocument } from "./c4/DesignDocument";
-import { useC4Editor } from "./c4/useC4Editor";
-import type { C4ArchitectProps } from "./c4/types";
+import { C4Diagram } from "@pages/project/c4/C4Diagram";
+import { DesignDocument } from "@pages/project/c4/DesignDocument";
+import { useC4Editor } from "@pages/project/c4/useC4Editor";
+import type { C4ArchitectProps } from "@pages/project/c4/types";
 
 export function C4Architect(props: C4ArchitectProps) {
   const {

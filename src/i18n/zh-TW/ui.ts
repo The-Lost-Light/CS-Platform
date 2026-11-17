@@ -1,4 +1,4 @@
-import type source from '../en/ui';
+import type source from '@i18n/en/ui';
 
 export default {
   "common.backHome": "返回首頁",

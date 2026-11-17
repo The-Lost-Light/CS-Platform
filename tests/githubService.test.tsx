@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createGitHubService, parseGitHubRepoUrl } from '../src/services/github';
-import { loadBuiltinRepoSnapshot } from '../src/services/github/snapshots';
+import { createGitHubService, parseGitHubRepoUrl } from '@services/github';
+import { loadBuiltinRepoSnapshot } from '@services/github/snapshots';
 
 test('repository URL parsing retains supported URL and shorthand forms', () => {
   for (const input of [' owner/repo ', 'https://www.github.com/owner/repo.git', 'github.com/owner/repo/', 'owner/repo/tree/main']) {

@@ -4,7 +4,7 @@ import {
   SUPPORTED_LOCALES,
   useI18n,
   type LanguagePreference,
-} from "../../i18n";
+} from "@i18n";
 
 export function LanguageSwitcher() {
   const { locale, preference, setPreference, t } = useI18n();

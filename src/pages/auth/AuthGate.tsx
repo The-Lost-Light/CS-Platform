@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { LoginView } from "./LoginView";
-import { useAuth } from "../../auth/AuthProvider";
-import type { AuthenticatedSession } from "../../auth/types";
+import { LoginView } from "@pages/auth/LoginView";
+import { useAuth } from "@auth/AuthProvider";
+import type { AuthenticatedSession } from "@auth/types";
 
 export function AuthGate({
   children,

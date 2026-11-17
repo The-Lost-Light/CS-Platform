@@ -1,6 +1,6 @@
 import { AlertCircle, FolderGit2, KeyRound, RefreshCw } from "lucide-react";
-import { useI18n } from "../../../i18n";
-import type { useRepository } from "../../../hooks/useRepository";
+import { useI18n } from "@i18n";
+import type { useRepository } from "@hooks/useRepository";
 
 export function RepositoryConnection({
   repository,

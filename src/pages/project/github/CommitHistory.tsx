@@ -1,8 +1,8 @@
-import { useI18n } from "../../../i18n";
-import type { RepoBundle } from "../../../domain/repository";
+import { useI18n } from "@i18n";
+import type { RepoBundle } from "@domain/repository";
 import { GitCommit, ChevronDown, ChevronRight } from "lucide-react";
-import { RepoDiff } from "../RepoDiff";
-import type { DiffMode } from "../../../domain/diff";
+import { RepoDiff } from "@pages/project/RepoDiff";
+import type { DiffMode } from "@domain/diff";
 
 export function CommitHistory({
   commits,

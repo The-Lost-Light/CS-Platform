@@ -1,4 +1,4 @@
-import type { RepoBundle } from './repository';
+import type { RepoBundle } from '@domain/repository';
 
 export interface TreeNode {
   name: string;

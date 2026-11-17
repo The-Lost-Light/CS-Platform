@@ -3,9 +3,9 @@ import {
   DEFAULT_LOCALE,
   type MessageKey,
   type Translator,
-} from "../i18n/messages";
+} from "@i18n/messages";
 
-import type { MindMapNode, Project } from "../domain/project";
+import type { MindMapNode, Project } from "@domain/project";
 
 type ProjectTemplate = Omit<
   Project,

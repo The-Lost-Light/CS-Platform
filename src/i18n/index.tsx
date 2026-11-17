@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { createTranslator, isLocale, resolveLocale, type Locale, type Translator } from './messages';
+import { createTranslator, isLocale, resolveLocale, type Locale, type Translator } from '@i18n/messages';
 
-export { SUPPORTED_LOCALES } from './messages';
-export type { Locale, MessageKey, Translator } from './messages';
+export { SUPPORTED_LOCALES } from '@i18n/messages';
+export type { Locale, MessageKey, Translator } from '@i18n/messages';
 export type LanguagePreference = 'auto' | Locale;
 const PREFERENCE_KEY = 'codepulse.languagePreference';
 interface I18nContextValue {

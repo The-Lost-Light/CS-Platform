@@ -1,7 +1,7 @@
-import { useI18n } from "../../../i18n";
-import type { RepoBundle } from "../../../domain/repository";
+import { useI18n } from "@i18n";
+import type { RepoBundle } from "@domain/repository";
 import { FolderTree, GitBranch } from "lucide-react";
-import { RepoFileTree } from "../RepoFileTree";
+import { RepoFileTree } from "@pages/project/RepoFileTree";
 
 export function RepositoryTree({
   repo,

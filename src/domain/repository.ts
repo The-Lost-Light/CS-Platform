@@ -58,7 +58,7 @@ export interface RepoCommit {
   parents: Array<{
     sha: string;
   }>;
-  prInfo: {
+  prInfo?: {
     number: number;
     title: string;
     html_url: string;
@@ -73,18 +73,19 @@ export interface RepoCommit {
     base_ref: string;
     head_ref: string;
   };
-  stats: {
+  stats?: {
     total: number;
     additions: number;
     deletions: number;
   };
-  files: Array<{
+  diffError?: string;
+  files?: Array<{
     filename: string;
     status: string;
     additions: number;
     deletions: number;
     changes: number;
-    patch: string;
+    patch?: string;
   }>;
 }
 

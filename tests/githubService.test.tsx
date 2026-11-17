@@ -73,8 +73,14 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
             : String(url).includes("/branches?")
               ? snapshot.branches
               : String(url).includes("/commits?")
-                ? snapshot.commits
-                : { tree: files };
+                ? snapshot.commits.map(
+                    ({ files, stats, ...summary }) => summary,
+                  )
+                : String(url).includes("/commits/")
+                  ? snapshot.commits.find((commit) =>
+                      String(url).includes(commit.sha),
+                    )
+                  : { tree: files };
       return Response.json(data, {
         headers: { "x-ratelimit-remaining": "42", "x-ratelimit-limit": "60" },
       });
@@ -84,7 +90,7 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     },
   });
   const result = await service("facebook/react", "test-token");
-  assert.equal(requests.length, 5);
+  assert.equal(requests.length, 5 + snapshot.commits.length);
   for (const request of requests)
     assert.deepEqual(request.headers, {
       Accept: "application/vnd.github+json",
@@ -103,6 +109,100 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     sourceType: "live-api",
     rateLimit: "42/60",
   });
+});
+
+test("commit detail failures preserve live history, successful diffs and partial pages", async () => {
+  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  for (const failure of ["http", "network", "invalid", "later-page"] as const) {
+    const [first, second] = snapshot.commits;
+    const summaries = [first, second].map(
+      ({ files, stats, ...summary }) => summary,
+    );
+    const service = createGitHubService({
+      fetch: async (input) => {
+        const url = String(input);
+        if (url.includes(`/commits/${first.sha}`)) {
+          if (failure === "later-page" && url.endsWith("page=1")) {
+            return Response.json(first, {
+              headers: { link: '<https://api.github.com/next>; rel="next"' },
+            });
+          }
+          if (failure === "network") throw new Error("offline");
+          if (failure === "invalid") return Response.json({ sha: first.sha });
+          return new Response(null, { status: 403 });
+        }
+        if (url.includes(`/commits/${second.sha}`))
+          return Response.json(second);
+        if (url.includes("/commits?")) return Response.json(summaries);
+        if (url.includes("/branches?")) return Response.json([]);
+        if (url.includes("/trees/")) return Response.json({ tree: [] });
+        if (url.endsWith("/languages")) return Response.json({});
+        return Response.json(snapshot.repo);
+      },
+      loadSnapshot: async () => assert.fail("must not replace live repository"),
+    });
+    const result = await service("facebook/react");
+    assert.equal(result.sourceType, "live-api");
+    assert.deepEqual(
+      result.commits.map((c) => c.sha),
+      [first.sha, second.sha],
+    );
+    assert.ok(result.commits[0].diffError);
+    assert.deepEqual(result.commits[1], second);
+    assert.deepEqual(
+      result.commits[0].files,
+      failure === "later-page" ? first.files : undefined,
+    );
+  }
+});
+
+test("commit detail pagination collects files using the same authenticated endpoint", async () => {
+  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const { files, stats, ...summary } = snapshot.commits[0];
+  const pages: string[] = [];
+  const service = createGitHubService({
+    fetch: async (input, init) => {
+      const url = String(input);
+      if (url.includes("/commits/")) {
+        pages.push(url);
+        assert.equal(
+          new Headers(init?.headers).get("Authorization"),
+          "Bearer test-token",
+        );
+        return Response.json(
+          {
+            ...summary,
+            ...(pages.length === 1 ? { stats } : {}),
+            files: pages.length === 1 ? files!.slice(0, 1) : files!.slice(1),
+          },
+          {
+            headers:
+              pages.length === 1
+                ? {
+                    link: '<https://api.github.com/unused?page=2>; rel="next", <https://api.github.com/unused?page=2>; rel="last"',
+                  }
+                : {},
+          },
+        );
+      }
+      if (url.includes("/commits?")) return Response.json([summary]);
+      if (url.includes("/branches?")) return Response.json([]);
+      if (url.includes("/trees/")) return Response.json({ tree: [] });
+      if (url.endsWith("/languages")) return Response.json({});
+      return Response.json(snapshot.repo);
+    },
+  });
+  const result = await service("facebook/react", "test-token");
+  assert.deepEqual(
+    pages,
+    [1, 2].map(
+      (page) =>
+        `https://api.github.com/repos/facebook/react/commits/${summary.sha}?per_page=100&page=${page}`,
+    ),
+  );
+  assert.deepEqual(result.commits[0].files, files);
+  assert.deepEqual(result.commits[0].stats, stats);
+  assert.equal(result.commits[0].diffError, undefined);
 });
 
 test("secondary endpoint failures yield empty sections without replacing live metadata", async () => {

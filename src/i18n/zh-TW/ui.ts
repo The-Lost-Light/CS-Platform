@@ -69,6 +69,11 @@ export default {
   "github.openIssues": "未結案問題",
   "github.diff.unified": "合併檢視",
   "github.diff.split": "分割檢視",
+  "github.diff.loadFailed":
+    "無法載入完整的 Commit 變更。請重新同步倉庫；若持續失敗，請檢查 Token 或 API 請求額度。",
+  "github.diff.noFiles": "此 Commit 沒有變更檔案。",
+  "github.diff.noPatch":
+    "此檔案沒有可顯示的文字差異（可能是二進位檔案、檔案過大或僅重新命名）。",
   "github.branchLabel": "分支：",
   "github.fileTree": "GitHub 實際檔案結構樹（{count} 個檔案）",
   "home.projectCount": "專案數：{count}",

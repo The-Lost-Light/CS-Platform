@@ -73,6 +73,7 @@ export function CommitHistory({
               <div key={c.sha} className="ui-panel overflow-hidden">
                 <button
                   type="button"
+                  aria-expanded={isExpanded}
                   onClick={() =>
                     setExpandedCommitSha(isExpanded ? null : c.sha)
                   }
@@ -116,9 +117,20 @@ export function CommitHistory({
                   )}
                 </button>
 
-                {isExpanded && c.files && (
+                {isExpanded && (
                   <div className="p-3 border-t border-outline space-y-2.5 bg-surface-high">
-                    {c.files.map((f) => {
+                    {(c.diffError || !c.files) && (
+                      <p role="alert" className="text-xs text-danger">
+                        {t("github.diff.loadFailed")}
+                        {c.diffError && ` (${c.diffError})`}
+                      </p>
+                    )}
+                    {!c.diffError && c.files?.length === 0 && (
+                      <p className="text-xs text-on-muted">
+                        {t("github.diff.noFiles")}
+                      </p>
+                    )}
+                    {c.files?.map((f) => {
                       return (
                         <div
                           key={f.filename}
@@ -137,7 +149,13 @@ export function CommitHistory({
                               </span>
                             </span>
                           </div>
-                          <RepoDiff patch={f.patch || ""} mode={diffMode} />
+                          {f.patch ? (
+                            <RepoDiff patch={f.patch} mode={diffMode} />
+                          ) : (
+                            <p className="p-3 text-xs text-on-muted">
+                              {t("github.diff.noPatch")}
+                            </p>
+                          )}
                         </div>
                       );
                     })}

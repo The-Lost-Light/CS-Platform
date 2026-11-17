@@ -70,6 +70,11 @@ export default {
   "github.openIssues": "Open issues",
   "github.diff.unified": "Unified",
   "github.diff.split": "Split",
+  "github.diff.loadFailed":
+    "Could not load all commit changes. Sync the repository again to retry; check your token or API rate limit if this persists.",
+  "github.diff.noFiles": "This commit has no changed files.",
+  "github.diff.noPatch":
+    "No text diff is available for this file (it may be binary, too large, or only renamed).",
   "github.branchLabel": "Branch: ",
   "github.fileTree": "GitHub file tree ({count} files)",
   "home.projectCount": "Projects: {count}",

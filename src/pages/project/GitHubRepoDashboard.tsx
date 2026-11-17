@@ -11,16 +11,24 @@ export function GitHubRepoDashboard({
 }: {
   repoBundle: RepoBundle | null;
 }) {
+  if (!repoBundle?.repo) return null;
+  return (
+    <LoadedGitHubRepoDashboard
+      key={`${repoBundle.repo.full_name}:${repoBundle.commits[0]?.sha ?? ""}`}
+      repoBundle={repoBundle}
+    />
+  );
+}
+
+function LoadedGitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle }) {
   const [selectedBranch, setSelectedBranch] = useState(
     repoBundle?.repo?.default_branch || "main",
   );
-  const [expandedCommitSha, setExpandedCommitSha] = useState(
-    repoBundle?.commits?.[0]?.sha || null,
+  const [expandedCommitSha, setExpandedCommitSha] = useState<string | null>(
+    null,
   );
   const [diffMode, setDiffMode] = useState<DiffMode>("unified");
   const [fileTreeSearch, setFileTreeSearch] = useState("");
-
-  if (!repoBundle || !repoBundle.repo) return null;
 
   const {
     repo,

@@ -3,6 +3,11 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RepoDiff } from "@pages/project/RepoDiff";
 import { splitPatch } from "@domain/diff";
+import { I18nProvider } from "@i18n";
+import { CommitHistory } from "@pages/project/github/CommitHistory";
+import { loadBuiltinRepoSnapshot } from "@services/github/snapshots";
+import { createGitHubService } from "@services/github";
+import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
 
 test("split diff pairs replacements and pads unequal changes within each hunk", () => {
   const rows = splitPatch(
@@ -20,6 +25,90 @@ test("split diff pairs replacements and pads unequal changes within each hunk", 
     ],
   );
   assert.deepEqual(splitPatch(""), []);
+});
+
+test("real API list summaries are enriched and render code in both history diff modes", async () => {
+  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const { files, stats, prInfo, ...summary } = snapshot.commits[0];
+  const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
+  const service = createGitHubService({
+    fetch: async (input) => {
+      const url = String(input);
+      if (url.includes("/commits?")) return Response.json([summary]);
+      if (url.includes("/commits/"))
+        return Response.json({
+          ...summary,
+          stats,
+          files: [{ ...files![0], patch }],
+        });
+      if (url.endsWith("/languages")) return Response.json({});
+      if (url.includes("/branches?")) return Response.json([]);
+      if (url.includes("/trees/")) return Response.json({ tree: [] });
+      return Response.json(snapshot.repo);
+    },
+  });
+  const bundle = await service("facebook/react");
+  for (const mode of ["unified", "split"] as const) {
+    const html = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <CommitHistory
+          commits={bundle.commits}
+          expandedCommitSha={summary.sha}
+          setExpandedCommitSha={() => {}}
+          diffMode={mode}
+          setDiffMode={() => {}}
+        />
+      </I18nProvider>,
+    );
+    assert.ok(html.includes(`data-diff-mode="${mode}"`));
+    assert.ok(html.includes("-old real code"));
+    assert.ok(html.includes("+new real code"));
+  }
+  const dashboard = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <GitHubRepoDashboard repoBundle={bundle} />
+    </I18nProvider>,
+  );
+  assert.ok(dashboard.includes('aria-expanded="false"'));
+  assert.ok(!dashboard.includes('aria-expanded="true"'));
+  assert.ok(!dashboard.includes("+new real code"));
+});
+
+test("expanded commits explain missing patches, empty changes and detail failures", async () => {
+  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const commit = snapshot.commits[0];
+  const cases = [
+    {
+      commit: { ...commit, files: [] },
+      message: "This commit has no changed files.",
+    },
+    {
+      commit: { ...commit, files: [{ ...commit.files![0], patch: undefined }] },
+      message: "No text diff is available",
+    },
+    {
+      commit: { ...commit, files: undefined, diffError: "HTTP 403" },
+      message: "Could not load all commit changes",
+    },
+    {
+      commit: { ...commit, files: undefined },
+      message: "Could not load all commit changes",
+    },
+  ];
+  for (const entry of cases) {
+    const html = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <CommitHistory
+          commits={[entry.commit]}
+          expandedCommitSha={commit.sha}
+          setExpandedCommitSha={() => {}}
+          diffMode="unified"
+          setDiffMode={() => {}}
+        />
+      </I18nProvider>,
+    );
+    assert.ok(html.includes(entry.message));
+  }
 });
 
 test("missing newline markers stay with their respective sides", () => {

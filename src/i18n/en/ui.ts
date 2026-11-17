@@ -1,5 +1,3 @@
-import type source from './ui.zh-TW';
-
 export default {
   "common.backHome": "Back to home",
   "workspace.githubToken": "GitHub token (optional)",
@@ -112,4 +110,4 @@ export default {
   "c4.readmeReading": "Reading",
   "c4.readmeSource": "Source",
   "c4.designDoc": "Project description · README.md"
-} satisfies Record<keyof typeof source, string>;
+} satisfies Record<string, string>;

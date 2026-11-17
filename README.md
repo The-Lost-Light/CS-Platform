@@ -76,11 +76,11 @@ pnpm build
 
 ## 多國語言
 
-登入頁與導覽列提供自動、繁體中文與 English 選單；自動模式依瀏覽器語言選擇，無支援語言時使用繁體中文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
+登入頁與導覽列提供自動、English 與繁體中文 選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
 
-翻譯集中於 `src/i18n/`：`ui.*.ts` 為介面、`courses.*.ts` 為專案題庫、`runtime.*.ts` 為分析與系統提示，各自提供 `zh-TW` 與 `en` 語系檔。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。繁體中文與英文文案只存放於語系檔，不作為查找鍵。
+翻譯集中於 `src/i18n/`：`ui.ts` 為介面、`courses.ts` 為專案題庫、`runtime.ts` 為分析與系統提示，各自置於 `en/` 與 `zh-TW/` 語言資料夾。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。英文與繁體中文文案只存放於語系檔，不作為查找鍵。
 
-`MessageKey` 由繁體中文語系檔推導，`t()` 會在編譯時拒絕不存在的 key 或直接傳入的文本；英文語系檔也會檢查 key 是否完整對應。新增文案時，請在對應分類的兩個語系檔加入相同 key，並維持插值參數一致。專案範本透過 `titleKey`、`labelKey` 等欄位引用翻譯。
+`MessageKey` 由英文語系檔推導，`t()` 會在編譯時拒絕不存在的 key 或直接傳入的文本；繁體中文語系檔透過 `satisfies` 檢查 key 是否完整對應英文。新增文案時，請在對應分類的兩個語系檔加入相同 key，並維持插值參數一致。專案範本透過 `titleKey`、`labelKey` 等欄位引用翻譯。
 
 切換語言會更新未修改的專案範本，保留自訂節點、已修改欄位、刪除狀態、路徑與位置；姓名及 GitHub 原始提交訊息保留原文。`src/data/localizedProjects.ts` 管理題庫翻譯與草稿更新。
 

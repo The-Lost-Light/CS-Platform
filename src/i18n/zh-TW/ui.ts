@@ -1,3 +1,5 @@
+import type source from '../en/ui';
+
 export default {
   "common.backHome": "返回首頁",
   "workspace.githubToken": "GitHub Token (選填)",
@@ -110,4 +112,4 @@ export default {
   "c4.readmeReading": "閱讀",
   "c4.readmeSource": "原始碼",
   "c4.designDoc": "專案說明 README.md"
-} satisfies Record<string, string>;
+} satisfies Record<keyof typeof source, string>;

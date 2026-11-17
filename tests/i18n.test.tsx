@@ -29,19 +29,19 @@ import {
   fetchGitHubProjectBundle,
 } from "../src/services/github";
 
-const zh = getLocalizedProjects("zh-TW");
 const en = getLocalizedProjects("en");
+const zh = getLocalizedProjects("zh-TW");
 const t = createTranslator("en");
 const han = /[\u3400-\u9fff]/;
 const bundle = await fetchGitHubProjectBundle("student-team/course-oj-platform");
 
-test("saved language takes priority; unsupported values fall back to browser languages or Traditional Chinese", () => {
-  assert.equal(resolveLocale("zh-TW", ["en-US"]), "zh-TW");
+test("saved language takes priority; unsupported values fall back to browser languages or English", () => {
   assert.equal(resolveLocale("en", ["zh-TW"]), "en");
+  assert.equal(resolveLocale("zh-TW", ["en-US"]), "zh-TW");
   assert.equal(resolveLocale("invalid", ["fr-FR", "en-GB"]), "en");
   assert.equal(resolveLocale(null, ["zh-Hant-TW"]), "zh-TW");
-  assert.equal(resolveLocale(null, ["ja-JP"]), "zh-TW");
-  assert.equal(resolveLocale(null), "zh-TW");
+  assert.equal(resolveLocale(null, ["ja-JP"]), "en");
+  assert.equal(resolveLocale(null), "en");
 });
 
 test("theme mode validation and resolution follow system preference or explicit override", () => {
@@ -91,10 +91,10 @@ test("locale dictionaries have identical semantic keys and interpolation paramet
   );
   const placeholders = (text: string) =>
     [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
-  for (const key of Object.keys(traditionalChineseMessages) as MessageKey[]) {
+  for (const key of Object.keys(englishMessages) as MessageKey[]) {
     assert.match(key, /^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+$/);
-    assert.ok(traditionalChineseMessages[key].length > 0, key);
     assert.ok(englishMessages[key].length > 0, key);
+    assert.ok(traditionalChineseMessages[key].length > 0, key);
     assert.deepEqual(
       placeholders(englishMessages[key]),
       placeholders(traditionalChineseMessages[key]),
@@ -178,7 +178,7 @@ test("language changes preserve custom nodes, edited fields, deleted nodes, path
 const noop = () => {};
 
 test("dashboard lists every project and uses project-only navigation in both languages", () => {
-  for (const locale of ["zh-TW", "en"] as const) {
+  for (const locale of ["en", "zh-TW"] as const) {
     const html = renderToStaticMarkup(
       <ThemeProvider>
         <I18nProvider initialLanguage={locale}>

@@ -1,5 +1,3 @@
-import type source from './courses.zh-TW';
-
 export default {
   "courses.fullstack.title": "Midterm: Full-Stack Architecture & GitHub Review",
   "courses.fullstack.difficulty": "Core project",
@@ -44,4 +42,4 @@ export default {
   "courses.react.nodes.docs.label": "Contributor Architecture Guide",
   "courses.react.nodes.docs.description": "Internal architecture documentation for team members",
   "courses.react.designDoc": "## 1. Research goals\nStudy the source structure of React 19 and React Compiler, map our understanding, and compare paths and recent commits with `facebook/react`.\n\n## 2. Key subsystems\n- **React Compiler (`compiler/packages/babel-plugin-react-compiler`)**: Study how `PruneScopes.ts` handles Server Actions.\n- **Fiber Reconciler (`packages/react-reconciler`)**: Trace Suspense and ViewTransition cleanup in `ReactFiberCommitWork.js`.\n- **DevTools Flight (`packages/react-devtools-shared`)**: Inspect RSC support in `parseFlightStack.js`.\n- **Architecture docs (`docs/ARCHITECTURE.md`)**: Check for a dedicated architecture guide."
-} satisfies Record<keyof typeof source, string>;
+} satisfies Record<string, string>;

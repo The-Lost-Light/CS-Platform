@@ -1,5 +1,6 @@
 import {
   createTranslator,
+  DEFAULT_LOCALE,
   type MessageKey,
   type Translator,
 } from "../i18n/messages";
@@ -246,4 +247,4 @@ export function createProjects(t: Translator): Project[] {
   );
 }
 
-export const PROJECTS = createProjects(createTranslator("zh-TW"));
+export const PROJECTS = createProjects(createTranslator(DEFAULT_LOCALE));

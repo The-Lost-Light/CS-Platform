@@ -1,25 +1,25 @@
-import uiEn from './ui.en';
-import coursesEn from './courses.en';
-import runtimeEn from './runtime.en';
-import uiZh from './ui.zh-TW';
-import coursesZh from './courses.zh-TW';
-import runtimeZh from './runtime.zh-TW';
+import uiEn from './en/ui';
+import coursesEn from './en/courses';
+import runtimeEn from './en/runtime';
+import uiZh from './zh-TW/ui';
+import coursesZh from './zh-TW/courses';
+import runtimeZh from './zh-TW/runtime';
 
-export const traditionalChineseMessages = { ...uiZh, ...coursesZh, ...runtimeZh };
-export type MessageKey = keyof typeof traditionalChineseMessages;
+export const englishMessages = { ...uiEn, ...coursesEn, ...runtimeEn };
+export type MessageKey = keyof typeof englishMessages;
 export type Messages = Record<MessageKey, string>;
-export const englishMessages = { ...uiEn, ...coursesEn, ...runtimeEn } satisfies Messages;
+export const traditionalChineseMessages = { ...uiZh, ...coursesZh, ...runtimeZh } satisfies Messages;
 
-export type Locale = 'zh-TW' | 'en';
-export const DEFAULT_LOCALE: Locale = 'zh-TW';
+export type Locale = 'en' | 'zh-TW';
+export const DEFAULT_LOCALE: Locale = 'en';
 export const messages: Record<Locale, Messages> = {
-  'zh-TW': traditionalChineseMessages,
   en: englishMessages,
+  'zh-TW': traditionalChineseMessages,
 };
 export const LOCALE_STORAGE_KEY = 'codepulse.locale';
 export const SUPPORTED_LOCALES: { value: Locale; label: string }[] = [
-  { value: 'zh-TW', label: '繁體中文' },
   { value: 'en', label: 'English' },
+  { value: 'zh-TW', label: '繁體中文' },
 ];
 
 export function isLocale(value: unknown): value is Locale {
@@ -29,8 +29,8 @@ export function isLocale(value: unknown): value is Locale {
 export function resolveLocale(stored: unknown, languages: readonly string[] = []): Locale {
   if (isLocale(stored)) return stored;
   for (const language of languages) {
-    if (/^zh(?:-|$)/i.test(language)) return 'zh-TW';
     if (/^en(?:-|$)/i.test(language)) return 'en';
+    if (/^zh(?:-|$)/i.test(language)) return 'zh-TW';
   }
   return DEFAULT_LOCALE;
 }
@@ -39,7 +39,7 @@ export type TranslationParams = Record<string, string | number | undefined>;
 export type Translator = (key: MessageKey, params?: TranslationParams) => string;
 
 export function isMessageKey(value: string): value is MessageKey {
-  return Object.hasOwn(traditionalChineseMessages, value);
+  return Object.hasOwn(englishMessages, value);
 }
 
 /** Values are interpolated once so user code, braces, and dollar signs stay literal. */

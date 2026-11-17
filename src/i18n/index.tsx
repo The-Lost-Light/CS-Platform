@@ -37,7 +37,7 @@ export function I18nProvider({ children, initialLanguage }: { children: ReactNod
     t: createTranslator(locale),
   }), [locale, preference]);
   useEffect(() => {
-    document.documentElement.lang = locale === 'zh-TW' ? 'zh-Hant' : 'en';
+    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
     document.title = `CodePulse Edu — ${value.t('app.title')}`;
     try { window.localStorage.setItem(PREFERENCE_KEY, preference); } catch { /* In-memory switching still works. */ }
   }, [locale, preference, value]);

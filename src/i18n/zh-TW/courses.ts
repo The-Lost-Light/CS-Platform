@@ -1,3 +1,5 @@
+import type source from '../en/courses';
+
 export default {
   "courses.fullstack.title": "期中軟體工程專題：模組化全端專案架構設計與 GitHub 開發檢核",
   "courses.fullstack.difficulty": "核心專題",
@@ -42,4 +44,4 @@ export default {
   "courses.react.nodes.docs.label": "貢獻者架構指南文件",
   "courses.react.nodes.docs.description": "整理給團隊成員閱讀的內部架構說明文件",
   "courses.react.designDoc": "## 1. 專題研究目標\n深入剖析 React 19 與 React Compiler 的核心原始碼結構，將我們的理解繪製為 C4 架構圖，並與 `facebook/react` 官方倉庫進行自動化路徑與近期 Commit 修改比對。\n\n## 2. 關鍵子系統追蹤清單\n- **React Compiler (`compiler/packages/babel-plugin-react-compiler`)**：重點觀察 `PruneScopes.ts` 如何處理 Server Actions。\n- **Fiber Reconciler (`packages/react-reconciler`)**：追蹤 `ReactFiberCommitWork.js` 中的 Suspense 與 ViewTransition 清理機制。\n- **DevTools Flight (`packages/react-devtools-shared`)**：檢視 `parseFlightStack.js` 對 RSC 的支援。\n- **架構文件 (`docs/ARCHITECTURE.md`)**：檢查是否具備獨立架構文件。"
-} satisfies Record<string, string>;
+} satisfies Record<keyof typeof source, string>;

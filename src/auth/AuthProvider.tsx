@@ -1,8 +1,6 @@
 import {
   createContext,
-  useCallback,
   useContext,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -31,20 +29,14 @@ export function AuthProvider({
 }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const login = useCallback(
-    (credentials: LoginCredentials): LoginResult => {
-      const result = service.login(credentials);
-      if (result.ok) setCurrentUser(result.user);
-      return result;
-    },
-    [service],
-  );
+  const login = (credentials: LoginCredentials): LoginResult => {
+    const result = service.login(credentials);
+    if (result.ok) setCurrentUser(result.user);
+    return result;
+  };
 
-  const logout = useCallback(() => setCurrentUser(null), []);
-  const value = useMemo(
-    () => ({ currentUser, login, logout }),
-    [currentUser, login, logout],
-  );
+  const logout = () => setCurrentUser(null);
+  const value: AuthContextValue = { currentUser, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

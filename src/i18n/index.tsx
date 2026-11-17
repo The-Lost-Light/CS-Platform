@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -59,26 +58,23 @@ export function I18nProvider({
     window.addEventListener("languagechange", update);
     return () => window.removeEventListener("languagechange", update);
   }, []);
-  const value = useMemo<I18nContextValue>(
-    () => ({
-      locale,
-      preference,
-      setPreference: (next) => {
-        if (next === "auto" || isLocale(next)) setPreference(next);
-      },
-      t: createTranslator(locale),
-    }),
-    [locale, preference],
-  );
+  const value: I18nContextValue = {
+    locale,
+    preference,
+    setPreference: (next) => {
+      if (next === "auto" || isLocale(next)) setPreference(next);
+    },
+    t: createTranslator(locale),
+  };
   useEffect(() => {
     document.documentElement.lang = locale === "en" ? "en" : "zh-Hant";
-    document.title = `CodePulse Edu — ${value.t("app.title")}`;
+    document.title = `CodePulse Edu — ${createTranslator(locale)("app.title")}`;
     try {
       window.localStorage.setItem(PREFERENCE_KEY, preference);
     } catch {
       /* In-memory switching still works. */
     }
-  }, [locale, preference, value]);
+  }, [locale, preference]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 export function useI18n() {

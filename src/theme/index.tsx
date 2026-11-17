@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -100,17 +99,14 @@ export function ThemeProvider({
     }
   }, [isDark, mode, resolvedTheme]);
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({
-      mode,
-      setMode: (nextMode: ThemeMode) => {
-        if (isThemeMode(nextMode)) setModeState(nextMode);
-      },
-      resolvedTheme,
-      isDark,
-    }),
-    [mode, resolvedTheme, isDark],
-  );
+  const value: ThemeContextValue = {
+    mode,
+    setMode: (nextMode) => {
+      if (isThemeMode(nextMode)) setModeState(nextMode);
+    },
+    resolvedTheme,
+    isDark,
+  };
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

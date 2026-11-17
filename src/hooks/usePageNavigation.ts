@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PROJECTS } from "@data/projectsData";
 import { getLocalizedProjects } from "@data/localizedProjects";
 import { useI18n } from "@i18n";
@@ -6,7 +6,7 @@ import type { Project } from "@domain/project";
 
 export function usePageNavigation() {
   const { locale } = useI18n();
-  const { projects } = useMemo(() => getLocalizedProjects(locale), [locale]);
+  const { projects } = getLocalizedProjects(locale);
   const [activeView, setActiveView] = useState<"home" | "project">("home");
   const [projectID, setProjectID] = useState(PROJECTS[0].id);
   const selectedProject =

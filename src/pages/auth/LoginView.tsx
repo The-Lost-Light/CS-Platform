@@ -1,9 +1,9 @@
-import { CheckCircle2, Code2 } from 'lucide-react';
-import { useI18n } from '../../i18n';
-import { LanguageSwitcher } from '../layout/LanguageSwitcher';
-import { ThemeSwitcher } from '../layout/ThemeSwitcher';
-import { LoginForm } from './LoginForm';
-import type { LoginHandler } from '../../auth/useLoginForm';
+import { CheckCircle2, Code2 } from "lucide-react";
+import { useI18n } from "../../i18n";
+import { LanguageSwitcher } from "../layout/LanguageSwitcher";
+import { ThemeSwitcher } from "../layout/ThemeSwitcher";
+import { LoginForm } from "./LoginForm";
+import type { LoginHandler } from "../../auth/useLoginForm";
 
 export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
   const { t } = useI18n();
@@ -32,20 +32,22 @@ export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-snug">
                   CodePulse Edu
                   <br />
-                  {t('app.title')}
+                  {t("app.title")}
                 </h1>
-                <p className="text-sm text-on-brand-banner-muted leading-relaxed">{t('auth.intro')}</p>
+                <p className="text-sm text-on-brand-banner-muted leading-relaxed">
+                  {t("auth.intro")}
+                </p>
               </div>
             </div>
 
             <div className="pt-8 space-y-3 border-t border-white/15 text-xs text-on-brand-banner-muted">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-success-outline shrink-0" />
-                <span>{t('auth.features.design')}</span>
+                <span>{t("auth.features.design")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-success-outline shrink-0" />
-                <span>{t('auth.features.github')}</span>
+                <span>{t("auth.features.github")}</span>
               </div>
             </div>
           </div>

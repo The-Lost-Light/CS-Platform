@@ -1,8 +1,11 @@
-import { serializeC4File } from '../domain/c4File';
-import type { C4Node, C4Relationship } from '../domain/c4';
+import type { C4Node, C4Relationship } from "../domain/c4";
+import { serializeC4File } from "../domain/c4File";
 
 /** Browser adapter; serialization itself stays usable without a DOM. */
-export function downloadC4Model(nodes: C4Node[], relationships: C4Relationship[]) {
+export function downloadC4Model(
+  nodes: C4Node[],
+  relationships: C4Relationship[],
+) {
   const url = URL.createObjectURL(
     new Blob([serializeC4File(nodes, relationships)], {
       type: "application/json",

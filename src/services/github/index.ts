@@ -1,8 +1,8 @@
-import type { RepoBundle, RepoSnapshot } from '../../domain/repository';
-import { fetchLiveRepoBundle } from './client';
-import { loadBuiltinRepoSnapshot } from './snapshots';
-import { parseGitHubRepoUrl } from './repoUrl';
-export { parseGitHubRepoUrl } from './repoUrl';
+import type { RepoBundle, RepoSnapshot } from "../../domain/repository";
+import { fetchLiveRepoBundle } from "./client";
+import { parseGitHubRepoUrl } from "./repoUrl";
+import { loadBuiltinRepoSnapshot } from "./snapshots";
+export { parseGitHubRepoUrl } from "./repoUrl";
 
 export interface GitHubServiceDependencies {
   fetch?: typeof globalThis.fetch;
@@ -10,37 +10,45 @@ export interface GitHubServiceDependencies {
 }
 
 /** Inject transport and snapshot storage without changing fallback policy. */
-export function createGitHubService(dependencies: GitHubServiceDependencies = {}) {
-  return async function fetchGitHubProjectBundle(rawUrl: string, githubToken = ''): Promise<RepoBundle> {
+export function createGitHubService(
+  dependencies: GitHubServiceDependencies = {},
+) {
+  return async function fetchGitHubProjectBundle(
+    rawUrl: string,
+    githubToken = "",
+  ): Promise<RepoBundle> {
     const parsed = parseGitHubRepoUrl(rawUrl);
     if (!parsed) {
-      throw new Error('github.errors.invalidUrl');
+      throw new Error("github.errors.invalidUrl");
     }
 
     const normalizedKey = parsed.fullKey.toLowerCase();
 
     // 若為內建教學專題範例 `student-team/course-oj-platform`，優先載入完整教學快照
-    if (normalizedKey === 'student-team/course-oj-platform') {
+    if (normalizedKey === "student-team/course-oj-platform") {
       return {
-        ...await (dependencies.loadSnapshot ?? loadBuiltinRepoSnapshot)(normalizedKey),
-        sourceType: 'snapshot',
-        rateLimit: '內建教學專題倉庫',
+        ...(await (dependencies.loadSnapshot ?? loadBuiltinRepoSnapshot)(
+          normalizedKey,
+        )),
+        sourceType: "snapshot",
+        rateLimit: "內建教學專題倉庫",
       };
     }
 
     try {
       return await fetchLiveRepoBundle(parsed, githubToken, dependencies.fetch);
     } catch (err) {
-      const snap = await (dependencies.loadSnapshot ?? loadBuiltinRepoSnapshot)(normalizedKey);
+      const snap = await (dependencies.loadSnapshot ?? loadBuiltinRepoSnapshot)(
+        normalizedKey,
+      );
       return {
         ...snap,
-        sourceType: 'fallback-snapshot',
+        sourceType: "fallback-snapshot",
         apiError: err instanceof Error ? err.message : String(err),
-        rateLimit: '內建快照備援',
+        rateLimit: "內建快照備援",
       };
     }
-  }
-
+  };
 }
 
 export const fetchGitHubProjectBundle = createGitHubService();

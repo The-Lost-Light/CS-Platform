@@ -1,7 +1,15 @@
-import type { FlowNode, BoundaryNode, CanvasNode } from './flowTypes';
-import { applyNodeChanges, Handle, NodeResizer, Position, ReactFlow, type NodeProps, type ReactFlowProps } from '@xyflow/react';
-import { useEffect, useRef, useState } from 'react';
-import { overlapsC4Boundary } from '../../../domain/c4';
+import type { FlowNode, BoundaryNode, CanvasNode } from "./flowTypes";
+import {
+  applyNodeChanges,
+  Handle,
+  NodeResizer,
+  Position,
+  ReactFlow,
+  type NodeProps,
+  type ReactFlowProps,
+} from "@xyflow/react";
+import { useEffect, useRef, useState } from "react";
+import { overlapsC4Boundary } from "../../../domain/c4";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
@@ -185,4 +193,3 @@ export function C4Canvas({
     />
   );
 }
-

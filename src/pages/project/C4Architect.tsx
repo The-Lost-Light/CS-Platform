@@ -1,13 +1,40 @@
-import { ChevronRight, Download, FileText, Network, Upload } from 'lucide-react';
-import { C4Diagram } from './c4/C4Diagram';
-import { DesignDocument } from './c4/DesignDocument';
-import { useC4Editor } from './c4/useC4Editor';
-import type { C4ArchitectProps } from './c4/types';
+import {
+  ChevronRight,
+  Download,
+  FileText,
+  Network,
+  Upload,
+} from "lucide-react";
+import { C4Diagram } from "./c4/C4Diagram";
+import { DesignDocument } from "./c4/DesignDocument";
+import { useC4Editor } from "./c4/useC4Editor";
+import type { C4ArchitectProps } from "./c4/types";
 
 export function C4Architect(props: C4ArchitectProps) {
-  const { nodes, onChangeNodes, relationships, onChangeRelationships, designDoc, onChangeDesignDoc } = props;
+  const {
+    nodes,
+    onChangeNodes,
+    relationships,
+    onChangeRelationships,
+    designDoc,
+    onChangeDesignDoc,
+  } = props;
   const editor = useC4Editor(props);
-  const { t, designTab, setDesignTab, readmeMode, setReadmeMode, fileInput, importing, fileStatus, exportModel, importModel, scope, path, navigate } = editor;
+  const {
+    t,
+    designTab,
+    setDesignTab,
+    readmeMode,
+    setReadmeMode,
+    fileInput,
+    importing,
+    fileStatus,
+    exportModel,
+    importModel,
+    scope,
+    path,
+    navigate,
+  } = editor;
   return (
     <div className="space-y-5">
       {/* Material Design 3 Control Header Card */}
@@ -146,9 +173,20 @@ export function C4Architect(props: C4ArchitectProps) {
 
       {/* Main Content Area: README Panel or C4 Diagram Panel */}
       {designTab === "readme" ? (
-        <DesignDocument designDoc={designDoc} onChangeDesignDoc={onChangeDesignDoc} readmeMode={readmeMode} setReadmeMode={setReadmeMode} />
+        <DesignDocument
+          designDoc={designDoc}
+          onChangeDesignDoc={onChangeDesignDoc}
+          readmeMode={readmeMode}
+          setReadmeMode={setReadmeMode}
+        />
       ) : (
-        <C4Diagram editor={editor} nodes={nodes} onChangeNodes={onChangeNodes} relationships={relationships} onChangeRelationships={onChangeRelationships} />
+        <C4Diagram
+          editor={editor}
+          nodes={nodes}
+          onChangeNodes={onChangeNodes}
+          relationships={relationships}
+          onChangeRelationships={onChangeRelationships}
+        />
       )}
     </div>
   );

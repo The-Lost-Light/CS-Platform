@@ -1,5 +1,5 @@
-import type { Node } from '@xyflow/react';
-import type { C4Kind } from '../../../domain/c4';
+import type { Node } from "@xyflow/react";
+import type { C4Kind } from "../../../domain/c4";
 
 export type FlowNode = Node<
   {

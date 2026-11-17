@@ -1,9 +1,5 @@
-import { RepositoryConnection } from './github/RepositoryConnection';
-import {
-  Compass,
-  FolderGit2,
-  GitBranch,
-} from "lucide-react";
+import { RepositoryConnection } from "./github/RepositoryConnection";
+import { Compass, FolderGit2, GitBranch } from "lucide-react";
 import { useProjectWorkspace } from "../../hooks/useProjectWorkspace";
 import { useI18n } from "../../i18n";
 import type { Project } from "../../domain/project";

@@ -1,14 +1,26 @@
-import { useI18n } from '../../../i18n';
-import type { RepoBundle } from '../../../domain/repository';
-import { Star, GitFork, AlertCircle, GitBranch, FolderTree, Code2 } from 'lucide-react';
+import { useI18n } from "../../../i18n";
+import type { RepoBundle } from "../../../domain/repository";
+import {
+  Star,
+  GitFork,
+  AlertCircle,
+  GitBranch,
+  FolderTree,
+  Code2,
+} from "lucide-react";
 
-export function RepositoryMetrics({ repo, branches, fileTree }: Pick<RepoBundle, 'repo' | 'branches' | 'fileTree'>) {
+export function RepositoryMetrics({
+  repo,
+  branches,
+  fileTree,
+}: Pick<RepoBundle, "repo" | "branches" | "fileTree">) {
   const { t, locale } = useI18n();
-  return (<>
+  return (
+    <>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="ui-card-sm">
           <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.stars')}</span>
+            <span>{t("github.stars")}</span>
             <Star className="w-3.5 h-3.5 text-warning" />
           </div>
           <div className="text-lg font-bold text-on-surface font-mono mt-1">
@@ -18,7 +30,7 @@ export function RepositoryMetrics({ repo, branches, fileTree }: Pick<RepoBundle,
 
         <div className="ui-card-sm">
           <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.forks')}</span>
+            <span>{t("github.forks")}</span>
             <GitFork className="w-3.5 h-3.5 text-secondary" />
           </div>
           <div className="text-lg font-bold text-on-surface font-mono mt-1">
@@ -28,7 +40,7 @@ export function RepositoryMetrics({ repo, branches, fileTree }: Pick<RepoBundle,
 
         <div className="ui-card-sm">
           <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.openIssues')}</span>
+            <span>{t("github.openIssues")}</span>
             <AlertCircle className="w-3.5 h-3.5 text-danger" />
           </div>
           <div className="text-lg font-bold text-on-surface font-mono mt-1">
@@ -38,7 +50,7 @@ export function RepositoryMetrics({ repo, branches, fileTree }: Pick<RepoBundle,
 
         <div className="ui-card-sm">
           <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.branches')}</span>
+            <span>{t("github.branches")}</span>
             <GitBranch className="w-3.5 h-3.5 text-success" />
           </div>
           <div className="text-lg font-bold text-on-surface font-mono mt-1">
@@ -48,7 +60,7 @@ export function RepositoryMetrics({ repo, branches, fileTree }: Pick<RepoBundle,
 
         <div className="ui-card-sm">
           <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.totalFiles')}</span>
+            <span>{t("github.totalFiles")}</span>
             <FolderTree className="w-3.5 h-3.5 text-secondary" />
           </div>
           <div className="text-lg font-bold text-on-surface font-mono mt-1">
@@ -58,13 +70,14 @@ export function RepositoryMetrics({ repo, branches, fileTree }: Pick<RepoBundle,
 
         <div className="ui-card-sm">
           <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.primaryLanguage')}</span>
+            <span>{t("github.primaryLanguage")}</span>
             <Code2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="text-lg font-bold text-on-surface mt-1 truncate">
-            {repo.language || 'TypeScript'}
+            {repo.language || "TypeScript"}
           </div>
         </div>
       </div>
-  </>);
+    </>
+  );
 }

@@ -1,4 +1,4 @@
-import type { C4Node, C4Relationship } from '../../../domain/c4';
+import type { C4Node, C4Relationship } from "../../../domain/c4";
 
 export type C4ArchitectProps = {
   nodes: C4Node[];

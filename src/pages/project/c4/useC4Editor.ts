@@ -1,13 +1,24 @@
-import { downloadC4Model } from '../../../services/c4Download';
-import { useEffect, useRef, useState } from 'react';
-import { MarkerType, type ReactFlowInstance } from '@xyflow/react';
-import { useI18n } from '../../../i18n';
-import { C4_FILE_MAX_BYTES, parseC4File } from '../../../domain/c4File';
-import { c4Drilldown, canExploreC4Node, createC4NodeInScope, removeC4Nodes, type C4Node } from '../../../domain/c4';
-import type { CanvasNode } from './flowTypes';
-import type { C4ArchitectProps } from './types';
+import { downloadC4Model } from "../../../services/c4Download";
+import { useEffect, useRef, useState } from "react";
+import { MarkerType, type ReactFlowInstance } from "@xyflow/react";
+import { useI18n } from "../../../i18n";
+import { C4_FILE_MAX_BYTES, parseC4File } from "../../../domain/c4File";
+import {
+  c4Drilldown,
+  canExploreC4Node,
+  createC4NodeInScope,
+  removeC4Nodes,
+  type C4Node,
+} from "../../../domain/c4";
+import type { CanvasNode } from "./flowTypes";
+import type { C4ArchitectProps } from "./types";
 
-export function useC4Editor({ nodes, onChangeNodes, relationships, onChangeRelationships }: C4ArchitectProps) {
+export function useC4Editor({
+  nodes,
+  onChangeNodes,
+  relationships,
+  onChangeRelationships,
+}: C4ArchitectProps) {
   const { t } = useI18n();
   const [designTab, setDesignTab] = useState<"readme" | "diagram">("readme");
   const [readmeMode, setReadmeMode] = useState<"reading" | "source">("reading");
@@ -207,5 +218,43 @@ export function useC4Editor({ nodes, onChangeNodes, relationships, onChangeRelat
     setEdgeId("");
   };
 
-  return { t, designTab, setDesignTab, readmeMode, setReadmeMode, scopeId, selectedId, setSelectedId, edgeId, setEdgeId, drawStart, drawPreview, setDrawPreview, fileInput, flowInstance, importing, fileStatus, importRevision, nodeClickTimer, cancelNodeClick, exportModel, importModel, scope, path, inside, expandableIds, selected, selectedEdge, boundaryId, boundary, insideIds, flowNodes, flowEdges, navigate, update, remove, addNode };
+  return {
+    t,
+    designTab,
+    setDesignTab,
+    readmeMode,
+    setReadmeMode,
+    scopeId,
+    selectedId,
+    setSelectedId,
+    edgeId,
+    setEdgeId,
+    drawStart,
+    drawPreview,
+    setDrawPreview,
+    fileInput,
+    flowInstance,
+    importing,
+    fileStatus,
+    importRevision,
+    nodeClickTimer,
+    cancelNodeClick,
+    exportModel,
+    importModel,
+    scope,
+    path,
+    inside,
+    expandableIds,
+    selected,
+    selectedEdge,
+    boundaryId,
+    boundary,
+    insideIds,
+    flowNodes,
+    flowEdges,
+    navigate,
+    update,
+    remove,
+    addNode,
+  };
 }

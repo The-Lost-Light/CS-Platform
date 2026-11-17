@@ -1,25 +1,40 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
-import { isThemeMode, resolveTheme, type ThemeMode, type ResolvedTheme } from './model';
-export { isThemeMode, resolveTheme, SUPPORTED_THEME_MODES } from './model';
-export type { ThemeMode, ResolvedTheme } from './model';
-const THEME_STORAGE_KEY = 'codepulse.themeMode';
+import {
+  isThemeMode,
+  resolveTheme,
+  type ResolvedTheme,
+  type ThemeMode,
+} from "./model";
+export { isThemeMode, resolveTheme, SUPPORTED_THEME_MODES } from "./model";
+export type { ResolvedTheme, ThemeMode } from "./model";
+const THEME_STORAGE_KEY = "codepulse.themeMode";
 
 function initialThemeMode(): ThemeMode {
   try {
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (typeof window !== "undefined" && window.localStorage) {
       const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
       if (isThemeMode(stored)) return stored;
     }
   } catch {
     /* Storage may be unavailable. */
   }
-  return 'system';
+  return "system";
 }
 
 function getSystemPrefersDark(): boolean {
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function"
+  ) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
   return false;
 }
@@ -32,9 +47,9 @@ export interface ThemeContextValue {
 }
 
 const DEFAULT_THEME_CONTEXT: ThemeContextValue = {
-  mode: 'system',
+  mode: "system",
   setMode: () => {},
-  resolvedTheme: 'light',
+  resolvedTheme: "light",
   isDark: false,
 };
 
@@ -47,16 +62,24 @@ export function ThemeProvider({
   children: ReactNode;
   initialMode?: ThemeMode;
 }) {
-  const [mode, setModeState] = useState<ThemeMode>(() => initialMode ?? initialThemeMode());
-  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(getSystemPrefersDark);
+  const [mode, setModeState] = useState<ThemeMode>(
+    () => initialMode ?? initialThemeMode(),
+  );
+  const [systemPrefersDark, setSystemPrefersDark] =
+    useState<boolean>(getSystemPrefersDark);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (event: MediaQueryListEvent) => setSystemPrefersDark(event.matches);
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    )
+      return;
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (event: MediaQueryListEvent) =>
+      setSystemPrefersDark(event.matches);
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
     } else if (mediaQuery.addListener) {
       mediaQuery.addListener(handleChange);
       return () => mediaQuery.removeListener(handleChange);
@@ -64,15 +87,15 @@ export function ThemeProvider({
   }, []);
 
   const resolvedTheme = resolveTheme(mode, systemPrefersDark);
-  const isDark = resolvedTheme === 'dark';
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.toggle('dark', isDark);
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", isDark);
       document.documentElement.style.colorScheme = resolvedTheme;
     }
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
+      if (typeof window !== "undefined" && window.localStorage) {
         window.localStorage.setItem(THEME_STORAGE_KEY, mode);
       }
     } catch {
@@ -89,10 +112,12 @@ export function ThemeProvider({
       resolvedTheme,
       isDark,
     }),
-    [mode, resolvedTheme, isDark]
+    [mode, resolvedTheme, isDark],
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme(): ThemeContextValue {

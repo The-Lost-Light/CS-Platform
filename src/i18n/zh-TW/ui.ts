@@ -1,10 +1,12 @@
-import type source from '@i18n/en/ui';
+import type source from "@i18n/en/ui";
 
 export default {
   "common.backHome": "返回首頁",
   "workspace.githubToken": "GitHub Token (選填)",
-  "workspace.tokenPlaceholder": "ghp_xxxxxxxxxxxx (留空即可使用公開 API 或內建完整教學快照)",
-  "workspace.repoPlaceholder": "輸入學生專題 GitHub Repo 網址 (例如 https://github.com/student-team/course-oj-platform)",
+  "workspace.tokenPlaceholder":
+    "ghp_xxxxxxxxxxxx (留空即可使用公開 API 或內建完整教學快照)",
+  "workspace.repoPlaceholder":
+    "輸入學生專題 GitHub Repo 網址 (例如 https://github.com/student-team/course-oj-platform)",
   "workspace.sync": "同步 GitHub 專案數據",
   "workspace.sampleRepos": "快速載入範例倉庫：",
   "workspace.studentRepo": "student-team/course-oj-platform (學生專題範例)",
@@ -28,7 +30,8 @@ export default {
   "app.title": "課程作業平台",
   "auth.features.github": "瀏覽 GitHub 倉庫檔案與 Commit 差異",
   "auth.title": "登入課程作業系統",
-  "auth.description": "請輸入您的學號與密碼，或點選下方快速測試帳號直接登入儀表板",
+  "auth.description":
+    "請輸入您的學號與密碼，或點選下方快速測試帳號直接登入儀表板",
   "auth.accountLabel": "學號 / 帳號 (Student ID)",
   "auth.accountPlaceholder": "例如: B11204018",
   "auth.nameLabel": "姓名顯示 (Display Name)",
@@ -72,9 +75,11 @@ export default {
   "c4.importModel": "匯入 C4 JSON",
   "c4.exportModel": "匯出 C4 JSON",
   "c4.importing": "匯入中…",
-  "c4.fileHelp": "匯出包含所有層級、位置與連線的完整模型。匯入會取代目前模型，README 保持不變。支援 5 MB 以內的 JSON 檔。",
+  "c4.fileHelp":
+    "匯出包含所有層級、位置與連線的完整模型。匯入會取代目前模型，README 保持不變。支援 5 MB 以內的 JSON 檔。",
   "c4.importSuccess": "C4 模型匯入成功。",
-  "c4.importError": "無法匯入此檔案。請使用匯出的 C4 JSON 檔，並確認節點、階層與連線有效。目前模型未變更。",
+  "c4.importError":
+    "無法匯入此檔案。請使用匯出的 C4 JSON 檔，並確認節點、階層與連線有效。目前模型未變更。",
   "c4.fileTooLarge": "檔案超過 5 MB 上限，目前模型未變更。",
   "c4.exportError": "匯出失敗，請重試。",
   "c4.closeEditor": "關閉編輯面板",
@@ -83,13 +88,16 @@ export default {
   "c4.expandable": "有深層圖 · 雙擊展開",
   "c4.internal": "內部元素",
   "c4.external": "外部元素",
-  "c4.externalHelp": "外部元素不能包含子元素或進入下一層；關閉開關即可設為內部元素。",
+  "c4.externalHelp":
+    "外部元素不能包含子元素或進入下一層；關閉開關即可設為內部元素。",
   "c4.externalBlocked": "此元素已有子元素，請先移除子元素才能切換為外部元素。",
   "c4.leaf": "尚無深層內容 · 未達 C4 可雙擊進入",
-  "c4.levelsDescription": "C1 呈現使用者與系統；C2 展開系統內的應用程式與資料庫；C3 展開容器內元件；C4 描述元件內的類別與函式。",
+  "c4.levelsDescription":
+    "C1 呈現使用者與系統；C2 展開系統內的應用程式與資料庫；C3 展開容器內元件；C4 描述元件內的類別與函式。",
   "c4.scope": "檢視範圍／邊界",
   "c4.createParentFirst": "請先建立上一層元素",
-  "c4.canvasInstructions": "在畫布空白處按住滑鼠左鍵或中鍵拖曳移動畫布；在畫布空白處按右鍵，於游標位置新增元素；按住右鍵拖曳可同時設定位置與大小。單擊選取並編輯，雙擊進入下一層（最多 C1～C4）。Enter／空白鍵選取，Shift+Enter 進入。拖曳節點移動；選取後拖曳邊框或角落調整大小。連接接點建立關係。",
+  "c4.canvasInstructions":
+    "在畫布空白處按住滑鼠左鍵或中鍵拖曳移動畫布；在畫布空白處按右鍵，於游標位置新增元素；按住右鍵拖曳可同時設定位置與大小。單擊選取並編輯，雙擊進入下一層（最多 C1～C4）。Enter／空白鍵選取，Shift+Enter 進入。拖曳節點移動；選取後拖曳邊框或角落調整大小。連接接點建立關係。",
   "c4.uses": "使用",
   "c4.emptyLevel": "此層尚無元素，請在畫布按右鍵新增。",
   "c4.addInCurrentLevel": "在目前層新增節點",
@@ -111,5 +119,5 @@ export default {
   "c4.readmeMode": "README 顯示模式",
   "c4.readmeReading": "閱讀",
   "c4.readmeSource": "原始碼",
-  "c4.designDoc": "專案說明 README.md"
+  "c4.designDoc": "專案說明 README.md",
 } satisfies Record<keyof typeof source, string>;

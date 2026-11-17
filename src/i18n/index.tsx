@@ -1,10 +1,23 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { createTranslator, isLocale, resolveLocale, type Locale, type Translator } from '@i18n/messages';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  createTranslator,
+  isLocale,
+  resolveLocale,
+  type Locale,
+  type Translator,
+} from "@i18n/messages";
 
-export { SUPPORTED_LOCALES } from '@i18n/messages';
-export type { Locale, MessageKey, Translator } from '@i18n/messages';
-export type LanguagePreference = 'auto' | Locale;
-const PREFERENCE_KEY = 'codepulse.languagePreference';
+export { SUPPORTED_LOCALES } from "@i18n/messages";
+export type { Locale, MessageKey, Translator } from "@i18n/messages";
+export type LanguagePreference = "auto" | Locale;
+const PREFERENCE_KEY = "codepulse.languagePreference";
 interface I18nContextValue {
   locale: Locale;
   preference: LanguagePreference;
@@ -16,35 +29,60 @@ function initialPreference(): LanguagePreference {
   try {
     const stored = window.localStorage.getItem(PREFERENCE_KEY);
     if (isLocale(stored)) return stored;
-  } catch { /* Storage may be unavailable. */ }
-  return 'auto';
+  } catch {
+    /* Storage may be unavailable. */
+  }
+  return "auto";
 }
 function systemLocale(): Locale {
-  return resolveLocale(null, typeof navigator === 'undefined' ? [] : navigator.languages ?? [navigator.language]);
+  return resolveLocale(
+    null,
+    typeof navigator === "undefined"
+      ? []
+      : (navigator.languages ?? [navigator.language]),
+  );
 }
-export function I18nProvider({ children, initialLanguage }: { children: ReactNode; initialLanguage?: Locale }) {
-  const [preference, setPreference] = useState<LanguagePreference>(() => initialLanguage ?? initialPreference());
+export function I18nProvider({
+  children,
+  initialLanguage,
+}: {
+  children: ReactNode;
+  initialLanguage?: Locale;
+}) {
+  const [preference, setPreference] = useState<LanguagePreference>(
+    () => initialLanguage ?? initialPreference(),
+  );
   const [detectedLocale, setDetectedLocale] = useState(systemLocale);
-  const locale = preference === 'auto' ? detectedLocale : preference;
+  const locale = preference === "auto" ? detectedLocale : preference;
   useEffect(() => {
     const update = () => setDetectedLocale(systemLocale());
-    window.addEventListener('languagechange', update);
-    return () => window.removeEventListener('languagechange', update);
+    window.addEventListener("languagechange", update);
+    return () => window.removeEventListener("languagechange", update);
   }, []);
-  const value = useMemo<I18nContextValue>(() => ({
-    locale, preference,
-    setPreference: next => { if (next === 'auto' || isLocale(next)) setPreference(next); },
-    t: createTranslator(locale),
-  }), [locale, preference]);
+  const value = useMemo<I18nContextValue>(
+    () => ({
+      locale,
+      preference,
+      setPreference: (next) => {
+        if (next === "auto" || isLocale(next)) setPreference(next);
+      },
+      t: createTranslator(locale),
+    }),
+    [locale, preference],
+  );
   useEffect(() => {
-    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant';
-    document.title = `CodePulse Edu — ${value.t('app.title')}`;
-    try { window.localStorage.setItem(PREFERENCE_KEY, preference); } catch { /* In-memory switching still works. */ }
+    document.documentElement.lang = locale === "en" ? "en" : "zh-Hant";
+    document.title = `CodePulse Edu — ${value.t("app.title")}`;
+    try {
+      window.localStorage.setItem(PREFERENCE_KEY, preference);
+    } catch {
+      /* In-memory switching still works. */
+    }
   }, [locale, preference, value]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 export function useI18n() {
   const context = useContext(I18nContext);
-  if (!context) throw new Error('useI18n must be used within I18nProvider');
+  if (!context) throw new Error("useI18n must be used within I18nProvider");
   return context;
 }

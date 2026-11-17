@@ -26,4 +26,3 @@ export interface Project {
   initialMindMapNodes: MindMapNode[];
   initialDesignDoc: string;
 }
-

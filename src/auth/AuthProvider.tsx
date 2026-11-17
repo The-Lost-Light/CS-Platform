@@ -1,6 +1,18 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { demoAuthService } from '@auth/demoAuthService';
-import type { AuthService, LoginCredentials, LoginResult, User } from '@auth/types';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { demoAuthService } from "@auth/demoAuthService";
+import type {
+  AuthService,
+  LoginCredentials,
+  LoginResult,
+  User,
+} from "@auth/types";
 
 interface AuthContextValue {
   currentUser: User | null;
@@ -19,20 +31,26 @@ export function AuthProvider({
 }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const login = useCallback((credentials: LoginCredentials): LoginResult => {
-    const result = service.login(credentials);
-    if (result.ok) setCurrentUser(result.user);
-    return result;
-  }, [service]);
+  const login = useCallback(
+    (credentials: LoginCredentials): LoginResult => {
+      const result = service.login(credentials);
+      if (result.ok) setCurrentUser(result.user);
+      return result;
+    },
+    [service],
+  );
 
   const logout = useCallback(() => setCurrentUser(null), []);
-  const value = useMemo(() => ({ currentUser, login, logout }), [currentUser, login, logout]);
+  const value = useMemo(
+    () => ({ currentUser, login, logout }),
+    [currentUser, login, logout],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 }

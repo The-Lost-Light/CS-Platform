@@ -1,4 +1,8 @@
-import type { FlowNode, BoundaryNode, CanvasNode } from "@pages/project/c4/flowTypes";
+import type {
+  FlowNode,
+  BoundaryNode,
+  CanvasNode,
+} from "@pages/project/c4/flowTypes";
 import {
   Handle,
   NodeResizer,

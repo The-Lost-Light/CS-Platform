@@ -1,10 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown, Languages, Monitor } from "lucide-react";
-import {
-  SUPPORTED_LOCALES,
-  useI18n,
-  type LanguagePreference,
-} from "@i18n";
+import { SUPPORTED_LOCALES, useI18n, type LanguagePreference } from "@i18n";
 
 export function LanguageSwitcher() {
   const { locale, preference, setPreference, t } = useI18n();

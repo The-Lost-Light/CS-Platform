@@ -25,15 +25,15 @@ import {
   type MessageKey,
 } from "@i18n/messages";
 import { ThemeProvider, isThemeMode, resolveTheme } from "@theme";
-import {
-  fetchGitHubProjectBundle,
-} from "@services/github";
+import { fetchGitHubProjectBundle } from "@services/github";
 
 const en = getLocalizedProjects("en");
 const zh = getLocalizedProjects("zh-TW");
 const t = createTranslator("en");
 const han = /[\u3400-\u9fff]/;
-const bundle = await fetchGitHubProjectBundle("student-team/course-oj-platform");
+const bundle = await fetchGitHubProjectBundle(
+  "student-team/course-oj-platform",
+);
 
 test("saved language takes priority; unsupported values fall back to browser languages or English", () => {
   assert.equal(resolveLocale("en", ["zh-TW"]), "en");

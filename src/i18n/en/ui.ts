@@ -1,8 +1,10 @@
 export default {
   "common.backHome": "Back to home",
   "workspace.githubToken": "GitHub token (optional)",
-  "workspace.tokenPlaceholder": "ghp_xxxxxxxxxxxx (leave blank for the public API or built-in snapshots)",
-  "workspace.repoPlaceholder": "GitHub repository URL (e.g. https://github.com/student-team/course-oj-platform)",
+  "workspace.tokenPlaceholder":
+    "ghp_xxxxxxxxxxxx (leave blank for the public API or built-in snapshots)",
+  "workspace.repoPlaceholder":
+    "GitHub repository URL (e.g. https://github.com/student-team/course-oj-platform)",
   "workspace.sync": "Sync GitHub project data",
   "workspace.sampleRepos": "Sample repositories: ",
   "workspace.studentRepo": "student-team/course-oj-platform (student project)",
@@ -26,7 +28,8 @@ export default {
   "app.title": "Course Assignment Platform",
   "auth.features.github": "Browse GitHub repository files and commit diffs",
   "auth.title": "Sign in to CodePulse Edu",
-  "auth.description": "Enter your student ID and password, or choose a demo account below.",
+  "auth.description":
+    "Enter your student ID and password, or choose a demo account below.",
   "auth.accountLabel": "Student ID / Account",
   "auth.accountPlaceholder": "e.g. B11204018",
   "auth.nameLabel": "Display name",
@@ -52,13 +55,16 @@ export default {
   "common.projects": "Projects",
   "home.projectsTitle": "Projects (GitHub architecture)",
   "nav.home": "Project overview",
-  "auth.intro": "Software engineering projects with C4 diagram design and GitHub repository browsing.",
-  "auth.features.design": "Interactive C4 diagrams and project design documents",
+  "auth.intro":
+    "Software engineering projects with C4 diagram design and GitHub repository browsing.",
+  "auth.features.design":
+    "Interactive C4 diagrams and project design documents",
   "language.label": "Language",
   "language.autoDetected": "Auto ({language})",
   "auth.errors.accountRequired": "Enter your student ID or email address",
   "auth.errors.passwordRequired": "Enter your password",
-  "workspace.errors.syncFailed": "Could not sync the GitHub project. Please try again.",
+  "workspace.errors.syncFailed":
+    "Could not sync the GitHub project. Please try again.",
   "common.count": "Count: {count}",
   "github.openIssues": "Open issues",
   "github.diff.unified": "Unified",
@@ -70,10 +76,13 @@ export default {
   "c4.importModel": "Import C4 JSON",
   "c4.exportModel": "Export C4 JSON",
   "c4.importing": "Importing…",
-  "c4.fileHelp": "Export the entire model, including all levels, positions and relationships. Import replaces the current model; README is unchanged. JSON files up to 5 MB.",
+  "c4.fileHelp":
+    "Export the entire model, including all levels, positions and relationships. Import replaces the current model; README is unchanged. JSON files up to 5 MB.",
   "c4.importSuccess": "C4 model imported successfully.",
-  "c4.importError": "Cannot import this file. Use an exported C4 JSON file with valid nodes, hierarchy and relationships. The current model was not changed.",
-  "c4.fileTooLarge": "The file exceeds the 5 MB limit. The current model was not changed.",
+  "c4.importError":
+    "Cannot import this file. Use an exported C4 JSON file with valid nodes, hierarchy and relationships. The current model was not changed.",
+  "c4.fileTooLarge":
+    "The file exceeds the 5 MB limit. The current model was not changed.",
   "c4.exportError": "Export failed. Please try again.",
   "c4.closeEditor": "Close editor",
   "c4.help": "Help",
@@ -81,15 +90,20 @@ export default {
   "c4.expandable": "Has details · double-click to explore",
   "c4.internal": "Internal element",
   "c4.external": "External element",
-  "c4.externalHelp": "External elements cannot contain children or be explored. Turn off to make this element internal.",
-  "c4.externalBlocked": "This element contains children. Remove them before switching to external.",
+  "c4.externalHelp":
+    "External elements cannot contain children or be explored. Turn off to make this element internal.",
+  "c4.externalBlocked":
+    "This element contains children. Remove them before switching to external.",
   "c4.leaf": "No deeper content · Double-click to explore below C4",
-  "c4.levelsDescription": "C1: people and systems. C2: applications and data stores within a system. C3: components within a container. C4: classes and functions within a component.",
+  "c4.levelsDescription":
+    "C1: people and systems. C2: applications and data stores within a system. C3: components within a container. C4: classes and functions within a component.",
   "c4.scope": "Scope / boundary",
   "c4.createParentFirst": "Create a parent element first",
-  "c4.canvasInstructions": "Drag empty canvas with the left or middle mouse button to pan. Right-click empty canvas to add an element at the pointer; right-drag to set its position and size. Click to edit; double-click to explore (C1–C4 only). Enter/Space selects; Shift+Enter explores. Drag nodes to move; drag selected borders or corners to resize. Connect handles to create relationships.",
+  "c4.canvasInstructions":
+    "Drag empty canvas with the left or middle mouse button to pan. Right-click empty canvas to add an element at the pointer; right-drag to set its position and size. Click to edit; double-click to explore (C1–C4 only). Enter/Space selects; Shift+Enter explores. Drag nodes to move; drag selected borders or corners to resize. Connect handles to create relationships.",
   "c4.uses": "Uses",
-  "c4.emptyLevel": "No elements at this level. Right-click the canvas to add one.",
+  "c4.emptyLevel":
+    "No elements at this level. Right-click the canvas to add one.",
   "c4.addInCurrentLevel": "Add node at current level",
   "c4.addTitle": "Add C4 element",
   "c4.elementType": "Element type",
@@ -109,5 +123,5 @@ export default {
   "c4.readmeMode": "README display mode",
   "c4.readmeReading": "Reading",
   "c4.readmeSource": "Source",
-  "c4.designDoc": "Project description · README.md"
+  "c4.designDoc": "Project description · README.md",
 } satisfies Record<string, string>;

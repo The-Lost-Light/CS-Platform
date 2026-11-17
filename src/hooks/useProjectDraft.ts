@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import { updateLocalizedProjectDraft } from '@data/localizedProjects';
-import type { Project } from '@domain/project';
-import { migrateC4Nodes, type C4Relationship } from '@domain/c4';
+import { useEffect, useRef, useState } from "react";
+import { updateLocalizedProjectDraft } from "@data/localizedProjects";
+import type { Project } from "@domain/project";
+import { migrateC4Nodes, type C4Relationship } from "@domain/c4";
 
 /** Locale updates merge untouched template fields; project changes reset the draft. */
-export function useProjectDraft(project: Project, onProjectChange: (url: string) => void) {
+export function useProjectDraft(
+  project: Project,
+  onProjectChange: (url: string) => void,
+) {
   const [mindMapNodes, setMindMapNodes] = useState(() =>
     migrateC4Nodes(project.initialMindMapNodes || []),
   );
@@ -37,5 +40,12 @@ export function useProjectDraft(project: Project, onProjectChange: (url: string)
     onProjectChange(project.defaultRepoUrl);
   }, [project]);
 
-  return { mindMapNodes, setMindMapNodes, relationships, setRelationships, designDoc, setDesignDoc };
+  return {
+    mindMapNodes,
+    setMindMapNodes,
+    relationships,
+    setRelationships,
+    designDoc,
+    setDesignDoc,
+  };
 }

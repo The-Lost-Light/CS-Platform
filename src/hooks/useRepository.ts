@@ -1,12 +1,17 @@
-import { useState } from 'react';
-import { isMessageKey, type MessageKey } from '@i18n/messages';
-import type { RepoBundle } from '@domain/repository';
-import { fetchGitHubProjectBundle, type GitHubProjectLoader } from '@services/github';
+import { useState } from "react";
+import { isMessageKey, type MessageKey } from "@i18n/messages";
+import type { RepoBundle } from "@domain/repository";
+import {
+  fetchGitHubProjectBundle,
+  type GitHubProjectLoader,
+} from "@services/github";
 
-export function useRepository(defaultRepoUrl: string, loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle) {
+export function useRepository(
+  defaultRepoUrl: string,
+  loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle,
+) {
   const [repoUrlInput, setRepoUrlInput] = useState(
-    defaultRepoUrl ||
-      "https://github.com/student-team/course-oj-platform",
+    defaultRepoUrl || "https://github.com/student-team/course-oj-platform",
   );
   const [githubToken, setGithubToken] = useState("");
   const [showTokenInput, setShowTokenInput] = useState(false);
@@ -34,5 +39,16 @@ export function useRepository(defaultRepoUrl: string, loadRepository: GitHubProj
     }
   };
 
-  return { repoUrlInput, setRepoUrlInput, githubToken, setGithubToken, showTokenInput, setShowTokenInput, repoBundle, isLoadingRepo, repoError, handleLoadRepo };
+  return {
+    repoUrlInput,
+    setRepoUrlInput,
+    githubToken,
+    setGithubToken,
+    showTokenInput,
+    setShowTokenInput,
+    repoBundle,
+    isLoadingRepo,
+    repoError,
+    handleLoadRepo,
+  };
 }

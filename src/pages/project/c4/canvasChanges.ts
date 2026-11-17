@@ -9,9 +9,9 @@ export function prepareC4CanvasChanges(
   movingIds: string[] | null,
 ) {
   const changes = new NodeChangeset<CanvasNode>(incoming.toArray());
-  const boundaryMove = changes.getByType("position").find(
-    (change) => change.id === "__c4_boundary__" && change.position,
-  );
+  const boundaryMove = changes
+    .getByType("position")
+    .find((change) => change.id === "__c4_boundary__" && change.position);
   if (boundaryMove?.position) {
     const frame = nodes.find((node) => node.id === boundaryMove.id);
     if (frame) {
@@ -51,15 +51,17 @@ export function prepareC4CanvasChanges(
     }
   }
   const completedMoves = new NodeChangeset<CanvasNode>(
-    changes.toArray().filter(
-      (change) =>
-        (change.type === "position" &&
-          change.position &&
-          change.dragging !== true) ||
-        (change.type === "dimensions" &&
-          change.dimensions &&
-          change.setAttributes),
-    ),
+    changes
+      .toArray()
+      .filter(
+        (change) =>
+          (change.type === "position" &&
+            change.position &&
+            change.dragging !== true) ||
+          (change.type === "dimensions" &&
+            change.dimensions &&
+            change.setAttributes),
+      ),
   );
   return { changes, completedMoves, movingIds };
 }

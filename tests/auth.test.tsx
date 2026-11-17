@@ -15,7 +15,9 @@ import { I18nProvider } from "@i18n";
 import { createTranslator } from "@i18n/messages";
 import { ThemeProvider } from "@theme";
 
-function credentials(overrides: Partial<LoginCredentials> = {}): LoginCredentials {
+function credentials(
+  overrides: Partial<LoginCredentials> = {},
+): LoginCredentials {
   return {
     studentId: "B11204018",
     name: "陳宥軒",
@@ -66,7 +68,9 @@ test("successful login normalizes the profile without exposing the password or m
 
 test("a blank display name falls back to the normalized account", () => {
   assert.deepEqual(
-    demoAuthService.login(credentials({ studentId: "  arbitrary-account  ", name: " \t " })),
+    demoAuthService.login(
+      credentials({ studentId: "  arbitrary-account  ", name: " \t " }),
+    ),
     {
       ok: true,
       user: {

@@ -1,7 +1,9 @@
-export type DiffMode = 'unified' | 'split';
-export type PatchLine = { type: 'hunk' | 'add' | 'del' | 'ctx'; text: string };
+export type DiffMode = "unified" | "split";
+export type PatchLine = { type: "hunk" | "add" | "del" | "ctx"; text: string };
 
-export function splitPatch(patch: string): { left: PatchLine | null; right: PatchLine | null }[] {
+export function splitPatch(
+  patch: string,
+): { left: PatchLine | null; right: PatchLine | null }[] {
   const rows: { left: PatchLine | null; right: PatchLine | null }[] = [];
   let removed: PatchLine[] = [];
   let added: PatchLine[] = [];
@@ -13,15 +15,15 @@ export function splitPatch(patch: string): { left: PatchLine | null; right: Patc
     added = [];
   };
   for (const line of parsePatch(patch)) {
-    if (line.type === 'del') {
+    if (line.type === "del") {
       if (added.length) flush();
       removed.push(line);
-    } else if (line.type === 'add') {
+    } else if (line.type === "add") {
       added.push(line);
-    } else if (line.text.startsWith('\\')) {
+    } else if (line.text.startsWith("\\")) {
       // Keep missing-newline markers beside the line they describe.
       const pending = added.length ? added : removed;
-      if (pending.length) pending[pending.length - 1].text += '\n' + line.text;
+      if (pending.length) pending[pending.length - 1].text += "\n" + line.text;
       else rows.push({ left: line, right: line });
     } else {
       flush();
@@ -33,9 +35,16 @@ export function splitPatch(patch: string): { left: PatchLine | null; right: Patc
 }
 
 export function parsePatch(patch: string): PatchLine[] {
-  return patch ? patch.split('\n').map(text => ({
-    type: text.startsWith('@@') ? 'hunk' : text.startsWith('+') ? 'add' : text.startsWith('-') ? 'del' : 'ctx',
-    text,
-  })) : [];
+  return patch
+    ? patch.split("\n").map((text) => ({
+        type: text.startsWith("@@")
+          ? "hunk"
+          : text.startsWith("+")
+            ? "add"
+            : text.startsWith("-")
+              ? "del"
+              : "ctx",
+        text,
+      }))
+    : [];
 }
-

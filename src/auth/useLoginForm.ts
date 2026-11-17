@@ -1,23 +1,28 @@
-import { useState, type FormEvent } from 'react';
-import { DEFAULT_LOGIN_CREDENTIALS, getDemoCredentials } from '@auth/demoAccounts';
-import type { LoginCredentials, LoginResult, User } from '@auth/types';
-import type { MessageKey } from '@i18n';
+import { useState, type FormEvent } from "react";
+import {
+  DEFAULT_LOGIN_CREDENTIALS,
+  getDemoCredentials,
+} from "@auth/demoAccounts";
+import type { LoginCredentials, LoginResult, User } from "@auth/types";
+import type { MessageKey } from "@i18n";
 
 export type LoginHandler = (credentials: LoginCredentials) => LoginResult;
 
-type LoginError = Extract<LoginResult, { ok: false }>['error'];
+type LoginError = Extract<LoginResult, { ok: false }>["error"];
 const ERROR_MESSAGES = {
-  accountRequired: 'auth.errors.accountRequired',
-  passwordRequired: 'auth.errors.passwordRequired',
+  accountRequired: "auth.errors.accountRequired",
+  passwordRequired: "auth.errors.passwordRequired",
 } satisfies Record<LoginError, MessageKey>;
 
 export function useLoginForm(onLogin: LoginHandler) {
-  const [credentials, setCredentials] = useState<LoginCredentials>(() => ({ ...DEFAULT_LOGIN_CREDENTIALS }));
+  const [credentials, setCredentials] = useState<LoginCredentials>(() => ({
+    ...DEFAULT_LOGIN_CREDENTIALS,
+  }));
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<LoginError | null>(null);
 
   function updateField(field: keyof LoginCredentials, value: string) {
-    setCredentials(current => ({ ...current, [field]: value }));
+    setCredentials((current) => ({ ...current, [field]: value }));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -35,7 +40,7 @@ export function useLoginForm(onLogin: LoginHandler) {
     credentials,
     updateField,
     showPassword,
-    togglePassword: () => setShowPassword(current => !current),
+    togglePassword: () => setShowPassword((current) => !current),
     errorMessage: error ? ERROR_MESSAGES[error] : null,
     handleSubmit,
     selectDemoAccount,

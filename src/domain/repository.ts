@@ -1,4 +1,4 @@
-import type { MessageKey } from '@i18n/messages';
+import type { MessageKey } from "@i18n/messages";
 
 export interface Repository {
   full_name: string;

@@ -1,38 +1,38 @@
 @layer components {
-    .ui-card {
-        @apply bg-surface text-on-surface border border-outline-subtle rounded-3xl shadow-xs transition-colors;
-    }
+  .ui-card {
+    @apply bg-surface text-on-surface border border-outline-subtle rounded-3xl shadow-xs transition-colors;
+  }
 
-    .ui-card-sm {
-        @apply bg-surface text-on-surface border border-outline-subtle rounded-2xl p-4 shadow-xs transition-colors;
-    }
+  .ui-card-sm {
+    @apply bg-surface text-on-surface border border-outline-subtle rounded-2xl p-4 shadow-xs transition-colors;
+  }
 
-    .ui-panel {
-        @apply bg-surface-sunken text-on-surface border border-outline rounded-2xl transition-colors;
-    }
+  .ui-panel {
+    @apply bg-surface-sunken text-on-surface border border-outline rounded-2xl transition-colors;
+  }
 
-    .ui-card-header {
-        @apply px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
-    }
+  .ui-card-header {
+    @apply px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
+  }
 
-    .ui-pill-group {
-        @apply inline-flex items-center bg-surface-container p-1 rounded-full border border-outline;
-    }
+  .ui-pill-group {
+    @apply inline-flex items-center bg-surface-container p-1 rounded-full border border-outline;
+  }
 
-    .ui-input {
-        @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2 text-xs sm:text-sm text-on-surface placeholder-on-subtle focus:outline-hidden focus:ring-2 focus:ring-secondary transition;
-    }
+  .ui-input {
+    @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2 text-xs sm:text-sm text-on-surface placeholder-on-subtle focus:outline-hidden focus:ring-2 focus:ring-secondary transition;
+  }
 
-    .ui-btn-primary {
-        @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-2xs transition disabled:opacity-50;
-    }
+  .ui-btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-2xs transition disabled:opacity-50;
+  }
 
-    .ui-btn-tonal {
-        @apply inline-flex items-center gap-1.5 rounded-xl bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40;
-    }
+  .ui-btn-tonal {
+    @apply inline-flex items-center gap-1.5 rounded-xl bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40;
+  }
 
-    .ui-markdown {
-        @apply min-h-96 wrap-break-word text-sm leading-7 text-on-surface
+  .ui-markdown {
+    @apply min-h-96 wrap-break-word text-sm leading-7 text-on-surface
       [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg
       [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-semibold
       [&_h1]:text-on-surface [&_h2]:text-on-surface
@@ -48,5 +48,5 @@
       [&_td]:border [&_td]:border-outline [&_td]:p-2.5
       [&_hr]:my-5 [&_hr]:border-outline
       [&_img]:max-w-full;
-    }
+  }
 }

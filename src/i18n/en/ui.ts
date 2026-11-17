@@ -1,5 +1,6 @@
 export default {
   "common.backHome": "Back to home",
+  "common.loading": "Loading…",
   "workspace.githubToken": "GitHub token (optional)",
   "workspace.tokenPlaceholder":
     "ghp_xxxxxxxxxxxx (leave blank for the public API or built-in snapshots)",

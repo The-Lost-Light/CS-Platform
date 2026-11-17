@@ -5,10 +5,17 @@ import {
   Network,
   Upload,
 } from "lucide-react";
-import { C4Diagram } from "@pages/project/c4/C4Diagram";
+import { lazy, Suspense } from "react";
+import { LoadingPanel } from "@pages/layout/LoadingPanel";
 import { DesignDocument } from "@pages/project/c4/DesignDocument";
 import { useC4Editor } from "@pages/project/c4/useC4Editor";
 import type { C4ArchitectProps } from "@pages/project/c4/types";
+
+const C4Diagram = lazy(() =>
+  import("@pages/project/c4/C4Diagram").then((module) => ({
+    default: module.C4Diagram,
+  })),
+);
 
 export function C4Architect(props: C4ArchitectProps) {
   const {
@@ -180,13 +187,15 @@ export function C4Architect(props: C4ArchitectProps) {
           setReadmeMode={setReadmeMode}
         />
       ) : (
-        <C4Diagram
-          editor={editor}
-          nodes={nodes}
-          onChangeNodes={onChangeNodes}
-          relationships={relationships}
-          onChangeRelationships={onChangeRelationships}
-        />
+        <Suspense fallback={<LoadingPanel />}>
+          <C4Diagram
+            editor={editor}
+            nodes={nodes}
+            onChangeNodes={onChangeNodes}
+            relationships={relationships}
+            onChangeRelationships={onChangeRelationships}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -1,8 +1,15 @@
+import { lazy, Suspense } from "react";
 import type { AuthenticatedSession } from "@auth/types";
 import { HomeDashboard } from "@pages/home/HomeDashboard";
 import { Navbar } from "@pages/layout/Navbar";
-import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
+import { LoadingPanel } from "@pages/layout/LoadingPanel";
 import { usePageNavigation } from "@hooks/usePageNavigation";
+
+const ProjectWorkspace = lazy(() =>
+  import("@pages/project/ProjectWorkspace").then((module) => ({
+    default: module.ProjectWorkspace,
+  })),
+);
 
 export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
   const {
@@ -34,7 +41,9 @@ export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
           />
         )}
         {activeView === "project" && (
-          <ProjectWorkspace project={selectedProject} />
+          <Suspense fallback={<LoadingPanel />}>
+            <ProjectWorkspace project={selectedProject} />
+          </Suspense>
         )}
       </main>
     </>

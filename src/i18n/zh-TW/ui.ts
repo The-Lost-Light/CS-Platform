@@ -2,6 +2,7 @@ import type source from "@i18n/en/ui";
 
 export default {
   "common.backHome": "返回首頁",
+  "common.loading": "載入中…",
   "workspace.githubToken": "GitHub Token (選填)",
   "workspace.tokenPlaceholder":
     "ghp_xxxxxxxxxxxx (留空即可使用公開 API 或內建完整教學快照)",

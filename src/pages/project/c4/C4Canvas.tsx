@@ -1,0 +1,188 @@
+import type { FlowNode, BoundaryNode, CanvasNode } from './flowTypes';
+import { applyNodeChanges, Handle, NodeResizer, Position, ReactFlow, type NodeProps, type ReactFlowProps } from '@xyflow/react';
+import { useEffect, useRef, useState } from 'react';
+import { overlapsC4Boundary } from '../../../domain/c4';
+
+function C4Card({ data, selected }: NodeProps<FlowNode>) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={data.title}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.key === "Enter" && event.shiftKey) data.onExplore();
+          else data.onSelect();
+        }
+      }}
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: 160,
+        backgroundColor: data.external
+          ? "var(--c4-external-bg)"
+          : "var(--c4-internal-bg)",
+        borderColor: selected
+          ? "var(--primary)"
+          : data.expandable
+            ? "var(--c4-expandable-border)"
+            : "var(--c4-leaf-border)",
+      }}
+      className={`rounded-2xl border-2 p-4 shadow-xs transition-colors flex flex-col justify-between text-on-surface ${
+        selected ? "ring-4 ring-primary/30 shadow-md" : "hover:shadow-md"
+      }`}
+    >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={200}
+        minHeight={160}
+        color="var(--primary)"
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="w-3! h-3! bg-secondary! border-2! border-surface!"
+      />
+      <div className="min-h-0 overflow-y-auto nowheel">
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono ${
+              data.expandable
+                ? "bg-secondary-container text-on-secondary-container"
+                : "bg-primary-container text-on-primary-container"
+            }`}
+          >
+            {data.kind} · {data.boundaryLabel}
+          </span>
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              data.expandable ? "bg-secondary" : "bg-primary"
+            }`}
+          />
+        </div>
+        <div className="mt-2 text-sm font-bold text-on-surface wrap-break-word">
+          {data.title}
+        </div>
+        {data.technology && (
+          <div className="mt-1.5 inline-block px-2 py-0.5 rounded-md bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
+            [{data.technology}]
+          </div>
+        )}
+        <p className="mt-2 text-xs text-on-muted wrap-break-word whitespace-pre-wrap leading-relaxed">
+          {data.description}
+        </p>
+      </div>
+      {data.status && (
+        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline pt-2 text-[11px] font-mono text-secondary wrap-break-word">
+          {data.status}
+        </p>
+      )}
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="w-3! h-3! bg-primary! border-2! border-surface!"
+      />
+    </div>
+  );
+}
+
+function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
+  return (
+    <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 cursor-move">
+      <NodeResizer
+        isVisible={selected}
+        minWidth={360}
+        minHeight={260}
+        color="var(--primary)"
+      />
+      <div className="px-4 py-3 text-sm font-bold text-primary">
+        {data.title}
+      </div>
+    </div>
+  );
+}
+export const nodeTypes = { c4: C4Card, boundary: C4BoundaryCard };
+
+/** Keep measurements local; persist user resizes and completed moves. */
+export function C4Canvas({
+  nodes = [],
+  onNodesChange,
+  ...props
+}: ReactFlowProps<CanvasNode>) {
+  const [canvasNodes, setCanvasNodes] = useState(nodes);
+  const movingIds = useRef<string[] | null>(null);
+  useEffect(() => {
+    setCanvasNodes((previous) =>
+      nodes.map((node) => ({
+        ...previous.find((item) => item.id === node.id),
+        ...node,
+      })),
+    );
+  }, [nodes]);
+  return (
+    <ReactFlow<CanvasNode>
+      {...props}
+      nodes={canvasNodes}
+      onNodesChange={(changes) => {
+        const boundaryMove = changes.find(
+          (change) =>
+            change.type === "position" &&
+            change.id === "__c4_boundary__" &&
+            change.position,
+        );
+        if (boundaryMove?.type === "position" && boundaryMove.position) {
+          const frame = canvasNodes.find((node) => node.id === boundaryMove.id);
+          if (frame) {
+            const width = Number(frame.style?.width ?? 600);
+            const height = Number(frame.style?.height ?? 360);
+            movingIds.current ??= canvasNodes
+              .filter(
+                (node) =>
+                  node.type !== "boundary" &&
+                  overlapsC4Boundary(
+                    {
+                      ...node.position,
+                      width: Number(node.style?.width ?? 280),
+                      height: Number(node.style?.height ?? 230),
+                    },
+                    { ...frame.position, width, height },
+                  ),
+              )
+              .map((node) => node.id);
+            const dx = boundaryMove.position.x - frame.position.x;
+            const dy = boundaryMove.position.y - frame.position.y;
+            changes = [
+              ...changes,
+              ...canvasNodes
+                .filter((node) => movingIds.current!.includes(node.id))
+                .map((node) => ({
+                  id: node.id,
+                  type: "position" as const,
+                  dragging: boundaryMove.dragging,
+                  position: {
+                    x: node.position.x + dx,
+                    y: node.position.y + dy,
+                  },
+                })),
+            ];
+            if (boundaryMove.dragging !== true) movingIds.current = null;
+          }
+        }
+        setCanvasNodes((previous) => applyNodeChanges(changes, previous));
+        const completedMoves = changes.filter(
+          (change) =>
+            (change.type === "position" &&
+              change.position &&
+              change.dragging !== true) ||
+            (change.type === "dimensions" &&
+              change.dimensions &&
+              change.setAttributes),
+        );
+        if (completedMoves.length) onNodesChange?.(completedMoves);
+      }}
+    />
+  );
+}
+

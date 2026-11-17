@@ -1,31 +1,12 @@
-import { useI18n } from '../../i18n';
-import type { RepoBundle } from '../../types';
+import type { RepoBundle } from '../../domain/repository';
 import { useState } from 'react';
-import { RepoDiff } from './RepoDiff';
-import type { DiffMode } from '../../utils/repoDiff';
-import { RepoFileTree } from './RepoFileTree';
-import {
-  GitBranch,
-  GitCommit,
-  FolderTree,
-  Star,
-  GitFork,
-  AlertCircle,
-  Code2,
-  ChevronDown,
-  ChevronRight,
-} from 'lucide-react';
-
-const LANG_CHART_COLORS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-];
+import type { DiffMode } from '../../domain/diff';
+import { RepositoryMetrics } from './github/RepositoryMetrics';
+import { RepositoryLanguages } from './github/RepositoryLanguages';
+import { RepositoryTree } from './github/RepositoryTree';
+import { CommitHistory } from './github/CommitHistory';
 
 export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | null }) {
-  const { t, locale } = useI18n();
   const [selectedBranch, setSelectedBranch] = useState(
     repoBundle?.repo?.default_branch || 'main'
   );
@@ -39,251 +20,21 @@ export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | n
 
   const { repo, languages = {}, branches = [], commits = [], fileTree = [] } = repoBundle;
 
-  const langEntries = Object.entries(languages as Record<string, number>).sort((a, b) => b[1] - a[1]);
-  const totalBytes = langEntries.reduce((acc, [, b]) => acc + b, 0) || 1;
-
   return (
     <div className="space-y-6">
       {/* KPI Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.stars')}</span>
-            <Star className="w-3.5 h-3.5 text-warning" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {repo.stargazers_count?.toLocaleString(locale) || 0}
-          </div>
-        </div>
-
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.forks')}</span>
-            <GitFork className="w-3.5 h-3.5 text-secondary" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {repo.forks_count?.toLocaleString(locale) || 0}
-          </div>
-        </div>
-
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.openIssues')}</span>
-            <AlertCircle className="w-3.5 h-3.5 text-danger" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {repo.open_issues_count?.toLocaleString(locale) || 0}
-          </div>
-        </div>
-
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.branches')}</span>
-            <GitBranch className="w-3.5 h-3.5 text-success" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {branches.length}
-          </div>
-        </div>
-
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.totalFiles')}</span>
-            <FolderTree className="w-3.5 h-3.5 text-secondary" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {fileTree.length}
-          </div>
-        </div>
-
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t('github.primaryLanguage')}</span>
-            <Code2 className="w-3.5 h-3.5 text-primary" />
-          </div>
-          <div className="text-lg font-bold text-on-surface mt-1 truncate">
-            {repo.language || 'TypeScript'}
-          </div>
-        </div>
-      </div>
+      <RepositoryMetrics repo={repo} branches={branches} fileTree={fileTree} />
 
       {/* Language Breakdown Bar */}
-      {langEntries.length > 0 && (
-        <div className="ui-card p-5 space-y-2.5">
-          <div className="text-xs font-bold text-on-surface">{t('github.languageDistribution')}</div>
-          <div className="w-full h-2.5 rounded-full bg-surface-high overflow-hidden flex">
-            {langEntries.map(([lang, bytes], idx) => {
-              const pct = Math.max(2, (bytes / totalBytes) * 100).toFixed(1);
-              return (
-                <div
-                  key={lang}
-                  style={{ width: `${pct}%`, backgroundColor: LANG_CHART_COLORS[idx % LANG_CHART_COLORS.length] }}
-                  title={`${lang}: ${pct}%`}
-                />
-              );
-            })}
-          </div>
-          <div className="flex flex-wrap gap-4 text-xs text-on-muted pt-1">
-            {langEntries.map(([lang, bytes]) => (
-              <span key={lang} className="font-mono">
-                <strong className="text-on-surface">{lang}</strong>:{' '}
-                {((bytes / totalBytes) * 100).toFixed(1)}%
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <RepositoryLanguages languages={languages} />
 
       {/* Two-Column Explorer: Left = Actual GitHub File Tree (5 cols), Right = Commits & Code Diff Viewer (7 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Actual Repository File Structure Tree */}
-        <div className="lg:col-span-5 ui-card p-5 space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-success" />
-              <h3 className="text-sm font-bold text-on-surface">
-                {t('github.fileTree', { count: fileTree.length })}
-              </h3>
-            </div>
-            <label className="flex min-w-0 max-w-[60%] items-center gap-1 px-2.5 py-0.5 rounded-full bg-success-container font-mono text-[11px] font-bold text-on-success-container">
-              <GitBranch className="w-3.5 h-3.5 shrink-0" />
-              <span className="shrink-0">{t('github.branchLabel')}</span>
-              <select
-                aria-label={t('github.branchLabel')}
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="min-w-0 cursor-pointer bg-transparent rounded-full focus:outline-hidden focus:ring-2 focus:ring-success"
-              >
-                {!branches.some(b => b.name === selectedBranch) && <option value={selectedBranch}>{selectedBranch}</option>}
-                {branches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
-              </select>
-            </label>
-          </div>
-
-          <input
-            type="text"
-            value={fileTreeSearch}
-            onChange={(e) => setFileTreeSearch(e.target.value)}
-            placeholder={t('github.filterPaths')}
-            className="ui-input font-mono text-xs"
-          />
-
-          <div className="max-h-[460px] overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
-            <RepoFileTree key={repo.full_name} files={fileTree} search={fileTreeSearch} />
-          </div>
-        </div>
+      <RepositoryTree repo={repo} branches={branches} fileTree={fileTree} selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} fileTreeSearch={fileTreeSearch} setFileTreeSearch={setFileTreeSearch} />
 
         {/* Right: Commit History & Code Diff Inspector */}
-        <div className="lg:col-span-7 min-w-0 ui-card p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline pb-3.5">
-            <div className="flex items-center gap-2">
-              <GitCommit className="w-4 h-4 text-secondary" />
-              <h3 className="text-sm font-bold text-on-surface">{t('github.commitHistory')}</h3>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="ui-pill-group text-[11px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => setDiffMode('unified')}
-                  aria-pressed={diffMode === 'unified'}
-                  className={`px-2.5 py-0.5 rounded-full transition ${
-                    diffMode === 'unified'
-                      ? 'bg-secondary text-on-secondary shadow-2xs'
-                      : 'text-on-muted'
-                  }`}
-                >
-                  {t('github.diff.unified')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDiffMode('split')}
-                  aria-pressed={diffMode === 'split'}
-                  className={`px-2.5 py-0.5 rounded-full transition ${
-                    diffMode === 'split'
-                      ? 'bg-secondary text-on-secondary shadow-2xs'
-                      : 'text-on-muted'
-                  }`}
-                >
-                  {t('github.diff.split')}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-            {commits.map((c) => {
-              const isExpanded = expandedCommitSha === c.sha;
-              const title = (c.commit?.message || '').split('\n')[0];
-              const author = c.commit?.author?.name || c.author?.login || 'Developer';
-              const commitDate = new Date(c.commit?.author?.date || '');
-              const dateStr = Number.isNaN(commitDate.getTime()) ? '' : commitDate.toLocaleDateString(locale);
-
-              return (
-                <div
-                  key={c.sha}
-                  className="ui-panel overflow-hidden"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setExpandedCommitSha(isExpanded ? null : c.sha)}
-                    className="w-full p-3.5 text-left flex items-start justify-between gap-3 hover:bg-surface-hover transition"
-                  >
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md bg-secondary-container text-on-secondary-container font-bold font-mono text-[11px]">
-                          {c.sha.slice(0, 7)}
-                        </span>
-                        {c.prInfo?.merge_method_key && (
-                          <span className="px-2 py-0.5 rounded-md bg-primary-container text-on-primary-container font-bold text-[10px]">
-                            {t(c.prInfo.merge_method_key)}
-                          </span>
-                        )}
-                        <span className="text-xs font-bold text-on-surface truncate">{title}</span>
-                      </div>
-                      <div className="text-[11px] text-on-muted">
-                        {t('github.authorLabel')}{author}{t('github.dateLabel')}{dateStr}
-                        {c.stats && (
-                          <span className="ml-2 font-mono">
-                            <span className="text-success">+{c.stats.additions}</span>{' '}
-                            <span className="text-danger">-{c.stats.deletions}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-on-muted shrink-0" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-on-muted shrink-0" />
-                    )}
-                  </button>
-
-                  {isExpanded && c.files && (
-                    <div className="p-3 border-t border-outline space-y-2.5 bg-surface-high">
-                      {c.files.map((f) => {
-                        return (
-                          <div
-                            key={f.filename}
-                            className="rounded-xl border border-outline overflow-hidden bg-surface"
-                          >
-                            <div className="px-3 py-1.5 bg-surface-sunken border-b border-outline flex items-center justify-between text-xs font-mono">
-                              <span className="text-on-surface truncate">{f.filename}</span>
-                              <span className="shrink-0">
-                                <span className="text-success">+{f.additions}</span>{' '}
-                                <span className="text-danger">-{f.deletions}</span>
-                              </span>
-                            </div>
-                            <RepoDiff patch={f.patch || ''} mode={diffMode} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <CommitHistory commits={commits} expandedCommitSha={expandedCommitSha} setExpandedCommitSha={setExpandedCommitSha} diffMode={diffMode} setDiffMode={setDiffMode} />
       </div>
     </div>
   );

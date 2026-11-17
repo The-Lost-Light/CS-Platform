@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { PROJECTS } from "@/data/projectsData";
 import { getLocalizedProjects } from "@/data/localizedProjects";
 import { useI18n } from "@/i18n";
-import type { Project } from "@/types";
+import type { Project } from "@/domain/project";
 
 export function usePageNavigation() {
   const { locale } = useI18n();

@@ -27,7 +27,7 @@ import {
 import { ThemeProvider, isThemeMode, resolveTheme } from "../src/theme";
 import {
   fetchGitHubProjectBundle,
-} from "../src/utils/githubService";
+} from "../src/services/github";
 
 const zh = getLocalizedProjects("zh-TW");
 const en = getLocalizedProjects("en");

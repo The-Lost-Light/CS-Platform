@@ -9,7 +9,7 @@ import {
   removeC4Nodes,
   visibleC4Nodes,
   type C4Node,
-} from "../src/utils/c4Model";
+} from "../src/domain/c4";
 
 const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
 

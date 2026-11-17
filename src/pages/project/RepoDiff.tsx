@@ -1,4 +1,4 @@
-import { parsePatch, splitPatch, type DiffMode, type PatchLine } from '../../utils/repoDiff';
+import { parsePatch, splitPatch, type DiffMode, type PatchLine } from '../../domain/diff';
 
 function lineClass(line: PatchLine | null) {
   const color = line?.type === 'add'

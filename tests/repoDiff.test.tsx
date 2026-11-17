@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RepoDiff } from '../src/pages/project/RepoDiff';
-import { splitPatch } from '../src/utils/repoDiff';
+import { splitPatch } from '../src/domain/diff';
 
 test('split diff pairs replacements and pads unequal changes within each hunk', () => {
   const rows = splitPatch('@@ -1,3 +1,2 @@\n same\n-old\n-extra\n+new\n@@ -9,0 +9 @@\n+added');

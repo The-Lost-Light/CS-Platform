@@ -15,20 +15,27 @@
 src/
 ├── main.tsx                         # 組合 Provider 與應用畫面入口
 ├── auth/                            # 登入型別、服務、狀態與 useLoginForm
+├── domain/                          # 專案／倉庫型別、C4 規則與檔案格式、Diff、檔案樹
+├── services/
+│   ├── github/                     # URL 解析、HTTP、快照與備援策略
+│   └── c4Download.ts               # 瀏覽器下載介面
 ├── hooks/
 │   ├── usePageNavigation.ts         # 首頁／專案導覽狀態
-│   └── useProjectWorkspace.ts       # 專案草稿、語言更新與倉庫載入
+│   ├── useProjectDraft.ts           # 專案草稿與語言更新生命週期
+│   ├── useRepository.ts             # 倉庫輸入、載入、錯誤與 Token 狀態
+│   └── useProjectWorkspace.ts       # 組合草稿、倉庫與分頁狀態
 ├── data/                            # 專案題庫、翻譯與草稿語言更新
 ├── i18n/                            # 翻譯內容與語言狀態
-├── theme/                           # 主題狀態與偏好儲存
-├── utils/                           # C4 模型、GitHub 服務、Diff 與檔案樹處理
+├── theme/                           # 純主題規則 model.ts、Provider 與偏好儲存
 └── pages/                           # 所有畫面元件與樣式
     ├── Workspace.tsx                # 首頁／專案畫面組合
     ├── auth/                       # AuthGate、登入頁、表單與示範帳號選擇
     ├── layout/                     # 導覽列、語言與主題切換
     ├── home/                       # 專案總覽首頁
-    ├── project/                   # 專案工作區、C4 與 GitHub 畫面
-    └── styles/                     # 全域樣式、主題色彩與字型
+    ├── project/                    # 專案工作區與畫面組合
+    │   ├── c4/                     # 編輯控制器、畫布、屬性面板、README 與 Flow 型別
+    │   └── github/                 # 倉庫連線、統計、語言、檔案樹與提交紀錄
+    └── styles/                     # index 組合 tokens/base/components/c4/scrollbars 與字型
 ```
 
 ## 開發與驗證
@@ -41,7 +48,21 @@ pnpm typecheck
 pnpm build
 ```
 
-`pnpm build` 包含 TypeScript strict 型別檢查與正式建置；`pnpm preview` 可預覽建置結果。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/index.css`。
+`pnpm build` 包含 TypeScript strict 型別檢查與正式建置；`pnpm preview` 可預覽建置結果。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/tokens.css`，樣式統一從 `index.css` 載入。
+
+## 模組邊界與重構分析
+
+原本的主要耦合點是：C4Architect 同時處理畫布渲染、編輯狀態、檔案 I/O 與表單；GitHubRepoDashboard 同時包含所有儀表板區塊；useProjectWorkspace 同時管理草稿與遠端資料；共用型別由題庫與快照 JSON 推導。這些責任已拆分，原有登入、導覽、翻譯及小型畫面模組保留既有設計。
+
+- `domain` 管理資料契約與純資料轉換，不依賴 React、畫面、服務或示範資料。倉庫型別明確定義，不再由快照推導；合併方式的翻譯 key 保留型別限制。
+- `services` 管理外部 I/O。GitHub 的 `createGitHubService({ fetch, loadSnapshot })` 可注入 HTTP 與快照來源；預設實作維持教學倉庫直接使用快照、其他倉庫嘗試 API、失敗後備援的順序。快照仍動態載入。
+- `hooks` 管理應用狀態。`useProjectWorkspace(project, loadRepository?)` 組合草稿與倉庫 hook，可替換載入服務。語言切換只合併未修改的題庫欄位；更換專案才重設草稿與載入倉庫，Token 不落地儲存。
+- `pages` 負責畫面與畫面專用互動。`useC4Editor` 保留在 C4 畫面模組，管理 React Flow 轉換、選取、導覽與匯入狀態；畫布尺寸量測留在 C4Canvas。README 模式由父層保存，切換分頁不重設。GitHub 分支、搜尋、展開提交與 Diff 模式也仍由原本父層持有。
+- 程式與測試直接匯入所屬模組：專案型別使用 `domain/project`、倉庫型別使用 `domain/repository`、使用者型別使用 `auth/types`；C4、Diff 與檔案樹使用 `domain` 中的模組，GitHub 服務使用 `services/github`。舊的 `src/utils/*`、`src/types.ts` 及 `projectsData` 的型別轉出已移除；`projectsData` 僅保留題庫資料與建立函式。
+
+`tests/architecture.test.tsx` 檢查相對路徑與 `@/` 匯入的分層邊界、路徑解析及循環相依；`tests/githubService.test.tsx` 以注入的 HTTP 實作驗證授權標頭、分支編碼、250 筆檔案上限、部分端點失敗與快照備援，不發出真實網路請求。既有測試繼續涵蓋登入、多語系、草稿保留、C4 編輯規則與檔案往返、Diff 及畫面渲染。
+
+本次重構另以 Git 原始版本進行 24 組初始畫面的 HTML 逐字比對，涵蓋兩種語言、淺深色主題、所有專案、首頁、登入、GitHub 與空資料狀態。此比對驗證初始渲染一致，不取代瀏覽器中的拖曳、縮放與檔案選取互動測試。
 
 ## 登入與身分驗證模組
 

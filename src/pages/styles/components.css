@@ -1,0 +1,53 @@
+@layer components {
+    .ui-card {
+        @apply bg-surface text-on-surface border border-outline-subtle rounded-3xl shadow-xs transition-colors;
+    }
+
+    .ui-card-sm {
+        @apply bg-surface text-on-surface border border-outline-subtle rounded-2xl p-4 shadow-xs transition-colors;
+    }
+
+    .ui-panel {
+        @apply bg-surface-sunken text-on-surface border border-outline rounded-2xl transition-colors;
+    }
+
+    .ui-card-header {
+        @apply px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
+    }
+
+    .ui-pill-group {
+        @apply inline-flex items-center bg-surface-container p-1 rounded-full border border-outline;
+    }
+
+    .ui-input {
+        @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2 text-xs sm:text-sm text-on-surface placeholder-on-subtle focus:outline-hidden focus:ring-2 focus:ring-secondary transition;
+    }
+
+    .ui-btn-primary {
+        @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-2xs transition disabled:opacity-50;
+    }
+
+    .ui-btn-tonal {
+        @apply inline-flex items-center gap-1.5 rounded-xl bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40;
+    }
+
+    .ui-markdown {
+        @apply min-h-96 wrap-break-word text-sm leading-7 text-on-surface
+      [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg
+      [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold [&_h4]:font-semibold
+      [&_h1]:text-on-surface [&_h2]:text-on-surface
+      [&_h1]:my-5 [&_h2]:my-4 [&_h3]:my-3
+      [&_p]:my-3 [&_p]:text-on-muted [&_li]:text-on-muted
+      [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
+      [&_a]:text-secondary [&_a]:underline
+      [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-surface-sunken [&_pre]:border [&_pre]:border-outline [&_pre]:p-4
+      [&_code]:font-mono
+      [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:bg-surface-tonal [&_blockquote]:py-1 [&_blockquote]:pl-4 [&_blockquote]:rounded-r-xl
+      [&_table]:block [&_table]:overflow-x-auto
+      [&_th]:border [&_th]:border-outline [&_th]:bg-surface-high [&_th]:p-2.5
+      [&_td]:border [&_td]:border-outline [&_td]:p-2.5
+      [&_hr]:my-5 [&_hr]:border-outline
+      [&_img]:max-w-full;
+    }
+}
+

@@ -1,6 +1,7 @@
 import { ChevronRight, FolderGit2 } from "lucide-react";
 import { useI18n } from "../../i18n";
-import type { Project, User } from "../../types";
+import type { Project } from "../../domain/project";
+import type { User } from "../../auth/types";
 
 export function HomeDashboard({
   projects,

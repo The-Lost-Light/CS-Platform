@@ -1,0 +1,219 @@
+:root {
+    color-scheme: light;
+
+    /* 背景與容器層級 (Canvas & Surface Tokens) */
+    --bg-canvas: #f0f4f9;
+    --surface: #ffffff;
+    --surface-sunken: #f8fafd;
+    --surface-container: #f0f4f9;
+    --surface-container-high: #f0f4f9;
+    --surface-hover: rgba(243, 237, 247, 0.6);
+    --surface-tonal: #f3edf7;
+
+    /* 文字與圖示層級 (Typography & Iconography Tokens) */
+    --on-surface: #1f1f1f;
+    --on-surface-muted: #444746;
+    --on-surface-subtle: #5e5e5e;
+
+    /* 邊框與分隔線 (Outline & Divider Tokens) */
+    --outline: #e2e8f0;
+    --outline-subtle: rgba(226, 232, 240, 0.9);
+    --outline-tonal: #eaddff;
+
+    /* 主強調色：Material 3 Purple (Primary Accent Tokens) */
+    --primary: #6750a4;
+    --primary-hover: #4f378b;
+    --on-primary: #ffffff;
+    --primary-container: #eaddff;
+    --on-primary-container: #4f378b;
+    --primary-outline: #eaddff;
+
+    /* 次強調色：Material 3 Blue (Secondary / Info Accent Tokens) */
+    --secondary: #0b57d0;
+    --secondary-hover: #0842a0;
+    --on-secondary: #ffffff;
+    --secondary-container: #d3e3fd;
+    --on-secondary-container: #041e49;
+    --secondary-outline: #a8c7fa;
+    --brand-banner: #0b57d0;
+    --on-brand-banner-muted: #d3e3fd;
+
+    /* 語意狀態色：成功 / 警告 / 錯誤 (Semantic Status Tokens) */
+    --success: #137333;
+    --success-container: #ceead6;
+    --on-success-container: #0d652d;
+    --success-outline: #81c995;
+
+    --warning: #b06000;
+    --warning-container: #fef7e0;
+    --on-warning-container: #b06000;
+    --warning-outline: #fdd663;
+
+    --danger: #c5221f;
+    --danger-container: #fad2cf;
+    --on-danger-container: #b3261e;
+    --danger-outline: #f28b82;
+
+    /* C4 架構圖與視覺化統計圖表專用變數 (C4 & Visualization Tokens) */
+    --c4-person-bg: #ffffff;
+    --c4-system-bg: #ffffff;
+    --c4-container-bg: #f8fafd;
+    --c4-component-bg: #f8fafd;
+    --c4-internal-bg: #e4eafe;
+    --c4-external-bg: #e4e5e9;
+    --c4-expandable-bg: #ffffff;
+    --c4-expandable-border: #0b57d0;
+    --c4-leaf-bg: #f8fafd;
+    --c4-leaf-border: rgba(103, 80, 164, 0.6);
+    --c4-edge: #6750a4;
+    --c4-edge-selected: #0b57d0;
+    --c4-edge-label-bg: #f3edf7;
+    --c4-grid: #94a3b8;
+
+    --chart-1: #0b57d0;
+    --chart-2: #6750a4;
+    --chart-3: #137333;
+    --chart-4: #b06000;
+    --chart-5: #006a60;
+
+    /* 捲軸色票 (Scrollbar Tokens) */
+    --scrollbar-thumb: #c4c7c5;
+    --scrollbar-thumb-hover: #8e918f;
+}
+
+.dark {
+    color-scheme: dark;
+
+    /* 背景與容器層級 */
+    --bg-canvas: #121316;
+    --surface: #1e1f23;
+    --surface-sunken: #121316;
+    --surface-container: #121316;
+    --surface-container-high: #282a2f;
+    --surface-hover: #282a2f;
+    --surface-tonal: rgba(79, 55, 139, 0.4);
+
+    /* 文字與圖示層級 */
+    --on-surface: #e3e2e6;
+    --on-surface-muted: #c4c7c5;
+    --on-surface-subtle: #8e918f;
+
+    /* 邊框與分隔線 */
+    --outline: #33353a;
+    --outline-subtle: #33353a;
+    --outline-tonal: rgba(103, 80, 164, 0.5);
+
+    /* 主強調色：Material 3 Purple */
+    --primary: #d0bcff;
+    --primary-hover: #eaddff;
+    --on-primary: #381e72;
+    --primary-container: #4f378b;
+    --on-primary-container: #eaddff;
+    --primary-outline: #6750a4;
+
+    /* 次強調色：Material 3 Blue */
+    --secondary: #a8c7fa;
+    --secondary-hover: #d3e3fd;
+    --on-secondary: #041e49;
+    --secondary-container: #004a77;
+    --on-secondary-container: #c2e7ff;
+    --secondary-outline: #004a77;
+    --brand-banner: #0842a0;
+    --on-brand-banner-muted: #d3e3fd;
+
+    /* 語意狀態色：成功 / 警告 / 錯誤 */
+    --success: #81c995;
+    --success-container: rgba(15, 82, 35, 0.5);
+    --on-success-container: #c4eed0;
+    --success-outline: #137333;
+
+    --warning: #fdd663;
+    --warning-container: rgba(89, 67, 0, 0.5);
+    --on-warning-container: #fce8b2;
+    --warning-outline: #b06000;
+
+    --danger: #f2b8b5;
+    --danger-container: rgba(140, 29, 24, 0.4);
+    --on-danger-container: #f2b8b5;
+    --danger-outline: #8c1d18;
+
+    /* C4 架構圖與視覺化統計圖表專用變數 */
+    --c4-person-bg: #1e1f23;
+    --c4-system-bg: #1e1f23;
+    --c4-container-bg: #121316;
+    --c4-component-bg: #121316;
+    --c4-internal-bg: #293550;
+    --c4-external-bg: #36373d;
+    --c4-expandable-bg: #1e1f23;
+    --c4-expandable-border: #a8c7fa;
+    --c4-leaf-bg: #121316;
+    --c4-leaf-border: rgba(208, 188, 255, 0.6);
+    --c4-edge: #d0bcff;
+    --c4-edge-selected: #a8c7fa;
+    --c4-edge-label-bg: #282a2f;
+    --c4-grid: #33353a;
+
+    --chart-1: #0b57d0;
+    --chart-2: #6750a4;
+    --chart-3: #137333;
+    --chart-4: #b06000;
+    --chart-5: #006a60;
+
+    /* 捲軸色票 */
+    --scrollbar-thumb: #444746;
+    --scrollbar-thumb-hover: #8e918f;
+}
+
+@theme {
+    --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo;
+
+    /* 映射語意化 CSS Variables 為原生 Tailwind 工具類別 */
+    --color-canvas: var(--bg-canvas);
+    --color-surface: var(--surface);
+    --color-surface-sunken: var(--surface-sunken);
+    --color-surface-container: var(--surface-container);
+    --color-surface-high: var(--surface-container-high);
+    --color-surface-hover: var(--surface-hover);
+    --color-surface-tonal: var(--surface-tonal);
+
+    --color-on-surface: var(--on-surface);
+    --color-on-muted: var(--on-surface-muted);
+    --color-on-subtle: var(--on-surface-subtle);
+
+    --color-outline: var(--outline);
+    --color-outline-subtle: var(--outline-subtle);
+    --color-outline-tonal: var(--outline-tonal);
+
+    --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --color-on-primary: var(--on-primary);
+    --color-primary-container: var(--primary-container);
+    --color-on-primary-container: var(--on-primary-container);
+    --color-primary-outline: var(--primary-outline);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-hover: var(--secondary-hover);
+    --color-on-secondary: var(--on-secondary);
+    --color-secondary-container: var(--secondary-container);
+    --color-on-secondary-container: var(--on-secondary-container);
+    --color-secondary-outline: var(--secondary-outline);
+    --color-brand-banner: var(--brand-banner);
+    --color-on-brand-banner-muted: var(--on-brand-banner-muted);
+
+    --color-success: var(--success);
+    --color-success-container: var(--success-container);
+    --color-on-success-container: var(--on-success-container);
+    --color-success-outline: var(--success-outline);
+
+    --color-warning: var(--warning);
+    --color-warning-container: var(--warning-container);
+    --color-on-warning-container: var(--on-warning-container);
+    --color-warning-outline: var(--warning-outline);
+
+    --color-danger: var(--danger);
+    --color-danger-container: var(--danger-container);
+    --color-on-danger-container: var(--on-danger-container);
+    --color-danger-outline: var(--danger-outline);
+}
+

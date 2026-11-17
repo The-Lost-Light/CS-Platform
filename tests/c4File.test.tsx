@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PROJECTS } from "../src/data/projectsData";
-import { parseC4File, serializeC4File } from "../src/utils/c4File";
-import { migrateC4Nodes } from "../src/utils/c4Model";
+import { parseC4File, serializeC4File } from "../src/domain/c4File";
+import { migrateC4Nodes } from "../src/domain/c4";
 
 const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
 const relationships = [

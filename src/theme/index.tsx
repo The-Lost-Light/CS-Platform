@@ -1,20 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-export type ThemeMode = 'system' | 'light' | 'dark';
-export type ResolvedTheme = 'light' | 'dark';
-
-export const SUPPORTED_THEME_MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
+import { isThemeMode, resolveTheme, type ThemeMode, type ResolvedTheme } from './model';
+export { isThemeMode, resolveTheme, SUPPORTED_THEME_MODES } from './model';
+export type { ThemeMode, ResolvedTheme } from './model';
 const THEME_STORAGE_KEY = 'codepulse.themeMode';
-
-export function isThemeMode(value: unknown): value is ThemeMode {
-  return value === 'system' || value === 'light' || value === 'dark';
-}
-
-export function resolveTheme(mode: ThemeMode, systemPrefersDark: boolean): ResolvedTheme {
-  if (mode === 'dark') return 'dark';
-  if (mode === 'light') return 'light';
-  return systemPrefersDark ? 'dark' : 'light';
-}
 
 function initialThemeMode(): ThemeMode {
   try {

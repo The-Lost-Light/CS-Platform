@@ -12,15 +12,18 @@
 ## 專案結構
 
 ```text
+pages/                              # Void 檔案式路由入口
+├── layout.tsx                      # Provider、登入與共用導覽列
+├── index.tsx                       # 首頁 /
+└── projects/[id].tsx               # 專案 /projects/:id
 src/
-├── main.tsx                         # 組合 Provider 與應用畫面入口
 ├── auth/                            # 登入型別、服務、狀態與 useLoginForm
 ├── domain/                          # 專案／倉庫型別、C4 規則與檔案格式、Diff、檔案樹
 ├── services/
 │   ├── github/                     # URL 解析、HTTP、快照與備援策略
 │   └── c4Download.ts               # 瀏覽器下載介面
 ├── hooks/
-│   ├── usePageNavigation.ts         # 首頁／專案導覽狀態
+│   ├── usePageNavigation.ts         # Void 路由參數與首頁／專案導覽
 │   ├── useProjectDraft.ts           # 專案草稿與語言更新生命週期
 │   ├── useRepository.ts             # 倉庫輸入、載入、錯誤與 Token 狀態
 │   └── useProjectWorkspace.ts       # 組合草稿、倉庫與分頁狀態
@@ -28,7 +31,7 @@ src/
 ├── i18n/                            # 翻譯內容與語言狀態
 ├── theme/                           # 純主題規則 model.ts、Provider 與偏好儲存
 └── pages/                           # 所有畫面元件與樣式
-    ├── Workspace.tsx                # 首頁／專案畫面組合
+    ├── Workspace.tsx                # 共用導覽列與路由內容容器
     ├── auth/                       # AuthGate、登入頁、表單與示範帳號選擇
     ├── layout/                     # 導覽列、語言與主題切換
     ├── home/                       # 專案總覽首頁
@@ -61,7 +64,7 @@ pnpm preview
 - `pnpm fmt` / `pnpm lint`：格式化專案／單獨執行 lint；`pnpm exec vp check --fix` 可格式化並套用安全的 lint 修正。
 - `pnpm typecheck`：使用 `vp check --no-fmt --no-lint` 單獨檢查型別。
 - `pnpm test` / `pnpm test:watch`：透過 Vite+ 內建 Vitest 執行全部測試／監看模式。測試使用 `vite-plus/test`，保留 Node strict assertions，並共用應用的模組別名與 React Compiler 設定。
-- `pnpm build`：先執行 strict 型別檢查，再透過 `vp build` 產生 `dist/`。
+- `pnpm build`：先執行 strict 型別檢查，再透過 `vp build` 產生 `.cloudflare/output/` 的 Worker 與前端資產。
 
 Vite+ 版本與 Vite 相容別名由 `pnpm-workspace.yaml` catalog 管理，`vite` 指向 Vite+ core，讓 React 與 Tailwind 外掛共用同一份建置引擎；Vitest override 對齊 Vite+ 內建版本。`pnpm-lock.yaml` 納入版本控制，CI 或乾淨環境請執行 `pnpm install --frozen-lockfile`、`pnpm check`、`pnpm test` 與 `pnpm build`。升級時依 [Vite+ 官方遷移指南](https://viteplus.dev/guide/migrate) 執行目標版本的 migrator，並重新驗證上述指令。
 
@@ -77,7 +80,7 @@ React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合�
 
 正式網站：[CodePulse Edu](https://course-assignment-platform.mono-lts.workers.dev)。
 
-採用 [Void 的 SPA 部署模式](https://void.cloud/guide/app-types)，由 Vite+ 建置前端，再由 Void 將 `dist/` 上傳至 Cloudflare Workers Assets。`void.config.ts` 明確指定 `spa`、輸出目錄與 `pnpm build`，讓每次部署先通過型別檢查。此模式不需要 `voidPlugin()`；`src/pages/` 仍是 React 畫面元件目錄。
+採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與共用導覽列，`src/pages/` 保留畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。直接開啟專案網址後，登入即可進入該專案。
 
 ```bash
 pnpm install --frozen-lockfile
@@ -86,7 +89,7 @@ pnpm test
 pnpm deploy
 ```
 
-`pnpm deploy` 執行 `void deploy --platform cloudflare`；首次使用時會開啟瀏覽器登入 Cloudflare 並選擇帳號，成功後印出部署網址。Worker 名稱為 `course-assignment-platform`，可在 `void.config.ts` 的 `cloudflare.name` 修改。後續部署沿用已連結的帳號；如需先完成登入，可執行 `pnpm exec void connect --platform cloudflare`。
+`pnpm deploy` 執行 `void deploy --platform cloudflare`；首次使用時會開啟瀏覽器登入 Cloudflare 並選擇帳號，成功後印出部署網址。Worker 名稱為 `cap`，可在 `void.config.ts` 的 `cloudflare.name` 修改。後續部署沿用已連結的帳號；如需先完成登入，可執行 `pnpm exec void connect --platform cloudflare`。
 
 Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) 完成 `workers.dev` 子網域設定；在帳號總覽找到 **Your subdomain**，選擇 **Change** 設定名稱後，重新執行 `pnpm deploy`。若 CLI 提供的 `/workers/onboarding` 連結顯示 404，請改用上述 Workers & Pages 入口。設定方式見 [Cloudflare 官方文件](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/)。
 
@@ -112,7 +115,7 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 
 `src/auth/` 管理身分資料與登入狀態。`AuthService` 定義登入請求與結果，`demoAuthService` 負責帳號／密碼必填檢查與使用者資料正規化；錯誤以代碼回傳，由介面翻譯。`AuthProvider` 統一管理 `currentUser`、`login`、`logout`，元件透過 `useAuth()` 存取；可用 `service` 屬性注入其他符合介面的實作。共用的 `src/types.ts` 保留 `User` 型別轉出。
 
-`src/pages/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號。`src/auth/useLoginForm.ts` 管理欄位、密碼顯示與錯誤訊息。`AuthGate` 根據 Provider 狀態顯示登入頁或應用內容；登出時卸載工作區，讓下一次登入從首頁開始。`main.tsx` 組合 Provider、`AuthGate` 與 `pages/Workspace`，導覽狀態由 `hooks/usePageNavigation` 管理。
+`src/pages/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號。`src/auth/useLoginForm.ts` 管理欄位、密碼顯示與錯誤訊息。`AuthGate` 根據 Provider 狀態顯示登入頁或應用內容；登出時卸載工作區，讓下一次登入從首頁開始。`pages/layout.tsx` 組合 Provider、`AuthGate` 與 `src/pages/Workspace`，`hooks/usePageNavigation` 使用 Void 的 `useParams()` 與 `useRouter()` 導覽。
 
 畫面與樣式集中於 `pages`；共用狀態、服務、資料處理與可重用 hooks 放在畫面目錄外，且不依賴 `pages`。僅供畫面使用的互動狀態（例如分頁、選單、畫布選取）可留在元件內。
 

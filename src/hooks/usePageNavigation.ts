@@ -1,21 +1,24 @@
 import { getLocalizedProjects } from "@data/localizedProjects";
-import { PROJECTS } from "@data/projectsData";
 import type { Project } from "@domain/project";
 import { useI18n } from "@i18n";
-import { useState } from "react";
+import { useParams, useRouter } from "@void/react";
 
 export function usePageNavigation() {
   const { locale } = useI18n();
   const { projects } = getLocalizedProjects(locale);
-  const [activeView, setActiveView] = useState<"home" | "project">("home");
-  const [projectID, setProjectID] = useState(PROJECTS[0].id);
-  const selectedProject = projects.find((project) => project.id === projectID) ?? projects[0];
+  const router = useRouter();
+  const { id } = useParams();
+  const activeView: "home" | "project" = id ? "project" : "home";
+  const selectedProject = projects.find((project) => project.id === id) ?? projects[0];
 
-  const navigateHome = () => setActiveView("home");
-  const navigateProject = () => setActiveView("project");
+  const navigateHome = () => {
+    void router.visit("/");
+  };
+  const navigateProject = () => {
+    void router.visit(`/projects/${encodeURIComponent(selectedProject.id)}`);
+  };
   const openProject = (project: Project) => {
-    setProjectID(project.id);
-    navigateProject();
+    void router.visit(`/projects/${encodeURIComponent(project.id)}`);
   };
 
   return {

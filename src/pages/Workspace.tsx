@@ -1,19 +1,14 @@
 import type { AuthenticatedSession } from "@auth/types";
 import { usePageNavigation } from "@hooks/usePageNavigation";
-import { HomeDashboard } from "@pages/home/HomeDashboard";
-import { LoadingPanel } from "@pages/layout/LoadingPanel";
 import { Navbar } from "@pages/layout/Navbar";
-import { lazy, Suspense } from "react";
+import type { ReactNode } from "react";
 
-const ProjectWorkspace = lazy(() =>
-  import("@pages/project/ProjectWorkspace").then((module) => ({
-    default: module.ProjectWorkspace,
-  })),
-);
-
-export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
-  const { activeView, projects, selectedProject, navigateHome, navigateProject, openProject } =
-    usePageNavigation();
+export function WorkSpace({
+  currentUser,
+  logout,
+  children,
+}: AuthenticatedSession & { children?: ReactNode }) {
+  const { activeView, selectedProject, navigateHome, navigateProject } = usePageNavigation();
 
   return (
     <>
@@ -23,23 +18,13 @@ export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
         onNavigateHome={navigateHome}
         onSelectProjectDefault={navigateProject}
         currentUser={currentUser}
-        onLogout={logout}
+        onLogout={() => {
+          logout();
+          navigateHome();
+        }}
       />
 
-      <main className="flex-1">
-        {activeView === "home" && (
-          <HomeDashboard
-            projects={projects}
-            onOpenProject={openProject}
-            currentUser={currentUser}
-          />
-        )}
-        {activeView === "project" && (
-          <Suspense fallback={<LoadingPanel />}>
-            <ProjectWorkspace project={selectedProject} />
-          </Suspense>
-        )}
-      </main>
+      <main className="flex-1">{children}</main>
     </>
   );
 }

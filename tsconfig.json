@@ -41,5 +41,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "tests", "*.ts"]
+  "include": ["src", "pages", "tests", "*.ts"]
 }

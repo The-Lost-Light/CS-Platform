@@ -1,6 +1,8 @@
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
-import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { reactCompilerPreset } from "@vitejs/plugin-react";
+import { voidReact } from "@void/react/plugin";
+import { voidPlugin } from "void";
 import path from "node:path";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
@@ -16,7 +18,12 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.tsx"],
   },
-  plugins: lazyPlugins(() => [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()]),
+  plugins: lazyPlugins(() => [
+    voidPlugin(),
+    voidReact(),
+    babel({ presets: [reactCompilerPreset()] }),
+    tailwindcss(),
+  ]),
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),

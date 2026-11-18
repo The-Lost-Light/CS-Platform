@@ -21,6 +21,7 @@
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/noto-sans-tc": "^5.3.1",
+    "@void/react": "1.10.0",
     "@xyflow/react": "^13.0.0-next.3",
     "lucide-react": "^1.74.0",
     "react": "^19.3.1",

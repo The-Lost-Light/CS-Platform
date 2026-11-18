@@ -1,4 +1,15 @@
 export default {
+  "draft.template": "Using the project template",
+  "draft.unsaved": "Unsaved changes",
+  "draft.saving": "Saving…",
+  "draft.saved": "Saved to your account",
+  "draft.loadError": "Could not load your workspace. Retry or sign in again.",
+  "draft.saveError": "Could not save. Your edits are still on this page.",
+  "draft.conflict":
+    "A newer version is saved. Copy any edits you want to keep, then reload this page.",
+  "draft.invalidRepo": "Enter a GitHub repository URL or owner/repository, or leave it empty.",
+  "draft.tooLarge": "The workspace exceeds the 6 MiB save limit.",
+  "draft.session": "Your sign-in has changed. Copy your edits and sign in again.",
   "admin.addTab": "Add",
   "admin.viewTab": "View",
   "admin.edit": "Edit",
@@ -16,9 +27,9 @@ export default {
   "admin.editAccount": "Edit account",
   "admin.confirmDelete": "Delete “{name}”?",
   "admin.deleteAccountHelp":
-    "This cannot be undone. The account and credentials will be deleted and all sessions revoked.",
+    "This permanently deletes the account, its credentials, and its saved workspaces across all projects. All sessions will be revoked.",
   "admin.deleteProjectHelp":
-    "This cannot be undone. The project will be removed from the list and its URL will no longer open.",
+    "This permanently deletes the project and every account’s saved workspace for it.",
   "admin.protectedAccount":
     "You cannot delete yourself, demote yourself or remove the last active administrator.",
   "admin.invalidAccount": "Enter a valid name, email and role.",

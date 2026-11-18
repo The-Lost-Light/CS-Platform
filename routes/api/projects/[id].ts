@@ -1,7 +1,7 @@
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
 import { db, eq } from "void/db";
-import { projects, removedProjects } from "../../../db/schema";
+import { projects, removedProjects, workspaces } from "../../../db/schema";
 import { listProjects } from "../../../server/projects";
 import { PROJECTS } from "@data/projectsData";
 import { parseProjectInput } from "@domain/projectInput";
@@ -75,6 +75,7 @@ export const DELETE = defineHandler(async (c) => {
     return c.json({ error: "notFound" }, 404);
   await db.batch([
     db.insert(removedProjects).values({ id }).onConflictDoNothing(),
+    db.delete(workspaces).where(eq(workspaces.projectId, id)),
     db.delete(projects).where(eq(projects.id, id)),
   ]);
   return { success: true };

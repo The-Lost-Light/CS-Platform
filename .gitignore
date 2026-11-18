@@ -10,7 +10,6 @@ void.lock.json
 .wrangler/
 .env
 .env.*
-!.env.example
 
 .test/
 .cloudflare/

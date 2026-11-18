@@ -1,9 +1,17 @@
 import { usePageNavigation } from "@hooks/usePageNavigation";
-import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
 import { LoadingPanel } from "@pages/layout/LoadingPanel";
+import { useAuth } from "@auth/AuthProvider";
+import { PersonalProject } from "@pages/project/PersonalProject";
 
 export default function ProjectPage() {
   const { selectedProject } = usePageNavigation();
-  if (!selectedProject) return <LoadingPanel />;
-  return <ProjectWorkspace key={selectedProject.id} project={selectedProject} />;
+  const { currentUser } = useAuth();
+  if (!selectedProject || !currentUser?.id) return <LoadingPanel />;
+  return (
+    <PersonalProject
+      key={currentUser.id + "/" + selectedProject.id}
+      project={selectedProject}
+      accountId={currentUser.id}
+    />
+  );
 }

@@ -1,5 +1,5 @@
 import type { C4Kind, C4Node, C4Relationship } from "@domain/c4";
-import { C4_MAX_LEVELS, c4NodeDepth } from "@domain/c4";
+import { C4_MAX_LEVELS } from "@domain/c4";
 
 export interface C4File {
   format: "codepulse-c4";
@@ -31,7 +31,10 @@ export function serializeC4File(nodes: C4Node[], relationships: C4Relationship[]
 
 /** Validate the entire graph before allowing the caller to replace any existing data. */
 export function parseC4File(text: string): C4File {
-  const data: unknown = JSON.parse(text.replace(/^\uFEFF/, ""));
+  return validateC4File(JSON.parse(text.replace(/^\uFEFF/, "")));
+}
+
+export function validateC4File(data: unknown): C4File {
   if (
     !object(data) ||
     data.format !== "codepulse-c4" ||
@@ -122,26 +125,24 @@ export function parseC4File(text: string): C4File {
   });
   const byId = new Map(nodes.map((node) => [node.id, node]));
   if (nodes.some((node) => node.parentId && byId.get(node.parentId)?.external)) return invalid();
-  const checked = new Set<string>();
+  const depths = new Map<string, number>();
   for (const node of nodes) {
     const path = new Set<string>();
     let current: C4Node | undefined = node;
-    while (current && !checked.has(current.id)) {
-      if (path.has(current.id)) return invalid();
+    while (current && !depths.has(current.id)) {
+      if (path.has(current.id) || path.size >= C4_MAX_LEVELS) return invalid();
       path.add(current.id);
       if (current.parentId !== null && !byId.has(current.parentId)) return invalid();
       current = current.parentId === null ? undefined : byId.get(current.parentId);
     }
-    path.forEach((id) => checked.add(id));
+    let depth = current ? depths.get(current.id)! : 0;
+    for (const id of [...path].reverse()) {
+      if (++depth > C4_MAX_LEVELS) return invalid();
+      depths.set(id, depth);
+    }
   }
   const edgeIds = new Set<string>();
-  if (
-    nodes.some(
-      (node) =>
-        c4NodeDepth(nodes, node.id) > C4_MAX_LEVELS ||
-        (node.parentId && byId.get(node.parentId)?.kind === "code"),
-    )
-  )
+  if (nodes.some((node) => node.parentId && byId.get(node.parentId)?.kind === "code"))
     return invalid();
   const relationships = data.relationships.map((value: unknown): C4Relationship => {
     if (!object(value)) return invalid();

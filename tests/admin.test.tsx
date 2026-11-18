@@ -86,6 +86,7 @@ test("deletion confirmation identifies the record and explains session revocatio
   );
   assert.match(html, /role="alertdialog"/);
   assert.ok(html.includes("Example account"));
-  assert.ok(html.includes("all sessions revoked"));
+  assert.match(html, /all sessions will be revoked/i);
+  assert.ok(html.includes("saved workspaces across all projects"));
   assert.ok(html.includes("Cancel"));
 });

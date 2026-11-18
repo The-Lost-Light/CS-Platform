@@ -35,11 +35,6 @@ export function useRepository(
   };
 
   return {
-    resetRepository: (url: string) => {
-      setRepoUrlInput(url);
-      setRepoBundle(null);
-      setRepoError(null);
-    },
     repoUrlInput,
     setRepoUrlInput,
     githubToken,

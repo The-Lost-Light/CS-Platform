@@ -194,6 +194,30 @@ test("dashboard lists every project and uses project-only navigation in both lan
   }
 });
 
+test("the project editor renders a saved personal README and repository in the current UI language", () => {
+  const html = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="zh-TW">
+        <ProjectWorkspace
+          project={zh.projects[0]}
+          snapshot={{
+            accountId: "student",
+            revision: "saved",
+            draft: {
+              designDoc: "# Private architecture notes",
+              repoUrl: "https://github.com/example/my-assignment",
+              model: { format: "codepulse-c4", version: 1, nodes: [], relationships: [] },
+            },
+          }}
+        />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  assert.match(html, /Private architecture notes/);
+  assert.match(html, /value="https:\/\/github\.com\/example\/my-assignment"/);
+  assert.match(html, /已儲存至你的帳號/);
+});
+
 const screens = {
   authGate: (
     <AuthProvider service={demoAuthService}>
@@ -204,7 +228,12 @@ const screens = {
     <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />
   ),
   login: <LoginView onLogin={(input) => demoAuthService.login(input)} />,
-  project: <ProjectWorkspace project={en.projects[0]} />,
+  project: (
+    <ProjectWorkspace
+      project={en.projects[0]}
+      snapshot={{ accountId: "student", draft: null, revision: null }}
+    />
+  ),
   github: <GitHubRepoDashboard repoBundle={bundle} />,
 };
 

@@ -103,7 +103,7 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 
 - `domain` 管理資料契約與純資料轉換，不依賴 React、畫面、服務或示範資料。倉庫型別明確定義，不再由快照推導；合併方式的翻譯 key 保留型別限制。
 - `services` 管理外部 I/O。GitHub 的 `createGitHubService({ fetch })` 可注入 HTTP 傳輸；所有倉庫一律讀取 GitHub API，載入失敗時回報錯誤，不替換成範例資料。測試使用 `tests/fixtures/repository.ts` 的獨立資料。
-- `hooks` 管理應用狀態。`useProjectWorkspace(project, loadRepository?)` 組合草稿與倉庫 hook，可替換載入服務。語言切換只合併未修改的題庫欄位；更換專案才重設草稿與載入倉庫，Token 不落地儲存。
+- `hooks` 管理應用狀態。`useProjectWorkspace(project, snapshot, loadRepository?)` 載入個人草稿與倉庫網址。使用範本時，切換語言會更新尚未編輯的題庫欄位。已儲存的個人內容保留原文。
 - `pages` 負責畫面與畫面專用互動。`useC4Editor` 保留在 C4 畫面模組，管理 React Flow 轉換、選取、導覽與匯入狀態；畫布尺寸量測留在 C4Canvas。README 模式由父層保存，切換分頁不重設。GitHub 分支、搜尋、展開提交與 Diff 模式也仍由原本父層持有。
 - 程式與測試直接匯入所屬模組：專案型別使用 `domain/project`、倉庫型別使用 `domain/repository`、使用者型別使用 `auth/types`；C4、Diff 與檔案樹使用 `domain` 中的模組，GitHub 服務使用 `services/github`。舊的 `src/utils/*`、`src/types.ts` 及 `projectsData` 的型別轉出已移除；`projectsData` 僅保留題庫資料與建立函式。
 
@@ -119,9 +119,11 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 - 一般使用者（user）可查看所有課程專案；專案 loader 使用 requireAuth，未登入導回首頁登入。
 - 管理者（admin）可透過導覽列的「管理模式」進入 /admin，內含「專案管理」與「帳號管理」兩個區塊，各自提供「新增」與「檢視」分頁。檢視分頁列出所有資料並支援搜尋、編輯與刪除。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
 - Better Auth 管理 API 同時提供停權、重設密碼、撤銷工作階段等能力，管理畫面提供新增、檢視、編輯姓名／電子郵件／角色與刪除帳號；停權、密碼重設未納入本次介面。
-- 尚未串接電子郵件驗證、忘記密碼寄信，也尚未把 C4 草稿與 GitHub 資料改成資料庫持久化。資料庫保存帳號、憑證、工作階段、角色，以及管理者新增的課程專案定義。學生個人的 C4 編輯草稿仍未持久化。
+- 停止編輯約 0.75 秒後，工作區會自動將 README.md、完整 C4 模型與 Repo 網址一併存入 D1。每個帳號在每個專案各有一份，首次進入時使用專案範本。看到「已儲存至你的帳號」後即可離開，下次登入會載回個人內容。GitHub Token 僅存於當次畫面的記憶體。
 
 ### 本機啟動
+
+本機 Cloudflare 帳號設定可參考 `cloudflare.env.example`，Void 會從根目錄的 `.env` 載入設定。
 
 執行 pnpm install --frozen-lockfile、pnpm exec void prepare、pnpm exec void db migrate，再執行 pnpm dev。db/migrations/ 內包含完整的驗證資料表 SQL 與 metadata。不要用 void db seed 初始化現有帳號資料，該指令會重設本機資料庫。
 
@@ -139,6 +141,8 @@ pnpm exec void db execute --file .void/bootstrap-admin.sql
 正式環境先部署 migration，再由具備 Cloudflare 資料庫管理權限的人員以 pnpm exec void db execute --remote --file .void/bootstrap-admin.sql 建立第一個管理者。部署與正式帳號建立不會在本機測試時自動執行。
 
 ### 驗證
+
+啟動本機開發伺服器後，執行 `pnpm exec node scripts/test-personal-workspace.mjs` 可驗證個人工作區。測試預設使用連接埠 5173，可透過 `WORKSPACE_TEST_PORT` 指定。它會建立兩個臨時一般帳號，驗證資料隔離、重新登入、大型 C4 模型及同時儲存，並在結束時清除測試帳號與其資料。
 
 pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建置。scripts/test-auth.mjs 是本機整合測試，固定連線 127.0.0.1:5177，需先用上述工具建立一次性 ADMIN_EMAIL / ADMIN_PASSWORD 測試帳號；會建立 student- 前綴的測試使用者。測試後刪除兩個測試帳號。涵蓋禁止註冊、錯誤密碼、工作階段、HttpOnly cookie、專案保護、管理者建立帳號、學生越權、跨來源請求與登出撤銷。
 

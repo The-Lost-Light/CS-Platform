@@ -1,6 +1,16 @@
 import type source from "@i18n/en/ui";
 
 export default {
+  "draft.template": "目前使用專案範本",
+  "draft.unsaved": "有未儲存的修改",
+  "draft.saving": "儲存中…",
+  "draft.saved": "已儲存至你的帳號",
+  "draft.loadError": "無法載入你的工作區，請重試或重新登入。",
+  "draft.saveError": "儲存失敗，修改仍保留在此頁面。",
+  "draft.conflict": "已有較新的儲存版本。請先備份要保留的修改，再重新載入此頁面。",
+  "draft.invalidRepo": "請填寫 GitHub 倉庫網址或 owner/repository，也可以留白。",
+  "draft.tooLarge": "工作區內容超過 6 MiB 儲存上限。",
+  "draft.session": "登入狀態已變更。請先備份修改，再重新登入。",
   "admin.addTab": "新增",
   "admin.viewTab": "檢視",
   "admin.edit": "編輯",
@@ -17,8 +27,9 @@ export default {
   "admin.editProject": "編輯專案",
   "admin.editAccount": "編輯帳號",
   "admin.confirmDelete": "確定要刪除「{name}」？",
-  "admin.deleteAccountHelp": "此操作無法復原，會刪除帳號及登入憑證，並立即撤銷所有登入工作階段。",
-  "admin.deleteProjectHelp": "此操作無法復原。專案將從列表移除，原本的專案網址也將無法開啟。",
+  "admin.deleteAccountHelp":
+    "這會永久刪除帳號、登入憑證及該帳號在所有專案儲存的工作區，並撤銷所有登入工作階段。",
+  "admin.deleteProjectHelp": "這會永久刪除專案，以及所有帳號在此專案儲存的工作區。",
   "admin.protectedAccount":
     "不能刪除自己的帳號、降低自己的管理員角色，或移除最後一位可用的管理員。",
   "admin.invalidAccount": "請填入有效的姓名、電子郵件與角色。",

@@ -1,6 +1,5 @@
 import { useLoginForm, type LoginHandler } from "@auth/useLoginForm";
 import { useI18n } from "@i18n";
-import { DemoAccountPicker } from "@pages/auth/DemoAccountPicker";
 import { ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
 
 export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
@@ -12,7 +11,7 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
     togglePassword,
     errorMessage,
     handleSubmit,
-    selectDemoAccount,
+    pending,
   } = useLoginForm(onLogin);
 
   return (
@@ -29,7 +28,7 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 gap-3.5">
           <div>
             <label className="block text-xs font-semibold text-on-muted mb-1.5">
               {t("auth.accountLabel")}
@@ -37,7 +36,9 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
             <div className="relative">
               <User className="w-4 h-4 text-on-subtle absolute left-3.5 top-3" />
               <input
-                type="text"
+                type="email"
+                autoComplete="username"
+                required
                 value={credentials.studentId}
                 onChange={(e) => updateField("studentId", e.target.value)}
                 placeholder={t("auth.accountPlaceholder")}
@@ -45,22 +46,9 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
               />
             </div>
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-on-muted mb-1.5">
-              {t("auth.nameLabel")}
-            </label>
-            <input
-              type="text"
-              value={credentials.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder={t("auth.namePlaceholder")}
-              className="ui-input px-3.5 py-2.5 text-sm font-medium"
-            />
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 gap-3.5">
           <div>
             <label className="block text-xs font-semibold text-on-muted mb-1.5">
               {t("auth.passwordLabel")}
@@ -69,6 +57,8 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
               <Lock className="w-4 h-4 text-on-subtle absolute left-3.5 top-3" />
               <input
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
                 value={credentials.password}
                 onChange={(e) => updateField("password", e.target.value)}
                 placeholder={t("auth.passwordPlaceholder")}
@@ -84,35 +74,19 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
               </button>
             </div>
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-on-muted mb-1.5">
-              {t("auth.roleLabel")}
-            </label>
-            <select
-              value={credentials.role}
-              onChange={(e) => updateField("role", e.target.value)}
-              className="ui-input px-3.5 py-2.5 text-sm font-medium"
-            >
-              <option value="學生 (Student)">{t("auth.roles.student")}</option>
-              <option value="專題組長 (Team Lead)">{t("auth.roles.teamLead")}</option>
-              <option value="課程助教 (TA)">{t("auth.roles.ta")}</option>
-            </select>
-          </div>
         </div>
 
         <div className="pt-2">
           <button
             type="submit"
+            disabled={pending}
             className="w-full py-3 px-6 rounded-full bg-secondary hover:bg-secondary-hover text-on-secondary font-semibold text-sm shadow-xs hover:shadow-md flex items-center justify-center gap-2 transition"
           >
-            <span>{t("auth.submit")}</span>
+            <span>{t(pending ? "common.loading" : "auth.submit")}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </form>
-
-      <DemoAccountPicker selectedAccount={credentials.studentId} onSelect={selectDemoAccount} />
     </div>
   );
 }

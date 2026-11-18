@@ -196,7 +196,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
 
 const screens = {
   authGate: (
-    <AuthProvider>
+    <AuthProvider service={demoAuthService}>
       <AuthGate>{(session) => <WorkSpace {...session} />}</AuthGate>
     </AuthProvider>
   ),

@@ -80,7 +80,7 @@ React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合�
 
 正式網站：[CodePulse Edu](https://course-assignment-platform.mono-lts.workers.dev)。
 
-採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與共用導覽列，`src/pages/` 保留畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。直接開啟專案網址後，登入即可進入該專案。
+採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與共用導覽列，`src/pages/` 保留畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。未登入時開啟專案網址會導回首頁登入。
 
 ```bash
 pnpm install --frozen-lockfile
@@ -95,7 +95,7 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 
 `pnpm-lock.yaml` 與部署後產生的 `void.lock.json` 應納入版本控制；`.void/`、`.void-wrangler.jsonc`、`.wrangler/` 和本機 `.env` 檔不納入。CI 需設定 `CLOUDFLARE_API_TOKEN`；Token 可存取多個帳號時另設 `CLOUDFLARE_ACCOUNT_ID`，再執行上述驗證與部署指令。憑證不放入前端 `VITE_*` 變數。
 
-目前登入仍為下方說明的前端示範模式，部署不會新增伺服器身分驗證、資料庫或持久化儲存。詳細帳號設定與部署行為見 [Void 官方部署文件](https://void.cloud/guide/deployment)。
+登入已改用 Void 的伺服器驗證與 D1；部署會需要建立資料庫並套用驗證資料表 migration。詳細帳號設定與部署行為見 [Void 官方部署文件](https://void.cloud/guide/deployment)。
 
 ## 模組邊界與重構分析
 
@@ -111,15 +111,36 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 
 本次重構另以 Git 原始版本進行 24 組初始畫面的 HTML 逐字比對，涵蓋兩種語言、淺深色主題、所有專案、首頁、登入、GitHub 與空資料狀態。此比對驗證初始渲染一致，不取代瀏覽器中的拖曳、縮放與檔案選取互動測試。
 
-## 登入與身分驗證模組
+## 登入、資料庫與權限
 
-`src/auth/` 管理身分資料與登入狀態。`AuthService` 定義登入請求與結果，`demoAuthService` 負責帳號／密碼必填檢查與使用者資料正規化；錯誤以代碼回傳，由介面翻譯。`AuthProvider` 統一管理 `currentUser`、`login`、`logout`，元件透過 `useAuth()` 存取；可用 `service` 屬性注入其他符合介面的實作。共用的 `src/types.ts` 保留 `User` 型別轉出。
+使用 Void 內建 Better Auth 與 Cloudflare D1。密碼由 Better Auth 雜湊保存，登入工作階段存於資料庫並使用 HttpOnly cookie；重新整理後會透過 /api/session 恢復登入，登出會撤銷伺服器工作階段。正式環境由 Void 管理 BETTER_AUTH_SECRET，請持續保留同一個 secret。
 
-`src/pages/auth/` 負責畫面：`LoginView` 組合版面、`LoginForm` 顯示欄位、`DemoAccountPicker` 顯示示範帳號。`src/auth/useLoginForm.ts` 管理欄位、密碼顯示與錯誤訊息。`AuthGate` 根據 Provider 狀態顯示登入頁或應用內容；登出時卸載工作區，讓下一次登入從首頁開始。`pages/layout.tsx` 組合 Provider、`AuthGate` 與 `src/pages/Workspace`，`hooks/usePageNavigation` 使用 Void 的 `useParams()` 與 `useRouter()` 導覽。
+- 公開註冊已關閉。登入使用電子郵件與密碼；使用者不能在登入表單指定姓名或角色。
+- 一般使用者（user）可查看所有課程專案；專案 loader 使用 requireAuth，未登入導回首頁登入。
+- 管理者（admin）可進入 /admin 建立一般使用者或其他管理者。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
+- Better Auth 管理 API 同時提供停權、重設密碼、撤銷工作階段等能力，目前管理畫面提供建立帳號。
+- 尚未串接電子郵件驗證、忘記密碼寄信，也尚未把 C4 草稿與 GitHub 資料改成資料庫持久化。本次資料庫範圍是帳號、憑證、工作階段與角色。
 
-畫面與樣式集中於 `pages`；共用狀態、服務、資料處理與可重用 hooks 放在畫面目錄外，且不依賴 `pages`。僅供畫面使用的互動狀態（例如分頁、選單、畫布選取）可留在元件內。
+### 本機啟動
 
-目前維持前端示範模式：任意非空白帳號與密碼皆可登入，角色由表單選擇，沒有後端密碼驗證或權限控管。登入狀態僅存在記憶體，重新整理後需再次登入，密碼不會放入使用者狀態或瀏覽器儲存空間。串接真實後端時，需另外設計非同步服務、伺服器端驗證與工作階段管理。
+執行 pnpm install --frozen-lockfile、pnpm exec void prepare、pnpm exec void db migrate，再執行 pnpm dev。db/migrations/ 內包含完整的驗證資料表 SQL 與 metadata。不要用 void db seed 初始化現有帳號資料，該指令會重設本機資料庫。
+
+### 第一個管理者
+
+第一次啟動沒有預設帳號或預設密碼。在自己的終端機設定 ADMIN_EMAIL、ADMIN_PASSWORD（12–128 字元）與選填 ADMIN_NAME，執行：
+
+```sh
+node scripts/prepare-admin.mjs
+pnpm exec void db execute --file .void/bootstrap-admin.sql
+```
+
+工具只產生含雜湊密碼的 SQL，不會自行修改資料庫。套用後刪除 .void/bootstrap-admin.sql，並清除上述環境變數。電子郵件必須尚未存在；不要重複套用同一份 SQL。登入後可在「帳號管理」建立其他帳號。請透過安全管道交付初始密碼。
+
+正式環境先部署 migration，再由具備 Cloudflare 資料庫管理權限的人員以 pnpm exec void db execute --remote --file .void/bootstrap-admin.sql 建立第一個管理者。部署與正式帳號建立不會在本機測試時自動執行。
+
+### 驗證
+
+pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建置。scripts/test-auth.mjs 是本機整合測試，固定連線 127.0.0.1:5177，需先用上述工具建立一次性 ADMIN_EMAIL / ADMIN_PASSWORD 測試帳號；會建立 student- 前綴的測試使用者。測試後刪除兩個測試帳號。涵蓋禁止註冊、錯誤密碼、工作階段、HttpOnly cookie、專案保護、管理者建立帳號、學生越權、跨來源請求與登出撤銷。
 
 ## 多國語言
 

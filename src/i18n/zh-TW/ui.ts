@@ -1,6 +1,15 @@
 import type source from "@i18n/en/ui";
 
 export default {
+  "admin.title": "帳號管理",
+  "admin.role": "管理者",
+  "admin.create": "建立帳號",
+  "admin.passwordHelp": "請使用 12–128 字元的不重複密碼。",
+  "admin.success": "帳號已建立。",
+  "admin.error": "無法建立帳號，請檢查電子郵件或管理者登入狀態。",
+  "auth.errors.invalidCredentials": "電子郵件或密碼錯誤，或此帳號無法使用。",
+  "auth.errors.unavailable": "無法驗證登入狀態，請重試。",
+  "auth.retry": "重試",
   "common.backHome": "返回首頁",
   "common.loading": "載入中…",
   "workspace.githubToken": "GitHub Token (選填)",
@@ -27,9 +36,9 @@ export default {
   "app.title": "課程作業平台",
   "auth.features.github": "瀏覽 GitHub 倉庫檔案與 Commit 差異",
   "auth.title": "登入課程作業系統",
-  "auth.description": "請輸入您的學號與密碼，或點選下方快速測試帳號直接登入儀表板",
-  "auth.accountLabel": "學號 / 帳號 (Student ID)",
-  "auth.accountPlaceholder": "例如: B11204018",
+  "auth.description": "請使用課程管理者提供的帳號登入。",
+  "auth.accountLabel": "電子郵件",
+  "auth.accountPlaceholder": "you@example.com",
   "auth.nameLabel": "姓名顯示 (Display Name)",
   "auth.namePlaceholder": "您的姓名",
   "auth.passwordLabel": "密碼 (Password)",

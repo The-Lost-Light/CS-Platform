@@ -116,7 +116,7 @@ function SessionStatus() {
 test("authentication starts signed out and can render without browser storage", () => {
   assert.equal(
     renderToStaticMarkup(
-      <AuthProvider>
+      <AuthProvider service={demoAuthService}>
         <SessionStatus />
       </AuthProvider>,
     ),
@@ -133,7 +133,7 @@ test("AuthGate initially presents login and hides authenticated navigation and d
   const html = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
-        <AuthProvider>
+        <AuthProvider service={demoAuthService}>
           <AuthGate>{(session) => <WorkSpace {...session} />}</AuthGate>
         </AuthProvider>
       </I18nProvider>

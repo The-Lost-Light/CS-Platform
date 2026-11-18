@@ -1,6 +1,6 @@
 # CodePulse Edu — 課程專案平台
 
-使用 React 19、TypeScript、Vite+、Tailwind CSS 4 與 pnpm 開發的課程專案平台，整合 C4 架構圖設計、專案設計文件與 GitHub 倉庫瀏覽。
+使用 React 19、TypeScript、Vite+、Tailwind CSS 4 與 pnpm 開發的課程專案平台，透過 Void 部署至 Cloudflare Workers，整合 C4 架構圖設計、專案設計文件與 GitHub 倉庫瀏覽。
 
 ## 核心功能
 
@@ -42,7 +42,7 @@ src/
 
 ## 開發與驗證
 
-需要 Node.js `^22.18.0 || ^24.11.0 || >=26.0.0` 與 `packageManager` 指定的 pnpm 12.21.0。專案已安裝本地 Vite+ CLI，不需全域安裝 `vp`。
+需要 Node.js `^24.22.0 || >=26.12.0`（符合 Void 的執行環境需求）與 `devEngines.packageManager` 指定的 pnpm 12.21.0。專案已安裝本地 Vite+ 與 Void CLI，不需全域安裝。
 
 ```bash
 pnpm install
@@ -66,6 +66,33 @@ pnpm preview
 Vite+ 版本與 Vite 相容別名由 `pnpm-workspace.yaml` catalog 管理，`vite` 指向 Vite+ core，讓 React 與 Tailwind 外掛共用同一份建置引擎；Vitest override 對齊 Vite+ 內建版本。`pnpm-lock.yaml` 納入版本控制，CI 或乾淨環境請執行 `pnpm install --frozen-lockfile`、`pnpm check`、`pnpm test` 與 `pnpm build`。升級時依 [Vite+ 官方遷移指南](https://viteplus.dev/guide/migrate) 執行目標版本的 migrator，並重新驗證上述指令。
 
 React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合；外掛由 `lazyPlugins` 延後載入，避免格式與 lint 指令啟動建置外掛。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/tokens.css`，樣式統一從 `index.css` 載入。
+
+`pnpm clean --lockfile` 可清除 `node_modules/`、`.vite/`、`.vite-plus/`、`.vitest/`、`void.lock.json` 與 `.void/`，並重新安裝依賴。
+
+`pnpm up --latest --interactive` 可互動式升級依賴，`pnpm up --latest --interactive vite-plus` 可升級 Vite+。升級後請重新執行 `pnpm check`、`pnpm test` 與 `pnpm build`。
+
+`pnpm runtime set node lts -g` 可在本機設定 Node.js LTS 版本，或使用 `pnpm exec node -v` 驗證目前版本。CI 可使用 `pnpm exec vp env doctor` 檢查 Node、pnpm、Vite+ 與 Void CLI 版本，並確認 `CLOUDFLARE_API_TOKEN` 是否設定。
+
+## Void / Cloudflare 部署
+
+正式網站：[CodePulse Edu](https://course-assignment-platform.mono-lts.workers.dev)。
+
+採用 [Void 的 SPA 部署模式](https://void.cloud/guide/app-types)，由 Vite+ 建置前端，再由 Void 將 `dist/` 上傳至 Cloudflare Workers Assets。`void.config.ts` 明確指定 `spa`、輸出目錄與 `pnpm build`，讓每次部署先通過型別檢查。此模式不需要 `voidPlugin()`；`src/pages/` 仍是 React 畫面元件目錄。
+
+```bash
+pnpm install --frozen-lockfile
+pnpm check
+pnpm test
+pnpm deploy
+```
+
+`pnpm deploy` 執行 `void deploy --platform cloudflare`；首次使用時會開啟瀏覽器登入 Cloudflare 並選擇帳號，成功後印出部署網址。Worker 名稱為 `course-assignment-platform`，可在 `void.config.ts` 的 `cloudflare.name` 修改。後續部署沿用已連結的帳號；如需先完成登入，可執行 `pnpm exec void connect --platform cloudflare`。
+
+Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) 完成 `workers.dev` 子網域設定；在帳號總覽找到 **Your subdomain**，選擇 **Change** 設定名稱後，重新執行 `pnpm deploy`。若 CLI 提供的 `/workers/onboarding` 連結顯示 404，請改用上述 Workers & Pages 入口。設定方式見 [Cloudflare 官方文件](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/)。
+
+`pnpm-lock.yaml` 與部署後產生的 `void.lock.json` 應納入版本控制；`.void/`、`.void-wrangler.jsonc`、`.wrangler/` 和本機 `.env` 檔不納入。CI 需設定 `CLOUDFLARE_API_TOKEN`；Token 可存取多個帳號時另設 `CLOUDFLARE_ACCOUNT_ID`，再執行上述驗證與部署指令。憑證不放入前端 `VITE_*` 變數。
+
+目前登入仍為下方說明的前端示範模式，部署不會新增伺服器身分驗證、資料庫或持久化儲存。詳細帳號設定與部署行為見 [Void 官方部署文件](https://void.cloud/guide/deployment)。
 
 ## 模組邊界與重構分析
 

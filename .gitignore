@@ -1,9 +1,15 @@
-pnpm-lock.yaml
 node_modules/
 dist/
 .vite/
 .vite-plus/
 coverage/
+.vitest/
+void.lock.json
+.void/
+.void-wrangler.jsonc
+.wrangler/
+.env
+.env.*
+!.env.example
 
 .test/
-.vitest/

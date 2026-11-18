@@ -1,4 +1,32 @@
 export default {
+  "admin.addTab": "Add",
+  "admin.viewTab": "View",
+  "admin.edit": "Edit",
+  "admin.delete": "Delete",
+  "admin.save": "Save changes",
+  "admin.cancel": "Cancel",
+  "admin.actions": "Actions",
+  "admin.search": "Search",
+  "admin.empty": "No matching records.",
+  "admin.saved": "Changes saved.",
+  "admin.operationFailed": "Operation failed. Check administrator access or refresh and retry.",
+  "admin.allProjects": "All projects ({count})",
+  "admin.allAccounts": "All accounts ({count})",
+  "admin.editProject": "Edit project",
+  "admin.editAccount": "Edit account",
+  "admin.confirmDelete": "Delete “{name}”?",
+  "admin.deleteAccountHelp":
+    "This cannot be undone. The account and credentials will be deleted and all sessions revoked.",
+  "admin.deleteProjectHelp":
+    "This cannot be undone. The project will be removed from the list and its URL will no longer open.",
+  "admin.protectedAccount":
+    "You cannot delete yourself, demote yourself or remove the last active administrator.",
+  "admin.invalidAccount": "Enter a valid name, email and role.",
+  "admin.duplicateEmail": "This email is already used by another account.",
+  "admin.accountEditHelp":
+    "After changing the name, email or role, this account must sign in again. The password remains unchanged.",
+  "admin.you": "You",
+  "admin.banned": "Banned",
   "admin.mode": "Management",
   "admin.description": "Manage course projects and user accounts.",
   "admin.projects.title": "Project management",

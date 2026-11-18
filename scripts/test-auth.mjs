@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { writeFileSync } from "node:fs";
 const base = "http://127.0.0.1:5177";
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
@@ -99,6 +100,7 @@ assert.equal(
 const createdProjectResponse = await request("/api/projects", projectInput, adminCookie);
 assert.equal(createdProjectResponse.status, 201, await createdProjectResponse.clone().text());
 const { project } = await createdProjectResponse.json();
+writeFileSync(".void/crud-project-ids.json", JSON.stringify([project.id]));
 assert.equal(project.title, projectInput.title);
 assert.equal((await request("/api/projects", projectInput, adminCookie)).status, 409);
 const list = await (await request("/api/projects", null, studentCookie)).json();
@@ -113,4 +115,164 @@ assert.equal((await (await request("/api/session", null, studentCookie)).json())
 assert.equal((await request("/projects/project-fullstack-web", null, studentCookie)).status, 302);
 console.log(
   "Passed: sign-up disabled, incorrect password, session restore, HttpOnly cookie, protected projects, admin create, student access, privilege escalation denied, cross-origin denied, logout revocation.",
+);
+
+// Management CRUD, with no mutations to pre-existing accounts or built-in projects.
+const accountList = await request("/api/admin/accounts", null, adminCookie);
+assert.equal(accountList.status, 200);
+const accountData = await accountList.json();
+const studentId = accountData.users.find((user) => user.email === studentEmail).id;
+const adminId = accountData.currentUserId;
+assert.ok(accountData.users.every((user) => !("password" in user) && !("token" in user)));
+assert.equal((await request("/api/admin/accounts")).status, 401);
+const relogin = await request("/api/auth/sign-in/email", { email: studentEmail, password });
+assert.equal(relogin.status, 200);
+const currentStudentCookie = relogin.headers
+  .getSetCookie()
+  .map((c) => c.split(";")[0])
+  .join("; ");
+assert.equal((await request("/api/admin/accounts", null, currentStudentCookie)).status, 403);
+const accountUpdate = { name: "Updated student", email: "edited-" + studentEmail, role: "user" };
+assert.equal(
+  (await request("/api/admin/accounts/" + studentId, accountUpdate, currentStudentCookie, "PATCH"))
+    .status,
+  403,
+);
+assert.equal(
+  (await request("/api/admin/accounts/" + studentId, null, currentStudentCookie, "DELETE")).status,
+  403,
+);
+assert.equal(
+  (await request("/api/admin/accounts/" + adminId, null, adminCookie, "DELETE")).status,
+  409,
+);
+assert.equal(
+  (
+    await request(
+      "/api/admin/accounts/" + adminId,
+      { name: "Admin", email, role: "user" },
+      adminCookie,
+      "PATCH",
+    )
+  ).status,
+  409,
+);
+assert.equal(
+  (
+    await request(
+      "/api/admin/accounts/" + studentId,
+      { ...accountUpdate, email },
+      adminCookie,
+      "PATCH",
+    )
+  ).status,
+  409,
+);
+assert.ok(
+  !(
+    await request(
+      "/api/auth/admin/update-user",
+      { userId: studentId, data: { role: "admin" } },
+      adminCookie,
+    )
+  ).ok,
+);
+const changedAccount = await request(
+  "/api/admin/accounts/" + studentId,
+  accountUpdate,
+  adminCookie,
+  "PATCH",
+);
+assert.equal(changedAccount.status, 200, await changedAccount.clone().text());
+assert.equal((await (await request("/api/session", null, currentStudentCookie)).json()).user, null);
+const editedLogin = await request("/api/auth/sign-in/email", {
+  email: accountUpdate.email,
+  password,
+});
+assert.equal(editedLogin.status, 200, await editedLogin.clone().text());
+const editedCookie = editedLogin.headers
+  .getSetCookie()
+  .map((c) => c.split(";")[0])
+  .join("; ");
+assert.equal(
+  (
+    await request(
+      "/api/admin/accounts/" + studentId,
+      { ...accountUpdate, role: "admin" },
+      adminCookie,
+      "PATCH",
+    )
+  ).status,
+  200,
+);
+assert.equal(
+  (await request("/api/admin/accounts/" + studentId, accountUpdate, adminCookie, "PATCH")).status,
+  200,
+);
+const editedProject = { ...projectInput, title: "Updated project", initialDesignDoc: "# Updated" };
+assert.equal(
+  (await request("/api/projects/" + project.id, editedProject, editedCookie, "PATCH")).status,
+  401,
+);
+const projectUpdate = await request(
+  "/api/projects/" + project.id,
+  editedProject,
+  adminCookie,
+  "PATCH",
+);
+assert.equal(projectUpdate.status, 200, await projectUpdate.clone().text());
+assert.deepEqual(
+  (await projectUpdate.json()).project.initialMindMapNodes,
+  project.initialMindMapNodes,
+);
+const updatedList = await (await request("/api/projects?locale=zh-TW", null, adminCookie)).json();
+assert.equal(updatedList.projects.find((item) => item.id === project.id).title, "Updated project");
+assert.ok(updatedList.projects.some((item) => item.id === "project-fullstack-web"));
+assert.equal(
+  (
+    await request(
+      "/api/projects/" + project.id,
+      { ...editedProject, codeName: "PROJ-01" },
+      adminCookie,
+      "PATCH",
+    )
+  ).status,
+  409,
+);
+assert.equal(
+  (await request("/api/projects/" + project.id, null, adminCookie, "DELETE")).status,
+  200,
+);
+assert.equal((await request("/projects/" + project.id, null, adminCookie)).status, 404);
+assert.ok(
+  !(await (await request("/api/projects", null, adminCookie)).json()).projects.some(
+    (item) => item.id === project.id,
+  ),
+);
+assert.equal(
+  (await request("/api/projects/" + project.id, editedProject, adminCookie, "PATCH")).status,
+  404,
+);
+const lastLogin = await request("/api/auth/sign-in/email", {
+  email: accountUpdate.email,
+  password,
+});
+assert.equal(lastLogin.status, 200);
+const lastCookie = lastLogin.headers
+  .getSetCookie()
+  .map((c) => c.split(";")[0])
+  .join("; ");
+assert.equal(
+  (await request("/api/admin/accounts/" + studentId, null, adminCookie, "DELETE")).status,
+  200,
+);
+assert.equal((await (await request("/api/session", null, lastCookie)).json()).user, null);
+assert.ok(!(await request("/api/auth/sign-in/email", { email: accountUpdate.email, password })).ok);
+assert.ok(
+  !(await (await request("/api/admin/accounts", null, adminCookie)).json()).users.some(
+    (user) => user.id === studentId,
+  ),
+);
+console.log(
+  "Passed management lists, project edit/delete, account edit/role/delete, duplicate email, self protection, session revocation and disabled bypass endpoints.",
 );

@@ -1,17 +1,14 @@
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
-import { db, desc } from "void/db";
+import { db } from "void/db";
 import { projects } from "../../db/schema";
 import { PROJECTS } from "@data/projectsData";
 import { parseProjectInput } from "@domain/projectInput";
+import { listProjects } from "../../server/projects";
 
 export const GET = defineHandler(async (c) => {
   requireAuth(c);
-  const rows = await db
-    .select({ data: projects.data })
-    .from(projects)
-    .orderBy(desc(projects.createdAt));
-  return { projects: rows.map((row) => row.data) };
+  return { projects: await listProjects(c.req.query("locale") === "zh-TW" ? "zh-TW" : "en") };
 });
 
 export const POST = defineHandler(async (c) => {

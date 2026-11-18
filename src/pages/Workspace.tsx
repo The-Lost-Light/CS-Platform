@@ -8,12 +8,14 @@ export function WorkSpace({
   logout,
   children,
 }: AuthenticatedSession & { children?: ReactNode }) {
-  const { activeView, selectedProject, navigateHome, navigateProject } = usePageNavigation();
+  const { activeView, selectedProject, navigateHome, navigateProject, projects } =
+    usePageNavigation();
 
   return (
     <>
       <Navbar
         activeView={activeView}
+        hasProjects={projects.length > 0}
         selectedProject={activeView === "project" ? (selectedProject ?? null) : null}
         onNavigateHome={navigateHome}
         onSelectProjectDefault={navigateProject}

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useI18n } from "@i18n";
 
-export function AccountManagement() {
+export function AccountManagement({ onCreated }: { onCreated?: () => void }) {
   const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"success" | "error" | null>(null);
@@ -27,6 +27,7 @@ export function AccountManagement() {
       if (!response.ok) throw new Error("Create failed");
       form.reset();
       setStatus("success");
+      onCreated?.();
     } catch {
       setStatus("error");
     } finally {
@@ -35,7 +36,7 @@ export function AccountManagement() {
   }
   return (
     <section className="max-w-lg mx-auto p-6 space-y-4">
-      <h1 className="text-xl font-bold">{t("admin.title")}</h1>
+      <h2 className="text-xl font-bold">{t("admin.create")}</h2>
       <form onSubmit={submit} className="space-y-4">
         <label className="block">
           {t("auth.accountLabel")}

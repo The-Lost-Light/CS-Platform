@@ -6,9 +6,10 @@ import { useRouter } from "@void/react";
 const CatalogContext = createContext<{
   projects: Project[];
   addProject: (project: Project) => void;
+  removeProject: (id: string) => void;
 } | null>(null);
 export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const pathname = useRouter().url.pathname;
   const [projects, setProjects] = useState<Project[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -17,7 +18,7 @@ export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
     const controller = new AbortController();
     async function load() {
       try {
-        const response = await fetch("/api/projects", {
+        const response = await fetch("/api/projects?locale=" + locale, {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -33,7 +34,7 @@ export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
     }
     void load();
     return () => controller.abort();
-  }, [attempt, pathname]);
+  }, [attempt, pathname, locale]);
   if (status === "loading")
     return (
       <p className="p-6" role="status">
@@ -58,6 +59,8 @@ export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
     <CatalogContext.Provider
       value={{
         projects,
+        removeProject: (id) =>
+          setProjects((current) => current.filter((project) => project.id !== id)),
         addProject: (project) =>
           setProjects((current) => [project, ...current.filter((item) => item.id !== project.id)]),
       }}

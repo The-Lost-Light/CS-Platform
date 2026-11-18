@@ -13,6 +13,7 @@ export function Navbar({
   onSelectProjectDefault,
   currentUser,
   onLogout,
+  hasProjects = true,
 }: {
   activeView: "home" | "project" | "admin";
   selectedProject: Project | null;
@@ -20,6 +21,7 @@ export function Navbar({
   onSelectProjectDefault: () => void;
   currentUser: User;
   onLogout: () => void;
+  hasProjects?: boolean;
 }) {
   const { t } = useI18n();
   const { mode, setMode } = useTheme();
@@ -106,6 +108,7 @@ export function Navbar({
             <button
               type="button"
               onClick={onSelectProjectDefault}
+              disabled={!hasProjects}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
                 activeView === "project"
                   ? "bg-primary text-on-primary shadow-xs"

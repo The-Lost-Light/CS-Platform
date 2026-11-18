@@ -8,3 +8,8 @@ export const projects = sqliteTable("course_project", {
   createdBy: text("created_by").notNull(),
   createdAt: integer("created_at").notNull(),
 });
+
+// Persist removal of built-in templates so they cannot reappear after a reload.
+export const removedProjects = sqliteTable("removed_project", {
+  id: text("id").primaryKey(),
+});

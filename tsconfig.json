@@ -41,5 +41,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "pages", "routes", "tests", "*.ts", ".void/**/*.d.ts"]
+  "include": ["src", "pages", "routes", "server", "db", "tests", "*.ts", ".void/**/*.d.ts"]
 }

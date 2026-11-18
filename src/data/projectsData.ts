@@ -38,7 +38,7 @@ const PROJECT_TEMPLATES = [
     difficultyColor: "indigo",
     dueDate: "2026-11-25 23:59",
     points: 200,
-    defaultRepoUrl: "https://github.com/student-team/course-oj-platform",
+    defaultRepoUrl: "",
     tags: [
       "System Architecture",
       "Mind Map",
@@ -137,7 +137,7 @@ const PROJECT_TEMPLATES = [
     difficultyColor: "rose",
     dueDate: "2026-12-18 23:59",
     points: 250,
-    defaultRepoUrl: "https://github.com/facebook/react",
+    defaultRepoUrl: "",
     tags: ["Open Source", "Architecture Recovery", "GitGraph", "Commit Diff"],
     titleKey: "courses.react.title",
     difficultyKey: "courses.react.difficulty",

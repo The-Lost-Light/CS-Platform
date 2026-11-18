@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createGitHubService, parseGitHubRepoUrl } from "@services/github";
-import { loadBuiltinRepoSnapshot } from "@services/github/snapshots";
+import { createRepoFixture } from "./fixtures/repository";
 
 test("repository URL parsing retains supported URL and shorthand forms", () => {
   for (const input of [
@@ -25,36 +25,31 @@ test("invalid input has a translation key and performs no I/O", async () => {
     fetch: async () => {
       assert.fail("unexpected network request");
     },
-    loadSnapshot: async () => {
-      assert.fail("unexpected snapshot request");
-    },
   });
   await assert.rejects(service("invalid"), {
     message: "github.errors.invalidUrl",
   });
 });
 
-test("teaching repository bypasses HTTP and unknown snapshots retain the teaching fallback", async () => {
+test("former teaching repository uses the GitHub API", async () => {
+  let requested = "";
   const service = createGitHubService({
-    fetch: async () => {
-      assert.fail("unexpected network request");
+    fetch: async (input) => {
+      requested = String(input);
+      return new Response(null, { status: 404 });
     },
   });
-  const result = await service("STUDENT-TEAM/COURSE-OJ-PLATFORM", "secret");
-  assert.equal(result.sourceType, "snapshot");
-  assert.equal(result.rateLimit, "內建教學專題倉庫");
-  assert.deepEqual(
-    await loadBuiltinRepoSnapshot("unknown/repo"),
-    await loadBuiltinRepoSnapshot("student-team/course-oj-platform"),
-  );
+  await assert.rejects(service("student-team/course-oj-platform"), {
+    message: "HTTP 404",
+  });
   assert.equal(
-    (await loadBuiltinRepoSnapshot("facebook/react")).repo.full_name,
-    "facebook/react",
+    requested,
+    "https://api.github.com/repos/student-team/course-oj-platform",
   );
 });
 
 test("live loading preserves headers, branch encoding, rate limits and the 250-file cap", async () => {
-  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const snapshot = createRepoFixture();
   const requests: Array<{ url: string; headers: HeadersInit | undefined }> = [];
   const repo = { ...snapshot.repo, default_branch: "feature/a b" };
   const files = Array.from({ length: 300 }, (_, i) => ({
@@ -85,9 +80,6 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
         headers: { "x-ratelimit-remaining": "42", "x-ratelimit-limit": "60" },
       });
     },
-    loadSnapshot: async () => {
-      assert.fail("unexpected fallback");
-    },
   });
   const result = await service("facebook/react", "test-token");
   assert.equal(requests.length, 5 + snapshot.commits.length);
@@ -112,7 +104,7 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
 });
 
 test("commit detail failures preserve live history, successful diffs and partial pages", async () => {
-  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const snapshot = createRepoFixture();
   for (const failure of ["http", "network", "invalid", "later-page"] as const) {
     const [first, second] = snapshot.commits;
     const summaries = [first, second].map(
@@ -139,7 +131,6 @@ test("commit detail failures preserve live history, successful diffs and partial
         if (url.endsWith("/languages")) return Response.json({});
         return Response.json(snapshot.repo);
       },
-      loadSnapshot: async () => assert.fail("must not replace live repository"),
     });
     const result = await service("facebook/react");
     assert.equal(result.sourceType, "live-api");
@@ -157,7 +148,7 @@ test("commit detail failures preserve live history, successful diffs and partial
 });
 
 test("commit detail pagination collects files using the same authenticated endpoint", async () => {
-  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const snapshot = createRepoFixture();
   const { files, stats, ...summary } = snapshot.commits[0];
   const pages: string[] = [];
   const service = createGitHubService({
@@ -206,7 +197,7 @@ test("commit detail pagination collects files using the same authenticated endpo
 });
 
 test("secondary endpoint failures yield empty sections without replacing live metadata", async () => {
-  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const snapshot = createRepoFixture();
   let calls = 0;
   const service = createGitHubService({
     fetch: async (_url, init) => {
@@ -227,27 +218,19 @@ test("secondary endpoint failures yield empty sections without replacing live me
   );
 });
 
-test("HTTP and transport errors preserve the normalized fallback key and diagnostic", async () => {
-  for (const failure of ["http", "network"] as const) {
-    let key = "";
-    const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+test("HTTP and transport errors propagate without substituting repository data", async () => {
+  for (const repo of ["facebook/react", "unknown/repo"]) {
+    for (const status of [403, 404, 429, 500]) {
+      const service = createGitHubService({
+        fetch: async () => new Response(null, { status }),
+      });
+      await assert.rejects(service(repo), { message: "HTTP " + status });
+    }
     const service = createGitHubService({
       fetch: async () => {
-        if (failure === "network") throw new Error("offline");
-        return new Response(null, { status: 403 });
-      },
-      loadSnapshot: async (value) => {
-        key = value;
-        return snapshot;
+        throw new Error("offline");
       },
     });
-    const result = await service("FACEBOOK/React");
-    assert.equal(key, "facebook/react");
-    assert.deepEqual(result, {
-      ...snapshot,
-      sourceType: "fallback-snapshot",
-      apiError: failure === "http" ? "HTTP 403" : "offline",
-      rateLimit: "內建快照備援",
-    });
+    await assert.rejects(service(repo), { message: "offline" });
   }
 });

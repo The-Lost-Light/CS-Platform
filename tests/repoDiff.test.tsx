@@ -5,7 +5,7 @@ import { RepoDiff } from "@pages/project/RepoDiff";
 import { splitPatch } from "@domain/diff";
 import { I18nProvider } from "@i18n";
 import { CommitHistory } from "@pages/project/github/CommitHistory";
-import { loadBuiltinRepoSnapshot } from "@services/github/snapshots";
+import { createRepoFixture } from "./fixtures/repository";
 import { createGitHubService } from "@services/github";
 import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
 
@@ -28,7 +28,7 @@ test("split diff pairs replacements and pads unequal changes within each hunk", 
 });
 
 test("real API list summaries are enriched and render code in both history diff modes", async () => {
-  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const snapshot = createRepoFixture();
   const { files, stats, prInfo, ...summary } = snapshot.commits[0];
   const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
   const service = createGitHubService({
@@ -75,7 +75,7 @@ test("real API list summaries are enriched and render code in both history diff 
 });
 
 test("expanded commits explain missing patches, empty changes and detail failures", async () => {
-  const snapshot = await loadBuiltinRepoSnapshot("facebook/react");
+  const snapshot = createRepoFixture();
   const commit = snapshot.commits[0];
   const cases = [
     {

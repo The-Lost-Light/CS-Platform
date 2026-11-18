@@ -95,16 +95,13 @@ export interface RepoFile {
   size: number;
 }
 
-export interface RepoSnapshot {
+export interface RepoBundle {
   repo: Repository;
   languages: Record<string, number>;
   branches: RepoBranch[];
   commits: RepoCommit[];
   fileTree: RepoFile[];
-}
 
-export interface RepoBundle extends RepoSnapshot {
-  sourceType: string;
+  sourceType: "live-api";
   rateLimit: string;
-  apiError?: string;
 }

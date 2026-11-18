@@ -4,13 +4,10 @@ export default {
   "common.backHome": "返回首頁",
   "common.loading": "載入中…",
   "workspace.githubToken": "GitHub Token (選填)",
-  "workspace.tokenPlaceholder":
-    "ghp_xxxxxxxxxxxx (留空即可使用公開 API 或內建完整教學快照)",
+  "workspace.tokenPlaceholder": "ghp_xxxxxxxxxxxx (留空即可使用公開 API)",
   "workspace.repoPlaceholder":
-    "輸入學生專題 GitHub Repo 網址 (例如 https://github.com/student-team/course-oj-platform)",
+    "輸入學生專題 GitHub Repo 網址 (例如 https://github.com/owner/repo)",
   "workspace.sync": "同步 GitHub 專案數據",
-  "workspace.sampleRepos": "快速載入範例倉庫：",
-  "workspace.studentRepo": "student-team/course-oj-platform (學生專題範例)",
   "workspace.tabs.design": "設計架構",
   "workspace.tabs.github": "Repo",
   "github.stars": "Stars 星數",

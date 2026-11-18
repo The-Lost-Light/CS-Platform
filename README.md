@@ -6,7 +6,7 @@
 
 - **專案總覽首頁**：單欄顯示所有專案與專案數量，點擊專案即可進入工作區。導覽列提供首頁與專案切換。
 - **C4 架構設計**：使用 React Flow 編輯架構節點與關係，設定預期的 GitHub 檔案路徑，並撰寫專案設計文件。
-- **GitHub 儀表板**：載入倉庫資訊、分支、語言佔比、檔案樹與 Commit Diff，支援 Unified / Split 檢視及內建教學倉庫快照。
+- **GitHub 儀表板**：透過 GitHub API 載入倉庫資訊、分支、語言佔比、檔案樹與 Commit Diff，支援 Unified / Split 檢視。
 - **介面設定**：支援繁體中文、English，以及自動、淺色、深色主題。
 
 ## 專案結構
@@ -57,7 +57,7 @@ pnpm build
 原本的主要耦合點是：C4Architect 同時處理畫布渲染、編輯狀態、檔案 I/O 與表單；GitHubRepoDashboard 同時包含所有儀表板區塊；useProjectWorkspace 同時管理草稿與遠端資料；共用型別由題庫與快照 JSON 推導。這些責任已拆分，原有登入、導覽、翻譯及小型畫面模組保留既有設計。
 
 - `domain` 管理資料契約與純資料轉換，不依賴 React、畫面、服務或示範資料。倉庫型別明確定義，不再由快照推導；合併方式的翻譯 key 保留型別限制。
-- `services` 管理外部 I/O。GitHub 的 `createGitHubService({ fetch, loadSnapshot })` 可注入 HTTP 與快照來源；預設實作維持教學倉庫直接使用快照、其他倉庫嘗試 API、失敗後備援的順序。快照仍動態載入。
+- `services` 管理外部 I/O。GitHub 的 `createGitHubService({ fetch })` 可注入 HTTP 傳輸；所有倉庫一律讀取 GitHub API，載入失敗時回報錯誤，不替換成範例資料。測試使用 `tests/fixtures/repository.ts` 的獨立資料。
 - `hooks` 管理應用狀態。`useProjectWorkspace(project, loadRepository?)` 組合草稿與倉庫 hook，可替換載入服務。語言切換只合併未修改的題庫欄位；更換專案才重設草稿與載入倉庫，Token 不落地儲存。
 - `pages` 負責畫面與畫面專用互動。`useC4Editor` 保留在 C4 畫面模組，管理 React Flow 轉換、選取、導覽與匯入狀態；畫布尺寸量測留在 C4Canvas。README 模式由父層保存，切換分頁不重設。GitHub 分支、搜尋、展開提交與 Diff 模式也仍由原本父層持有。
 - 程式與測試直接匯入所屬模組：專案型別使用 `domain/project`、倉庫型別使用 `domain/repository`、使用者型別使用 `auth/types`；C4、Diff 與檔案樹使用 `domain` 中的模組，GitHub 服務使用 `services/github`。舊的 `src/utils/*`、`src/types.ts` 及 `projectsData` 的型別轉出已移除；`projectsData` 僅保留題庫資料與建立函式。

@@ -14,8 +14,8 @@ export function useProjectWorkspace(
 ) {
   const repository = useRepository(project.defaultRepoUrl, loadRepository);
   const draft = useProjectDraft(project, (url) => {
-    repository.setRepoUrlInput(url);
-    void repository.handleLoadRepo(url);
+    repository.resetRepository(url);
+    if (url) void repository.handleLoadRepo(url);
   });
   const [activeTab, setActiveTab] = useState<"design" | "github">("design");
   return { ...repository, ...draft, activeTab, setActiveTab };

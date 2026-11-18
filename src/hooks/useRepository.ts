@@ -10,9 +10,7 @@ export function useRepository(
   defaultRepoUrl: string,
   loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle,
 ) {
-  const [repoUrlInput, setRepoUrlInput] = useState(
-    defaultRepoUrl || "https://github.com/student-team/course-oj-platform",
-  );
+  const [repoUrlInput, setRepoUrlInput] = useState(defaultRepoUrl);
   const [githubToken, setGithubToken] = useState("");
   const [showTokenInput, setShowTokenInput] = useState(false);
   const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(null);
@@ -40,6 +38,11 @@ export function useRepository(
   };
 
   return {
+    resetRepository: (url: string) => {
+      setRepoUrlInput(url);
+      setRepoBundle(null);
+      setRepoError(null);
+    },
     repoUrlInput,
     setRepoUrlInput,
     githubToken,

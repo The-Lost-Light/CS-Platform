@@ -47,7 +47,7 @@ export function RepositoryConnection({
         </div>
       )}
 
-      {/* GitHub Repo URL Search Bar & Presets */}
+      {/* GitHub Repo URL Search Bar */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -89,35 +89,6 @@ export function RepositoryConnection({
           </span>
         </div>
       )}
-
-      {/* Quick Repo Preset Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-on-muted pt-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold">{t("workspace.sampleRepos")}</span>
-          <button
-            type="button"
-            onClick={() => {
-              const u = "https://github.com/student-team/course-oj-platform";
-              setRepoUrlInput(u);
-              handleLoadRepo(u);
-            }}
-            className="px-3 py-1 rounded-full bg-surface-tonal hover:bg-primary-container text-on-primary-container border border-outline-tonal font-mono font-semibold transition"
-          >
-            {t("workspace.studentRepo")}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const u = "https://github.com/facebook/react";
-              setRepoUrlInput(u);
-              handleLoadRepo(u);
-            }}
-            className="px-3 py-1 rounded-full bg-secondary-container/60 hover:bg-secondary-container text-on-secondary-container border border-secondary-outline font-mono font-semibold transition"
-          >
-            facebook/react
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

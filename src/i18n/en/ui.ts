@@ -3,12 +3,10 @@ export default {
   "common.loading": "Loading…",
   "workspace.githubToken": "GitHub token (optional)",
   "workspace.tokenPlaceholder":
-    "ghp_xxxxxxxxxxxx (leave blank for the public API or built-in snapshots)",
+    "ghp_xxxxxxxxxxxx (leave blank for the public API)",
   "workspace.repoPlaceholder":
-    "GitHub repository URL (e.g. https://github.com/student-team/course-oj-platform)",
+    "GitHub repository URL (e.g. https://github.com/owner/repo)",
   "workspace.sync": "Sync GitHub project data",
-  "workspace.sampleRepos": "Sample repositories: ",
-  "workspace.studentRepo": "student-team/course-oj-platform (student project)",
   "workspace.tabs.design": "Architecture design",
   "workspace.tabs.github": "Repo",
   "github.stars": "Stars",

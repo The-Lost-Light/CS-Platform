@@ -1,4 +1,4 @@
-import { createGitHubService, parseGitHubRepoUrl } from "@services/github";
+import { createGitHubService, parseGitHubRepoUrl } from "@modules/repository";
 import assert from "node:assert/strict";
 import { test } from "vite-plus/test";
 import { createRepoFixture } from "./fixtures/repository";

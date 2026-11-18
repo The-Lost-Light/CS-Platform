@@ -1,0 +1,61 @@
+import { useState } from "react";
+import type { Project } from "@modules/projects";
+import { useProjectCatalog } from "@modules/catalog";
+
+export function useProjectList() {
+  const { projects, removeProject } = useProjectCatalog();
+  const [editing, setEditing] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState<Project | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [search, setSearch] = useState("");
+  async function remove() {
+    if (!deleting || pending) return;
+    setPending(true);
+    setError(false);
+    setSaved(false);
+    try {
+      const response = await fetch(`/api/projects/${deleting.id}`, { method: "DELETE" });
+      if (!response.ok && response.status !== 404) throw new Error("Delete failed");
+      removeProject(deleting.id);
+      setDeleting(null);
+      setSaved(true);
+    } catch {
+      setError(true);
+    } finally {
+      setPending(false);
+    }
+  }
+  const visible = projects.filter((project) =>
+    `${project.codeName} ${project.title}`.toLowerCase().includes(search.toLowerCase()),
+  );
+  return {
+    count: projects.length,
+    visible,
+    search,
+    setSearch,
+    saved,
+    pending,
+    editing,
+    deleting,
+    error,
+    remove,
+    edit: (project: Project) => {
+      setEditing(project);
+      setSaved(false);
+      setError(false);
+    },
+    requestDelete: (project: Project) => {
+      setDeleting(project);
+      setSaved(false);
+      setError(false);
+    },
+    cancelEdit: () => setEditing(null),
+    finishEdit: () => {
+      setEditing(null);
+      setSaved(true);
+    },
+    cancelDelete: () => setDeleting(null),
+  };
+}

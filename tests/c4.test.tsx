@@ -1,4 +1,4 @@
-import { PROJECTS } from "@data/projectsData";
+import { PROJECTS } from "@modules/projects";
 import {
   c4Drilldown,
   createC4NodeInScope,
@@ -7,7 +7,7 @@ import {
   removeC4Nodes,
   visibleC4Nodes,
   type C4Node,
-} from "@domain/c4";
+} from "@modules/c4-model";
 import assert from "node:assert/strict";
 import { test } from "vite-plus/test";
 

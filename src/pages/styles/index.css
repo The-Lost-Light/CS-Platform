@@ -1,8 +1,0 @@
-@import "tailwindcss";
-@import "@pages/styles/tokens.css";
-@import "@pages/styles/base.css";
-@import "@pages/styles/components.css";
-@import "@pages/styles/c4.css";
-@import "@pages/styles/scrollbars.css";
-
-@custom-variant dark (&:where(.dark, .dark *));

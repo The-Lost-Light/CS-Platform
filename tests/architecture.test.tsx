@@ -2,81 +2,116 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { test } from "vite-plus/test";
+import tsconfig from "../tsconfig.json";
 
-const root = path.resolve("src");
-const moduleAliases = new Set(
-  readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => `@${entry.name}`),
-);
 function files(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const file = path.join(directory, entry.name);
+    const file = directory + "/" + entry.name;
     return entry.isDirectory() ? files(file) : /\.tsx?$/.test(file) ? [file] : [];
   });
 }
-const sources = files(root);
-const graph = new Map<string, string[]>();
-for (const file of sources) {
-  const dependencies: string[] = [];
-  // Scan module specifiers only; includes static, re-export and dynamic imports.
-  const imports = readFileSync(file, "utf8").matchAll(
-    /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)["']([^"']+)["']/g,
-  );
-  for (const [, name] of imports) {
-    const isModuleAlias = moduleAliases.has(name.split("/")[0]);
-    if (name.startsWith(".") || name.startsWith("@/") || isModuleAlias) {
-      const base = isModuleAlias
-        ? path.resolve(root, name.slice(1))
-        : name.startsWith("@/")
-          ? path.resolve(root, name.slice(2))
-          : path.resolve(path.dirname(file), name);
-      const resolved = [
-        base,
-        base + ".ts",
-        base + ".tsx",
-        path.join(base, "index.ts"),
-        path.join(base, "index.tsx"),
-      ].find((candidate) => existsSync(candidate) && statSync(candidate).isFile());
-      assert.ok(resolved, `${file}: unresolved ${name}`);
-      dependencies.push(resolved);
-    } else dependencies.push(name);
-  }
-  graph.set(file, dependencies);
-}
-const layer = (file: string) => path.relative(root, file).split(path.sep)[0];
 
-test("domain and service modules do not depend on UI, hooks or fixture-derived types", () => {
+const sources = ["src", "pages", "routes", "server", "db", "tests"]
+  .flatMap(files)
+  .concat("auth.ts");
+const aliasTargets = new Map(
+  Object.entries(tsconfig.compilerOptions.paths).map(([pattern, [target]]) => [
+    pattern.slice(0, -2),
+    target,
+  ]),
+);
+
+function resolveImport(file: string, name: string) {
+  const [prefix, ...segments] = name.split("/");
+  const target = aliasTargets.get(prefix);
+  const base =
+    target && segments.length
+      ? path.posix.normalize(target.replace("*", () => segments.join("/")))
+      : name.startsWith(".")
+        ? path.posix.join(path.posix.dirname(file), name)
+        : undefined;
+  if (!base) return name;
+  const candidates = [base, base + ".ts", base + ".tsx", base + "/index.ts", base + "/index.tsx"];
+  const resolved = candidates.find((p) => existsSync(p) && statSync(p).isFile());
+  assert.ok(resolved, `${file}: unresolved ${name}`);
+  return resolved;
+}
+
+const graph = new Map(
+  sources.map((file) => {
+    const specifiers = readFileSync(file, "utf8").matchAll(
+      /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*|\bvi\.mock\(\s*)["']([^"']+)["']/g,
+    );
+    return [file, Array.from(specifiers, ([, name]) => resolveImport(file, name))];
+  }),
+);
+
+function feature(file: string) {
+  return file.match(/^(src\/modules\/[^/]+|server\/[^/]+)\//)?.[1];
+}
+
+test("cross-feature imports use the public index, including route handlers and type imports", () => {
+  for (const directory of ["src/modules", "server"]) {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory())
+        assert.ok(existsSync(`${directory}/${entry.name}/index.ts`), entry.name);
+    }
+  }
   for (const [file, dependencies] of graph) {
-    for (const dependency of dependencies) {
-      if (layer(file) === "domain") {
-        assert.ok(
-          !["pages", "hooks", "services", "data"].includes(layer(dependency)),
-          `${file} -> ${dependency}`,
-        );
-        assert.ok(
-          !["react", "react-dom", "@xyflow/react"].includes(dependency),
-          `${file} -> ${dependency}`,
-        );
-      }
-      if (["services", "hooks", "data", "auth", "i18n", "theme"].includes(layer(file))) {
-        assert.notEqual(layer(dependency), "pages", `${file} -> ${dependency}`);
-      }
+    for (const dep of dependencies) {
+      const owner = feature(dep);
+      if (owner && owner !== feature(file))
+        assert.equal(dep, owner + "/index.ts", `${file} -> ${dep}`);
     }
   }
 });
 
-test("source module dependency graph has no cycles, including type imports", () => {
+test("shared utilities, domain rules and client features respect their layers", () => {
+  for (const [file, dependencies] of graph) {
+    if (file.includes("/__tests__/")) continue;
+    for (const dep of dependencies) {
+      const edge = `${file} -> ${dep}`;
+      if (file.startsWith("src/shared/") && graph.has(dep))
+        assert.ok(dep.startsWith("src/shared/"), edge);
+      if (file.startsWith("src/")) {
+        assert.doesNotMatch(
+          dep,
+          /^(?:server|pages|routes|db|\.void)\/|^void\/(?:db|auth|schema-d1)$/,
+          edge,
+        );
+        if (feature(file)) assert.ok(!dep.startsWith("src/app/"), edge);
+      }
+      if (file.includes("/model/") || file.startsWith("src/modules/c4-model/")) {
+        assert.doesNotMatch(dep, /\/(?:hooks|ui|services)\/|^react(?:-dom)?$/, edge);
+        if (!file.startsWith("src/modules/c4-editor/")) assert.notEqual(dep, "@xyflow/react", edge);
+      }
+      if (/\/(services|hooks|data)\//.test(file)) assert.ok(!dep.includes("/ui/"), edge);
+    }
+  }
+});
+
+function assertAcyclic(edges: Map<string, string[]>) {
   const done = new Set<string>();
   function visit(file: string, stack: string[]) {
-    assert.ok(
-      !stack.includes(file),
-      `Dependency cycle: ${[...stack, file].map((p) => path.relative(root, p)).join(" -> ")}`,
-    );
+    assert.ok(!stack.includes(file), `Dependency cycle: ${[...stack, file].join(" -> ")}`);
     if (done.has(file)) return;
-    for (const dependency of graph.get(file) ?? [])
-      if (graph.has(dependency)) visit(dependency, [...stack, file]);
+    for (const dep of edges.get(file) ?? []) if (edges.has(dep)) visit(dep, [...stack, file]);
     done.add(file);
   }
-  for (const file of sources) visit(file, []);
+  for (const file of edges.keys()) visit(file, []);
+}
+test("files and features have no dependency cycles, including type imports", () => {
+  assertAcyclic(graph);
+  const features = new Map<string, string[]>();
+  for (const [file, deps] of graph) {
+    const owner = feature(file);
+    if (!owner || file.includes("/__tests__/")) continue;
+    features.set(owner, [
+      ...new Set([
+        ...(features.get(owner) ?? []),
+        ...deps.map(feature).filter((dep): dep is string => !!dep && dep !== owner),
+      ]),
+    ]);
+  }
+  assertAcyclic(features);
 });

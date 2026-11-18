@@ -1,0 +1,171 @@
+import { useI18n } from "@modules/i18n";
+import { ConfirmDelete } from "./ConfirmDelete";
+
+import { useAccountList } from "../hooks/useAccountList";
+
+export function AccountList({ revision }: { revision: number }) {
+  const { t } = useI18n();
+  const {
+    count,
+    visible,
+    selfId,
+    pending,
+    saved,
+    error,
+    loading,
+    editing,
+    deleting,
+    search,
+    setSearch,
+    submit,
+    edit,
+    requestDelete,
+    retry,
+    cancelEdit,
+    cancelDelete,
+    confirmDelete,
+  } = useAccountList(revision);
+  return (
+    <section className="ui-card p-5 space-y-4">
+      <h2 className="text-lg font-bold">
+        {t(editing ? "admin.editAccount" : "admin.allAccounts", { count })}
+      </h2>
+      {saved && <p role="status">{t("admin.saved")}</p>}
+      {error && (
+        <div role="alert">
+          {t(
+            error === "duplicate"
+              ? "admin.duplicateEmail"
+              : error === "self" || error === "protected"
+                ? "admin.protectedAccount"
+                : error === "invalid"
+                  ? "admin.invalidAccount"
+                  : "admin.operationFailed",
+          )}{" "}
+          <button type="button" disabled={pending} onClick={retry}>
+            {t("auth.retry")}
+          </button>
+        </div>
+      )}
+      {editing ? (
+        <form key={editing.id} onSubmit={submit} className="space-y-4 max-w-lg">
+          <fieldset disabled={pending} className="space-y-4">
+            <label className="block">
+              {t("auth.nameLabel")}
+              <input
+                className="ui-input mt-1 p-2.5"
+                name="name"
+                required
+                maxLength={100}
+                defaultValue={editing.name}
+              />
+            </label>
+            <label className="block">
+              {t("auth.accountLabel")}
+              <input
+                className="ui-input mt-1 p-2.5"
+                name="email"
+                type="email"
+                required
+                maxLength={254}
+                defaultValue={editing.email}
+              />
+            </label>
+            <label className="block">
+              {t("auth.roleLabel")}
+              <select
+                className="ui-input mt-1 p-2.5"
+                name="role"
+                defaultValue={editing.role ?? "user"}
+              >
+                <option value="user" disabled={editing.id === selfId}>
+                  {t("auth.roles.student")}
+                </option>
+                <option value="admin">{t("admin.role")}</option>
+              </select>
+            </label>
+            <p className="text-sm text-on-muted">{t("admin.accountEditHelp")}</p>
+            <button className="px-5 py-2 rounded-full bg-primary text-on-primary">
+              {t(pending ? "common.loading" : "admin.save")}
+            </button>
+            <button type="button" className="px-5 py-2" onClick={cancelEdit}>
+              {t("admin.cancel")}
+            </button>
+          </fieldset>
+        </form>
+      ) : (
+        <>
+          <label className="block">
+            {t("admin.search")}
+            <input
+              className="ui-input mt-1 p-2"
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          {deleting && (
+            <ConfirmDelete
+              name={`${deleting.name} (${deleting.email})`}
+              account
+              pending={pending}
+              onCancel={cancelDelete}
+              onConfirm={confirmDelete}
+            />
+          )}
+          {loading ? (
+            <p role="status">{t("common.loading")}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr>
+                    <th className="p-3">{t("auth.nameLabel")}</th>
+                    <th className="p-3">{t("auth.accountLabel")}</th>
+                    <th className="p-3">{t("auth.roleLabel")}</th>
+                    <th className="p-3">{t("admin.actions")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((user) => (
+                    <tr key={user.id} className="border-t border-outline">
+                      <td className="p-3">
+                        {user.name}
+                        {user.id === selfId && ` (${t("admin.you")})`}
+                        {user.banned && ` (${t("admin.banned")})`}
+                      </td>
+                      <td className="p-3">{user.email}</td>
+                      <td className="p-3">
+                        {t(user.role === "admin" ? "admin.role" : "auth.roles.student")}
+                      </td>
+                      <td className="p-3 whitespace-nowrap">
+                        <button
+                          type="button"
+                          disabled={!!deleting}
+                          className="px-3 py-2"
+                          onClick={() => edit(user)}
+                        >
+                          {t("admin.edit")}
+                        </button>
+                        <button
+                          type="button"
+                          className="px-3 py-2 disabled:opacity-40"
+                          disabled={user.id === selfId || !!deleting}
+                          title={user.id === selfId ? t("admin.protectedAccount") : undefined}
+                          onClick={() => requestDelete(user)}
+                        >
+                          {t("admin.delete")}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!visible.length && <p className="p-3">{t("admin.empty")}</p>}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}

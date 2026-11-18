@@ -1,6 +1,5 @@
-import { PROJECTS } from "@data/projectsData";
-import { migrateC4Nodes } from "@domain/c4";
-import { parseC4File, serializeC4File } from "@domain/c4File";
+import { PROJECTS } from "@modules/projects";
+import { migrateC4Nodes, parseC4File, serializeC4File } from "@modules/c4-model";
 import assert from "node:assert/strict";
 import { test } from "vite-plus/test";
 

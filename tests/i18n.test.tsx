@@ -1,25 +1,20 @@
-import { AuthProvider } from "@auth/AuthProvider";
-import { DEMO_ACCOUNTS } from "@auth/demoAccounts";
-import { demoAuthService } from "@auth/demoAuthService";
-import { getLocalizedProjects, updateLocalizedProjectDraft } from "@data/localizedProjects";
-import { I18nProvider } from "@i18n";
+import { AuthProvider, DEMO_ACCOUNTS, demoAuthService, AuthGate, LoginView } from "@modules/auth";
+import { getLocalizedProjects, updateLocalizedProjectDraft } from "@modules/projects";
 import {
+  I18nProvider,
   createTranslator,
   englishMessages,
   isMessageKey,
   resolveLocale,
   traditionalChineseMessages,
   type MessageKey,
-} from "@i18n/messages";
-import { AuthGate } from "@pages/auth/AuthGate";
-import { LoginView } from "@pages/auth/LoginView";
-import { HomeDashboard } from "@pages/home/HomeDashboard";
-import { Navbar } from "@pages/layout/Navbar";
-import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
-import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
-import { WorkSpace } from "@pages/Workspace";
-import { fetchGitHubProjectBundle } from "@services/github";
-import { ThemeProvider, isThemeMode, resolveTheme } from "@theme";
+} from "@modules/i18n";
+import { HomeDashboard } from "@modules/catalog";
+import { Navbar } from "@app/Navbar";
+import { GitHubRepoDashboard, fetchGitHubProjectBundle } from "@modules/repository";
+import { ProjectWorkspace } from "@modules/workspace";
+import { WorkSpace } from "@app/Workspace";
+import { ThemeProvider, isThemeMode, resolveTheme } from "@modules/theme";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { test } from "vite-plus/test";

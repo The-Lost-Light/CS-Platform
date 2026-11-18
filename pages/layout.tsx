@@ -1,13 +1,12 @@
-import { AuthProvider } from "@auth/AuthProvider";
-import { I18nProvider } from "@i18n";
-import { AuthGate } from "@pages/auth/AuthGate";
-import "@pages/styles/fonts.css";
-import "@pages/styles/index.css";
-import { WorkSpace } from "@pages/Workspace";
-import { ThemeProvider } from "@theme";
+import { AuthProvider, AuthGate } from "@modules/auth";
+import { I18nProvider } from "@modules/i18n";
+import "@app/styles/fonts.css";
+import "@app/styles/index.css";
+import { WorkSpace } from "@app/Workspace";
+import { ThemeProvider } from "@modules/theme";
 import "@xyflow/react/dist/style.css";
 import type { ReactNode } from "react";
-import { ProjectCatalogProvider } from "@hooks/ProjectCatalog";
+import { ProjectCatalogProvider } from "@modules/catalog";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (

@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    /* Language and Environment */
     "target": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "useDefineForClassFields": true,
 
-    /* Modules & Resolution */
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
@@ -14,28 +12,20 @@
     "isolatedModules": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@auth/*": ["./src/auth/*"],
-      "@data/*": ["./src/data/*"],
-      "@domain/*": ["./src/domain/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@i18n": ["./src/i18n/index.tsx"],
-      "@i18n/*": ["./src/i18n/*"],
-      "@pages/*": ["./src/pages/*"],
-      "@services/*": ["./src/services/*"],
-      "@theme": ["./src/theme/index.tsx"],
-      "@theme/*": ["./src/theme/*"]
+      "@app/*": ["./src/app/*"],
+      "@modules/*": ["./src/modules/*/index.ts"],
+      "@shared/*": ["./src/shared/*"],
+      "@server/*": ["./server/*"],
+      "@db/*": ["./db/*"]
     },
     "types": ["vite-plus/client", "node"],
 
-    /* Emit */
     "noEmit": true,
 
-    /* Interop & System */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
 
-    /* Type Checking */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

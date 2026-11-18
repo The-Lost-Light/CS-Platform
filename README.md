@@ -12,36 +12,27 @@
 ## 專案結構
 
 ```text
-pages/                              # Void 檔案式路由入口
-├── layout.tsx                      # Provider、登入與共用導覽列
-├── index.tsx                       # 首頁 /
-└── projects/[id].tsx               # 專案 /projects/:id
+pages/                   # Void 頁面、layout 與 loader
+routes/api/              # Void HTTP handlers
+server/                  # accounts、projects、workspaces 的 D1 讀寫與交易
+db/                      # D1 schema 與 migrations
 src/
-├── auth/                            # 登入型別、服務、狀態與 useLoginForm
-├── domain/                          # 專案／倉庫型別、C4 規則與檔案格式、Diff、檔案樹
-├── services/
-│   ├── github/                     # URL 解析、HTTP、快照與備援策略
-│   └── c4Download.ts               # 瀏覽器下載介面
-├── hooks/
-│   ├── usePageNavigation.ts         # Void 路由參數與首頁／專案導覽
-│   ├── useProjectDraft.ts           # 專案草稿與語言更新生命週期
-│   ├── useRepository.ts             # 倉庫輸入、載入、錯誤與 Token 狀態
-│   └── useProjectWorkspace.ts       # 組合草稿、倉庫與分頁狀態
-├── data/                            # 專案題庫、翻譯與草稿語言更新
-├── i18n/                            # 翻譯內容與語言狀態
-├── theme/                           # 純主題規則 model.ts、Provider 與偏好儲存
-└── pages/                           # 所有畫面元件與樣式
-    ├── Workspace.tsx                # 共用導覽列與路由內容容器
-    ├── auth/                       # AuthGate、登入頁、表單與示範帳號選擇
-    ├── layout/                     # 導覽列、語言與主題切換
-    ├── home/                       # 專案總覽首頁
-    ├── project/                    # 專案工作區與畫面組合
-    │   ├── c4/                     # 編輯控制器、畫布、屬性面板、README 與 Flow 型別
-    │   └── github/                 # 倉庫連線、統計、語言、檔案樹與提交紀錄
-    └── styles/                     # index 組合 tokens/base/components/c4/scrollbars 與字型
+├── app/                 # Void 導覽、應用外框與全站樣式
+├── modules/
+│   ├── auth/            # 登入、工作階段與登入表單
+│   ├── projects/        # 專案資料契約、題庫、輸入驗證與清單合併
+│   ├── catalog/         # 瀏覽器端專案清單與首頁
+│   ├── workspace/       # 個人草稿載入、自動儲存與工作區畫面
+│   ├── c4-model/        # C4 領域規則與檔案格式
+│   ├── c4-editor/       # React Flow 畫布、屬性面板與 README 編輯器
+│   ├── repository/      # GitHub API、檔案樹、提交與 Diff
+│   ├── admin/           # 專案與帳號管理
+│   ├── i18n/            # 翻譯、語言偏好與語言選單
+│   └── theme/           # 主題規則、偏好與切換元件
+└── shared/              # 通用 UI 與 HTTP 工具
 ```
 
-模組匯入統一使用 `@auth/*`、`@data/*`、`@domain/*`、`@hooks/*`、`@i18n/*`、`@pages/*`、`@services/*` 與 `@theme/*`；`@i18n`、`@theme` 可直接匯入各自的入口。別名同步設定於 `tsconfig.json` 與 `vite.config.ts`，並保留 `@/*` 作為 `src/*` 的通用別名。
+跨功能使用 `@modules/<名稱>` 匯入模組根目錄的 `index.ts`，模組內使用相對路徑。頁面使用 `@app/*` 匯入應用外框、導覽與樣式，通用工具使用 `@shared/*`。Void 路由以 `@server/*` 呼叫伺服器功能，D1 資料表由 `@db/schema` 匯入。這些別名定義於 `tsconfig.json` 的 `compilerOptions.paths`，Vite+ 建置與測試共用同一份設定。
 
 ## 開發與驗證
 
@@ -68,7 +59,7 @@ pnpm preview
 
 Vite+ 版本與 Vite 相容別名由 `pnpm-workspace.yaml` catalog 管理，`vite` 指向 Vite+ core，讓 React 與 Tailwind 外掛共用同一份建置引擎；Vitest override 對齊 Vite+ 內建版本。`pnpm-lock.yaml` 納入版本控制，CI 或乾淨環境請執行 `pnpm install --frozen-lockfile`、`pnpm check`、`pnpm test` 與 `pnpm build`。升級時依 [Vite+ 官方遷移指南](https://viteplus.dev/guide/migrate) 執行目標版本的 migrator，並重新驗證上述指令。
 
-React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合；外掛由 `lazyPlugins` 延後載入，避免格式與 lint 指令啟動建置外掛。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/tokens.css`，樣式統一從 `index.css` 載入。
+React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合；外掛由 `lazyPlugins` 延後載入，避免格式與 lint 指令啟動建置外掛。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/app/styles/tokens.css`，樣式統一從 `index.css` 載入。
 
 `pnpm clean --lockfile` 可清除 `node_modules/`、`.vite/`、`.vite-plus/`、`.vitest/`、`void.lock.json` 與 `.void/`，並重新安裝依賴。
 
@@ -80,7 +71,7 @@ React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合�
 
 正式網站：[CodePulse Edu](https://course-assignment-platform.mono-lts.workers.dev)。
 
-採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與共用導覽列，`src/pages/` 保留畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。未登入時開啟專案網址會導回首頁登入。
+採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與共用導覽列，`src/modules/` 保存各功能的畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。未登入時開啟專案網址會導回首頁登入。
 
 ```bash
 pnpm install --frozen-lockfile
@@ -97,19 +88,11 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 
 登入已改用 Void 的伺服器驗證與 D1；部署會需要建立資料庫並套用驗證資料表 migration。詳細帳號設定與部署行為見 [Void 官方部署文件](https://void.cloud/guide/deployment)。
 
-## 模組邊界與重構分析
+## 模組邊界與驗證
 
-原本的主要耦合點是：C4Architect 同時處理畫布渲染、編輯狀態、檔案 I/O 與表單；GitHubRepoDashboard 同時包含所有儀表板區塊；useProjectWorkspace 同時管理草稿與遠端資料；共用型別由題庫與快照 JSON 推導。這些責任已拆分，原有登入、導覽、翻譯及小型畫面模組保留既有設計。
+React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲存佇列依序送出修改並沿用上一筆成功寫入的 revision。C4 的檔案驗證與畫布座標轉換可獨立測試。GitHub 服務可注入 HTTP 傳輸，在測試中使用本地 fixture。
 
-- `domain` 管理資料契約與純資料轉換，不依賴 React、畫面、服務或示範資料。倉庫型別明確定義，不再由快照推導；合併方式的翻譯 key 保留型別限制。
-- `services` 管理外部 I/O。GitHub 的 `createGitHubService({ fetch })` 可注入 HTTP 傳輸；所有倉庫一律讀取 GitHub API，載入失敗時回報錯誤，不替換成範例資料。測試使用 `tests/fixtures/repository.ts` 的獨立資料。
-- `hooks` 管理應用狀態。`useProjectWorkspace(project, snapshot, loadRepository?)` 載入個人草稿與倉庫網址。使用範本時，切換語言會更新尚未編輯的題庫欄位。已儲存的個人內容保留原文。
-- `pages` 負責畫面與畫面專用互動。`useC4Editor` 保留在 C4 畫面模組，管理 React Flow 轉換、選取、導覽與匯入狀態；畫布尺寸量測留在 C4Canvas。README 模式由父層保存，切換分頁不重設。GitHub 分支、搜尋、展開提交與 Diff 模式也仍由原本父層持有。
-- 程式與測試直接匯入所屬模組：專案型別使用 `domain/project`、倉庫型別使用 `domain/repository`、使用者型別使用 `auth/types`；C4、Diff 與檔案樹使用 `domain` 中的模組，GitHub 服務使用 `services/github`。舊的 `src/utils/*`、`src/types.ts` 及 `projectsData` 的型別轉出已移除；`projectsData` 僅保留題庫資料與建立函式。
-
-`tests/architecture.test.tsx` 檢查相對路徑、`@/` 與各模組別名匯入的分層邊界、路徑解析及循環相依；`tests/githubService.test.tsx` 以注入的 HTTP 實作驗證授權標頭、分支編碼、250 筆檔案上限、部分端點失敗與快照備援，不發出真實網路請求。既有測試繼續涵蓋登入、多語系、草稿保留、C4 編輯規則與檔案往返、Diff 及畫面渲染。
-
-本次重構另以 Git 原始版本進行 24 組初始畫面的 HTML 逐字比對，涵蓋兩種語言、淺深色主題、所有專案、首頁、登入、GitHub 與空資料狀態。此比對驗證初始渲染一致，不取代瀏覽器中的拖曳、縮放與檔案選取互動測試。
+`tests/architecture.test.tsx` 檢查公開入口、共用層依賴方向，以及檔案和模組之間的循環相依。跨功能測試位於 `tests/`，需要驗證私有實作的測試可放在功能自己的 `__tests__/`。
 
 ## 登入、資料庫與權限
 
@@ -150,11 +133,11 @@ pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建�
 
 登入頁與導覽列提供自動、English 與繁體中文 選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
 
-翻譯集中於 `src/i18n/`：`ui.ts` 為介面、`courses.ts` 為專案題庫、`runtime.ts` 為分析與系統提示，各自置於 `en/` 與 `zh-TW/` 語言資料夾。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。英文與繁體中文文案只存放於語系檔，不作為查找鍵。
+翻譯集中於 `src/modules/i18n/`：`ui.ts` 為介面、`courses.ts` 為專案題庫、`runtime.ts` 為分析與系統提示，各自置於 `en/` 與 `zh-TW/` 語言資料夾。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。英文與繁體中文文案只存放於語系檔，不作為查找鍵。
 
 `MessageKey` 由英文語系檔推導，`t()` 會在編譯時拒絕不存在的 key 或直接傳入的文本；繁體中文語系檔透過 `satisfies` 檢查 key 是否完整對應英文。新增文案時，請在對應分類的兩個語系檔加入相同 key，並維持插值參數一致。專案範本透過 `titleKey`、`labelKey` 等欄位引用翻譯。
 
-切換語言會更新未修改的專案範本，保留自訂節點、已修改欄位、刪除狀態、路徑與位置；姓名及 GitHub 原始提交訊息保留原文。`src/data/localizedProjects.ts` 管理題庫翻譯與草稿更新。
+切換語言會更新未修改的專案範本，保留自訂節點、已修改欄位、刪除狀態、路徑與位置；姓名及 GitHub 原始提交訊息保留原文。`src/modules/projects/data/localizedProjects.ts` 管理題庫翻譯與草稿更新。
 
 測試涵蓋語言判定、翻譯參數、專案路徑、草稿保留、首頁專案列表、各畫面渲染，以及 C4 節點行為。
 

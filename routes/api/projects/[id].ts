@@ -1,20 +1,12 @@
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
-import { db, eq } from "void/db";
-import { projects, removedProjects, workspaces } from "../../../db/schema";
-import { listProjects } from "../../../server/projects";
-import { PROJECTS } from "@data/projectsData";
-import { parseProjectInput } from "@domain/projectInput";
-import { isUniqueViolation } from "../../../server/errors";
+import { allowsAdminMutation } from "@server/access";
+import { parseProjectInput } from "@modules/projects";
+import { deleteProject, listProjects, updateProject } from "@server/projects";
 
 export const PATCH = defineHandler(async (c) => {
   const user = requireAuth(c);
-  if (
-    !("role" in user) ||
-    user.role !== "admin" ||
-    c.req.header("origin") !== new URL(c.req.url).origin
-  )
-    return c.json({ error: "forbidden" }, 403);
+  if (!allowsAdminMutation(user, c.req.raw)) return c.json({ error: "forbidden" }, 403);
   const id = c.req.param("id") ?? "";
   const existing = (await listProjects(c.req.query("locale") === "zh-TW" ? "zh-TW" : "en")).find(
     (project) => project.id === id,
@@ -30,53 +22,14 @@ export const PATCH = defineHandler(async (c) => {
   }
   const parsed = parseProjectInput(input);
   if (!parsed) return c.json({ error: "invalid" }, 400);
-  if (PROJECTS.some((project) => project.id !== id && project.codeName === parsed.codeName))
-    return c.json({ error: "duplicate" }, 409);
-  const project = {
-    ...existing,
-    ...parsed,
-    id,
-    initialMindMapNodes: existing.initialMindMapNodes,
-    difficulty: existing.difficulty,
-    difficultyColor: existing.difficultyColor,
-    status: existing.status,
-  };
-  try {
-    await db
-      .insert(projects)
-      .values({
-        id,
-        codeName: project.codeName,
-        data: project,
-        createdBy: user.id,
-        createdAt: Date.now(),
-      })
-      .onConflictDoUpdate({
-        target: projects.id,
-        set: { codeName: project.codeName, data: project },
-      });
-  } catch (error) {
-    if (isUniqueViolation(error)) return c.json({ error: "duplicate" }, 409);
-    throw error;
-  }
+  const project = await updateProject(existing, parsed, user.id);
+  if (!project) return c.json({ error: "duplicate" }, 409);
   return { project };
 });
 
 export const DELETE = defineHandler(async (c) => {
   const user = requireAuth(c);
-  if (
-    !("role" in user) ||
-    user.role !== "admin" ||
-    c.req.header("origin") !== new URL(c.req.url).origin
-  )
-    return c.json({ error: "forbidden" }, 403);
-  const id = c.req.param("id") ?? "";
-  if (!(await listProjects()).some((project) => project.id === id))
-    return c.json({ error: "notFound" }, 404);
-  await db.batch([
-    db.insert(removedProjects).values({ id }).onConflictDoNothing(),
-    db.delete(workspaces).where(eq(workspaces.projectId, id)),
-    db.delete(projects).where(eq(projects.id, id)),
-  ]);
+  if (!allowsAdminMutation(user, c.req.raw)) return c.json({ error: "forbidden" }, 403);
+  if (!(await deleteProject(c.req.param("id") ?? ""))) return c.json({ error: "notFound" }, 404);
   return { success: true };
 });

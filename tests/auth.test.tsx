@@ -1,12 +1,16 @@
-import { AuthProvider, useAuth } from "@auth/AuthProvider";
-import { DEFAULT_LOGIN_CREDENTIALS, DEMO_ACCOUNTS, getDemoCredentials } from "@auth/demoAccounts";
-import { demoAuthService } from "@auth/demoAuthService";
-import type { LoginCredentials } from "@auth/types";
-import { I18nProvider } from "@i18n";
-import { createTranslator } from "@i18n/messages";
-import { AuthGate } from "@pages/auth/AuthGate";
-import { WorkSpace } from "@pages/Workspace";
-import { ThemeProvider } from "@theme";
+import {
+  AuthProvider,
+  useAuth,
+  DEFAULT_LOGIN_CREDENTIALS,
+  DEMO_ACCOUNTS,
+  getDemoCredentials,
+  demoAuthService,
+  type LoginCredentials,
+  AuthGate,
+} from "@modules/auth";
+import { I18nProvider, createTranslator } from "@modules/i18n";
+import { WorkSpace } from "@app/Workspace";
+import { ThemeProvider } from "@modules/theme";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { test } from "vite-plus/test";

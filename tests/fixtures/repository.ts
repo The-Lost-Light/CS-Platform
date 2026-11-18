@@ -1,4 +1,4 @@
-import type { RepoBundle, RepoCommit } from "@domain/repository";
+import type { RepoBundle, RepoCommit } from "@modules/repository";
 
 /** Small, isolated API-shaped data for service and rendering tests. */
 export function createRepoFixture(): RepoBundle {

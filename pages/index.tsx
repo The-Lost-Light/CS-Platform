@@ -1,6 +1,6 @@
-import { useAuth } from "@auth/AuthProvider";
-import { usePageNavigation } from "@hooks/usePageNavigation";
-import { HomeDashboard } from "@pages/home/HomeDashboard";
+import { useAuth } from "@modules/auth";
+import { usePageNavigation } from "@app/usePageNavigation";
+import { HomeDashboard } from "@modules/catalog";
 
 export default function HomePage() {
   const { currentUser } = useAuth();

@@ -3,7 +3,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { reactCompilerPreset } from "@vitejs/plugin-react";
 import { voidReact } from "@void/react/plugin";
 import { voidPlugin } from "void";
-import path from "node:path";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
 export default defineConfig({
@@ -16,7 +15,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.tsx"],
+    include: ["tests/**/*.test.tsx", "src/modules/*/__tests__/*.test.tsx"],
   },
   plugins: lazyPlugins(() => [
     voidPlugin(),
@@ -24,18 +23,6 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
   ]),
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
-      "@auth": path.resolve(import.meta.dirname, "./src/auth"),
-      "@data": path.resolve(import.meta.dirname, "./src/data"),
-      "@domain": path.resolve(import.meta.dirname, "./src/domain"),
-      "@hooks": path.resolve(import.meta.dirname, "./src/hooks"),
-      "@i18n": path.resolve(import.meta.dirname, "./src/i18n"),
-      "@pages": path.resolve(import.meta.dirname, "./src/pages"),
-      "@services": path.resolve(import.meta.dirname, "./src/services"),
-      "@theme": path.resolve(import.meta.dirname, "./src/theme"),
-    },
-  },
+  resolve: { tsconfigPaths: true },
   server: { open: true },
 });

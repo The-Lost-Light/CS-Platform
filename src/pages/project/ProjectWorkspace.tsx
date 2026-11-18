@@ -30,9 +30,11 @@ export function ProjectWorkspace({
   } = workspace;
 
   return (
-    <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6">
       {/* Material Design 3 Project Overview & Segmented View Switcher Banner */}
-      <section className="ui-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section
+        className={`ui-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${activeTab === "design" ? "rounded-b-none border-b-0" : ""}`}
+      >
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="w-10 h-10 rounded-2xl bg-primary text-on-primary flex items-center justify-center shadow-2xs shrink-0">
             <FolderGit2 className="w-5 h-5" />
@@ -120,7 +122,7 @@ export function ProjectWorkspace({
         role="tabpanel"
         id="workspace-panel-github"
         aria-labelledby="workspace-tab-github"
-        className="space-y-6"
+        className="mt-6 space-y-6"
         hidden={activeTab !== "github"}
       >
         <RepositoryConnection repository={workspace} />

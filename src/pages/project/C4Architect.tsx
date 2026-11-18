@@ -39,7 +39,7 @@ export function C4Architect(props: C4ArchitectProps) {
   return (
     <div className="space-y-5">
       {/* Material Design 3 Control Header Card */}
-      <div className="ui-card p-4 sm:p-5 space-y-4">
+      <div className="ui-card rounded-t-none p-4 sm:p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div
             className="ui-pill-group gap-1"

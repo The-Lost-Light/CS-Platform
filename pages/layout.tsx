@@ -7,6 +7,7 @@ import { WorkSpace } from "@pages/Workspace";
 import { ThemeProvider } from "@theme";
 import "@xyflow/react/dist/style.css";
 import type { ReactNode } from "react";
+import { ProjectCatalogProvider } from "@hooks/ProjectCatalog";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
@@ -14,7 +15,13 @@ export default function Layout({ children }: { children: ReactNode }) {
       <I18nProvider>
         <AuthProvider>
           <div className="min-h-screen flex flex-col bg-canvas text-on-surface transition-colors duration-200">
-            <AuthGate>{(session) => <WorkSpace {...session}>{children}</WorkSpace>}</AuthGate>
+            <AuthGate>
+              {(session) => (
+                <ProjectCatalogProvider>
+                  <WorkSpace {...session}>{children}</WorkSpace>
+                </ProjectCatalogProvider>
+              )}
+            </AuthGate>
           </div>
         </AuthProvider>
       </I18nProvider>

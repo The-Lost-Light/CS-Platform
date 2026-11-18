@@ -1,3 +1,4 @@
+import { Link } from "@void/react";
 import type { User } from "@auth/types";
 import type { Project } from "@domain/project";
 import { useI18n } from "@i18n";
@@ -13,7 +14,7 @@ export function Navbar({
   currentUser,
   onLogout,
 }: {
-  activeView: "home" | "project";
+  activeView: "home" | "project" | "admin";
   selectedProject: Project | null;
   onNavigateHome: () => void;
   onSelectProjectDefault: () => void;
@@ -114,6 +115,19 @@ export function Navbar({
               <FolderGit2 className="w-3.5 h-3.5" />
               <span>{t("common.projects")}</span>
             </button>
+            {currentUser.role === "admin" && (
+              <Link
+                href="/admin"
+                className={
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition " +
+                  (activeView === "admin"
+                    ? "bg-primary text-on-primary shadow-xs"
+                    : "text-on-muted hover:bg-surface-hover hover:text-on-surface")
+                }
+              >
+                {t("admin.mode")}
+              </Link>
+            )}
           </nav>
 
           <LanguageSwitcher />

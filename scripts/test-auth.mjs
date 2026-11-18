@@ -71,6 +71,43 @@ assert.ok(
     )
   ).ok,
 );
+const projectInput = {
+  codeName: "TEST-" + Date.now(),
+  title: "Integration project",
+  summary: "Project creation integration test",
+  points: 100,
+  dueDate: "2026-12-20T23:59",
+  defaultRepoUrl: "",
+  tags: "React,D1",
+  requirements: "One requirement",
+  initialDesignDoc: "# Test",
+};
+assert.equal((await request("/api/projects")).status, 401);
+assert.equal((await request("/api/projects", projectInput, studentCookie)).status, 403);
+assert.ok(
+  !(await request("/api/projects", projectInput, adminCookie, "POST", "https://untrusted.example"))
+    .ok,
+);
+assert.equal(
+  (await request("/api/projects", { ...projectInput, points: -1 }, adminCookie)).status,
+  400,
+);
+assert.equal(
+  (await request("/api/projects", { ...projectInput, codeName: "PROJ-01" }, adminCookie)).status,
+  409,
+);
+const createdProjectResponse = await request("/api/projects", projectInput, adminCookie);
+assert.equal(createdProjectResponse.status, 201, await createdProjectResponse.clone().text());
+const { project } = await createdProjectResponse.json();
+assert.equal(project.title, projectInput.title);
+assert.equal((await request("/api/projects", projectInput, adminCookie)).status, 409);
+const list = await (await request("/api/projects", null, studentCookie)).json();
+assert.ok(list.projects.some((item) => item.id === project.id));
+assert.equal((await request("/projects/" + project.id, null, studentCookie)).status, 200);
+assert.equal((await request("/projects/" + project.id, null, studentCookie)).status, 200);
+console.log(
+  "Passed project creation, validation, duplicate conflict, student read, deep links, and admin-only writes.",
+);
 assert.equal((await request("/api/auth/sign-out", {}, studentCookie)).status, 200);
 assert.equal((await (await request("/api/session", null, studentCookie)).json()).user, null);
 assert.equal((await request("/projects/project-fullstack-web", null, studentCookie)).status, 302);

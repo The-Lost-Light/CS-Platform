@@ -1,10 +1,7 @@
-import { useState } from "react";
-import { isMessageKey, type MessageKey } from "@i18n/messages";
 import type { RepoBundle } from "@domain/repository";
-import {
-  fetchGitHubProjectBundle,
-  type GitHubProjectLoader,
-} from "@services/github";
+import { isMessageKey, type MessageKey } from "@i18n/messages";
+import { fetchGitHubProjectBundle, type GitHubProjectLoader } from "@services/github";
+import { useState } from "react";
 
 export function useRepository(
   defaultRepoUrl: string,
@@ -15,9 +12,9 @@ export function useRepository(
   const [showTokenInput, setShowTokenInput] = useState(false);
   const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(null);
   const [isLoadingRepo, setIsLoadingRepo] = useState(false);
-  const [repoError, setRepoError] = useState<
-    { key: MessageKey } | { message: string } | null
-  >(null);
+  const [repoError, setRepoError] = useState<{ key: MessageKey } | { message: string } | null>(
+    null,
+  );
   const handleLoadRepo = async (targetUrl = repoUrlInput) => {
     setIsLoadingRepo(true);
     setRepoError(null);

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "source": {
+    "name": "cap"
+  },
+  "resolved": {
+    "name": "cap",
+    "account_id": "dfe01544a4fa22b650652935d2d05cd2"
+  },
+  "text": "{\n  \"name\": \"cap\",\n  \"account_id\": \"dfe01544a4fa22b650652935d2d05cd2\"\n}\n"
+}

@@ -1,16 +1,20 @@
 {
   "name": "cs-platform",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "description": "CS course assignment platform",
   "type": "module",
-  "packageManager": "pnpm@12.21.0",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/**/*.test.tsx"
+    "dev": "vp dev",
+    "build": "vp check --no-fmt --no-lint && vp build",
+    "preview": "vp preview",
+    "check": "vp check",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "typecheck": "vp check --no-fmt --no-lint",
+    "test": "vp test",
+    "test:watch": "vp test watch",
+    "prepare": "vp config"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
@@ -32,8 +36,17 @@
     "@vitejs/plugin-react": "^6.3.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.8"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^12.21.0",
+      "onFail": "download"
+    }
+  },
+  "engines": {
+    "node": "^26.0.0"
   }
 }

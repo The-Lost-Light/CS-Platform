@@ -1,5 +1,5 @@
-import { useI18n } from "@i18n";
 import type { RepoBundle } from "@domain/repository";
+import { useI18n } from "@i18n";
 const LANG_CHART_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -8,9 +8,7 @@ const LANG_CHART_COLORS = [
   "var(--chart-5)",
 ];
 
-export function RepositoryLanguages({
-  languages,
-}: Pick<RepoBundle, "languages">) {
+export function RepositoryLanguages({ languages }: Pick<RepoBundle, "languages">) {
   const { t } = useI18n();
   const langEntries = Object.entries(languages).sort((a, b) => b[1] - a[1]);
   const totalBytes = langEntries.reduce((acc, [, b]) => acc + b, 0) || 1;
@@ -29,8 +27,7 @@ export function RepositoryLanguages({
                   key={lang}
                   style={{
                     width: `${pct}%`,
-                    backgroundColor:
-                      LANG_CHART_COLORS[idx % LANG_CHART_COLORS.length],
+                    backgroundColor: LANG_CHART_COLORS[idx % LANG_CHART_COLORS.length],
                   }}
                   title={`${lang}: ${pct}%`}
                 />

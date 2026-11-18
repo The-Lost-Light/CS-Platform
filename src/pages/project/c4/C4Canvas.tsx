@@ -1,8 +1,5 @@
-import type {
-  FlowNode,
-  BoundaryNode,
-  CanvasNode,
-} from "@pages/project/c4/flowTypes";
+import { prepareC4CanvasChanges } from "@pages/project/c4/canvasChanges";
+import type { BoundaryNode, CanvasNode, FlowNode } from "@pages/project/c4/flowTypes";
 import {
   Handle,
   NodeResizer,
@@ -12,7 +9,6 @@ import {
   type ReactFlowProps,
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
-import { prepareC4CanvasChanges } from "@pages/project/c4/canvasChanges";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
@@ -32,9 +28,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         width: "100%",
         height: "100%",
         minHeight: 160,
-        backgroundColor: data.external
-          ? "var(--c4-external-bg)"
-          : "var(--c4-internal-bg)",
+        backgroundColor: data.external ? "var(--c4-external-bg)" : "var(--c4-internal-bg)",
         borderColor: selected
           ? "var(--primary)"
           : data.expandable
@@ -45,12 +39,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         selected ? "ring-4 ring-primary/30 shadow-md" : "hover:shadow-md"
       }`}
     >
-      <NodeResizer
-        isVisible={selected}
-        minWidth={200}
-        minHeight={160}
-        color="var(--primary)"
-      />
+      <NodeResizer isVisible={selected} minWidth={200} minHeight={160} color="var(--primary)" />
       <Handle
         type="target"
         position={Position.Left}
@@ -73,9 +62,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
             }`}
           />
         </div>
-        <div className="mt-2 text-sm font-bold text-on-surface wrap-break-word">
-          {data.title}
-        </div>
+        <div className="mt-2 text-sm font-bold text-on-surface wrap-break-word">{data.title}</div>
         {data.technology && (
           <div className="mt-1.5 inline-block px-2 py-0.5 rounded-md bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
             [{data.technology}]
@@ -102,26 +89,15 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
 function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
   return (
     <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 cursor-move">
-      <NodeResizer
-        isVisible={selected}
-        minWidth={360}
-        minHeight={260}
-        color="var(--primary)"
-      />
-      <div className="px-4 py-3 text-sm font-bold text-primary">
-        {data.title}
-      </div>
+      <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
+      <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
     </div>
   );
 }
 export const nodeTypes = { c4: C4Card, boundary: C4BoundaryCard };
 
 /** Keep measurements local; persist user resizes and completed moves. */
-export function C4Canvas({
-  nodes = [],
-  onNodesChange,
-  ...props
-}: ReactFlowProps<CanvasNode>) {
+export function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps<CanvasNode>) {
   const [canvasNodes, setCanvasNodes] = useState(nodes);
   const movingIds = useRef<string[] | null>(null);
   useEffect(() => {
@@ -137,11 +113,7 @@ export function C4Canvas({
       {...props}
       nodes={canvasNodes}
       onNodesChange={(changes) => {
-        const update = prepareC4CanvasChanges(
-          changes,
-          canvasNodes,
-          movingIds.current,
-        );
+        const update = prepareC4CanvasChanges(changes, canvasNodes, movingIds.current);
         movingIds.current = update.movingIds;
         setCanvasNodes((previous) => update.changes.applyTo(previous));
         if (update.completedMoves.toArray().length) {

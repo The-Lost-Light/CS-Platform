@@ -5,8 +5,7 @@ export default {
   "common.loading": "載入中…",
   "workspace.githubToken": "GitHub Token (選填)",
   "workspace.tokenPlaceholder": "ghp_xxxxxxxxxxxx (留空即可使用公開 API)",
-  "workspace.repoPlaceholder":
-    "輸入學生專題 GitHub Repo 網址 (例如 https://github.com/owner/repo)",
+  "workspace.repoPlaceholder": "輸入學生專題 GitHub Repo 網址 (例如 https://github.com/owner/repo)",
   "workspace.sync": "同步 GitHub 專案數據",
   "workspace.tabs.design": "設計架構",
   "workspace.tabs.github": "Repo",
@@ -28,8 +27,7 @@ export default {
   "app.title": "課程作業平台",
   "auth.features.github": "瀏覽 GitHub 倉庫檔案與 Commit 差異",
   "auth.title": "登入課程作業系統",
-  "auth.description":
-    "請輸入您的學號與密碼，或點選下方快速測試帳號直接登入儀表板",
+  "auth.description": "請輸入您的學號與密碼，或點選下方快速測試帳號直接登入儀表板",
   "auth.accountLabel": "學號 / 帳號 (Student ID)",
   "auth.accountPlaceholder": "例如: B11204018",
   "auth.nameLabel": "姓名顯示 (Display Name)",
@@ -69,8 +67,7 @@ export default {
   "github.diff.loadFailed":
     "無法載入完整的 Commit 變更。請重新同步倉庫；若持續失敗，請檢查 Token 或 API 請求額度。",
   "github.diff.noFiles": "此 Commit 沒有變更檔案。",
-  "github.diff.noPatch":
-    "此檔案沒有可顯示的文字差異（可能是二進位檔案、檔案過大或僅重新命名）。",
+  "github.diff.noPatch": "此檔案沒有可顯示的文字差異（可能是二進位檔案、檔案過大或僅重新命名）。",
   "github.branchLabel": "分支：",
   "github.fileTree": "GitHub 實際檔案結構樹（{count} 個檔案）",
   "home.projectCount": "專案數：{count}",
@@ -91,8 +88,7 @@ export default {
   "c4.expandable": "有深層圖 · 雙擊展開",
   "c4.internal": "內部元素",
   "c4.external": "外部元素",
-  "c4.externalHelp":
-    "外部元素不能包含子元素或進入下一層；關閉開關即可設為內部元素。",
+  "c4.externalHelp": "外部元素不能包含子元素或進入下一層；關閉開關即可設為內部元素。",
   "c4.externalBlocked": "此元素已有子元素，請先移除子元素才能切換為外部元素。",
   "c4.leaf": "尚無深層內容 · 未達 C4 可雙擊進入",
   "c4.levelsDescription":

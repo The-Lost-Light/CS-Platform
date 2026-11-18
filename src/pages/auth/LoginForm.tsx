@@ -1,7 +1,7 @@
-import { ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
+import { useLoginForm, type LoginHandler } from "@auth/useLoginForm";
 import { useI18n } from "@i18n";
 import { DemoAccountPicker } from "@pages/auth/DemoAccountPicker";
-import { useLoginForm, type LoginHandler } from "@auth/useLoginForm";
+import { ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
 
 export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
   const { t } = useI18n();
@@ -18,12 +18,8 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-on-surface">
-          {t("auth.title")}
-        </h2>
-        <p className="text-xs sm:text-sm text-on-muted mt-1">
-          {t("auth.description")}
-        </p>
+        <h2 className="text-xl sm:text-2xl font-bold text-on-surface">{t("auth.title")}</h2>
+        <p className="text-xs sm:text-sm text-on-muted mt-1">{t("auth.description")}</p>
       </div>
 
       {errorMessage && (
@@ -82,15 +78,9 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
                 type="button"
                 onClick={togglePassword}
                 className="absolute right-3 top-2.5 text-on-subtle hover:text-on-surface transition"
-                title={
-                  showPassword ? t("auth.hidePassword") : t("auth.showPassword")
-                }
+                title={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
               >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
@@ -105,9 +95,7 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
               className="ui-input px-3.5 py-2.5 text-sm font-medium"
             >
               <option value="學生 (Student)">{t("auth.roles.student")}</option>
-              <option value="專題組長 (Team Lead)">
-                {t("auth.roles.teamLead")}
-              </option>
+              <option value="專題組長 (Team Lead)">{t("auth.roles.teamLead")}</option>
               <option value="課程助教 (TA)">{t("auth.roles.ta")}</option>
             </select>
           </div>
@@ -124,10 +112,7 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
         </div>
       </form>
 
-      <DemoAccountPicker
-        selectedAccount={credentials.studentId}
-        onSelect={selectDemoAccount}
-      />
+      <DemoAccountPicker selectedAccount={credentials.studentId} onSelect={selectDemoAccount} />
     </div>
   );
 }

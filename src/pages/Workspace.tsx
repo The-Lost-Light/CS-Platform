@@ -1,9 +1,9 @@
-import { lazy, Suspense } from "react";
 import type { AuthenticatedSession } from "@auth/types";
-import { HomeDashboard } from "@pages/home/HomeDashboard";
-import { Navbar } from "@pages/layout/Navbar";
-import { LoadingPanel } from "@pages/layout/LoadingPanel";
 import { usePageNavigation } from "@hooks/usePageNavigation";
+import { HomeDashboard } from "@pages/home/HomeDashboard";
+import { LoadingPanel } from "@pages/layout/LoadingPanel";
+import { Navbar } from "@pages/layout/Navbar";
+import { lazy, Suspense } from "react";
 
 const ProjectWorkspace = lazy(() =>
   import("@pages/project/ProjectWorkspace").then((module) => ({
@@ -12,14 +12,8 @@ const ProjectWorkspace = lazy(() =>
 );
 
 export function WorkSpace({ currentUser, logout }: AuthenticatedSession) {
-  const {
-    activeView,
-    projects,
-    selectedProject,
-    navigateHome,
-    navigateProject,
-    openProject,
-  } = usePageNavigation();
+  const { activeView, projects, selectedProject, navigateHome, navigateProject, openProject } =
+    usePageNavigation();
 
   return (
     <>

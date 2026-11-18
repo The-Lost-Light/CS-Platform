@@ -1,18 +1,11 @@
-import { ChevronRight, FileCode2, Folder } from "lucide-react";
 import type { RepoBundle } from "@domain/repository";
+import { ChevronRight, FileCode2, Folder } from "lucide-react";
 
 import { buildRepoFileTree, type TreeNode } from "@domain/fileTree";
 
-function TreeEntries({
-  nodes,
-  searching,
-}: {
-  nodes: Map<string, TreeNode>;
-  searching: boolean;
-}) {
+function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searching: boolean }) {
   const sorted = [...nodes.values()].sort(
-    (a, b) =>
-      Number(b.directory) - Number(a.directory) || a.name.localeCompare(b.name),
+    (a, b) => Number(b.directory) - Number(a.directory) || a.name.localeCompare(b.name),
   );
 
   return (
@@ -55,13 +48,7 @@ function TreeEntries({
   );
 }
 
-export function RepoFileTree({
-  files,
-  search,
-}: {
-  files: RepoBundle["fileTree"];
-  search: string;
-}) {
+export function RepoFileTree({ files, search }: { files: RepoBundle["fileTree"]; search: string }) {
   const { roots, query } = buildRepoFileTree(files, search);
 
   return <TreeEntries key={query} nodes={roots} searching={Boolean(query)} />;

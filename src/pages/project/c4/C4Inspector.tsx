@@ -1,7 +1,7 @@
-import { Trash2, X } from "lucide-react";
-import type { ReactNode } from "react";
 import type { C4ArchitectProps } from "@pages/project/c4/types";
 import type { useC4Editor } from "@pages/project/c4/useC4Editor";
+import { Trash2, X } from "lucide-react";
+import type { ReactNode } from "react";
 const fieldClass = "ui-input px-3 py-2";
 
 export function C4Inspector({
@@ -9,10 +9,9 @@ export function C4Inspector({
   nodes,
   relationships,
   onChangeRelationships,
-}: Pick<
-  C4ArchitectProps,
-  "nodes" | "relationships" | "onChangeRelationships"
-> & { editor: ReturnType<typeof useC4Editor> }) {
+}: Pick<C4ArchitectProps, "nodes" | "relationships" | "onChangeRelationships"> & {
+  editor: ReturnType<typeof useC4Editor>;
+}) {
   const {
     t,
     selected,
@@ -46,9 +45,7 @@ export function C4Inspector({
         >
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-outline">
             <span className="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-mono text-xs font-bold">
-              {selected
-                ? `${t("c4.editElement")} · ${selected.kind}`
-                : t("c4.editRelationship")}
+              {selected ? `${t("c4.editElement")} · ${selected.kind}` : t("c4.editRelationship")}
             </span>
             <button
               type="button"
@@ -83,17 +80,11 @@ export function C4Inspector({
                     checked={!!selected.external}
                     disabled={expandableIds.has(selected.id)}
                     aria-describedby="c4-external-help"
-                    onChange={(event) =>
-                      update({ external: event.target.checked })
-                    }
+                    onChange={(event) => update({ external: event.target.checked })}
                   />
                 </label>
                 <p id="c4-external-help" className="text-xs text-on-muted">
-                  {t(
-                    expandableIds.has(selected.id)
-                      ? "c4.externalBlocked"
-                      : "c4.externalHelp",
-                  )}
+                  {t(expandableIds.has(selected.id) ? "c4.externalBlocked" : "c4.externalHelp")}
                 </p>
               </div>
               {field(
@@ -101,9 +92,7 @@ export function C4Inspector({
                 <input
                   className={`${fieldClass} font-mono`}
                   value={selected.technology}
-                  onChange={(event) =>
-                    update({ technology: event.target.value })
-                  }
+                  onChange={(event) => update({ technology: event.target.value })}
                   placeholder="React / REST / MySQL"
                 />,
               )}
@@ -113,9 +102,7 @@ export function C4Inspector({
                   rows={3}
                   className={fieldClass}
                   value={selected.description}
-                  onChange={(event) =>
-                    update({ description: event.target.value })
-                  }
+                  onChange={(event) => update({ description: event.target.value })}
                 />,
               )}
               {field(
@@ -123,9 +110,7 @@ export function C4Inspector({
                 <input
                   className={`${fieldClass} font-mono`}
                   value={selected.expectedPath}
-                  onChange={(event) =>
-                    update({ expectedPath: event.target.value })
-                  }
+                  onChange={(event) => update({ expectedPath: event.target.value })}
                   placeholder="src/"
                 />,
               )}
@@ -154,9 +139,7 @@ export function C4Inspector({
                   onChange={(event) =>
                     onChangeRelationships(
                       relationships.map((edge) =>
-                        edge.id === edgeId
-                          ? { ...edge, label: event.target.value }
-                          : edge,
+                        edge.id === edgeId ? { ...edge, label: event.target.value } : edge,
                       ),
                     )
                   }
@@ -170,9 +153,7 @@ export function C4Inspector({
                   onChange={(event) =>
                     onChangeRelationships(
                       relationships.map((edge) =>
-                        edge.id === edgeId
-                          ? { ...edge, technology: event.target.value }
-                          : edge,
+                        edge.id === edgeId ? { ...edge, technology: event.target.value } : edge,
                       ),
                     )
                   }
@@ -182,9 +163,7 @@ export function C4Inspector({
                 type="button"
                 className="w-full mt-2 px-3.5 py-2 rounded-xl bg-danger-container/60 hover:bg-danger-container text-on-danger-container border border-danger-outline text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition"
                 onClick={() =>
-                  onChangeRelationships(
-                    relationships.filter((edge) => edge.id !== edgeId),
-                  )
+                  onChangeRelationships(relationships.filter((edge) => edge.id !== edgeId))
                 }
               >
                 <Trash2 className="w-3.5 h-3.5" />

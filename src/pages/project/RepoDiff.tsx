@@ -1,9 +1,4 @@
-import {
-  parsePatch,
-  splitPatch,
-  type DiffMode,
-  type PatchLine,
-} from "@domain/diff";
+import { parsePatch, splitPatch, type DiffMode, type PatchLine } from "@domain/diff";
 
 function lineClass(line: PatchLine | null) {
   const color =
@@ -19,10 +14,7 @@ function lineClass(line: PatchLine | null) {
 
 export function RepoDiff({ patch, mode }: { patch: string; mode: DiffMode }) {
   return (
-    <div
-      className="p-2 font-mono text-[11px] overflow-x-auto"
-      data-diff-mode={mode}
-    >
+    <div className="p-2 font-mono text-[11px] overflow-x-auto" data-diff-mode={mode}>
       {mode === "split" ? (
         <table className="w-full border-collapse table-fixed">
           <tbody>
@@ -33,9 +25,7 @@ export function RepoDiff({ patch, mode }: { patch: string; mode: DiffMode }) {
                 >
                   {row.left?.text ?? "\u00a0"}
                 </td>
-                <td
-                  className={`${lineClass(row.right)} w-1/2 whitespace-pre-wrap break-all`}
-                >
+                <td className={`${lineClass(row.right)} w-1/2 whitespace-pre-wrap break-all`}>
                   {row.right?.text ?? "\u00a0"}
                 </td>
               </tr>

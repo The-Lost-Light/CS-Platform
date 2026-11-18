@@ -1,0 +1,14 @@
+[fix.tools.vp-fmt]
+command = "vp fmt --stdin-filepath=$path"
+patterns = [
+  "glob:'**/*.ts'",
+  "glob:'**/*.tsx'",
+  "glob:'**/*.js'",
+  "glob:'**/*.jsx'",
+  "glob:'**/*.json'",
+  "glob:'**/*.css'",
+  "glob:'**/*.html'",
+]
+
+[aliases]
+push = ["util", "exec", "--", "cmd.exe", "/c", "jj fix && jj git push"]

@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import test from "node:test";
 import { createGitHubService, parseGitHubRepoUrl } from "@services/github";
+import assert from "node:assert/strict";
+import { test } from "vite-plus/test";
 import { createRepoFixture } from "./fixtures/repository";
 
 test("repository URL parsing retains supported URL and shorthand forms", () => {
@@ -35,17 +35,14 @@ test("former teaching repository uses the GitHub API", async () => {
   let requested = "";
   const service = createGitHubService({
     fetch: async (input) => {
-      requested = String(input);
+      requested = new Request(input).url;
       return new Response(null, { status: 404 });
     },
   });
   await assert.rejects(service("student-team/course-oj-platform"), {
     message: "HTTP 404",
   });
-  assert.equal(
-    requested,
-    "https://api.github.com/repos/student-team/course-oj-platform",
-  );
+  assert.equal(requested, "https://api.github.com/repos/student-team/course-oj-platform");
 });
 
 test("live loading preserves headers, branch encoding, rate limits and the 250-file cap", async () => {
@@ -58,23 +55,20 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     size: i,
   }));
   const service = createGitHubService({
-    fetch: async (url, init) => {
-      requests.push({ url: String(url), headers: init?.headers });
+    fetch: async (input, init) => {
+      const url = new Request(input).url;
+      requests.push({ url: url, headers: init?.headers });
       const data =
         requests.length === 1
           ? repo
-          : String(url).endsWith("/languages")
+          : url.endsWith("/languages")
             ? { TypeScript: 100 }
-            : String(url).includes("/branches?")
+            : url.includes("/branches?")
               ? snapshot.branches
-              : String(url).includes("/commits?")
-                ? snapshot.commits.map(
-                    ({ files, stats, ...summary }) => summary,
-                  )
-                : String(url).includes("/commits/")
-                  ? snapshot.commits.find((commit) =>
-                      String(url).includes(commit.sha),
-                    )
+              : url.includes("/commits?")
+                ? snapshot.commits.map(({ files: _files, stats: _stats, ...summary }) => summary)
+                : url.includes("/commits/")
+                  ? snapshot.commits.find((commit) => url.includes(commit.sha))
                   : { tree: files };
       return Response.json(data, {
         headers: { "x-ratelimit-remaining": "42", "x-ratelimit-limit": "60" },
@@ -89,9 +83,7 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
       Authorization: "Bearer test-token",
     });
   assert.ok(requests.some((r) => r.url.includes("sha=feature%2Fa%20b")));
-  assert.ok(
-    requests.some((r) => r.url.includes("/trees/feature%2Fa%20b?recursive=1")),
-  );
+  assert.ok(requests.some((r) => r.url.includes("/trees/feature%2Fa%20b?recursive=1")));
   assert.deepEqual(result, {
     repo,
     languages: { TypeScript: 100 },
@@ -108,11 +100,11 @@ test("commit detail failures preserve live history, successful diffs and partial
   for (const failure of ["http", "network", "invalid", "later-page"] as const) {
     const [first, second] = snapshot.commits;
     const summaries = [first, second].map(
-      ({ files, stats, ...summary }) => summary,
+      ({ files: _files, stats: _stats, ...summary }) => summary,
     );
     const service = createGitHubService({
       fetch: async (input) => {
-        const url = String(input);
+        const url = new Request(input).url;
         if (url.includes(`/commits/${first.sha}`)) {
           if (failure === "later-page" && url.endsWith("page=1")) {
             return Response.json(first, {
@@ -123,8 +115,7 @@ test("commit detail failures preserve live history, successful diffs and partial
           if (failure === "invalid") return Response.json({ sha: first.sha });
           return new Response(null, { status: 403 });
         }
-        if (url.includes(`/commits/${second.sha}`))
-          return Response.json(second);
+        if (url.includes(`/commits/${second.sha}`)) return Response.json(second);
         if (url.includes("/commits?")) return Response.json(summaries);
         if (url.includes("/branches?")) return Response.json([]);
         if (url.includes("/trees/")) return Response.json({ tree: [] });
@@ -140,10 +131,7 @@ test("commit detail failures preserve live history, successful diffs and partial
     );
     assert.ok(result.commits[0].diffError);
     assert.deepEqual(result.commits[1], second);
-    assert.deepEqual(
-      result.commits[0].files,
-      failure === "later-page" ? first.files : undefined,
-    );
+    assert.deepEqual(result.commits[0].files, failure === "later-page" ? first.files : undefined);
   }
 });
 
@@ -153,13 +141,10 @@ test("commit detail pagination collects files using the same authenticated endpo
   const pages: string[] = [];
   const service = createGitHubService({
     fetch: async (input, init) => {
-      const url = String(input);
+      const url = new Request(input).url;
       if (url.includes("/commits/")) {
         pages.push(url);
-        assert.equal(
-          new Headers(init?.headers).get("Authorization"),
-          "Bearer test-token",
-        );
+        assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-token");
         return Response.json(
           {
             ...summary,

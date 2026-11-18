@@ -1,7 +1,7 @@
-import { ChevronRight, FolderGit2 } from "lucide-react";
-import { useI18n } from "@i18n";
-import type { Project } from "@domain/project";
 import type { User } from "@auth/types";
+import type { Project } from "@domain/project";
+import { useI18n } from "@i18n";
+import { ChevronRight, FolderGit2 } from "lucide-react";
 
 export function HomeDashboard({
   projects,
@@ -26,18 +26,12 @@ export function HomeDashboard({
             {t("home.welcome")}
             {currentUser?.name || t("home.student")}
           </h1>
-          <p className="text-xs sm:text-sm text-on-muted mt-0.5">
-            {t("home.description")}
-          </p>
+          <p className="text-xs sm:text-sm text-on-muted mt-0.5">{t("home.description")}</p>
         </div>
 
         <div className="ui-panel px-4 py-2.5 text-center">
-          <div className="text-lg font-bold text-primary font-mono">
-            {projects.length}
-          </div>
-          <div className="text-[11px] font-medium text-on-muted">
-            {t("common.projects")}
-          </div>
+          <div className="text-lg font-bold text-primary font-mono">{projects.length}</div>
+          <div className="text-[11px] font-medium text-on-muted">{t("common.projects")}</div>
         </div>
       </section>
 

@@ -1,9 +1,4 @@
-import {
-  createTranslator,
-  DEFAULT_LOCALE,
-  type MessageKey,
-  type Translator,
-} from "@i18n/messages";
+import { createTranslator, DEFAULT_LOCALE, type MessageKey, type Translator } from "@i18n/messages";
 
 import type { MindMapNode, Project } from "@domain/project";
 
@@ -39,13 +34,7 @@ const PROJECT_TEMPLATES = [
     dueDate: "2026-11-25 23:59",
     points: 200,
     defaultRepoUrl: "",
-    tags: [
-      "System Architecture",
-      "Mind Map",
-      "GitHub API",
-      "File Tree Diff",
-      "CI/CD",
-    ],
+    tags: ["System Architecture", "Mind Map", "GitHub API", "File Tree Diff", "CI/CD"],
     titleKey: "courses.fullstack.title",
     difficultyKey: "courses.fullstack.difficulty",
     statusKey: "courses.fullstack.status",
@@ -183,8 +172,7 @@ const PROJECT_TEMPLATES = [
       {
         id: "react-devtools",
         category: "ai",
-        expectedPath:
-          "packages/react-devtools-shared/src/backend/flight/parseFlightStack.js",
+        expectedPath: "packages/react-devtools-shared/src/backend/flight/parseFlightStack.js",
         parentId: "react-root",
         x: 630,
         y: 185,
@@ -236,13 +224,11 @@ export function createProjects(t: Translator): Project[] {
       summary: t(summaryKey),
       requirements: requirementKeys.map((key) => t(key)),
       initialDesignDoc: t(initialDesignDocKey),
-      initialMindMapNodes: initialMindMapNodes.map(
-        ({ labelKey, descriptionKey, ...node }) => ({
-          ...node,
-          label: t(labelKey),
-          description: t(descriptionKey),
-        }),
-      ),
+      initialMindMapNodes: initialMindMapNodes.map(({ labelKey, descriptionKey, ...node }) => ({
+        ...node,
+        label: t(labelKey),
+        description: t(descriptionKey),
+      })),
     }),
   );
 }

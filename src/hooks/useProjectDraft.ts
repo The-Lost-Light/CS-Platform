@@ -1,13 +1,10 @@
-import { useEffect, useRef, useState } from "react";
 import { updateLocalizedProjectDraft } from "@data/localizedProjects";
-import type { Project } from "@domain/project";
 import { migrateC4Nodes, type C4Relationship } from "@domain/c4";
+import type { Project } from "@domain/project";
+import { useEffect, useRef, useState } from "react";
 
 /** Locale updates merge untouched template fields; project changes reset the draft. */
-export function useProjectDraft(
-  project: Project,
-  onProjectChange: (url: string) => void,
-) {
+export function useProjectDraft(project: Project, onProjectChange: (url: string) => void) {
   const [mindMapNodes, setMindMapNodes] = useState(() =>
     migrateC4Nodes(project.initialMindMapNodes || []),
   );
@@ -20,18 +17,10 @@ export function useProjectDraft(
     previousProject.current = project;
     if (previous.id === project.id && previous !== project) {
       setMindMapNodes((nodes) => {
-        const localized = updateLocalizedProjectDraft(
-          nodes,
-          "",
-          previous,
-          project,
-        ).nodes;
+        const localized = updateLocalizedProjectDraft(nodes, "", previous, project).nodes;
         return nodes.map((node, index) => ({ ...node, ...localized[index] }));
       });
-      setDesignDoc(
-        (doc) =>
-          updateLocalizedProjectDraft([], doc, previous, project).designDoc,
-      );
+      setDesignDoc((doc) => updateLocalizedProjectDraft([], doc, previous, project).designDoc);
       return;
     }
     setMindMapNodes(migrateC4Nodes(project.initialMindMapNodes || []));

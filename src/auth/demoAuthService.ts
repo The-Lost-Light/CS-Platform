@@ -5,8 +5,7 @@ export const demoAuthService: AuthService = {
   login(credentials) {
     const studentId = credentials.studentId.trim();
     if (!studentId) return { ok: false, error: "accountRequired" };
-    if (!credentials.password.trim())
-      return { ok: false, error: "passwordRequired" };
+    if (!credentials.password.trim()) return { ok: false, error: "passwordRequired" };
 
     return {
       ok: true,

@@ -8,10 +8,7 @@ export interface TreeNode {
   children: Map<string, TreeNode>;
 }
 
-export function buildRepoFileTree(
-  files: RepoBundle["fileTree"],
-  search: string,
-) {
+export function buildRepoFileTree(files: RepoBundle["fileTree"], search: string) {
   const query = search.trim().toLowerCase();
   const roots = new Map<string, TreeNode>();
 

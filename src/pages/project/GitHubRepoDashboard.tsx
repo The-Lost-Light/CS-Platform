@@ -1,16 +1,12 @@
-import type { RepoBundle } from "@domain/repository";
-import { useState } from "react";
 import type { DiffMode } from "@domain/diff";
-import { RepositoryMetrics } from "@pages/project/github/RepositoryMetrics";
-import { RepositoryLanguages } from "@pages/project/github/RepositoryLanguages";
-import { RepositoryTree } from "@pages/project/github/RepositoryTree";
+import type { RepoBundle } from "@domain/repository";
 import { CommitHistory } from "@pages/project/github/CommitHistory";
+import { RepositoryLanguages } from "@pages/project/github/RepositoryLanguages";
+import { RepositoryMetrics } from "@pages/project/github/RepositoryMetrics";
+import { RepositoryTree } from "@pages/project/github/RepositoryTree";
+import { useState } from "react";
 
-export function GitHubRepoDashboard({
-  repoBundle,
-}: {
-  repoBundle: RepoBundle | null;
-}) {
+export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | null }) {
   if (!repoBundle?.repo) return null;
   return (
     <LoadedGitHubRepoDashboard
@@ -21,22 +17,12 @@ export function GitHubRepoDashboard({
 }
 
 function LoadedGitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle }) {
-  const [selectedBranch, setSelectedBranch] = useState(
-    repoBundle?.repo?.default_branch || "main",
-  );
-  const [expandedCommitSha, setExpandedCommitSha] = useState<string | null>(
-    null,
-  );
+  const [selectedBranch, setSelectedBranch] = useState(repoBundle?.repo?.default_branch || "main");
+  const [expandedCommitSha, setExpandedCommitSha] = useState<string | null>(null);
   const [diffMode, setDiffMode] = useState<DiffMode>("unified");
   const [fileTreeSearch, setFileTreeSearch] = useState("");
 
-  const {
-    repo,
-    languages = {},
-    branches = [],
-    commits = [],
-    fileTree = [],
-  } = repoBundle;
+  const { repo, languages, branches, commits, fileTree } = repoBundle;
 
   return (
     <div className="space-y-6">

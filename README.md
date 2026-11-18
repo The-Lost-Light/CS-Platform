@@ -1,6 +1,6 @@
 # CodePulse Edu — 課程專案平台
 
-使用 React 19、TypeScript、Vite 8、Tailwind CSS 4 與 pnpm 開發的課程專案平台，整合 C4 架構圖設計、專案設計文件與 GitHub 倉庫瀏覽。
+使用 React 19、TypeScript、Vite+、Tailwind CSS 4 與 pnpm 開發的課程專案平台，整合 C4 架構圖設計、專案設計文件與 GitHub 倉庫瀏覽。
 
 ## 核心功能
 
@@ -42,15 +42,30 @@ src/
 
 ## 開發與驗證
 
+需要 Node.js `^22.18.0 || ^24.11.0 || >=26.0.0` 與 `packageManager` 指定的 pnpm 12.21.0。專案已安裝本地 Vite+ CLI，不需全域安裝 `vp`。
+
 ```bash
 pnpm install
 pnpm dev
+pnpm check
 pnpm test
 pnpm typecheck
 pnpm build
+pnpm preview
 ```
 
-`pnpm build` 包含 TypeScript strict 型別檢查與正式建置；`pnpm preview` 可預覽建置結果。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/tokens.css`，樣式統一從 `index.css` 載入。
+所有工具指令由 Vite+ 統一執行，設定集中於 `vite.config.ts`：
+
+- `pnpm dev` / `pnpm preview`：啟動開發伺服器／預覽正式建置。
+- `pnpm check`：以 Oxfmt、Oxlint 與 Vite+ 型別檢查器執行格式、含型別資訊的 lint 和 TypeScript strict 檢查。
+- `pnpm fmt` / `pnpm lint`：格式化專案／單獨執行 lint；`pnpm exec vp check --fix` 可格式化並套用安全的 lint 修正。
+- `pnpm typecheck`：使用 `vp check --no-fmt --no-lint` 單獨檢查型別。
+- `pnpm test` / `pnpm test:watch`：透過 Vite+ 內建 Vitest 執行全部測試／監看模式。測試使用 `vite-plus/test`，保留 Node strict assertions，並共用應用的模組別名與 React Compiler 設定。
+- `pnpm build`：先執行 strict 型別檢查，再透過 `vp build` 產生 `dist/`。
+
+Vite+ 版本與 Vite 相容別名由 `pnpm-workspace.yaml` catalog 管理，`vite` 指向 Vite+ core，讓 React 與 Tailwind 外掛共用同一份建置引擎；Vitest override 對齊 Vite+ 內建版本。`pnpm-lock.yaml` 納入版本控制，CI 或乾淨環境請執行 `pnpm install --frozen-lockfile`、`pnpm check`、`pnpm test` 與 `pnpm build`。升級時依 [Vite+ 官方遷移指南](https://viteplus.dev/guide/migrate) 執行目標版本的 migrator，並重新驗證上述指令。
+
+React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合；外掛由 `lazyPlugins` 延後載入，避免格式與 lint 指令啟動建置外掛。Tailwind CSS 4 透過 `@tailwindcss/vite` 整合，主題定義於 `src/pages/styles/tokens.css`，樣式統一從 `index.css` 載入。
 
 ## 模組邊界與重構分析
 

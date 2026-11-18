@@ -1,13 +1,6 @@
-import { useI18n } from "@i18n";
 import type { RepoBundle } from "@domain/repository";
-import {
-  Star,
-  GitFork,
-  AlertCircle,
-  GitBranch,
-  FolderTree,
-  Code2,
-} from "lucide-react";
+import { useI18n } from "@i18n";
+import { AlertCircle, Code2, FolderTree, GitBranch, GitFork, Star } from "lucide-react";
 
 export function RepositoryMetrics({
   repo,
@@ -53,9 +46,7 @@ export function RepositoryMetrics({
             <span>{t("github.branches")}</span>
             <GitBranch className="w-3.5 h-3.5 text-success" />
           </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {branches.length}
-          </div>
+          <div className="text-lg font-bold text-on-surface font-mono mt-1">{branches.length}</div>
         </div>
 
         <div className="ui-card-sm">
@@ -63,9 +54,7 @@ export function RepositoryMetrics({
             <span>{t("github.totalFiles")}</span>
             <FolderTree className="w-3.5 h-3.5 text-secondary" />
           </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {fileTree.length}
-          </div>
+          <div className="text-lg font-bold text-on-surface font-mono mt-1">{fileTree.length}</div>
         </div>
 
         <div className="ui-card-sm">

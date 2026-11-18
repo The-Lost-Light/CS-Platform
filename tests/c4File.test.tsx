@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import test from "node:test";
 import { PROJECTS } from "@data/projectsData";
-import { parseC4File, serializeC4File } from "@domain/c4File";
 import { migrateC4Nodes } from "@domain/c4";
+import { parseC4File, serializeC4File } from "@domain/c4File";
+import assert from "node:assert/strict";
+import { test } from "vite-plus/test";
 
 const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
 const relationships = [
@@ -22,10 +22,7 @@ test("import accepts four levels and rejects a fifth regardless of node kinds or
     id: `level-${index}`,
     parentId: index ? `level-${index - 1}` : null,
   }));
-  assert.equal(
-    parseC4File(serializeC4File(chain.slice(0, 4), [])).nodes.length,
-    4,
-  );
+  assert.equal(parseC4File(serializeC4File(chain.slice(0, 4), [])).nodes.length, 4);
   assert.throws(() => parseC4File(serializeC4File(chain, [])));
   assert.throws(() => parseC4File(serializeC4File([...chain].reverse(), [])));
 });
@@ -60,8 +57,7 @@ test("C4 JSON round trip preserves all levels, positions, metadata and directed 
 });
 
 test("C4 import rejects malformed, incompatible and incomplete files", () => {
-  for (const text of ["", "{", "null", "[]", "{}"])
-    assert.throws(() => parseC4File(text));
+  for (const text of ["", "{", "null", "[]", "{}"]) assert.throws(() => parseC4File(text));
   for (const mutate of [
     (file: ReturnType<typeof fixture>) => {
       file.version = 2;
@@ -120,10 +116,7 @@ test("C4 dimensions survive export and import while legacy nodes remain unchange
   const resized = nodes.map((node, index) =>
     index === 0 ? { ...node, width: 412.5, height: 360 } : node,
   );
-  assert.deepEqual(
-    parseC4File(serializeC4File(resized, relationships)).nodes,
-    resized,
-  );
+  assert.deepEqual(parseC4File(serializeC4File(resized, relationships)).nodes, resized);
   for (const key of ["width", "height"]) {
     for (const value of [0, -1, null, "300", Infinity]) {
       const file = fixture();
@@ -138,10 +131,7 @@ test("external flags round trip and external boundaries reject children", () => 
   assert.deepEqual(parseC4File(serializeC4File(external, [])).nodes, external);
   assert.throws(() =>
     parseC4File(
-      serializeC4File(
-        [{ ...nodes[0], external: true }, ...nodes.slice(1)],
-        relationships,
-      ),
+      serializeC4File([{ ...nodes[0], external: true }, ...nodes.slice(1)], relationships),
     ),
   );
   for (const value of ["true", 1, null]) {

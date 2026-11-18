@@ -1,18 +1,16 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
-import { RepoDiff } from "@pages/project/RepoDiff";
 import { splitPatch } from "@domain/diff";
 import { I18nProvider } from "@i18n";
 import { CommitHistory } from "@pages/project/github/CommitHistory";
-import { createRepoFixture } from "./fixtures/repository";
-import { createGitHubService } from "@services/github";
 import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
+import { RepoDiff } from "@pages/project/RepoDiff";
+import { createGitHubService } from "@services/github";
+import assert from "node:assert/strict";
+import { renderToStaticMarkup } from "react-dom/server";
+import { test } from "vite-plus/test";
+import { createRepoFixture } from "./fixtures/repository";
 
 test("split diff pairs replacements and pads unequal changes within each hunk", () => {
-  const rows = splitPatch(
-    "@@ -1,3 +1,2 @@\n same\n-old\n-extra\n+new\n@@ -9,0 +9 @@\n+added",
-  );
+  const rows = splitPatch("@@ -1,3 +1,2 @@\n same\n-old\n-extra\n+new\n@@ -9,0 +9 @@\n+added");
   assert.deepEqual(
     rows.map((row) => [row.left?.text ?? null, row.right?.text ?? null]),
     [
@@ -29,11 +27,11 @@ test("split diff pairs replacements and pads unequal changes within each hunk", 
 
 test("real API list summaries are enriched and render code in both history diff modes", async () => {
   const snapshot = createRepoFixture();
-  const { files, stats, prInfo, ...summary } = snapshot.commits[0];
+  const { files, stats, prInfo: _prInfo, ...summary } = snapshot.commits[0];
   const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
   const service = createGitHubService({
     fetch: async (input) => {
-      const url = String(input);
+      const url = new Request(input).url;
       if (url.includes("/commits?")) return Response.json([summary]);
       if (url.includes("/commits/"))
         return Response.json({
@@ -112,9 +110,7 @@ test("expanded commits explain missing patches, empty changes and detail failure
 });
 
 test("missing newline markers stay with their respective sides", () => {
-  const rows = splitPatch(
-    "-old\n\\ No newline at end of file\n+new\n\\ No newline at end of file",
-  );
+  const rows = splitPatch("-old\n\\ No newline at end of file\n+new\n\\ No newline at end of file");
   assert.equal(rows.length, 1);
   assert.equal(rows[0].left?.text, "-old\n\\ No newline at end of file");
   assert.equal(rows[0].right?.text, "+new\n\\ No newline at end of file");
@@ -122,9 +118,7 @@ test("missing newline markers stay with their respective sides", () => {
 
 test("diff mode changes rendered layout while preserving and escaping code", () => {
   const patch = "@@ -1 +1 @@\n-<old>\n+<new>";
-  const unified = renderToStaticMarkup(
-    <RepoDiff patch={patch} mode="unified" />,
-  );
+  const unified = renderToStaticMarkup(<RepoDiff patch={patch} mode="unified" />);
   const split = renderToStaticMarkup(<RepoDiff patch={patch} mode="split" />);
   assert.ok(!unified.includes("<table"));
   assert.ok(split.includes("<table"));

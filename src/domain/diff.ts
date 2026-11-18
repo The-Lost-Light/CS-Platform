@@ -1,9 +1,7 @@
 export type DiffMode = "unified" | "split";
 export type PatchLine = { type: "hunk" | "add" | "del" | "ctx"; text: string };
 
-export function splitPatch(
-  patch: string,
-): { left: PatchLine | null; right: PatchLine | null }[] {
+export function splitPatch(patch: string): { left: PatchLine | null; right: PatchLine | null }[] {
   const rows: { left: PatchLine | null; right: PatchLine | null }[] = [];
   let removed: PatchLine[] = [];
   let added: PatchLine[] = [];

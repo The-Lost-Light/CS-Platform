@@ -1,11 +1,6 @@
 @layer base {
   body {
-    font-family:
-      "Inter",
-      "Noto Sans TC",
-      system-ui,
-      -apple-system,
-      sans-serif;
+    font-family: "Inter", "Noto Sans TC", system-ui, -apple-system, sans-serif;
     background-color: var(--bg-canvas);
     color: var(--on-surface);
   }
@@ -18,8 +13,6 @@
   code,
   pre,
   .font-mono-code {
-    font-family:
-      "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      monospace;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }

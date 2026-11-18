@@ -1,17 +1,11 @@
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import {
   createTranslator,
   isLocale,
   resolveLocale,
   type Locale,
   type Translator,
 } from "@i18n/messages";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export { SUPPORTED_LOCALES } from "@i18n/messages";
 export type { Locale, MessageKey, Translator } from "@i18n/messages";
@@ -36,9 +30,7 @@ function initialPreference(): LanguagePreference {
 function systemLocale(): Locale {
   return resolveLocale(
     null,
-    typeof navigator === "undefined"
-      ? []
-      : (navigator.languages ?? [navigator.language]),
+    typeof navigator === "undefined" ? [] : (navigator.languages ?? [navigator.language]),
   );
 }
 export function I18nProvider({

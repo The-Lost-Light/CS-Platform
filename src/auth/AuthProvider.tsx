@@ -1,16 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
 import { demoAuthService } from "@auth/demoAuthService";
-import type {
-  AuthService,
-  LoginCredentials,
-  LoginResult,
-  User,
-} from "@auth/types";
+import type { AuthService, LoginCredentials, LoginResult, User } from "@auth/types";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface AuthContextValue {
   currentUser: User | null;

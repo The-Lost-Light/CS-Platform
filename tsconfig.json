@@ -23,9 +23,9 @@
       "@pages/*": ["./src/pages/*"],
       "@services/*": ["./src/services/*"],
       "@theme": ["./src/theme/index.tsx"],
-      "@theme/*": ["./src/theme/*"],
+      "@theme/*": ["./src/theme/*"]
     },
-    "types": ["vite/client", "node"],
+    "types": ["vite-plus/client", "node"],
 
     /* Emit */
     "noEmit": true,
@@ -39,7 +39,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "tests", "*.ts"],
+  "include": ["src", "tests", "*.ts"]
 }

@@ -70,16 +70,12 @@ export async function fetchLiveRepoBundle(
   const defaultBranch = repoData.default_branch || "main";
 
   const [languages, branches, commitsList, treeData] = await Promise.all([
-    fetch(
-      `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/languages`,
-      { headers },
-    )
+    fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/languages`, { headers })
       .then((r) => (r.ok ? r.json() : {}))
       .catch(() => ({})),
-    fetch(
-      `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/branches?per_page=30`,
-      { headers },
-    )
+    fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/branches?per_page=30`, {
+      headers,
+    })
       .then((r) => (r.ok ? r.json() : []))
       .catch(() => []),
     fetch(
@@ -114,7 +110,6 @@ export async function fetchLiveRepoBundle(
     commits,
     fileTree: Array.isArray(treeData?.tree) ? treeData.tree.slice(0, 250) : [],
     sourceType: "live-api",
-    rateLimit:
-      rateRemaining && rateLimit ? `${rateRemaining}/${rateLimit}` : "Live API",
+    rateLimit: rateRemaining && rateLimit ? `${rateRemaining}/${rateLimit}` : "Live API",
   };
 }

@@ -1,6 +1,6 @@
-import { AlertCircle, FolderGit2, KeyRound, RefreshCw } from "lucide-react";
-import { useI18n } from "@i18n";
 import type { useRepository } from "@hooks/useRepository";
+import { useI18n } from "@i18n";
+import { AlertCircle, FolderGit2, KeyRound, RefreshCw } from "lucide-react";
 
 export function RepositoryConnection({
   repository,
@@ -34,9 +34,7 @@ export function RepositoryConnection({
 
       {showTokenInput && (
         <div className="ui-panel p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 text-xs">
-          <span className="font-semibold text-on-muted shrink-0">
-            Personal Access Token:
-          </span>
+          <span className="font-semibold text-on-muted shrink-0">Personal Access Token:</span>
           <input
             type="password"
             value={githubToken}
@@ -51,7 +49,7 @@ export function RepositoryConnection({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          handleLoadRepo(repoUrlInput);
+          void handleLoadRepo(repoUrlInput);
         }}
         className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 pt-1"
       >
@@ -71,9 +69,7 @@ export function RepositoryConnection({
           disabled={isLoadingRepo}
           className="ui-btn-primary px-5 py-2.5 text-xs sm:text-sm shrink-0"
         >
-          <RefreshCw
-            className={`w-4 h-4 ${isLoadingRepo ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`w-4 h-4 ${isLoadingRepo ? "animate-spin" : ""}`} />
           <span>{t("workspace.sync")}</span>
         </button>
       </form>
@@ -84,9 +80,7 @@ export function RepositoryConnection({
           className="p-3.5 rounded-xl bg-danger-container border border-danger-outline text-on-danger-container text-xs font-semibold flex items-center gap-2"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>
-            {"key" in repoError ? t(repoError.key) : repoError.message}
-          </span>
+          <span>{"key" in repoError ? t(repoError.key) : repoError.message}</span>
         </div>
       )}
     </div>

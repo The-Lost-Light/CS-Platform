@@ -1,7 +1,7 @@
-import { useI18n } from "@i18n";
 import type { RepoBundle } from "@domain/repository";
-import { FolderTree, GitBranch } from "lucide-react";
+import { useI18n } from "@i18n";
 import { RepoFileTree } from "@pages/project/RepoFileTree";
+import { FolderTree, GitBranch } from "lucide-react";
 
 export function RepositoryTree({
   repo,
@@ -58,11 +58,7 @@ export function RepositoryTree({
         />
 
         <div className="max-h-115 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
-          <RepoFileTree
-            key={repo.full_name}
-            files={fileTree}
-            search={fileTreeSearch}
-          />
+          <RepoFileTree key={repo.full_name} files={fileTree} search={fileTreeSearch} />
         </div>
       </div>
     </>

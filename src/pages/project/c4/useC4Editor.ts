@@ -1,8 +1,3 @@
-import { downloadC4Model } from "@services/c4Download";
-import { useEffect, useRef, useState } from "react";
-import { MarkerType, type ReactFlowInstance } from "@xyflow/react";
-import { useI18n } from "@i18n";
-import { C4_FILE_MAX_BYTES, parseC4File } from "@domain/c4File";
 import {
   c4Drilldown,
   canExploreC4Node,
@@ -10,8 +5,13 @@ import {
   removeC4Nodes,
   type C4Node,
 } from "@domain/c4";
+import { C4_FILE_MAX_BYTES, parseC4File } from "@domain/c4File";
+import { useI18n } from "@i18n";
 import type { CanvasNode } from "@pages/project/c4/flowTypes";
 import type { C4ArchitectProps } from "@pages/project/c4/types";
+import { downloadC4Model } from "@services/c4Download";
+import { MarkerType, type ReactFlowInstance } from "@xyflow/react";
+import { useEffect, useRef, useState } from "react";
 
 export function useC4Editor({
   nodes,
@@ -85,9 +85,7 @@ export function useC4Editor({
   };
 
   const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
-  const expandableIds = new Set(
-    nodes.map((node) => node.parentId).filter(Boolean),
-  );
+  const expandableIds = new Set(nodes.map((node) => node.parentId).filter(Boolean));
   const visibleIds = new Set(visible.map((node) => node.id));
   const selected = nodes.find((node) => node.id === selectedId);
   const selectedEdge = relationships.find((edge) => edge.id === edgeId);
@@ -96,14 +94,8 @@ export function useC4Editor({
   const boundary = scope?.boundary ?? {
     x: -40,
     y: -70,
-    width: Math.max(
-      600,
-      ...inside.map((node) => node.x + (node.width ?? 280) + 80),
-    ),
-    height: Math.max(
-      360,
-      ...inside.map((node) => node.y + (node.height ?? 230) + 110),
-    ),
+    width: Math.max(600, ...inside.map((node) => node.x + (node.width ?? 280) + 80)),
+    height: Math.max(360, ...inside.map((node) => node.y + (node.height ?? 230) + 110)),
   };
   const insideIds = new Set(inside.map((node) => node.id));
   const flowNodes: CanvasNode[] = visible.map((node) => ({
@@ -146,9 +138,7 @@ export function useC4Editor({
     });
 
   const flowEdges = relationships
-    .filter(
-      (edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target),
-    )
+    .filter((edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target))
     .map((edge) => ({
       ...edge,
       type: "smoothstep",
@@ -162,8 +152,7 @@ export function useC4Editor({
       },
       style: {
         strokeWidth: 2,
-        stroke:
-          edge.id === edgeId ? "var(--c4-edge-selected)" : "var(--c4-edge)",
+        stroke: edge.id === edgeId ? "var(--c4-edge-selected)" : "var(--c4-edge)",
       },
       labelStyle: { fontSize: 11, fontWeight: 600, fill: "var(--on-surface)" },
       labelBgStyle: { fill: "var(--c4-edge-label-bg)", fillOpacity: 0.95 },
@@ -180,11 +169,7 @@ export function useC4Editor({
   };
   const update = (patch: Partial<C4Node>) => {
     if (patch.external && expandableIds.has(selectedId)) return;
-    onChangeNodes(
-      nodes.map((node) =>
-        node.id === selectedId ? { ...node, ...patch } : node,
-      ),
-    );
+    onChangeNodes(nodes.map((node) => (node.id === selectedId ? { ...node, ...patch } : node)));
   };
   const remove = (ids: string[]) => {
     const remaining = removeC4Nodes(nodes, ids);
@@ -194,8 +179,7 @@ export function useC4Editor({
     onChangeNodes(remaining);
     onChangeRelationships(
       relationships.filter(
-        (edge) =>
-          remainingIds.has(edge.source) && remainingIds.has(edge.target),
+        (edge) => remainingIds.has(edge.source) && remainingIds.has(edge.target),
       ),
     );
   };

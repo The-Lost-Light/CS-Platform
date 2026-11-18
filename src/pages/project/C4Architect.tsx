@@ -1,15 +1,9 @@
-import {
-  ChevronRight,
-  Download,
-  FileText,
-  Network,
-  Upload,
-} from "lucide-react";
-import { lazy, Suspense } from "react";
 import { LoadingPanel } from "@pages/layout/LoadingPanel";
 import { DesignDocument } from "@pages/project/c4/DesignDocument";
-import { useC4Editor } from "@pages/project/c4/useC4Editor";
 import type { C4ArchitectProps } from "@pages/project/c4/types";
+import { useC4Editor } from "@pages/project/c4/useC4Editor";
+import { ChevronRight, Download, FileText, Network, Upload } from "lucide-react";
+import { lazy, Suspense } from "react";
 
 const C4Diagram = lazy(() =>
   import("@pages/project/c4/C4Diagram").then((module) => ({
@@ -104,14 +98,8 @@ export function C4Architect(props: C4ArchitectProps) {
                   C1 · Context
                 </button>
                 {path.map((node, index) => (
-                  <span
-                    key={node.id}
-                    className="flex shrink-0 items-center gap-1.5"
-                  >
-                    <ChevronRight
-                      className="w-3.5 h-3.5 text-on-subtle"
-                      aria-hidden="true"
-                    />
+                  <span key={node.id} className="flex shrink-0 items-center gap-1.5">
+                    <ChevronRight className="w-3.5 h-3.5 text-on-subtle" aria-hidden="true" />
                     <button
                       type="button"
                       onClick={() => navigate(node.id)}
@@ -134,9 +122,7 @@ export function C4Architect(props: C4ArchitectProps) {
                   className="ui-btn-tonal"
                 >
                   <Upload className="w-3.5 h-3.5 text-secondary" />
-                  <span>
-                    {t(importing ? "c4.importing" : "c4.importModel")}
-                  </span>
+                  <span>{t(importing ? "c4.importing" : "c4.importModel")}</span>
                 </button>
                 <button
                   type="button"

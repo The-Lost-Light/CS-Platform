@@ -1,10 +1,10 @@
-import { RepositoryConnection } from "@pages/project/github/RepositoryConnection";
-import { Compass, FolderGit2, GitBranch } from "lucide-react";
+import type { Project } from "@domain/project";
 import { useProjectWorkspace } from "@hooks/useProjectWorkspace";
 import { useI18n } from "@i18n";
-import type { Project } from "@domain/project";
 import { C4Architect } from "@pages/project/C4Architect";
+import { RepositoryConnection } from "@pages/project/github/RepositoryConnection";
 import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
+import { Compass, FolderGit2, GitBranch } from "lucide-react";
 
 export function ProjectWorkspace({ project }: { project: Project }) {
   const { t } = useI18n();
@@ -38,9 +38,7 @@ export function ProjectWorkspace({ project }: { project: Project }) {
                 {project.title}
               </h1>
             </div>
-            <p className="text-xs text-on-muted mt-1 line-clamp-1">
-              {project.summary}
-            </p>
+            <p className="text-xs text-on-muted mt-1 line-clamp-1">{project.summary}</p>
           </div>
         </div>
 
@@ -71,13 +69,7 @@ export function ProjectWorkspace({ project }: { project: Project }) {
               ) : (
                 <GitBranch className="w-3.5 h-3.5" />
               )}
-              <span>
-                {t(
-                  tab === "design"
-                    ? "workspace.tabs.design"
-                    : "workspace.tabs.github",
-                )}
-              </span>
+              <span>{t(tab === "design" ? "workspace.tabs.design" : "workspace.tabs.github")}</span>
             </button>
           ))}
         </div>

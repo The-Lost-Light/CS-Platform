@@ -1,5 +1,5 @@
 import type { C4Kind, C4Node, C4Relationship } from "@domain/c4";
-import { c4NodeDepth, C4_MAX_LEVELS } from "@domain/c4";
+import { C4_MAX_LEVELS, c4NodeDepth } from "@domain/c4";
 
 export interface C4File {
   format: "codepulse-c4";
@@ -16,10 +16,7 @@ const invalid = (): never => {
   throw new Error("Invalid C4 model file");
 };
 
-export function serializeC4File(
-  nodes: C4Node[],
-  relationships: C4Relationship[],
-): string {
+export function serializeC4File(nodes: C4Node[], relationships: C4Relationship[]): string {
   return JSON.stringify(
     {
       format: "codepulse-c4",
@@ -46,18 +43,8 @@ export function parseC4File(text: string): C4File {
   const ids = new Set<string>();
   const nodes = data.nodes.map((value: unknown): C4Node => {
     if (!object(value)) return invalid();
-    const {
-      id,
-      kind,
-      label,
-      category,
-      parentId,
-      description,
-      technology,
-      expectedPath,
-      x,
-      y,
-    } = value;
+    const { id, kind, label, category, parentId, description, technology, expectedPath, x, y } =
+      value;
     if (
       typeof id !== "string" ||
       !id.trim() ||
@@ -66,10 +53,7 @@ export function parseC4File(text: string): C4File {
       !kinds.includes(kind as C4Kind) ||
       typeof label !== "string" ||
       typeof category !== "string" ||
-      !(
-        parentId === null ||
-        (typeof parentId === "string" && !!parentId.trim())
-      ) ||
+      !(parentId === null || (typeof parentId === "string" && !!parentId.trim())) ||
       typeof description !== "string" ||
       typeof technology !== "string" ||
       typeof expectedPath !== "string" ||
@@ -79,14 +63,12 @@ export function parseC4File(text: string): C4File {
       !Number.isFinite(y)
     )
       return invalid();
-    if (value.external !== undefined && typeof value.external !== "boolean")
-      return invalid();
+    if (value.external !== undefined && typeof value.external !== "boolean") return invalid();
     const dimensions: Pick<C4Node, "width" | "height"> = {};
     for (const key of ["width", "height"] as const) {
       const size = value[key];
       if (size === undefined) continue;
-      if (typeof size !== "number" || !Number.isFinite(size) || size <= 0)
-        return invalid();
+      if (typeof size !== "number" || !Number.isFinite(size) || size <= 0) return invalid();
       dimensions[key] = size;
     }
     const layout: Pick<C4Node, "boundary" | "contextPositions"> = {};
@@ -94,9 +76,7 @@ export function parseC4File(text: string): C4File {
       if (!object(value.boundary)) return invalid();
       const { x, y, width, height } = value.boundary;
       if (
-        ![x, y, width, height].every(
-          (n) => typeof n === "number" && Number.isFinite(n),
-        ) ||
+        ![x, y, width, height].every((n) => typeof n === "number" && Number.isFinite(n)) ||
         (width as number) <= 0 ||
         (height as number) <= 0
       )
@@ -137,14 +117,11 @@ export function parseC4File(text: string): C4File {
       y,
       ...dimensions,
       ...layout,
-      ...(value.external === undefined
-        ? {}
-        : { external: value.external as boolean }),
+      ...(value.external === undefined ? {} : { external: value.external as boolean }),
     };
   });
   const byId = new Map(nodes.map((node) => [node.id, node]));
-  if (nodes.some((node) => node.parentId && byId.get(node.parentId)?.external))
-    return invalid();
+  if (nodes.some((node) => node.parentId && byId.get(node.parentId)?.external)) return invalid();
   const checked = new Set<string>();
   for (const node of nodes) {
     const path = new Set<string>();
@@ -152,10 +129,8 @@ export function parseC4File(text: string): C4File {
     while (current && !checked.has(current.id)) {
       if (path.has(current.id)) return invalid();
       path.add(current.id);
-      if (current.parentId !== null && !byId.has(current.parentId))
-        return invalid();
-      current =
-        current.parentId === null ? undefined : byId.get(current.parentId);
+      if (current.parentId !== null && !byId.has(current.parentId)) return invalid();
+      current = current.parentId === null ? undefined : byId.get(current.parentId);
     }
     path.forEach((id) => checked.add(id));
   }
@@ -168,26 +143,24 @@ export function parseC4File(text: string): C4File {
     )
   )
     return invalid();
-  const relationships = data.relationships.map(
-    (value: unknown): C4Relationship => {
-      if (!object(value)) return invalid();
-      const { id, source, target, label, technology } = value;
-      if (
-        typeof id !== "string" ||
-        !id.trim() ||
-        edgeIds.has(id) ||
-        typeof source !== "string" ||
-        !ids.has(source) ||
-        typeof target !== "string" ||
-        !ids.has(target) ||
-        source === target ||
-        typeof label !== "string" ||
-        typeof technology !== "string"
-      )
-        return invalid();
-      edgeIds.add(id);
-      return { id, source, target, label, technology };
-    },
-  );
+  const relationships = data.relationships.map((value: unknown): C4Relationship => {
+    if (!object(value)) return invalid();
+    const { id, source, target, label, technology } = value;
+    if (
+      typeof id !== "string" ||
+      !id.trim() ||
+      edgeIds.has(id) ||
+      typeof source !== "string" ||
+      !ids.has(source) ||
+      typeof target !== "string" ||
+      !ids.has(target) ||
+      source === target ||
+      typeof label !== "string" ||
+      typeof technology !== "string"
+    )
+      return invalid();
+    edgeIds.add(id);
+    return { id, source, target, label, technology };
+  });
   return { format: "codepulse-c4", version: 1, nodes, relationships };
 }

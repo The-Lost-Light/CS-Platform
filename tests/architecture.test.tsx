@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import test from "node:test";
+import { test } from "vite-plus/test";
 
 const root = path.resolve("src");
 const moduleAliases = new Set(
@@ -12,11 +12,7 @@ const moduleAliases = new Set(
 function files(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const file = path.join(directory, entry.name);
-    return entry.isDirectory()
-      ? files(file)
-      : /\.tsx?$/.test(file)
-        ? [file]
-        : [];
+    return entry.isDirectory() ? files(file) : /\.tsx?$/.test(file) ? [file] : [];
   });
 }
 const sources = files(root);
@@ -41,9 +37,7 @@ for (const file of sources) {
         base + ".tsx",
         path.join(base, "index.ts"),
         path.join(base, "index.tsx"),
-      ].find(
-        (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
-      );
+      ].find((candidate) => existsSync(candidate) && statSync(candidate).isFile());
       assert.ok(resolved, `${file}: unresolved ${name}`);
       dependencies.push(resolved);
     } else dependencies.push(name);
@@ -65,11 +59,7 @@ test("domain and service modules do not depend on UI, hooks or fixture-derived t
           `${file} -> ${dependency}`,
         );
       }
-      if (
-        ["services", "hooks", "data", "auth", "i18n", "theme"].includes(
-          layer(file),
-        )
-      ) {
+      if (["services", "hooks", "data", "auth", "i18n", "theme"].includes(layer(file))) {
         assert.notEqual(layer(dependency), "pages", `${file} -> ${dependency}`);
       }
     }

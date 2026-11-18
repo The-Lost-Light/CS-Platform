@@ -10,8 +10,7 @@ export interface LoginCredentials extends User {
 
 export type LoginErrorCode = "accountRequired" | "passwordRequired";
 
-export type LoginResult =
-  { ok: true; user: User } | { ok: false; error: LoginErrorCode };
+export type LoginResult = { ok: true; user: User } | { ok: false; error: LoginErrorCode };
 
 export interface AuthService {
   login(credentials: LoginCredentials): LoginResult;

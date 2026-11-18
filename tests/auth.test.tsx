@@ -1,23 +1,17 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
-import { AuthGate } from "@pages/auth/AuthGate";
-import { WorkSpace } from "@pages/Workspace";
 import { AuthProvider, useAuth } from "@auth/AuthProvider";
-import {
-  DEFAULT_LOGIN_CREDENTIALS,
-  DEMO_ACCOUNTS,
-  getDemoCredentials,
-} from "@auth/demoAccounts";
+import { DEFAULT_LOGIN_CREDENTIALS, DEMO_ACCOUNTS, getDemoCredentials } from "@auth/demoAccounts";
 import { demoAuthService } from "@auth/demoAuthService";
 import type { LoginCredentials } from "@auth/types";
 import { I18nProvider } from "@i18n";
 import { createTranslator } from "@i18n/messages";
+import { AuthGate } from "@pages/auth/AuthGate";
+import { WorkSpace } from "@pages/Workspace";
 import { ThemeProvider } from "@theme";
+import assert from "node:assert/strict";
+import { renderToStaticMarkup } from "react-dom/server";
+import { test } from "vite-plus/test";
 
-function credentials(
-  overrides: Partial<LoginCredentials> = {},
-): LoginCredentials {
+function credentials(overrides: Partial<LoginCredentials> = {}): LoginCredentials {
   return {
     studentId: "B11204018",
     name: "陳宥軒",
@@ -29,10 +23,10 @@ function credentials(
 
 test("demo login rejects blank accounts before checking passwords", () => {
   for (const studentId of ["", " \t\n "]) {
-    assert.deepEqual(
-      demoAuthService.login(credentials({ studentId, password: "" })),
-      { ok: false, error: "accountRequired" },
-    );
+    assert.deepEqual(demoAuthService.login(credentials({ studentId, password: "" })), {
+      ok: false,
+      error: "accountRequired",
+    });
   }
 });
 
@@ -68,9 +62,7 @@ test("successful login normalizes the profile without exposing the password or m
 
 test("a blank display name falls back to the normalized account", () => {
   assert.deepEqual(
-    demoAuthService.login(
-      credentials({ studentId: "  arbitrary-account  ", name: " \t " }),
-    ),
+    demoAuthService.login(credentials({ studentId: "  arbitrary-account  ", name: " \t " })),
     {
       ok: true,
       user: {

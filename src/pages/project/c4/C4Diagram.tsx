@@ -1,10 +1,10 @@
+import { C4Canvas, nodeTypes } from "@pages/project/c4/C4Canvas";
+import { C4Inspector } from "@pages/project/c4/C4Inspector";
+import type { FlowNode } from "@pages/project/c4/flowTypes";
+import type { C4ArchitectProps } from "@pages/project/c4/types";
+import type { useC4Editor } from "@pages/project/c4/useC4Editor";
 import { Background, Controls, MiniMap } from "@xyflow/react";
 import { HelpCircle, Layers } from "lucide-react";
-import { C4Canvas, nodeTypes } from "@pages/project/c4/C4Canvas";
-import type { FlowNode } from "@pages/project/c4/flowTypes";
-import { C4Inspector } from "@pages/project/c4/C4Inspector";
-import type { useC4Editor } from "@pages/project/c4/useC4Editor";
-import type { C4ArchitectProps } from "@pages/project/c4/types";
 const colors = {
   internal: "var(--c4-internal-bg)",
   external: "var(--c4-external-bg)",
@@ -17,10 +17,9 @@ export function C4Diagram({
   onChangeNodes,
   relationships,
   onChangeRelationships,
-}: Pick<
-  C4ArchitectProps,
-  "nodes" | "onChangeNodes" | "relationships" | "onChangeRelationships"
-> & { editor: ReturnType<typeof useC4Editor> }) {
+}: Pick<C4ArchitectProps, "nodes" | "onChangeNodes" | "relationships" | "onChangeRelationships"> & {
+  editor: ReturnType<typeof useC4Editor>;
+}) {
   const {
     t,
     setSelectedId,
@@ -86,9 +85,7 @@ export function C4Diagram({
                     />
                     {t("c4.external")}
                   </p>
-                  <p className="font-semibold text-secondary">
-                    ● {t("c4.expandable")}
-                  </p>
+                  <p className="font-semibold text-secondary">● {t("c4.expandable")}</p>
                   <p className="font-semibold text-primary">● {t("c4.leaf")}</p>
                 </div>
                 <p className="text-[11px] text-on-subtle pt-1 border-t border-outline">
@@ -109,12 +106,8 @@ export function C4Diagram({
               if (event.button !== 2) return;
               const target = event.target as HTMLElement;
               if (
-                !target.closest(
-                  ".react-flow__pane, .react-flow__node-boundary",
-                ) ||
-                target.closest(
-                  ".react-flow__node-c4, .react-flow__controls, .react-flow__minimap",
-                )
+                !target.closest(".react-flow__pane, .react-flow__node-boundary") ||
+                target.closest(".react-flow__node-c4, .react-flow__controls, .react-flow__minimap")
               )
                 return;
               event.preventDefault();
@@ -145,10 +138,7 @@ export function C4Diagram({
                 x: event.clientX,
                 y: event.clientY,
               });
-              if (
-                Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5
-              )
-                addNode(from);
+              if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) addNode(from);
               else
                 addNode(
                   { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y) },
@@ -246,22 +236,16 @@ export function C4Diagram({
                   }),
                 );
               }}
-              onNodesDelete={(deleted) =>
-                remove(deleted.map((node) => node.id))
-              }
+              onNodesDelete={(deleted) => remove(deleted.map((node) => node.id))}
               onEdgesDelete={(deleted) =>
                 onChangeRelationships(
-                  relationships.filter(
-                    (edge) => !deleted.some((item) => item.id === edge.id),
-                  ),
+                  relationships.filter((edge) => !deleted.some((item) => item.id === edge.id)),
                 )
               }
               isValidConnection={(connection) =>
                 connection.source !== connection.target &&
                 !relationships.some(
-                  (edge) =>
-                    edge.source === connection.source &&
-                    edge.target === connection.target,
+                  (edge) => edge.source === connection.source && edge.target === connection.target,
                 )
               }
               onConnect={(connection) => {
@@ -284,9 +268,7 @@ export function C4Diagram({
               <Controls />
               <MiniMap
                 nodeColor={(node) =>
-                  (node.data as FlowNode["data"]).external
-                    ? colors.external
-                    : colors.internal
+                  (node.data as FlowNode["data"]).external ? colors.external : colors.internal
                 }
                 pannable
                 zoomable

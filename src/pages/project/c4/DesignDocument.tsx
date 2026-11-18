@@ -1,8 +1,8 @@
+import { useI18n } from "@i18n";
 import { Code2, Eye, FileText } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useI18n } from "@i18n";
 const fieldClass = "ui-input px-3 py-2";
 
 export function DesignDocument({
@@ -35,9 +35,7 @@ export function DesignDocument({
         </div>
         <button
           type="button"
-          onClick={() =>
-            setReadmeMode((mode) => (mode === "reading" ? "source" : "reading"))
-          }
+          onClick={() => setReadmeMode((mode) => (mode === "reading" ? "source" : "reading"))}
           className="inline-flex items-center gap-1.5 rounded-full bg-surface hover:bg-primary-container text-primary hover:text-on-primary-container border border-primary-outline px-3.5 py-1.5 text-xs font-bold shadow-2xs transition"
         >
           {readmeMode === "reading" ? (
@@ -45,11 +43,7 @@ export function DesignDocument({
           ) : (
             <Eye className="w-3.5 h-3.5" />
           )}
-          <span>
-            {t(
-              readmeMode === "reading" ? "c4.readmeSource" : "c4.readmeReading",
-            )}
-          </span>
+          <span>{t(readmeMode === "reading" ? "c4.readmeSource" : "c4.readmeReading")}</span>
         </button>
       </div>
 

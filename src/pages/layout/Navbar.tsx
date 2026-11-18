@@ -1,17 +1,9 @@
-import {
-  Code2,
-  FolderGit2,
-  Home,
-  LogOut,
-  Monitor,
-  Moon,
-  Sun,
-} from "lucide-react";
-import { useI18n } from "@i18n";
-import { useTheme, type ThemeMode } from "@theme";
-import type { Project } from "@domain/project";
 import type { User } from "@auth/types";
+import type { Project } from "@domain/project";
+import { useI18n } from "@i18n";
 import { LanguageSwitcher } from "@pages/layout/LanguageSwitcher";
+import { useTheme, type ThemeMode } from "@theme";
+import { Code2, FolderGit2, Home, LogOut, Monitor, Moon, Sun } from "lucide-react";
 
 export function Navbar({
   activeView,
@@ -127,11 +119,7 @@ export function Navbar({
           <LanguageSwitcher />
 
           {/* Theme Switcher: 自動 (System) / 淺色 (Light) / 深色 (Dark) */}
-          <div
-            className="ui-pill-group"
-            role="group"
-            aria-label={t("theme.label")}
-          >
+          <div className="ui-pill-group" role="group" aria-label={t("theme.label")}>
             {themeOptions.map(({ value, label, title, Icon }) => (
               <button
                 key={value}
@@ -157,9 +145,7 @@ export function Navbar({
                 <div className="w-5 h-5 rounded-full bg-secondary text-on-secondary text-[11px] font-bold flex items-center justify-center">
                   {currentUser.name?.slice(0, 1) || "S"}
                 </div>
-                <span className="font-bold text-on-surface">
-                  {currentUser.name}
-                </span>
+                <span className="font-bold text-on-surface">{currentUser.name}</span>
               </div>
 
               <button

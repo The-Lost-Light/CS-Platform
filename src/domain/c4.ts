@@ -38,12 +38,7 @@ export function c4NodeDepth(nodes: C4Node[], id: string): number {
 
 export function canExploreC4Node(nodes: C4Node[], id: string): boolean {
   const node = nodes.find((node) => node.id === id);
-  return (
-    !!node &&
-    !node.external &&
-    node.kind !== "code" &&
-    c4NodeDepth(nodes, id) < C4_MAX_LEVELS
-  );
+  return !!node && !node.external && node.kind !== "code" && c4NodeDepth(nodes, id) < C4_MAX_LEVELS;
 }
 
 export function createC4NodeInScope(
@@ -80,8 +75,7 @@ export function createC4NodeInScope(
     y:
       position?.y ??
       (siblings.length
-        ? Math.max(...siblings.map((node) => node.y + (node.height ?? 230))) +
-          50
+        ? Math.max(...siblings.map((node) => node.y + (node.height ?? 230))) + 50
         : 0),
   };
 }
@@ -98,9 +92,7 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   }
   path.splice(C4_MAX_LEVELS - 1);
   const scope = path.at(-1);
-  const inside = nodes.filter((node) =>
-    scope ? node.parentId === scope.id : !node.parentId,
-  );
+  const inside = nodes.filter((node) => (scope ? node.parentId === scope.id : !node.parentId));
   const outside: C4Node[] = [];
   const visible = inside;
   return { path, scope, inside, outside, visible };
@@ -127,22 +119,15 @@ export function migrateC4Nodes(nodes: MindMapNode[]): C4Node[] {
   });
   // Tests and documentation describe implementation; they are not deployable containers.
   const container = migrated.find(
-    (node) =>
-      node.kind === "container" &&
-      !["testing", "database"].includes(node.category),
+    (node) => node.kind === "container" && !["testing", "database"].includes(node.category),
   );
   if (container)
     migrated.forEach((node) => {
-      if (
-        node.category === "testing" ||
-        node.expectedPath.startsWith("docs/")
-      ) {
+      if (node.category === "testing" || node.expectedPath.startsWith("docs/")) {
         node.kind = "component";
         node.parentId =
-          migrated.find(
-            (parent) =>
-              parent.id === node.parentId && parent.kind === "container",
-          )?.id || container.id;
+          migrated.find((parent) => parent.id === node.parentId && parent.kind === "container")
+            ?.id || container.id;
       }
     });
   return migrated;
@@ -160,20 +145,11 @@ export function removeC4Nodes(nodes: C4Node[], ids: string[]) {
   return nodes.filter((node) => !removed.has(node.id));
 }
 
-export function visibleC4Nodes(
-  nodes: C4Node[],
-  level: C4Kind,
-  scope: string,
-): C4Node[] {
+export function visibleC4Nodes(nodes: C4Node[], level: C4Kind, scope: string): C4Node[] {
   if (level === "system")
-    return nodes.filter(
-      (node) => node.kind === "person" || node.kind === "system",
-    );
+    return nodes.filter((node) => node.kind === "person" || node.kind === "system");
   const view = c4Drilldown(nodes, scope);
-  return [
-    ...view.inside.filter((node) => node.kind === level),
-    ...view.outside,
-  ];
+  return [...view.inside.filter((node) => node.kind === level), ...view.outside];
 }
 
 /** Membership is determined geometrically at the start of a boundary drag. */

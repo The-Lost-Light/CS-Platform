@@ -1,6 +1,6 @@
-import { NodeChangeset } from "@xyflow/react";
 import { overlapsC4Boundary } from "@domain/c4";
 import type { CanvasNode } from "@pages/project/c4/flowTypes";
+import { NodeChangeset } from "@xyflow/react";
 
 /** Move overlapping nodes with the boundary and only persist user edits. */
 export function prepareC4CanvasChanges(
@@ -55,12 +55,8 @@ export function prepareC4CanvasChanges(
       .toArray()
       .filter(
         (change) =>
-          (change.type === "position" &&
-            change.position &&
-            change.dragging !== true) ||
-          (change.type === "dimensions" &&
-            change.dimensions &&
-            change.setAttributes),
+          (change.type === "position" && change.position && change.dragging !== true) ||
+          (change.type === "dimensions" && change.dimensions && change.setAttributes),
       ),
   );
   return { changes, completedMoves, movingIds };

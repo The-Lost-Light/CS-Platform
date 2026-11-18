@@ -1,6 +1,6 @@
-import { createTranslator, type Locale } from "@i18n/messages";
 import { createProjects } from "@data/projectsData";
 import type { Project } from "@domain/project";
+import { createTranslator, type Locale } from "@i18n/messages";
 
 export function getLocalizedProjects(locale: Locale) {
   const t = createTranslator(locale);
@@ -18,25 +18,15 @@ export function updateLocalizedProjectDraft(
 ) {
   return {
     nodes: nodes.map((node) => {
-      const before = previous.initialMindMapNodes.find(
-        (item) => item.id === node.id,
-      );
-      const after = next.initialMindMapNodes.find(
-        (item) => item.id === node.id,
-      );
+      const before = previous.initialMindMapNodes.find((item) => item.id === node.id);
+      const after = next.initialMindMapNodes.find((item) => item.id === node.id);
       if (!before || !after) return node;
       return {
         ...node,
         label: node.label === before.label ? after.label : node.label,
-        description:
-          node.description === before.description
-            ? after.description
-            : node.description,
+        description: node.description === before.description ? after.description : node.description,
       };
     }),
-    designDoc:
-      designDoc === previous.initialDesignDoc
-        ? next.initialDesignDoc
-        : designDoc,
+    designDoc: designDoc === previous.initialDesignDoc ? next.initialDesignDoc : designDoc,
   };
 }

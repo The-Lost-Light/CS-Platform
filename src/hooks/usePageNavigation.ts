@@ -1,16 +1,15 @@
-import { useState } from "react";
-import { PROJECTS } from "@data/projectsData";
 import { getLocalizedProjects } from "@data/localizedProjects";
-import { useI18n } from "@i18n";
+import { PROJECTS } from "@data/projectsData";
 import type { Project } from "@domain/project";
+import { useI18n } from "@i18n";
+import { useState } from "react";
 
 export function usePageNavigation() {
   const { locale } = useI18n();
   const { projects } = getLocalizedProjects(locale);
   const [activeView, setActiveView] = useState<"home" | "project">("home");
   const [projectID, setProjectID] = useState(PROJECTS[0].id);
-  const selectedProject =
-    projects.find((project) => project.id === projectID) ?? projects[0];
+  const selectedProject = projects.find((project) => project.id === projectID) ?? projects[0];
 
   const navigateHome = () => setActiveView("home");
   const navigateProject = () => setActiveView("project");

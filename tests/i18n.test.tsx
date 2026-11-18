@@ -1,20 +1,7 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import { AuthProvider } from "@auth/AuthProvider";
-import { AuthGate } from "@pages/auth/AuthGate";
-import { WorkSpace } from "@pages/Workspace";
 import { DEMO_ACCOUNTS } from "@auth/demoAccounts";
 import { demoAuthService } from "@auth/demoAuthService";
-import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
-import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
-import { LoginView } from "@pages/auth/LoginView";
-import { HomeDashboard } from "@pages/home/HomeDashboard";
-import { Navbar } from "@pages/layout/Navbar";
-import {
-  getLocalizedProjects,
-  updateLocalizedProjectDraft,
-} from "@data/localizedProjects";
+import { getLocalizedProjects, updateLocalizedProjectDraft } from "@data/localizedProjects";
 import { I18nProvider } from "@i18n";
 import {
   createTranslator,
@@ -24,9 +11,19 @@ import {
   traditionalChineseMessages,
   type MessageKey,
 } from "@i18n/messages";
-import { ThemeProvider, isThemeMode, resolveTheme } from "@theme";
-import { createRepoFixture } from "./fixtures/repository";
+import { AuthGate } from "@pages/auth/AuthGate";
+import { LoginView } from "@pages/auth/LoginView";
+import { HomeDashboard } from "@pages/home/HomeDashboard";
+import { Navbar } from "@pages/layout/Navbar";
+import { GitHubRepoDashboard } from "@pages/project/GitHubRepoDashboard";
+import { ProjectWorkspace } from "@pages/project/ProjectWorkspace";
+import { WorkSpace } from "@pages/Workspace";
 import { fetchGitHubProjectBundle } from "@services/github";
+import { ThemeProvider, isThemeMode, resolveTheme } from "@theme";
+import assert from "node:assert/strict";
+import { renderToStaticMarkup } from "react-dom/server";
+import { test } from "vite-plus/test";
+import { createRepoFixture } from "./fixtures/repository";
 
 const en = getLocalizedProjects("en");
 const zh = getLocalizedProjects("zh-TW");
@@ -57,16 +54,10 @@ test("theme mode validation and resolution follow system preference or explicit 
 test("semantic keys resolve in both languages and interpolation preserves literal code", () => {
   const input = "${value} {count} <script> $&";
   assert.equal(t("common.count", { count: input }), `Count: ${input}`);
-  assert.equal(
-    createTranslator("zh-TW")("common.count", { count: 3 }),
-    "筆數：3",
-  );
+  assert.equal(createTranslator("zh-TW")("common.count", { count: 3 }), "筆數：3");
   assert.equal(t("auth.title"), "Sign in to CodePulse Edu");
   assert.equal(createTranslator("zh-TW")("auth.title"), "登入課程作業系統");
-  assert.equal(
-    t("language.autoDetected", { language: "English" }),
-    "Auto (English)",
-  );
+  assert.equal(t("language.autoDetected", { language: "English" }), "Auto (English)");
   assert.equal(t("common.count"), "Count: {count}");
   assert.equal(t("common.count", { count: undefined }), "Count: ");
 });
@@ -136,9 +127,7 @@ test("all built-in project text is translated and path mappings remain unchanged
 test("language changes preserve custom nodes, edited fields, deleted nodes, paths and positions", () => {
   const before = zh.projects[0];
   const after = en.projects[0];
-  const nodes = before.initialMindMapNodes
-    .slice(0, 3)
-    .map((node) => ({ ...node }));
+  const nodes = before.initialMindMapNodes.slice(0, 3).map((node) => ({ ...node }));
   nodes[1].label = "我自己改的標題";
   nodes[1].expectedPath = "src/custom.ts";
   nodes[1].x = 222;
@@ -148,10 +137,7 @@ test("language changes preserve custom nodes, edited fields, deleted nodes, path
   assert.equal(result.nodes.length, nodes.length);
   assert.equal(result.nodes[0].label, after.initialMindMapNodes[0].label);
   assert.equal(result.nodes[1].label, nodes[1].label);
-  assert.equal(
-    result.nodes[1].description,
-    after.initialMindMapNodes[1].description,
-  );
+  assert.equal(result.nodes[1].description, after.initialMindMapNodes[1].description);
   assert.equal(result.nodes[1].expectedPath, "src/custom.ts");
   assert.equal(result.nodes[1].x, 222);
   assert.deepEqual(result.nodes[3], nodes[3]);
@@ -164,12 +150,7 @@ test("language changes preserve custom nodes, edited fields, deleted nodes, path
   );
   assert.deepEqual(pristine.nodes, after.initialMindMapNodes);
   assert.equal(pristine.designDoc, after.initialDesignDoc);
-  const roundTrip = updateLocalizedProjectDraft(
-    result.nodes,
-    result.designDoc,
-    after,
-    before,
-  );
+  const roundTrip = updateLocalizedProjectDraft(result.nodes, result.designDoc, after, before);
   assert.deepEqual(roundTrip.nodes, nodes);
   assert.equal(roundTrip.designDoc, doc);
 });
@@ -201,24 +182,13 @@ test("dashboard lists every project and uses project-only navigation in both lan
     const { projects } = getLocalizedProjects(locale);
     for (const project of projects) {
       assert.ok(visibleText.includes(project.codeName));
-      assert.ok(
-        visibleText.includes(renderToStaticMarkup(<>{project.title}</>)),
-      );
+      assert.ok(visibleText.includes(renderToStaticMarkup(<>{project.title}</>)));
     }
-    assert.doesNotMatch(
-      visibleText,
-      /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i,
-    );
+    assert.doesNotMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
+    assert.ok(visibleText.includes(locale === "en" ? "Project overview" : "專案總覽首頁"));
     assert.ok(
       visibleText.includes(
-        locale === "en" ? "Project overview" : "專案總覽首頁",
-      ),
-    );
-    assert.ok(
-      visibleText.includes(
-        locale === "en"
-          ? `Projects: ${projects.length}`
-          : `專案數：${projects.length}`,
+        locale === "en" ? `Projects: ${projects.length}` : `專案數：${projects.length}`,
       ),
     );
   }
@@ -231,13 +201,9 @@ const screens = {
     </AuthProvider>
   ),
   dashboard: (
-    <HomeDashboard
-      projects={en.projects}
-      currentUser={DEMO_ACCOUNTS[0]}
-      onOpenProject={noop}
-    />
+    <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />
   ),
-  login: <LoginView onLogin={demoAuthService.login} />,
+  login: <LoginView onLogin={(input) => demoAuthService.login(input)} />,
   project: <ProjectWorkspace project={en.projects[0]} />,
   github: <GitHubRepoDashboard repoBundle={bundle} />,
 };

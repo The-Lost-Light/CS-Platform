@@ -8,9 +8,7 @@ export interface GitHubServiceDependencies {
 }
 
 /** Inject the HTTP transport for GitHub API requests. */
-export function createGitHubService(
-  dependencies: GitHubServiceDependencies = {},
-) {
+export function createGitHubService(dependencies: GitHubServiceDependencies = {}) {
   return async function fetchGitHubProjectBundle(
     rawUrl: string,
     githubToken = "",

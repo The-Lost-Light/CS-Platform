@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { Check, ChevronDown, Languages, Monitor } from "lucide-react";
 import { SUPPORTED_LOCALES, useI18n, type LanguagePreference } from "@i18n";
+import { Check, ChevronDown, Languages, Monitor } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 
 export function LanguageSwitcher() {
   const { locale, preference, setPreference, t } = useI18n();
@@ -9,17 +9,12 @@ export function LanguageSwitcher() {
   const trigger = useRef<HTMLButtonElement>(null);
   const items = useRef<(HTMLButtonElement | null)[]>([]);
   const menuId = useId();
-  const currentLanguage = SUPPORTED_LOCALES.find(
-    (language) => language.value === locale,
-  )!.label;
+  const currentLanguage = SUPPORTED_LOCALES.find((language) => language.value === locale)!.label;
   const autoLabel =
     preference === "auto"
       ? t("language.autoDetected", { language: currentLanguage })
       : t("common.auto");
-  const options = [
-    { value: "auto" as const, label: autoLabel },
-    ...SUPPORTED_LOCALES,
-  ];
+  const options = [{ value: "auto" as const, label: autoLabel }, ...SUPPORTED_LOCALES];
   const selected = options.findIndex((option) => option.value === preference);
   useEffect(() => {
     if (!open) return;
@@ -77,9 +72,7 @@ export function LanguageSwitcher() {
           aria-label={t("language.label")}
           className="absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-2xl border border-outline bg-surface p-1.5 text-on-surface shadow-xl"
           onKeyDown={(event) => {
-            const index = items.current.indexOf(
-              document.activeElement as HTMLButtonElement,
-            );
+            const index = items.current.indexOf(document.activeElement as HTMLButtonElement);
             if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
               event.preventDefault();
               const next =
@@ -87,9 +80,7 @@ export function LanguageSwitcher() {
                   ? 0
                   : event.key === "End"
                     ? options.length - 1
-                    : (index +
-                        (event.key === "ArrowDown" ? 1 : -1) +
-                        options.length) %
+                    : (index + (event.key === "ArrowDown" ? 1 : -1) + options.length) %
                       options.length;
               items.current[next]?.focus();
             } else if (event.key === "Escape") {
@@ -117,20 +108,11 @@ export function LanguageSwitcher() {
               }`}
             >
               {option.value === "auto" ? (
-                <Monitor
-                  className="h-4 w-4 shrink-0 text-secondary"
-                  aria-hidden="true"
-                />
+                <Monitor className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
               ) : (
-                <Languages
-                  className="h-4 w-4 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
+                <Languages className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               )}
-              <span
-                className="flex-1"
-                lang={option.value === "auto" ? undefined : option.value}
-              >
+              <span className="flex-1" lang={option.value === "auto" ? undefined : option.value}>
                 {option.label}
               </span>
               {preference === option.value && (

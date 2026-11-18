@@ -22,8 +22,7 @@ export default {
   "courses.fullstack.nodes.editor.description":
     "Online editor, change tracking, and WebAssembly execution",
   "courses.fullstack.nodes.api.label": "Backend API & Grading",
-  "courses.fullstack.nodes.api.description":
-    "APIs for submissions, test validation, and grades",
+  "courses.fullstack.nodes.api.description": "APIs for submissions, test validation, and grades",
   "courses.fullstack.nodes.database.label": "Database Schema & ORM",
   "courses.fullstack.nodes.database.description":
     "User, Assignment, Submission, and ChangeLog tables",
@@ -31,12 +30,10 @@ export default {
   "courses.fullstack.nodes.aiTutor.description":
     "Progressive hints based on edit history and error messages",
   "courses.fullstack.nodes.tests.label": "Unit & Integration Tests",
-  "courses.fullstack.nodes.tests.description":
-    "Vitest checks for grading logic and API edge cases",
+  "courses.fullstack.nodes.tests.description": "Vitest checks for grading logic and API edge cases",
   "courses.fullstack.designDoc":
     "## 1. Project goals\nBuild a course assignment platform with instant code evaluation and learning history analysis. Use a browser WebAssembly sandbox to reduce server load and record fine-grained edits (Insert / Delete / Replace).\n\n## 2. System layers\n- **Frontend (src/)**: React + TypeScript + Tailwind CSS, including the `src/App.tsx` shell and `src/components/CodeEditor.tsx` editor.\n- **Backend (server/)**: RESTful API (`server/routes/submissions.ts`) and AI tutor service (`server/services/aiTutor.ts`).\n- **Persistence (prisma/)**: Manage assignments and submissions with `prisma/schema.prisma`.\n- **Quality assurance (tests/)**: Implement `tests/submissions.test.ts` to validate grading logic.\n\n## 3. Milestones\n1. **Milestone 1 (weeks 1–2)**: Project setup, database schema, and frontend skeleton.\n2. **Milestone 2 (weeks 3–4)**: Code editor and submission API integration.\n3. **Milestone 3 (week 5)**: AI diagnostics and 80% unit test coverage.",
-  "courses.react.title":
-    "Final: Open-Source Architecture & Evolution (React / Next.js)",
+  "courses.react.title": "Final: Open-Source Architecture & Evolution (React / Next.js)",
   "courses.react.difficulty": "Research",
   "courses.react.status": "Open for submission",
   "courses.react.summary":
@@ -48,11 +45,9 @@ export default {
   "courses.react.requirements.report":
     "Compare your C4 diagram with the repository tree and write an architecture evolution report.",
   "courses.react.nodes.root.label": "React Core (Monorepo)",
-  "courses.react.nodes.root.description":
-    "Top-level React workspace and build configuration",
+  "courses.react.nodes.root.description": "Top-level React workspace and build configuration",
   "courses.react.nodes.compiler.label": "React Compiler",
-  "courses.react.nodes.compiler.description":
-    "Automatic memoization and reactive scope pruning",
+  "courses.react.nodes.compiler.description": "Automatic memoization and reactive scope pruning",
   "courses.react.nodes.reconciler.label": "Fiber Reconciler",
   "courses.react.nodes.reconciler.description":
     "Concurrent scheduling, Suspense, and ViewTransition handling",
@@ -60,11 +55,9 @@ export default {
   "courses.react.nodes.devtools.description":
     "Async Server Component stack tracing and symbolication",
   "courses.react.nodes.tests.label": "Compiler Unit Tests",
-  "courses.react.nodes.tests.description":
-    "Validate closure scope pruning for Server Actions",
+  "courses.react.nodes.tests.description": "Validate closure scope pruning for Server Actions",
   "courses.react.nodes.docs.label": "Contributor Architecture Guide",
-  "courses.react.nodes.docs.description":
-    "Internal architecture documentation for team members",
+  "courses.react.nodes.docs.description": "Internal architecture documentation for team members",
   "courses.react.designDoc":
     "## 1. Research goals\nStudy the source structure of React 19 and React Compiler, map our understanding, and compare paths and recent commits with `facebook/react`.\n\n## 2. Key subsystems\n- **React Compiler (`compiler/packages/babel-plugin-react-compiler`)**: Study how `PruneScopes.ts` handles Server Actions.\n- **Fiber Reconciler (`packages/react-reconciler`)**: Trace Suspense and ViewTransition cleanup in `ReactFiberCommitWork.js`.\n- **DevTools Flight (`packages/react-devtools-shared`)**: Inspect RSC support in `parseFlightStack.js`.\n- **Architecture docs (`docs/ARCHITECTURE.md`)**: Check for a dedicated architecture guide.",
 } satisfies Record<string, string>;

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { NodeChangeset } from "@xyflow/react";
 import { prepareC4CanvasChanges } from "@pages/project/c4/canvasChanges";
 import type { CanvasNode, FlowNode } from "@pages/project/c4/flowTypes";
+import { NodeChangeset } from "@xyflow/react";
+import assert from "node:assert/strict";
+import { test } from "vite-plus/test";
 
 function card(id: string, x: number, y: number): FlowNode {
   return {

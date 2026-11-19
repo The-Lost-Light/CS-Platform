@@ -1,5 +1,6 @@
 import { Background, Controls, MiniMap } from "@xyflow/react";
 import { ChevronRight, HelpCircle, Layers, Redo2, Undo2 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
 import type { FlowNode } from "../model/flowTypes";
@@ -35,6 +36,18 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     stepHistory,
     beginEditGroup,
   } = editor;
+  const helpRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    function dismissHelp(event: PointerEvent) {
+      const help = helpRef.current;
+      if (help?.open && event.target instanceof Node && !help.contains(event.target)) {
+        help.open = false;
+      }
+    }
+    document.addEventListener("pointerdown", dismissHelp, true);
+    return () => document.removeEventListener("pointerdown", dismissHelp, true);
+  }, []);
+
   return (
     <div
       role="tabpanel"
@@ -94,7 +107,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               <Redo2 aria-hidden="true" className="w-3.5 h-3.5" />
               {t("c4.redo")}
             </button>
-            <details className="relative group">
+            <details ref={helpRef} className="relative group">
               <summary className="ui-btn-outlined bg-surface text-primary border-primary-outline px-3 py-1.5 text-xs list-none [&::-webkit-details-marker]:hidden">
                 <HelpCircle aria-hidden="true" className="w-3.5 h-3.5" />
                 <span>{t("c4.help")}</span>

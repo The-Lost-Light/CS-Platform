@@ -31,7 +31,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
       {(selected || selectedEdge) && (
         <aside
           aria-label={t(selected ? "c4.editElement" : "c4.editRelationship")}
-          className="ui-card shadow-m3-3 absolute right-4 top-16 z-20 w-80 max-w-[calc(100%-2rem)] max-h-[calc(100%-5rem)] overflow-y-auto p-5"
+          className="ui-card shadow-m3-3 absolute right-4 top-4 z-20 w-80 max-w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] overflow-y-auto p-5"
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setSelectedId("");

@@ -1,5 +1,13 @@
 import { Background, Controls, MiniMap } from "@xyflow/react";
-import { HelpCircle, Layers } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronRight,
+  Download,
+  HelpCircle,
+  Layers,
+  Upload,
+} from "lucide-react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
 import type { FlowNode } from "../model/flowTypes";
@@ -16,10 +24,16 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     setSelectedId,
     setEdgeId,
     drawing,
+    fileInput,
     flowInstance,
+    importing,
+    fileStatus,
     importRevision,
     cancelNodeClick,
+    exportModel,
+    importModel,
     scope,
+    path,
     inside,
     flowNodes,
     flowEdges,
@@ -38,23 +52,77 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
       aria-labelledby="design-tab-diagram"
       className="space-y-5"
     >
-      <div className="relative">
-        <div className="ui-card overflow-hidden bg-surface-sunken">
-          <div className="ui-card-header flex items-center justify-between py-3 text-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="ui-icon-badge w-7 h-7 rounded-lg">
-                <Layers aria-hidden="true" className="w-3.5 h-3.5" />
-              </div>
-              <span className="font-bold text-on-primary-container">
-                {scope ? scope.label : "System Context"}
-              </span>
+      <div className="ui-card overflow-hidden bg-surface-sunken">
+        <div className="ui-card-header flex flex-wrap items-center justify-between gap-3 py-3 text-xs">
+          <div className="flex min-w-48 flex-1 items-center gap-2.5">
+            <div className="ui-icon-badge w-7 h-7 rounded-lg">
+              <Layers aria-hidden="true" className="w-3.5 h-3.5" />
             </div>
+            <nav
+              aria-label="Breadcrumb"
+              className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap py-0.5 text-xs"
+            >
+              <button
+                type="button"
+                onClick={() => navigate("")}
+                aria-current={!scope ? "page" : undefined}
+                className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface/75 text-on-muted hover:bg-surface hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold aria-[current=page]:shadow-m3-1"
+              >
+                C1 · Context
+              </button>
+              {path.map((node, index) => (
+                <span key={node.id} className="flex shrink-0 items-center gap-1.5">
+                  <ChevronRight className="w-3.5 h-3.5 text-on-subtle" aria-hidden="true" />
+                  <button
+                    type="button"
+                    onClick={() => navigate(node.id)}
+                    aria-current={node.id === scope?.id ? "page" : undefined}
+                    className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface/75 text-on-muted hover:bg-surface hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold aria-[current=page]:shadow-m3-1"
+                  >
+                    C{index + 2} · {node.label}
+                  </button>
+                </span>
+              ))}
+            </nav>
+          </div>
+          <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={importing}
+              title={t("c4.fileHelp")}
+              onClick={() => fileInput.current?.click()}
+              className="ui-btn-tonal border border-primary-outline/70 px-3 py-1.5 text-xs"
+            >
+              <Upload aria-hidden="true" className="w-3.5 h-3.5" />
+              <span>{t(importing ? "c4.importing" : "c4.importModel")}</span>
+            </button>
+            <button
+              type="button"
+              disabled={importing}
+              onClick={exportModel}
+              className="ui-btn-tonal border border-primary-outline/70 px-3 py-1.5 text-xs"
+            >
+              <Download aria-hidden="true" className="w-3.5 h-3.5" />
+              <span>{t("c4.exportModel")}</span>
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".json,application/json"
+              aria-label={t("c4.importModel")}
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void importModel(file);
+              }}
+            />
             <details className="relative group">
-              <summary className="ui-btn-outlined bg-surface text-primary border-primary-outline px-3 py-1 text-xs list-none [&::-webkit-details-marker]:hidden">
+              <summary className="ui-btn-outlined bg-surface text-primary border-primary-outline px-3 py-1.5 text-xs list-none [&::-webkit-details-marker]:hidden">
                 <HelpCircle aria-hidden="true" className="w-3.5 h-3.5" />
                 <span>{t("c4.help")}</span>
               </summary>
-              <div className="ui-menu absolute right-0 top-9 z-30 w-80 p-4 space-y-2.5 text-xs text-on-muted">
+              <div className="ui-menu absolute right-0 top-10 z-30 w-80 max-w-[calc(100vw-3rem)] p-4 space-y-2.5 text-xs text-on-muted">
                 <p className="leading-relaxed">{t("c4.canvasInstructions")}</p>
                 <p className="leading-relaxed">{t("c4.levelsDescription")}</p>
                 <div className="pt-2 border-t border-outline-subtle space-y-1.5">
@@ -81,6 +149,25 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               </div>
             </details>
           </div>
+        </div>
+        {fileStatus && (
+          <div className="px-5 sm:px-6 py-2.5 bg-surface border-b border-outline-subtle">
+            <div
+              role={fileStatus === "importSuccess" ? "status" : "alert"}
+              className={fileStatus === "importSuccess" ? "ui-banner-success" : "ui-banner-danger"}
+            >
+              <div className="flex items-center gap-2">
+                {fileStatus === "importSuccess" ? (
+                  <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
+                )}
+                <span>{t(`c4.${fileStatus}`)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="relative">
           <div
             style={{
               height: "max(600px, 72vh)",
@@ -161,13 +248,13 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               />
             )}
           </div>
-          {!inside.length && (
-            <p className="px-5 py-3.5 text-xs sm:text-sm font-medium text-on-muted bg-surface-sunken border-t border-outline-subtle">
-              {t("c4.emptyLevel")}
-            </p>
-          )}
+          <C4Inspector editor={editor} />
         </div>
-        <C4Inspector editor={editor} />
+        {!inside.length && (
+          <p className="px-5 py-3.5 text-xs sm:text-sm font-medium text-on-muted bg-surface-sunken border-t border-outline-subtle">
+            {t("c4.emptyLevel")}
+          </p>
+        )}
       </div>
     </div>
   );

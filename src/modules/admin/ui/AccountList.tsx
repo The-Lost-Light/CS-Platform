@@ -1,6 +1,9 @@
+import { useImperativeHandle, useState, type Ref } from "react";
 import { useI18n, type MessageKey } from "@modules/i18n";
+import { AccountManagement } from "./AccountManagement";
 import { ChangeAccountPassword } from "./ChangeAccountPassword";
 import { ConfirmDelete } from "./ConfirmDelete";
+import type { ManagementListHandle } from "./ManagementListHandle";
 
 import { useAccountList } from "../hooks/useAccountList";
 
@@ -11,8 +14,9 @@ const accountErrors = new Map<string, MessageKey>([
   ["invalid", "admin.invalidAccount"],
 ]);
 
-export function AccountList({ revision }: { revision: number }) {
+export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
   const { t } = useI18n();
+  const [creating, setCreating] = useState(false);
   const {
     count,
     visible,
@@ -28,18 +32,26 @@ export function AccountList({ revision }: { revision: number }) {
     submit,
     edit,
     requestDelete,
-    retry,
+    reload,
     cancelEdit,
     cancelDelete,
     confirmDelete,
-  } = useAccountList(revision);
+  } = useAccountList();
+  useImperativeHandle(ref, () => ({
+    showList() {
+      setCreating(false);
+      if (editing) cancelEdit();
+      cancelDelete();
+    },
+  }));
+  if (creating) return <AccountManagement onCreated={reload} onBack={() => setCreating(false)} />;
   return (
     <section className="ui-card p-5 space-y-4">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
         <h2 className="text-lg font-bold">
           {t(editing ? "admin.editAccount" : "admin.allAccounts", { count })}
         </h2>
-        {editing && (
+        {editing ? (
           <ChangeAccountPassword
             key={editing.id}
             accountId={editing.id}
@@ -47,13 +59,22 @@ export function AccountList({ revision }: { revision: number }) {
             isSelf={editing.id === selfId}
             disabled={pending}
           />
+        ) : (
+          <button
+            type="button"
+            disabled={!!deleting}
+            onClick={() => setCreating(true)}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-40"
+          >
+            {t("admin.add")}
+          </button>
         )}
       </header>
       {saved && <p role="status">{t("admin.saved")}</p>}
       {error && (
         <div role="alert">
           {t(accountErrors.get(error) ?? "admin.operationFailed")}{" "}
-          <button type="button" disabled={pending} onClick={retry}>
+          <button type="button" disabled={pending} onClick={reload}>
             {t("auth.retry")}
           </button>
         </div>

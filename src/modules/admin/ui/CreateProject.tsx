@@ -133,7 +133,7 @@ export function CreateProject({
           </button>
           {onCancel && (
             <button type="button" className="px-5 py-2.5" onClick={onCancel}>
-              {t("admin.cancel")}
+              {t(original ? "admin.cancel" : "admin.backToList")}
             </button>
           )}
         </fieldset>

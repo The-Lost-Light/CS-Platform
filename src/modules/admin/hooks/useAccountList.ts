@@ -8,7 +8,7 @@ interface Account {
   banned: boolean | null;
 }
 
-export function useAccountList(revision: number) {
+export function useAccountList() {
   const [users, setUsers] = useState<Account[]>([]);
   const [selfId, setSelfId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export function useAccountList(revision: number) {
     void load();
 
     return () => controller.abort();
-  }, [revision, attempt]);
+  }, [attempt]);
 
   async function mutate(
     id: string,
@@ -114,7 +114,7 @@ export function useAccountList(revision: number) {
     submit,
     edit,
     requestDelete,
-    retry: () => setAttempt((current) => current + 1),
+    reload: () => setAttempt((current) => current + 1),
     cancelEdit: () => {
       setEditing(null);
       setError(null);

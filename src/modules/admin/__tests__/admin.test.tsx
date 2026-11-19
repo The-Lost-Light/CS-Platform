@@ -34,26 +34,35 @@ test("only administrators have a management navigation entry", () => {
     assert.ok(!html.includes("Account management"));
   }
 });
-test("management contains project creation and account management, with constrained inputs", () => {
+test("each management list has an Add button in its header", () => {
   const html = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <AdminPage />
     </I18nProvider>,
   );
-  for (const text of [
-    "Management",
-    "Project management",
-    "Account management",
-    "Create project",
-    "Taipei time",
-    "All projects (0)",
-    "All accounts (0)",
-  ])
-    assert.ok(html.includes(text));
+  assert.ok(html.includes("Project management"));
+  assert.ok(html.includes("Account management"));
+  for (const title of ["All projects (0)", "All accounts (0)"])
+    assert.ok(
+      Array.from(html.matchAll(/<header\b[^>]*>([\s\S]*?)<\/header>/g)).some(
+        ([header]) => header.includes(title) && header.includes(">Add</button>"),
+      ),
+    );
+  assert.ok(!html.includes(">View</button>"));
+  assert.ok(!html.includes("<form"));
+});
+
+test("project creation offers a return to the list and constrains inputs", () => {
+  const html = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <CreateProject onCancel={() => {}} />
+    </I18nProvider>,
+  );
+  assert.ok(html.includes("Create project"));
+  assert.ok(html.includes("Taipei time"));
+  assert.ok(html.includes("Back to list"));
   assert.match(html, /<input(?=[^>]*name="title")(?=[^>]*required)[^>]*>/);
   assert.match(html, /<input(?=[^>]*name="codeName")(?=[^>]*required)[^>]*>/);
-  assert.equal((html.match(/>Add<\/button>/g) ?? []).length, 2);
-  assert.equal((html.match(/>View<\/button>/g) ?? []).length, 2);
   assert.match(html, /type="datetime-local"/);
   assert.match(html, /<input(?=[^>]*name="points")(?=[^>]*min="0")(?=[^>]*max="10000")[^>]*>/);
 });

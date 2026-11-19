@@ -1,12 +1,15 @@
+import { useImperativeHandle, useState, type Ref } from "react";
 import { Link } from "@void/react";
 import { useI18n } from "@modules/i18n";
 import { CreateProject } from "./CreateProject";
 import { ConfirmDelete } from "./ConfirmDelete";
+import type { ManagementListHandle } from "./ManagementListHandle";
 
 import { useProjectList } from "../hooks/useProjectList";
 
-export function ProjectList() {
+export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
   const { t } = useI18n();
+  const [creating, setCreating] = useState(false);
   const {
     count,
     visible,
@@ -24,6 +27,14 @@ export function ProjectList() {
     finishEdit,
     cancelDelete,
   } = useProjectList();
+  useImperativeHandle(ref, () => ({
+    showList() {
+      setCreating(false);
+      cancelEdit();
+      cancelDelete();
+    },
+  }));
+  if (creating) return <CreateProject onCancel={() => setCreating(false)} />;
   if (editing)
     return (
       <CreateProject
@@ -36,7 +47,17 @@ export function ProjectList() {
 
   return (
     <section className="ui-card p-5 space-y-4">
-      <h2 className="text-lg font-bold">{t("admin.allProjects", { count })}</h2>
+      <header className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold">{t("admin.allProjects", { count })}</h2>
+        <button
+          type="button"
+          disabled={!!deleting}
+          onClick={() => setCreating(true)}
+          className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-40"
+        >
+          {t("admin.add")}
+        </button>
+      </header>
       <label className="block">
         {t("admin.search")}
         <input

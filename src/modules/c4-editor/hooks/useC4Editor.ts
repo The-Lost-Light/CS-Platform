@@ -19,6 +19,7 @@ import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xy
 import { useEffect, useRef, useState } from "react";
 
 export function useC4Editor({
+  designDoc,
   nodes,
   onChangeNodes,
   relationships,
@@ -26,7 +27,9 @@ export function useC4Editor({
 }: C4ArchitectProps) {
   const { t } = useI18n();
   const [designTab, setDesignTab] = useState<"readme" | "diagram">("readme");
-  const [readmeMode, setReadmeMode] = useState<"reading" | "source">("reading");
+  const [readmeMode, setReadmeMode] = useState<"reading" | "source">(
+    designDoc ? "reading" : "source",
+  );
   const [scopeId, setScopeId] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [edgeId, setEdgeId] = useState("");

@@ -33,7 +33,7 @@ export function useWorkspaceAutosave({
     }),
     [designDoc, nodes, relationships, repoUrl],
   );
-  const [status, setStatus] = useState<SaveStatus>(revision ? "draft.saved" : "draft.template");
+  const [status, setStatus] = useState<SaveStatus>(revision ? "draft.saved" : "draft.empty");
   const [queue] = useState(() =>
     createSaveQueue(
       draft,

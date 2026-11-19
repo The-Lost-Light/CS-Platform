@@ -1,5 +1,11 @@
-export { type Project, type MindMapNode } from "./model/project";
+export {
+  type Project,
+  type ProjectAttachment,
+  MAX_ATTACHMENTS,
+  MAX_ATTACHMENT_BYTES,
+  MAX_CONTENT_LENGTH,
+} from "./model/project";
 export { parseProjectInput } from "./model/projectInput";
 export { mergeProjectCatalog } from "./model/projectCatalog";
 export { PROJECTS } from "./data/projectsData";
-export { getLocalizedProjects, updateLocalizedProjectDraft } from "./data/localizedProjects";
+export { getLocalizedProjects } from "./data/localizedProjects";

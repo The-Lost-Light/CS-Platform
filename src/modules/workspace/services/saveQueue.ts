@@ -4,7 +4,7 @@ import type { SaveError, SaveResult } from "./workspaceApi";
 export type SaveStatus =
   | SaveError
   | "draft.saved"
-  | "draft.template"
+  | "draft.empty"
   | "draft.saving"
   | "draft.unsaved";
 

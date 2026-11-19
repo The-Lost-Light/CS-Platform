@@ -1,4 +1,4 @@
-import { PROJECTS } from "@modules/projects";
+import { legacyNodes } from "./fixtures/mindMap";
 import {
   c4Drilldown,
   createC4NodeInScope,
@@ -11,7 +11,7 @@ import {
 import assert from "node:assert/strict";
 import { test } from "vite-plus/test";
 
-const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
+const nodes = migrateC4Nodes(legacyNodes);
 
 test("new nodes are placed below the full height of resized siblings", () => {
   const siblings = [
@@ -137,7 +137,7 @@ test("missing or deleted scope returns to context without stale boundary or brea
 test("legacy path mappings survive C4 migration and databases belong to the system", () => {
   assert.deepEqual(
     nodes.map((node) => [node.id, node.expectedPath]),
-    PROJECTS[0].initialMindMapNodes.map((node) => [node.id, node.expectedPath]),
+    legacyNodes.map((node) => [node.id, node.expectedPath]),
   );
   assert.equal(nodes.find((node) => node.id === "node-db")?.parentId, "node-root");
   assert.equal(nodes.find((node) => node.id === "node-tests")?.kind, "component");

@@ -5,10 +5,26 @@ import type { Project } from "@modules/projects";
 export const projects = sqliteTable("course_project", {
   id: text("id").primaryKey(),
   codeName: text("code_name").notNull().unique(),
-  data: text("data", { mode: "json" }).$type<Project>().notNull(),
+  data: text("data", { mode: "json" }).$type<Omit<Project, "attachments">>().notNull(),
   createdBy: text("created_by").notNull(),
   createdAt: integer("created_at").notNull(),
 });
+
+// Store file bytes separately so a catalog read only loads names and sizes.
+export const projectAttachmentParts = sqliteTable(
+  "project_attachment_part",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    attachmentId: text("attachment_id").notNull(),
+    part: integer("part").notNull(),
+    name: text("name").notNull(),
+    size: integer("size").notNull(),
+    content: text("content").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.projectId, table.attachmentId, table.part] })],
+);
 
 // Persist removal of built-in templates so they cannot reappear after a reload.
 export const removedProjects = sqliteTable("removed_project", {

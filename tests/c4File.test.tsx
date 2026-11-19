@@ -1,9 +1,9 @@
-import { PROJECTS } from "@modules/projects";
+import { legacyNodes } from "./fixtures/mindMap";
 import { migrateC4Nodes, parseC4File, serializeC4File } from "@modules/c4-model";
 import assert from "node:assert/strict";
 import { test } from "vite-plus/test";
 
-const nodes = migrateC4Nodes(PROJECTS[0].initialMindMapNodes);
+const nodes = migrateC4Nodes(legacyNodes);
 const relationships = [
   {
     id: "edge",

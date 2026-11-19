@@ -1,8 +1,7 @@
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
 import { allowsAdminMutation } from "@server/access";
-import { parseProjectInput } from "@modules/projects";
-import { createProject, listProjects } from "@server/projects";
+import { saveProject, listProjects, readProjectInput } from "@server/projects";
 
 export const GET = defineHandler(async (c) => {
   requireAuth(c);
@@ -12,17 +11,9 @@ export const GET = defineHandler(async (c) => {
 export const POST = defineHandler(async (c) => {
   const user = requireAuth(c);
   if (!allowsAdminMutation(user, c.req.raw)) return c.json({ error: "forbidden" }, 403);
-  const body = await c.req.text();
-  if (body.length > 40000) return c.json({ error: "invalid" }, 400);
-  let input: unknown;
-  try {
-    input = JSON.parse(body);
-  } catch {
-    return c.json({ error: "invalid" }, 400);
-  }
-  const parsed = parseProjectInput(input);
+  const parsed = await readProjectInput(c.req.raw);
   if (!parsed) return c.json({ error: "invalid" }, 400);
-  const project = await createProject(parsed, user.id);
+  const project = await saveProject(parsed, user.id);
   if (!project) return c.json({ error: "duplicate" }, 409);
   return c.json({ project }, 201);
 });

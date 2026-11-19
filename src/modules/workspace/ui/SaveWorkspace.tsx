@@ -5,7 +5,7 @@ export function SaveWorkspace(props: AutosaveOptions) {
   const { t } = useI18n();
   const status = useWorkspaceAutosave(props);
   const neutral =
-    status === "draft.template" || status === "draft.unsaved" || status === "draft.saving";
+    status === "draft.empty" || status === "draft.unsaved" || status === "draft.saving";
   const color = neutral
     ? "bg-surface-sunken border-outline text-on-muted"
     : status === "draft.saved"

@@ -1,25 +1,39 @@
 import {
   PROJECTS,
-  type Project,
   getLocalizedProjects,
   mergeProjectCatalog,
+  type ProjectAttachment,
 } from "@modules/projects";
 import { isUniqueViolation } from "@server/errors";
-import { db, desc, eq, sql } from "void/db";
-import { projects, removedProjects, workspaces } from "@db/schema";
+import { and, db, desc, eq, notInArray, sql } from "void/db";
+import { projectAttachmentParts as parts, projects, removedProjects, workspaces } from "@db/schema";
 import type { Locale } from "@modules/i18n";
+import { attachmentMetadata, insertAttachmentParts } from "./attachments";
+import type { ProjectInput } from "./input";
+
+export { downloadProjectAttachment } from "./attachments";
+export { readProjectInput } from "./input";
 
 export async function listProjects(locale: Locale = "en") {
-  const rows = await db
-    .select({ data: projects.data })
-    .from(projects)
-    .orderBy(desc(projects.createdAt));
-  const removed = (await db.select().from(removedProjects)).map((row) => row.id);
-  const templates = getLocalizedProjects(locale).projects;
+  const [rows, files, removed] = await db.batch([
+    db.select({ data: projects.data }).from(projects).orderBy(desc(projects.createdAt)),
+    db
+      .select({ projectId: parts.projectId, ...attachmentMetadata })
+      .from(parts)
+      .where(eq(parts.part, 0))
+      .orderBy(parts.name, parts.attachmentId),
+    db.select().from(removedProjects),
+  ]);
+  const attachments = new Map<string, ProjectAttachment[]>();
+  for (const { projectId, ...file } of files) {
+    const group = attachments.get(projectId) ?? [];
+    group.push(file);
+    attachments.set(projectId, group);
+  }
   return mergeProjectCatalog(
-    templates,
-    rows.map((row) => row.data),
-    removed,
+    getLocalizedProjects(locale).projects,
+    rows.map(({ data }) => ({ ...data, attachments: attachments.get(data.id) ?? [] })),
+    removed.map((row) => row.id),
   );
 }
 
@@ -29,59 +43,48 @@ export function availableProject(id: string) {
     AND (${Number(builtIn)} OR EXISTS (SELECT 1 FROM ${projects} WHERE ${projects.id} = ${id}))`;
 }
 
-export async function createProject(input: Omit<Project, "id">, userId: string) {
-  if (PROJECTS.some((project) => project.codeName.toUpperCase() === input.codeName)) return null;
-  const project = { ...input, id: crypto.randomUUID() };
-  const inserted = await db
-    .insert(projects)
-    .values({
-      id: project.id,
-      codeName: project.codeName,
-      data: project,
-      createdBy: userId,
-      createdAt: Date.now(),
-    })
-    .onConflictDoNothing()
-    .returning({ id: projects.id });
-  return inserted.length ? project : null;
-}
-
-export async function updateProject(
-  existing: Project,
-  parsed: Omit<Project, "id">,
-  userId: string,
-) {
-  const { id } = existing;
-  if (PROJECTS.some((project) => project.id !== id && project.codeName === parsed.codeName))
-    return null;
-  const project = {
-    ...existing,
-    ...parsed,
-    id,
-    initialMindMapNodes: existing.initialMindMapNodes,
-    difficulty: existing.difficulty,
-    difficultyColor: existing.difficultyColor,
-    status: existing.status,
-  };
+export async function saveProject(input: ProjectInput, userId: string, existingId?: string) {
+  const id = existingId ?? crypto.randomUUID();
+  const data = { ...input.project, id };
+  if (PROJECTS.some((item) => item.id !== id && item.codeName === data.codeName)) return null;
+  const row = { id, codeName: data.codeName, data, createdBy: userId, createdAt: Date.now() };
+  // A teacher can still have the editor open after another teacher deletes this project.
+  const write = existingId
+    ? db
+        .insert(projects)
+        .select(sql`SELECT ${id}, ${data.codeName}, ${JSON.stringify(data)}, ${userId}, ${row.createdAt}
+        WHERE ${availableProject(id)}`)
+        .onConflictDoUpdate({ target: projects.id, set: { codeName: data.codeName, data } })
+    : db.insert(projects).values(row);
+  const keepIds = input.retained.map((file) => file.id);
+  const uploads = await insertAttachmentParts(id, input.uploads);
   try {
-    await db
-      .insert(projects)
-      .values({
-        id,
-        codeName: project.codeName,
-        data: project,
-        createdBy: userId,
-        createdAt: Date.now(),
-      })
-      .onConflictDoUpdate({
-        target: projects.id,
-        set: { codeName: project.codeName, data: project },
-      });
+    // Metadata and file edits share one transaction, including a duplicate-code rollback.
+    const result = await db.batch([
+      write.returning({ id: projects.id }),
+      db
+        .delete(parts)
+        .where(
+          and(
+            eq(parts.projectId, id),
+            keepIds.length ? notInArray(parts.attachmentId, keepIds) : undefined,
+          ),
+        ),
+      ...uploads,
+      db
+        .select(attachmentMetadata)
+        .from(parts)
+        .where(and(eq(parts.projectId, id), eq(parts.part, 0)))
+        .orderBy(parts.name, parts.attachmentId),
+    ]);
+    if (!result[0].length) return undefined;
+    return { ...data, attachments: result.at(-1) as ProjectAttachment[] };
   } catch (error) {
+    if (existingId && !(await db.get(sql`SELECT 1 WHERE ${availableProject(id)}`)))
+      return undefined;
     if (isUniqueViolation(error)) return null;
     throw error;
   }
-  return project;
 }
 
 export async function deleteProject(id: string) {

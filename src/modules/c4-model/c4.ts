@@ -1,4 +1,13 @@
-import type { MindMapNode } from "@modules/projects";
+interface MindMapNode {
+  id: string;
+  label: string;
+  category: string;
+  expectedPath: string;
+  description: string;
+  parentId: string | null;
+  x: number;
+  y: number;
+}
 
 export type C4Kind = "person" | "system" | "container" | "component" | "code";
 export type C4Node = MindMapNode & {

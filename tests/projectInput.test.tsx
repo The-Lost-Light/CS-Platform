@@ -8,19 +8,24 @@ const valid = {
   summary: "A course project",
   dueDate: "2026-12-20T23:59",
   points: 100,
-  defaultRepoUrl: "https://github.com/example/project",
   tags: "React, React, D1",
-  requirements: "First\r\nSecond",
-  initialDesignDoc: "# Design",
+  content: "    indented Markdown\n",
 };
-test("project creation normalizes identifiers and creates an editable root without trusting supplied IDs", () => {
-  const project = parseProjectInput({ ...valid, id: "project-fullstack-web", createdBy: "forged" });
+test("project creation normalizes identifiers and preserves Markdown without accepting student data or supplied IDs", () => {
+  const project = parseProjectInput({
+    ...valid,
+    id: "project-fullstack-web",
+    createdBy: "forged",
+    initialDesignDoc: "answer",
+    repoUrl: "private",
+  });
   assert.ok(project);
   assert.equal(project.codeName, "NEW-01");
   assert.equal(project.title, "New project");
   assert.deepEqual(project.tags, ["React", "D1"]);
-  assert.deepEqual(project.requirements, ["First", "Second"]);
-  assert.equal(project.initialMindMapNodes[0].parentId, null);
+  assert.equal(project.content, valid.content);
+  assert.equal("initialDesignDoc" in project, false);
+  assert.equal("repoUrl" in project, false);
   assert.equal("id" in project, false);
   assert.equal("createdBy" in project, false);
 });
@@ -34,9 +39,8 @@ test("invalid project input cannot reach storage", () => {
     { points: -1 },
     { points: 1.5 },
     { points: "100" },
-    { defaultRepoUrl: "javascript:alert(1)" },
-    { defaultRepoUrl: "https://github.com.evil.test/owner/repo" },
-    { requirements: [] },
+    { content: [] },
+    { content: "x".repeat(40001) },
   ]) {
     assert.equal(parseProjectInput({ ...valid, ...patch }), null);
   }
@@ -46,12 +50,10 @@ test("optional project fields can remain empty", () => {
   const project = parseProjectInput({
     ...valid,
     dueDate: "",
-    defaultRepoUrl: "",
     tags: "",
-    requirements: "",
-    initialDesignDoc: "",
+    content: "",
   });
   assert.ok(project);
   assert.deepEqual(project.tags, []);
-  assert.deepEqual(project.requirements, []);
+  assert.equal(project.content, "");
 });

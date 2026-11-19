@@ -64,6 +64,12 @@ test("project creation offers a return to the list and constrains inputs", () =>
   assert.match(html, /<input(?=[^>]*name="title")(?=[^>]*required)[^>]*>/);
   assert.match(html, /<input(?=[^>]*name="codeName")(?=[^>]*required)[^>]*>/);
   assert.match(html, /type="datetime-local"/);
+  assert.match(html, /<textarea[^>]*name="content"/);
+  assert.match(
+    html,
+    /<input(?=[^>]*type="file")(?=[^>]*multiple)(?=[^>]*name="attachments")[^>]*>/,
+  );
+  assert.doesNotMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc)"/);
   assert.match(html, /<input(?=[^>]*name="points")(?=[^>]*min="0")(?=[^>]*max="10000")[^>]*>/);
 });
 

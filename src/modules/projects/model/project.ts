@@ -1,28 +1,21 @@
-export interface MindMapNode {
+export interface ProjectAttachment {
   id: string;
-  label: string;
-  category: string;
-  expectedPath: string;
-  description: string;
-  parentId: string | null;
-  x: number;
-  y: number;
+  name: string;
+  size: number;
 }
 
 export interface Project {
   id: string;
-  type: "project";
-  codeName: string;
   title: string;
-  difficulty: string;
-  difficultyColor: string;
+  codeName: string;
+  summary: string;
   dueDate: string;
   points: number;
-  status: string;
-  defaultRepoUrl: string;
   tags: string[];
-  summary: string;
-  requirements: string[];
-  initialMindMapNodes: MindMapNode[];
-  initialDesignDoc: string;
+  content: string;
+  attachments: ProjectAttachment[];
 }
+
+export const MAX_ATTACHMENTS = 8;
+export const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+export const MAX_CONTENT_LENGTH = 40000;

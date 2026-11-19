@@ -1,6 +1,11 @@
 import { Link } from "@void/react";
 import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
+import {
+  MAX_ATTACHMENTS,
+  MAX_ATTACHMENT_BYTES,
+  MAX_CONTENT_LENGTH,
+  type Project,
+} from "@modules/projects";
 import { useProjectForm } from "../hooks/useProjectForm";
 
 export function CreateProject({
@@ -13,7 +18,10 @@ export function CreateProject({
   onCancel?: () => void;
 }) {
   const { t } = useI18n();
-  const { pending, created, error, submit } = useProjectForm(original, onSaved);
+  const { pending, created, error, submit, attachments, addFiles, removeFile } = useProjectForm(
+    original,
+    onSaved,
+  );
   return (
     <section className="ui-card p-5 sm:p-6 space-y-5">
       <div>
@@ -42,7 +50,7 @@ export function CreateProject({
                 defaultValue={original?.codeName}
                 required
                 maxLength={30}
-                pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,29}"
+                pattern={"[A-Za-z0-9][A-Za-z0-9_\\-]{0,29}"}
                 placeholder="PROJ-03"
                 className="ui-input mt-1 p-2.5"
               />
@@ -86,17 +94,6 @@ export function CreateProject({
             </label>
           </div>
           <label className="block text-sm font-semibold">
-            {t("admin.projects.repo")}
-            <input
-              name="defaultRepoUrl"
-              defaultValue={original?.defaultRepoUrl}
-              type="url"
-              maxLength={300}
-              placeholder="https://github.com/owner/repository"
-              className="ui-input mt-1 p-2.5"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
             {t("admin.projects.tags")}
             <input
               name="tags"
@@ -106,25 +103,57 @@ export function CreateProject({
             />
           </label>
           <label className="block text-sm font-semibold">
-            {t("admin.projects.requirements")}
+            {t("admin.projects.content")}
             <textarea
-              name="requirements"
-              defaultValue={original?.requirements.join("\n")}
-              rows={4}
-              maxLength={8000}
-              className="ui-input mt-1 p-2.5"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            {t("admin.projects.designDoc")}
-            <textarea
-              name="initialDesignDoc"
-              defaultValue={original?.initialDesignDoc}
-              rows={6}
-              maxLength={20000}
+              name="content"
+              defaultValue={original?.content}
+              rows={10}
+              maxLength={MAX_CONTENT_LENGTH}
               className="ui-input mt-1 p-2.5 font-mono"
             />
           </label>
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold">
+              {t("project.attachments")}
+              <input
+                type="file"
+                multiple
+                name="attachments"
+                className="ui-input mt-1 p-2.5"
+                aria-describedby="project-attachment-help"
+                onChange={(event) => {
+                  addFiles(Array.from(event.currentTarget.files ?? []));
+                  event.currentTarget.value = "";
+                }}
+              />
+            </label>
+            <p id="project-attachment-help" className="text-xs text-on-muted">
+              {t("admin.projects.attachmentLimit", {
+                count: MAX_ATTACHMENTS,
+                size: MAX_ATTACHMENT_BYTES / 1024 / 1024,
+              })}
+            </p>
+            {attachments.length > 0 && (
+              <ul className="divide-y divide-outline">
+                {attachments.map((file, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between gap-3 py-1.5 text-sm"
+                  >
+                    <span className="break-all">{file.name}</span>
+                    <button
+                      type="button"
+                      className="ui-btn-tonal shrink-0"
+                      aria-label={t("admin.projects.removeAttachment", { name: file.name })}
+                      onClick={() => removeFile(index)}
+                    >
+                      {t("admin.remove")}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button
             className="px-5 py-2.5 rounded-full bg-primary text-on-primary font-semibold"
             type="submit"
@@ -139,13 +168,18 @@ export function CreateProject({
         </fieldset>
         {error && (
           <p role="alert" className="text-on-danger-container bg-danger-container rounded-xl p-3">
-            {t(
-              error === "duplicate"
-                ? "admin.projects.duplicate"
-                : error === "invalid"
-                  ? "admin.projects.invalid"
-                  : "admin.projects.failed",
-            )}
+            {error === "attachments"
+              ? t("admin.projects.attachmentLimit", {
+                  count: MAX_ATTACHMENTS,
+                  size: MAX_ATTACHMENT_BYTES / 1024 / 1024,
+                })
+              : t(
+                  error === "duplicate"
+                    ? "admin.projects.duplicate"
+                    : error === "invalid"
+                      ? "admin.projects.invalid"
+                      : "admin.projects.failed",
+                )}
           </p>
         )}
         {created && (

@@ -1,20 +1,47 @@
 import { useState, type FormEvent } from "react";
 import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
+import {
+  MAX_ATTACHMENTS,
+  MAX_ATTACHMENT_BYTES,
+  type Project,
+  type ProjectAttachment,
+} from "@modules/projects";
 import { useProjectCatalog } from "@modules/catalog";
 
 export function useProjectForm(original?: Project, onSaved?: () => void) {
   const { locale } = useI18n();
   const { addProject } = useProjectCatalog();
+  const [attachments, setAttachments] = useState<(ProjectAttachment | File)[]>(
+    original?.attachments ?? [],
+  );
   const [pending, setPending] = useState(false);
   const [created, setCreated] = useState<Project | null>(null);
-  const [error, setError] = useState<"duplicate" | "invalid" | "failed" | null>(null);
+  const [error, setError] = useState<"duplicate" | "invalid" | "failed" | "attachments" | null>(
+    null,
+  );
+  function addFiles(files: File[]) {
+    const next = [...attachments, ...files];
+    if (
+      next.length > MAX_ATTACHMENTS ||
+      next.reduce((sum, file) => sum + file.size, 0) > MAX_ATTACHMENT_BYTES
+    ) {
+      setError("attachments");
+      return;
+    }
+    setAttachments(next);
+    setError(null);
+  }
+  function removeFile(index: number) {
+    setAttachments(attachments.filter((_, i) => i !== index));
+    setError(null);
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
     const form = event.currentTarget;
     const data = new FormData(form);
-    const input = { ...Object.fromEntries(data), points: Number(data.get("points")) };
+    data.delete("attachments");
+    for (const file of attachments) data.append("attachments", "id" in file ? file.id : file);
     setPending(true);
     setError(null);
     setCreated(null);
@@ -23,8 +50,7 @@ export function useProjectForm(original?: Project, onSaved?: () => void) {
         original ? `/api/projects/${original.id}?locale=${locale}` : "/api/projects",
         {
           method: original ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
+          body: data,
         },
       );
       if (!response.ok) {
@@ -36,7 +62,10 @@ export function useProjectForm(original?: Project, onSaved?: () => void) {
       const { project } = (await response.json()) as { project: Project };
       addProject(project);
       setCreated(project);
-      if (!original) form.reset();
+      if (!original) {
+        form.reset();
+        setAttachments([]);
+      }
       onSaved?.();
     } catch {
       setError("failed");
@@ -44,5 +73,5 @@ export function useProjectForm(original?: Project, onSaved?: () => void) {
       setPending(false);
     }
   }
-  return { pending, created, error, submit };
+  return { pending, created, error, submit, attachments, addFiles, removeFile };
 }

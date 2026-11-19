@@ -3,8 +3,9 @@ import { useProjectWorkspace } from "../hooks/useProjectWorkspace";
 import { useI18n } from "@modules/i18n";
 import { C4Architect } from "@modules/c4-editor";
 import { RepositoryConnection, GitHubRepoDashboard } from "@modules/repository";
-import { Compass, FolderGit2, GitBranch } from "lucide-react";
+import { Compass, FileText, FolderGit2, GitBranch } from "lucide-react";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
+import { AssignmentPanel } from "./AssignmentPanel";
 import { SaveWorkspace } from "./SaveWorkspace";
 
 export function ProjectWorkspace({
@@ -15,10 +16,8 @@ export function ProjectWorkspace({
   snapshot: WorkspaceSnapshot;
 }) {
   const { t } = useI18n();
-  const { repository, draft, revision, setRevision, activeTab, setActiveTab } = useProjectWorkspace(
-    project,
-    snapshot,
-  );
+  const { repository, draft, revision, setRevision, activeTab, setActiveTab } =
+    useProjectWorkspace(snapshot);
   const {
     mindMapNodes,
     setMindMapNodes,
@@ -46,7 +45,7 @@ export function ProjectWorkspace({
                 {project.title}
               </h1>
             </div>
-            <p className="text-xs text-on-muted mt-1 line-clamp-1">{project.summary}</p>
+            <p className="text-xs text-on-muted mt-1 break-words">{project.summary}</p>
           </div>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
@@ -62,10 +61,16 @@ export function ProjectWorkspace({
           />
           <div
             role="tablist"
-            aria-label={t("workspace.tabs.design")}
+            aria-label={t("workspace.tabs.label")}
             className="ui-pill-group gap-1 self-start sm:self-auto shrink-0"
           >
-            {(["design", "github"] as const).map((tab) => (
+            {(
+              [
+                ["assignment", FileText],
+                ["design", Compass],
+                ["github", GitBranch],
+              ] as const
+            ).map(([tab, Icon]) => (
               <button
                 key={tab}
                 type="button"
@@ -74,7 +79,7 @@ export function ProjectWorkspace({
                 aria-controls={`workspace-panel-${tab}`}
                 aria-selected={activeTab === tab}
                 onClick={() => setActiveTab(tab)}
-                className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition ${
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold transition ${
                   activeTab === tab
                     ? tab === "design"
                       ? "bg-primary text-on-primary shadow-2xs"
@@ -82,19 +87,21 @@ export function ProjectWorkspace({
                     : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
                 }`}
               >
-                {tab === "design" ? (
-                  <Compass className="w-3.5 h-3.5" />
-                ) : (
-                  <GitBranch className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {t(tab === "design" ? "workspace.tabs.design" : "workspace.tabs.github")}
-                </span>
+                <Icon className="w-3.5 h-3.5" />
+                <span>{t(`workspace.tabs.${tab}`)}</span>
               </button>
             ))}
           </div>
         </div>
       </section>
+      <div
+        role="tabpanel"
+        id="workspace-panel-assignment"
+        aria-labelledby="workspace-tab-assignment"
+        hidden={activeTab !== "assignment"}
+      >
+        <AssignmentPanel project={project} />
+      </div>
       <div
         role="tabpanel"
         id="workspace-panel-design"

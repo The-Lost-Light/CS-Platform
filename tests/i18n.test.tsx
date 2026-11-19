@@ -1,5 +1,5 @@
 import { AuthProvider, DEMO_ACCOUNTS, demoAuthService, AuthGate, LoginView } from "@modules/auth";
-import { getLocalizedProjects, updateLocalizedProjectDraft } from "@modules/projects";
+import { getLocalizedProjects } from "@modules/projects";
 import {
   I18nProvider,
   createTranslator,
@@ -103,51 +103,14 @@ test("GitHub validation exposes a key that can be translated after a language ch
   });
 });
 
-test("all built-in project text is translated and path mappings remain unchanged", () => {
+test("built-in assignment briefs are localized independently of student work", () => {
   assert.equal(han.test(JSON.stringify(en)), false);
   for (const [i, project] of en.projects.entries()) {
-    assert.deepEqual(
-      project.initialMindMapNodes.map(({ id, expectedPath }) => ({
-        id,
-        expectedPath,
-      })),
-      zh.projects[i].initialMindMapNodes.map(({ id, expectedPath }) => ({
-        id,
-        expectedPath,
-      })),
-    );
+    assert.equal(project.id, zh.projects[i].id);
+    assert.ok(project.content.includes("## Assignment instructions"));
+    assert.ok(zh.projects[i].content.includes("## 作業說明"));
+    assert.deepEqual(project.attachments, []);
   }
-});
-
-test("language changes preserve custom nodes, edited fields, deleted nodes, paths and positions", () => {
-  const before = zh.projects[0];
-  const after = en.projects[0];
-  const nodes = before.initialMindMapNodes.slice(0, 3).map((node) => ({ ...node }));
-  nodes[1].label = "我自己改的標題";
-  nodes[1].expectedPath = "src/custom.ts";
-  nodes[1].x = 222;
-  nodes.push({ ...nodes[0], id: "custom", label: "My custom module" });
-  const doc = before.initialDesignDoc + "\nMy notes";
-  const result = updateLocalizedProjectDraft(nodes, doc, before, after);
-  assert.equal(result.nodes.length, nodes.length);
-  assert.equal(result.nodes[0].label, after.initialMindMapNodes[0].label);
-  assert.equal(result.nodes[1].label, nodes[1].label);
-  assert.equal(result.nodes[1].description, after.initialMindMapNodes[1].description);
-  assert.equal(result.nodes[1].expectedPath, "src/custom.ts");
-  assert.equal(result.nodes[1].x, 222);
-  assert.deepEqual(result.nodes[3], nodes[3]);
-  assert.equal(result.designDoc, doc);
-  const pristine = updateLocalizedProjectDraft(
-    before.initialMindMapNodes,
-    before.initialDesignDoc,
-    before,
-    after,
-  );
-  assert.deepEqual(pristine.nodes, after.initialMindMapNodes);
-  assert.equal(pristine.designDoc, after.initialDesignDoc);
-  const roundTrip = updateLocalizedProjectDraft(result.nodes, result.designDoc, after, before);
-  assert.deepEqual(roundTrip.nodes, nodes);
-  assert.equal(roundTrip.designDoc, doc);
 });
 
 const noop = () => {};
@@ -189,6 +152,28 @@ test("dashboard lists every project and uses project-only navigation in both lan
   }
 });
 
+test("new workspaces show teacher handouts and start with an empty student README", () => {
+  const project = {
+    ...en.projects[0],
+    content: "# Handout",
+    attachments: [{ id: "worksheet", name: "題目.pdf", size: 100 }],
+  };
+  const html = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="en">
+        <ProjectWorkspace
+          project={project}
+          snapshot={{ accountId: "student", draft: null, revision: null }}
+        />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  assert.match(html, /<h1>Handout<\/h1>/);
+  assert.ok(html.includes(`href="/api/projects/${project.id}/attachments/worksheet"`));
+  assert.ok(html.includes('download="題目.pdf"'));
+  assert.match(html, /<textarea[^>]*><\/textarea>/);
+});
+
 test("the project editor renders a saved personal README and repository in the current UI language", () => {
   const html = renderToStaticMarkup(
     <ThemeProvider>
@@ -208,6 +193,15 @@ test("the project editor renders a saved personal README and repository in the c
       </I18nProvider>
     </ThemeProvider>,
   );
+  assert.match(html, /id="workspace-tab-assignment"[^>]*aria-selected="true"/);
+  assert.ok(
+    html.indexOf('id="workspace-tab-assignment"') < html.indexOf('id="workspace-tab-design"'),
+  );
+  const brief = html
+    .split('id="workspace-panel-assignment"')[1]
+    .split('id="workspace-panel-design"')[0];
+  assert.match(brief, /<h2>作業說明<\/h2>/);
+  assert.doesNotMatch(brief, /Private architecture notes/);
   assert.match(html, /Private architecture notes/);
   assert.match(html, /value="https:\/\/github\.com\/example\/my-assignment"/);
   assert.match(html, /已儲存至你的帳號/);

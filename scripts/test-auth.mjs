@@ -98,10 +98,8 @@ const projectInput = {
   summary: "Project creation integration test",
   points: 100,
   dueDate: "2026-12-20T23:59",
-  defaultRepoUrl: "",
   tags: "React,D1",
-  requirements: "One requirement",
-  initialDesignDoc: "# Test",
+  content: "# Test",
 };
 assert.equal((await request("/api/projects")).status, 401);
 assert.equal((await request("/api/projects", projectInput, studentCookie)).status, 403);
@@ -117,16 +115,93 @@ assert.equal(
   (await request("/api/projects", { ...projectInput, codeName: "PROJ-01" }, adminCookie)).status,
   409,
 );
-const createdProjectResponse = await request("/api/projects", projectInput, adminCookie);
+const upload = new FormData();
+for (const [key, value] of Object.entries(projectInput)) upload.set(key, String(value));
+const fileContents = "題目附件".repeat(60000);
+upload.append("attachments", new Blob([fileContents]), "試題.txt");
+const createdProjectResponse = await fetch(base + "/api/projects", {
+  method: "POST",
+  headers: { Origin: base, Cookie: adminCookie },
+  body: upload,
+});
 assert.equal(createdProjectResponse.status, 201, await createdProjectResponse.clone().text());
 const { project } = await createdProjectResponse.json();
 writeFileSync(".void/crud-project-ids.json", JSON.stringify([project.id]));
 assert.equal(project.title, projectInput.title);
+assert.equal(project.attachments.length, 1);
+const attachmentPath = "/api/projects/" + project.id + "/attachments/" + project.attachments[0].id;
+assert.equal((await request(attachmentPath)).status, 401);
+const downloaded = await request(attachmentPath, null, studentCookie);
+assert.equal(downloaded.status, 200);
+assert.equal(await downloaded.text(), fileContents);
 assert.equal((await request("/api/projects", projectInput, adminCookie)).status, 409);
 const list = await (await request("/api/projects", null, studentCookie)).json();
 assert.ok(list.projects.some((item) => item.id === project.id));
 assert.equal((await request("/projects/" + project.id, null, studentCookie)).status, 200);
-assert.equal((await request("/projects/" + project.id, null, studentCookie)).status, 200);
+// Keep a student's work while replacing a handout on the teacher's assignment.
+const projectPath = "/api/projects/" + project.id;
+const workspacePath = projectPath + "/workspace";
+const initialWorkspace = await (await request(workspacePath, null, studentCookie)).json();
+assert.equal(initialWorkspace.draft, null);
+const draft = {
+  designDoc: "# My README",
+  repoUrl: "student/work",
+  model: {
+    format: "codepulse-c4",
+    version: 1,
+    relationships: [],
+    nodes: [
+      {
+        id: "system",
+        kind: "system",
+        category: "system",
+        label: "Student system",
+        description: "",
+        expectedPath: "",
+        technology: "",
+        parentId: null,
+        x: 0,
+        y: 0,
+      },
+    ],
+  },
+};
+const saved = await fetch(base + workspacePath, {
+  method: "PUT",
+  headers: {
+    Origin: base,
+    Cookie: studentCookie,
+    "X-Workspace-Account": initialWorkspace.accountId,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ revision: null, draft }),
+});
+assert.equal(saved.status, 200);
+upload.delete("attachments");
+upload.set("content", "# New instructions");
+upload.append("attachments", project.attachments[0].id);
+upload.append("attachments", new Blob(["new handout"]), "handout.txt");
+const patchFiles = () =>
+  fetch(base + projectPath, {
+    method: "PATCH",
+    headers: { Origin: base, Cookie: adminCookie },
+    body: upload,
+  });
+const added = await patchFiles();
+assert.equal(added.status, 200);
+const withHandout = (await added.json()).project;
+assert.equal(withHandout.attachments.length, 2);
+assert.deepEqual((await (await request(workspacePath, null, studentCookie)).json()).draft, draft);
+upload.delete("attachments");
+upload.append("attachments", project.attachments[0].id);
+const removed = await patchFiles();
+assert.equal(removed.status, 200);
+assert.deepEqual((await removed.json()).project.attachments, project.attachments);
+const removedFile = withHandout.attachments.find((file) => file.name === "handout.txt");
+assert.equal(
+  (await request(projectPath + "/attachments/" + removedFile.id, null, studentCookie)).status,
+  404,
+);
 console.log(
   "Passed project creation, validation, duplicate conflict, student read, deep links, and admin-only writes.",
 );
@@ -284,7 +359,7 @@ assert.equal(
   (await request(profilePath, { ...accountUpdate, role: "admin" }, adminCookie, "PATCH")).status,
   200,
 );
-const editedProject = { ...projectInput, title: "Updated project", initialDesignDoc: "# Updated" };
+const editedProject = { ...projectInput, title: "Updated project", content: "# Updated" };
 assert.equal(
   (await request("/api/projects/" + project.id, editedProject, editedCookie, "PATCH")).status,
   401,
@@ -296,10 +371,9 @@ const projectUpdate = await request(
   "PATCH",
 );
 assert.equal(projectUpdate.status, 200, await projectUpdate.clone().text());
-assert.deepEqual(
-  (await projectUpdate.json()).project.initialMindMapNodes,
-  project.initialMindMapNodes,
-);
+const updated = (await projectUpdate.json()).project;
+assert.equal(updated.content, editedProject.content);
+assert.deepEqual(updated.attachments, project.attachments);
 const updatedList = await (await request("/api/projects?locale=zh-TW", null, adminCookie)).json();
 assert.equal(updatedList.projects.find((item) => item.id === project.id).title, "Updated project");
 assert.ok(updatedList.projects.some((item) => item.id === "project-fullstack-web"));
@@ -319,6 +393,7 @@ assert.equal(
   200,
 );
 assert.equal((await request("/projects/" + project.id, null, adminCookie)).status, 404);
+assert.equal((await request(attachmentPath, null, adminCookie)).status, 404);
 assert.ok(
   !(await (await request("/api/projects", null, adminCookie)).json()).projects.some(
     (item) => item.id === project.id,

@@ -1,4 +1,4 @@
-export { I18nProvider, useI18n } from "./I18nProvider";
+export { I18nProvider, useI18n, type LanguagePreference } from "./I18nProvider";
 export { LanguageSwitcher } from "./LanguageSwitcher";
 export {
   createTranslator,
@@ -6,6 +6,7 @@ export {
   englishMessages,
   isMessageKey,
   resolveLocale,
+  SUPPORTED_LOCALES,
   traditionalChineseMessages,
   type Locale,
   type MessageKey,

@@ -25,7 +25,7 @@ export function DemoAccountPicker({
             key={account.id}
             type="button"
             onClick={() => onSelect(account)}
-            className={`p-2.5 rounded-2xl border text-left transition-colors cursor-pointer flex items-center gap-2.5 ${
+            className={`p-2.5 rounded-xl border text-left transition-colors cursor-pointer flex items-center gap-2.5 ${
               selectedAccount === account.studentId
                 ? "bg-primary-container border-primary-outline text-on-primary-container"
                 : "bg-surface-sunken hover:bg-surface-hover border-outline-subtle text-on-surface"

@@ -1,4 +1,5 @@
 import { isMessageKey, type MessageKey } from "@modules/i18n";
+import { useSettings } from "@modules/settings";
 import { useState } from "react";
 
 import type { RepoBundle } from "../model/repository";
@@ -8,9 +9,8 @@ export function useRepository(
   defaultRepoUrl: string,
   loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle,
 ) {
+  const { githubToken } = useSettings();
   const [repoUrlInput, setRepoUrlInput] = useState(defaultRepoUrl);
-  const [githubToken, setGithubToken] = useState("");
-  const [showTokenInput, setShowTokenInput] = useState(false);
   const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(null);
   const [isLoadingRepo, setIsLoadingRepo] = useState(false);
   const [repoError, setRepoError] = useState<{ key: MessageKey } | { message: string } | null>(
@@ -39,9 +39,7 @@ export function useRepository(
     repoUrlInput,
     setRepoUrlInput,
     githubToken,
-    setGithubToken,
-    showTokenInput,
-    setShowTokenInput,
+    hasGithubToken: Boolean(githubToken),
     repoBundle,
     isLoadingRepo,
     repoError,

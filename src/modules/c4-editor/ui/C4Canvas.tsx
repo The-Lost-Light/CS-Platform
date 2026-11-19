@@ -36,7 +36,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
             ? "var(--c4-expandable-border)"
             : "var(--c4-leaf-border)",
       }}
-      className={`rounded-[20px] border-2 p-4 shadow-m3-1 transition-all flex flex-col justify-between text-on-surface ${
+      className={`rounded-xl border-2 p-4 shadow-m3-1 transition-all flex flex-col justify-between text-on-surface ${
         selected ? "ring-4 ring-primary/25 shadow-m3-2" : "hover:shadow-m3-2"
       }`}
     >
@@ -87,7 +87,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
 
 function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
   return (
-    <div className="c4-boundary-drag h-full w-full rounded-[24px] border-2 border-dashed border-primary/70 bg-primary/5 cursor-move">
+    <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary/70 bg-primary/5 cursor-move">
       <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
       <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
     </div>

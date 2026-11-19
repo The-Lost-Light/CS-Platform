@@ -1,15 +1,51 @@
 @layer components {
-  /* Cards & Containers */
+  /* Cards & Frosted Containers */
   .ui-card {
-    @apply rounded-[28px] bg-surface text-on-surface border border-outline-subtle shadow-m3-1 transition-colors;
+    @apply rounded-2xl bg-surface backdrop-blur-md text-on-surface border border-outline-subtle shadow-m3-1 transition-colors;
   }
 
   .ui-card-sm {
-    @apply rounded-[20px] bg-surface text-on-surface border border-outline-subtle p-4 shadow-m3-1 transition-colors;
+    @apply rounded-xl bg-surface backdrop-blur-md text-on-surface border border-outline-subtle p-4 shadow-m3-1 transition-colors;
   }
 
   .ui-panel {
-    @apply rounded-2xl bg-surface-sunken text-on-surface border border-outline-subtle transition-colors;
+    @apply rounded-xl bg-surface-sunken text-on-surface border border-outline-subtle transition-colors;
+  }
+
+  .ui-setting-section {
+    @apply rounded-2xl bg-surface-sunken border border-outline-subtle overflow-hidden transition-colors;
+  }
+
+  .ui-setting-trigger {
+    @apply w-full grid grid-cols-[minmax(0,1fr)_10.5rem] sm:grid-cols-[minmax(0,1fr)_13rem] items-stretch gap-3 sm:gap-4 p-4 text-left transition-colors cursor-pointer hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary;
+  }
+
+  .ui-setting-value-cell {
+    @apply flex items-stretch gap-2.5 border-l border-outline-subtle pl-3 sm:pl-4 min-w-0;
+  }
+
+  .ui-setting-value-pill {
+    @apply inline-flex flex-1 min-w-0 items-center justify-center gap-1.5 rounded-full border border-outline-subtle bg-surface px-3 text-xs font-semibold text-on-surface shadow-m3-1 transition-colors;
+  }
+
+  .ui-setting-value-pill-active {
+    @apply border-primary-outline bg-primary-container text-on-primary-container;
+  }
+
+  .ui-setting-value-pill-success {
+    @apply border-success-outline bg-success-container text-on-success-container;
+  }
+
+  .ui-choice-card {
+    @apply relative flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-xs transition-all cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-45 disabled:pointer-events-none;
+  }
+
+  .ui-choice-card-active {
+    @apply border-primary-outline bg-primary-container text-on-primary-container font-semibold shadow-m3-1;
+  }
+
+  .ui-choice-card-idle {
+    @apply border-outline-subtle bg-surface text-on-surface hover:bg-surface-hover hover:border-outline font-medium;
   }
 
   .ui-card-header {
@@ -17,19 +53,19 @@
   }
 
   .ui-dialog {
-    @apply rounded-[28px] bg-surface text-on-surface border border-outline-subtle shadow-m3-3 backdrop:bg-black/50 backdrop:backdrop-blur-[2px];
+    @apply rounded-2xl bg-surface-elevated backdrop-blur-xl text-on-surface border border-outline-subtle shadow-m3-3 backdrop:bg-black/40 backdrop:backdrop-blur-xs;
   }
 
   .ui-menu {
-    @apply rounded-2xl bg-surface text-on-surface border border-outline-subtle p-1.5 shadow-m3-3;
+    @apply rounded-xl bg-surface-elevated backdrop-blur-xl text-on-surface border border-outline-subtle p-1.5 shadow-m3-3;
   }
 
   .ui-icon-badge {
-    @apply inline-flex items-center justify-center rounded-xl bg-primary text-on-primary shadow-m3-1 shrink-0;
+    @apply inline-flex items-center justify-center rounded-lg bg-primary text-on-primary shadow-m3-1 shrink-0;
   }
 
   .ui-icon-badge-tonal {
-    @apply inline-flex items-center justify-center rounded-xl bg-primary-container text-on-primary-container shrink-0;
+    @apply inline-flex items-center justify-center rounded-lg bg-primary-container text-on-primary-container shrink-0;
   }
 
   /* Buttons (Material You 3 Full Pill) */
@@ -77,7 +113,7 @@
 
   /* Segmented Pill Groups & Tabs */
   .ui-pill-group {
-    @apply inline-flex items-center gap-1 bg-surface-container p-1 rounded-full border border-outline-subtle;
+    @apply inline-flex items-center gap-1 bg-surface-container backdrop-blur-xs p-1 rounded-full border border-outline-subtle;
   }
 
   .ui-pill-item {
@@ -144,7 +180,7 @@
   }
 
   .ui-input {
-    @apply w-full rounded-2xl border border-outline bg-surface-sunken px-3.5 py-2.5 text-sm text-on-surface placeholder:text-on-subtle transition-colors hover:border-on-subtle focus:bg-surface focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:opacity-55 file:mr-3 file:rounded-full file:border-0 file:bg-primary-container file:px-3.5 file:py-1.5 file:text-xs file:font-semibold file:text-on-primary-container hover:file:bg-primary-container-hover file:cursor-pointer;
+    @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2.5 text-sm text-on-surface placeholder:text-on-subtle transition-colors hover:border-on-subtle focus:bg-surface-elevated focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:opacity-55 file:mr-3 file:rounded-full file:border-0 file:bg-primary-container file:px-3.5 file:py-1.5 file:text-xs file:font-semibold file:text-on-primary-container hover:file:bg-primary-container-hover file:cursor-pointer;
   }
 
   .ui-switch {
@@ -178,7 +214,7 @@
   .ui-banner-primary,
   .ui-banner-success,
   .ui-banner-danger {
-    @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-xs sm:text-sm font-medium;
+    @apply flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-xs sm:text-sm font-medium;
   }
 
   .ui-banner-neutral {
@@ -203,7 +239,7 @@
 
   /* Tables & Empty State */
   .ui-table-wrap {
-    @apply overflow-x-auto rounded-2xl border border-outline-subtle bg-surface;
+    @apply overflow-x-auto rounded-xl border border-outline-subtle bg-surface;
   }
 
   .ui-table {
@@ -227,7 +263,7 @@
   }
 
   .ui-empty {
-    @apply rounded-2xl border border-dashed border-outline bg-surface-sunken px-6 py-10 text-center text-sm text-on-muted;
+    @apply rounded-xl border border-dashed border-outline bg-surface-sunken px-6 py-10 text-center text-sm text-on-muted;
   }
 
   /* Markdown Body */
@@ -240,7 +276,7 @@
       [&_p]:my-3 [&_p]:text-on-muted [&_li]:text-on-muted
       [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
       [&_a]:text-secondary [&_a]:underline
-      [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-surface-sunken [&_pre]:border [&_pre]:border-outline-subtle [&_pre]:p-4
+      [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-surface-sunken [&_pre]:border [&_pre]:border-outline-subtle [&_pre]:p-4
       [&_code]:font-mono
       [&_:not(pre)>code]:rounded-md [&_:not(pre)>code]:bg-surface-container [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:text-[0.875em] [&_:not(pre)>code]:text-primary
       [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:bg-surface-tonal [&_blockquote]:py-1 [&_blockquote]:pl-4 [&_blockquote]:rounded-r-xl

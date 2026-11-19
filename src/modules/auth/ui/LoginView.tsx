@@ -1,5 +1,5 @@
-import { useI18n, LanguageSwitcher } from "@modules/i18n";
-import { ThemeSwitcher } from "@modules/theme";
+import { useI18n } from "@modules/i18n";
+import { SettingsButton } from "@modules/settings";
 import { CheckCircle2, Code2 } from "lucide-react";
 
 import type { LoginHandler } from "../hooks/useLoginForm";
@@ -10,9 +10,8 @@ export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
 
   return (
     <div className="min-h-screen bg-canvas text-on-surface flex flex-col items-center gap-6 p-4 sm:p-6 relative transition-colors">
-      <div className="relative z-10 self-end flex max-w-full flex-wrap justify-end items-center gap-1.5 rounded-full bg-surface/95 border border-outline-subtle shadow-m3-1 p-1.5">
-        <LanguageSwitcher />
-        <ThemeSwitcher size="sm" />
+      <div className="relative z-10 self-end">
+        <SettingsButton variant="elevated" />
       </div>
       <div className="flex w-full flex-1 items-center justify-center">
         <div className="ui-card shadow-m3-2 w-full max-w-4xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
@@ -22,7 +21,7 @@ export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
               className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-brand-banner-accent/55 blur-2xl"
             />
             <div className="relative space-y-5">
-              <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-xs flex items-center justify-center shadow-m3-1">
+              <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center shadow-m3-1">
                 <Code2 aria-hidden="true" className="w-7 h-7 text-white" />
               </div>
               <div className="space-y-2.5">

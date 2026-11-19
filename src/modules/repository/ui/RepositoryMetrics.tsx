@@ -14,7 +14,7 @@ export function RepositoryMetrics({
       <div className="ui-card-sm">
         <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
           <span>{t("github.stars")}</span>
-          <span className="w-7 h-7 rounded-xl bg-warning-container text-on-warning-container inline-flex items-center justify-center shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-warning-container text-on-warning-container inline-flex items-center justify-center shrink-0">
             <Star aria-hidden="true" className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -26,7 +26,7 @@ export function RepositoryMetrics({
       <div className="ui-card-sm">
         <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
           <span>{t("github.forks")}</span>
-          <span className="w-7 h-7 rounded-xl bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
             <GitFork aria-hidden="true" className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -38,7 +38,7 @@ export function RepositoryMetrics({
       <div className="ui-card-sm">
         <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
           <span>{t("github.openIssues")}</span>
-          <span className="w-7 h-7 rounded-xl bg-danger-container text-on-danger-container inline-flex items-center justify-center shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-danger-container text-on-danger-container inline-flex items-center justify-center shrink-0">
             <AlertCircle aria-hidden="true" className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -50,7 +50,7 @@ export function RepositoryMetrics({
       <div className="ui-card-sm">
         <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
           <span>{t("github.branches")}</span>
-          <span className="w-7 h-7 rounded-xl bg-success-container text-on-success-container inline-flex items-center justify-center shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-success-container text-on-success-container inline-flex items-center justify-center shrink-0">
             <GitBranch aria-hidden="true" className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -60,7 +60,7 @@ export function RepositoryMetrics({
       <div className="ui-card-sm">
         <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
           <span>{t("github.totalFiles")}</span>
-          <span className="w-7 h-7 rounded-xl bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
             <FolderTree aria-hidden="true" className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -70,7 +70,7 @@ export function RepositoryMetrics({
       <div className="ui-card-sm">
         <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
           <span>{t("github.primaryLanguage")}</span>
-          <span className="w-7 h-7 rounded-xl bg-primary-container text-on-primary-container inline-flex items-center justify-center shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-primary-container text-on-primary-container inline-flex items-center justify-center shrink-0">
             <Code2 aria-hidden="true" className="w-3.5 h-3.5" />
           </span>
         </div>

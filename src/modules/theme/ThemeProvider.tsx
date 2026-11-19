@@ -1,9 +1,26 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { isThemeMode, resolveTheme, type ResolvedTheme, type ThemeMode } from "./model";
-export { isThemeMode, resolveTheme, SUPPORTED_THEME_MODES } from "./model";
-export type { ResolvedTheme, ThemeMode } from "./model";
+import {
+  DEFAULT_THEME_PALETTE,
+  isThemeMode,
+  isThemePalette,
+  resolveTheme,
+  type ResolvedTheme,
+  type ThemeMode,
+  type ThemePalette,
+} from "./model";
+export {
+  DEFAULT_THEME_PALETTE,
+  isThemeMode,
+  isThemePalette,
+  resolveTheme,
+  SUPPORTED_THEME_MODES,
+  SUPPORTED_THEME_PALETTES,
+} from "./model";
+export type { ResolvedTheme, ThemeMode, ThemePalette } from "./model";
+
 const THEME_STORAGE_KEY = "codepulse.themeMode";
+const PALETTE_STORAGE_KEY = "codepulse.themePalette";
 
 function initialThemeMode(): ThemeMode {
   try {
@@ -17,6 +34,18 @@ function initialThemeMode(): ThemeMode {
   return "system";
 }
 
+function initialThemePalette(): ThemePalette {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const stored = window.localStorage.getItem(PALETTE_STORAGE_KEY);
+      if (isThemePalette(stored)) return stored;
+    }
+  } catch {
+    /* Storage may be unavailable. */
+  }
+  return DEFAULT_THEME_PALETTE;
+}
+
 function getSystemPrefersDark(): boolean {
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -27,6 +56,8 @@ function getSystemPrefersDark(): boolean {
 export interface ThemeContextValue {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
+  palette: ThemePalette;
+  setPalette: (palette: ThemePalette) => void;
   resolvedTheme: ResolvedTheme;
   isDark: boolean;
 }
@@ -34,6 +65,8 @@ export interface ThemeContextValue {
 const DEFAULT_THEME_CONTEXT: ThemeContextValue = {
   mode: "system",
   setMode: () => {},
+  palette: DEFAULT_THEME_PALETTE,
+  setPalette: () => {},
   resolvedTheme: "light",
   isDark: false,
 };
@@ -43,11 +76,16 @@ const ThemeContext = createContext<ThemeContextValue>(DEFAULT_THEME_CONTEXT);
 export function ThemeProvider({
   children,
   initialMode,
+  initialPalette,
 }: {
   children: ReactNode;
   initialMode?: ThemeMode;
+  initialPalette?: ThemePalette;
 }) {
   const [mode, setModeState] = useState<ThemeMode>(() => initialMode ?? initialThemeMode());
+  const [palette, setPaletteState] = useState<ThemePalette>(
+    () => initialPalette ?? initialThemePalette(),
+  );
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(getSystemPrefersDark);
 
   useEffect(() => {
@@ -67,20 +105,26 @@ export function ThemeProvider({
     if (typeof document !== "undefined") {
       document.documentElement.classList.toggle("dark", isDark);
       document.documentElement.style.colorScheme = resolvedTheme;
+      document.documentElement.dataset.themePalette = palette;
     }
     try {
       if (typeof window !== "undefined" && window.localStorage) {
         window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+        window.localStorage.setItem(PALETTE_STORAGE_KEY, palette);
       }
     } catch {
       /* In-memory switching still works. */
     }
-  }, [isDark, mode, resolvedTheme]);
+  }, [isDark, mode, palette, resolvedTheme]);
 
   const value: ThemeContextValue = {
     mode,
     setMode: (nextMode) => {
       if (isThemeMode(nextMode)) setModeState(nextMode);
+    },
+    palette,
+    setPalette: (nextPalette) => {
+      if (isThemePalette(nextPalette)) setPaletteState(nextPalette);
     },
     resolvedTheme,
     isDark,

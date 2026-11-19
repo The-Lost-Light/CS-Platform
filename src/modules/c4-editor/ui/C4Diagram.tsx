@@ -157,7 +157,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
-                className="border-2 border-dashed border-primary bg-primary/10 rounded-[20px]"
+                className="border-2 border-dashed border-primary bg-primary/10 rounded-xl"
               />
             )}
           </div>

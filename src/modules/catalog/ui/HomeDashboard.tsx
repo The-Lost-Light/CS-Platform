@@ -25,7 +25,7 @@ export function HomeDashboard({
           </h1>
           <p className="text-sm text-on-muted mt-1">{t("home.description")}</p>
         </div>
-        <div className="rounded-2xl bg-surface-tonal border border-outline-tonal px-5 py-3.5 text-center min-w-28 shrink-0">
+        <div className="rounded-xl bg-surface-tonal border border-outline-tonal px-5 py-3.5 text-center min-w-28 shrink-0">
           <div className="text-2xl font-bold text-primary font-mono">{projects.length}</div>
           <div className="text-xs font-semibold text-on-primary-container/80 mt-0.5">
             {t("common.projects")}
@@ -43,7 +43,7 @@ export function HomeDashboard({
               {t("home.projectsTitle")}
             </h2>
           </div>
-          <span className="px-3 py-1 rounded-full bg-surface text-primary font-mono text-xs font-bold border border-primary-outline shrink-0">
+          <span className="px-3 py-1 rounded-full bg-surface-elevated text-primary font-mono text-xs font-bold border border-primary-outline shrink-0">
             {t("home.projectCount", { count: projects.length })}
           </span>
         </div>
@@ -55,7 +55,7 @@ export function HomeDashboard({
                 key={proj.id}
                 type="button"
                 onClick={() => onOpenProject(proj)}
-                className="w-full px-5 sm:px-6 py-4.5 text-left bg-surface hover:bg-surface-hover flex items-center justify-between gap-4 group transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
+                className="w-full px-5 sm:px-6 py-4.5 text-left bg-transparent hover:bg-surface-hover flex items-center justify-between gap-4 group transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
                   <span className="ui-code-badge">{proj.codeName}</span>

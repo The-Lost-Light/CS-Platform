@@ -1,5 +1,6 @@
 import { useI18n } from "@modules/i18n";
-import { AlertCircle, FolderGit2, KeyRound, RefreshCw } from "lucide-react";
+import { useSettings } from "@modules/settings";
+import { AlertCircle, FolderGit2, KeyRound, RefreshCw, Settings } from "lucide-react";
 
 import type { useRepository } from "../hooks/useRepository";
 
@@ -9,50 +10,23 @@ export function RepositoryConnection({
   repository: ReturnType<typeof useRepository>;
 }) {
   const { t } = useI18n();
+  const { openSettings } = useSettings();
   const {
     repoUrlInput,
     setRepoUrlInput,
-    githubToken,
-    setGithubToken,
-    showTokenInput,
-    setShowTokenInput,
+    hasGithubToken,
     isLoadingRepo,
     repoError,
     handleLoadRepo,
   } = repository;
   return (
     <div className="ui-card p-5 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          aria-expanded={showTokenInput}
-          onClick={() => setShowTokenInput(!showTokenInput)}
-          className={showTokenInput ? "ui-btn-tonal" : "ui-btn-outlined"}
-        >
-          <KeyRound aria-hidden="true" className="w-3.5 h-3.5" />
-          <span>{t("workspace.githubToken")}</span>
-        </button>
-      </div>
-
-      {showTokenInput && (
-        <div className="ui-panel p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 text-xs">
-          <span className="font-semibold text-on-muted shrink-0">Personal Access Token:</span>
-          <input
-            type="password"
-            value={githubToken}
-            onChange={(e) => setGithubToken(e.target.value)}
-            placeholder={t("workspace.tokenPlaceholder")}
-            className="ui-input flex-1 font-mono"
-          />
-        </div>
-      )}
-
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void handleLoadRepo(repoUrlInput);
         }}
-        className="flex flex-col md:flex-row items-stretch md:items-center gap-3 pt-1"
+        className="flex flex-col md:flex-row items-stretch md:items-center gap-3"
       >
         <div className="relative flex-1">
           <FolderGit2
@@ -75,6 +49,24 @@ export function RepositoryConnection({
           <span>{t("workspace.sync")}</span>
         </button>
       </form>
+
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 border-t border-outline-subtle">
+        <span className={hasGithubToken ? "ui-chip-success" : "ui-chip-neutral"}>
+          <KeyRound aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+          <span>
+            {t(hasGithubToken ? "workspace.tokenStatusConfigured" : "workspace.tokenStatusPublic")}
+          </span>
+        </span>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => openSettings("github")}
+          className="ui-btn-outlined px-3 py-1.5"
+        >
+          <Settings aria-hidden="true" className="w-3.5 h-3.5 text-primary" />
+          <span>{t("workspace.manageToken")}</span>
+        </button>
+      </div>
 
       {repoError && (
         <div role="alert" className="ui-banner-danger">

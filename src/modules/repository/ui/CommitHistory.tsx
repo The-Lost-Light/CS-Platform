@@ -118,7 +118,7 @@ export function CommitHistory({
                     {c.files?.map((f) => (
                       <div
                         key={f.filename}
-                        className="rounded-2xl border border-outline-subtle overflow-hidden bg-surface"
+                        className="rounded-xl border border-outline-subtle overflow-hidden bg-surface"
                       >
                         <div className="px-3.5 py-2 bg-surface-sunken border-b border-outline-subtle flex items-center justify-between text-xs font-mono">
                           <span className="text-on-surface truncate">{f.filename}</span>

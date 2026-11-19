@@ -1,7 +1,7 @@
 import type { User } from "@modules/auth";
-import { useI18n, LanguageSwitcher } from "@modules/i18n";
+import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
-import { ThemeSwitcher } from "@modules/theme";
+import { SettingsButton } from "@modules/settings";
 import { Link } from "@void/react";
 import { Code2, FolderGit2, Home, LogOut, ShieldCheck } from "lucide-react";
 
@@ -25,13 +25,13 @@ export function Navbar({
   const { t } = useI18n();
 
   return (
-    <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-subtle shadow-m3-1 transition-colors">
+    <header className="sticky top-0 z-40 bg-surface-elevated backdrop-blur-xl border-b border-outline-subtle shadow-m3-1 transition-colors">
       <div className="w-full px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
             onClick={onNavigateHome}
-            className="flex items-center gap-2.5 text-left group rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+            className="flex items-center gap-2.5 text-left group rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
           >
             <div className="ui-icon-badge w-9 h-9 group-hover:opacity-90 transition">
               <Code2 aria-hidden="true" className="w-5 h-5" />
@@ -40,7 +40,7 @@ export function Navbar({
               <span className="text-base font-bold tracking-tight text-on-surface">
                 CodePulse Edu
               </span>
-              <span className="ui-chip-secondary text-[11px] px-2.5 py-0.5">Material You 3</span>
+              <span className="ui-chip-secondary text-[11px] px-2 py-0.5">Material You 3</span>
             </div>
           </button>
 
@@ -90,8 +90,7 @@ export function Navbar({
             )}
           </nav>
 
-          <LanguageSwitcher />
-          <ThemeSwitcher size="xs" />
+          <SettingsButton />
 
           {currentUser && (
             <div className="flex items-center gap-1.5 pl-2 border-l border-outline-subtle">

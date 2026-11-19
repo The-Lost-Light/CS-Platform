@@ -28,7 +28,7 @@ export function ConfirmDelete({
       tabIndex={-1}
       aria-labelledby={`${id}-heading`}
       aria-describedby={`${id}-description`}
-      className="rounded-2xl border border-danger-outline bg-danger-container p-5 text-on-danger-container shadow-m3-1 space-y-3.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-danger"
+      className="rounded-xl border border-danger-outline bg-danger-container p-5 text-on-danger-container shadow-m3-1 space-y-3.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-danger"
     >
       <div className="flex items-center gap-2.5">
         <AlertTriangle aria-hidden="true" className="w-5 h-5 shrink-0 text-danger" />

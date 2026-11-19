@@ -102,7 +102,7 @@ export function LanguageSwitcher() {
               aria-checked={preference === option.value}
               tabIndex={-1}
               onClick={() => choose(option.value)}
-              className={`flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3.5 py-2 text-left text-xs transition-colors cursor-pointer focus:outline-hidden ${
+              className={`flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3.5 py-2 text-left text-xs transition-colors cursor-pointer focus:outline-hidden ${
                 preference === option.value
                   ? "bg-primary-container text-on-primary-container font-semibold"
                   : "text-on-surface hover:bg-surface-hover focus:bg-surface-hover font-medium"

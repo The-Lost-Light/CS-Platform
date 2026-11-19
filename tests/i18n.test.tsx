@@ -15,7 +15,16 @@ import {
 } from "@modules/i18n";
 import { getLocalizedProjects } from "@modules/projects";
 import { GitHubRepoDashboard, fetchGitHubProjectBundle } from "@modules/repository";
-import { ThemeProvider, isThemeMode, resolveTheme } from "@modules/theme";
+import { SettingsButton, SettingsDialog, SettingsProvider } from "@modules/settings";
+import {
+  DEFAULT_THEME_PALETTE,
+  PaletteSwitcher,
+  SUPPORTED_THEME_PALETTES,
+  ThemeProvider,
+  isThemeMode,
+  isThemePalette,
+  resolveTheme,
+} from "@modules/theme";
 import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
 import { test } from "vite-plus/test";
@@ -46,6 +55,31 @@ test("theme mode validation and resolution follow system preference or explicit 
   assert.equal(resolveTheme("system", true), "dark");
   assert.equal(resolveTheme("light", true), "light");
   assert.equal(resolveTheme("dark", false), "dark");
+});
+
+test("theme palette validation defaults to Mist Blue and preserves Soft Lavender", () => {
+  assert.equal(DEFAULT_THEME_PALETTE, "blue");
+  assert.ok(SUPPORTED_THEME_PALETTES.includes("blue"));
+  assert.ok(SUPPORTED_THEME_PALETTES.includes("lavender"));
+  for (const palette of SUPPORTED_THEME_PALETTES) assert.equal(isThemePalette(palette), true);
+  assert.equal(isThemePalette("invalid"), false);
+
+  const enHtml = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="en">
+        <PaletteSwitcher />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  const zhHtml = renderToStaticMarkup(
+    <ThemeProvider initialPalette="lavender">
+      <I18nProvider initialLanguage="zh-TW">
+        <PaletteSwitcher />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  assert.ok(enHtml.includes("Mist Blue"));
+  assert.ok(zhHtml.includes("霧感淡紫"));
 });
 
 test("semantic keys resolve in both languages and interpolation preserves literal code", () => {
@@ -226,6 +260,18 @@ const screens = {
     />
   ),
   github: <GitHubRepoDashboard repoBundle={bundle} />,
+  paletteSwitcher: <PaletteSwitcher />,
+  settingsButton: <SettingsButton />,
+  settingsDialog: (
+    <SettingsProvider initialGithubToken="ghp_test">
+      <SettingsDialog showGithubToken />
+    </SettingsProvider>
+  ),
+  settingsDialogGuest: (
+    <SettingsProvider>
+      <SettingsDialog showGithubToken={false} />
+    </SettingsProvider>
+  ),
 };
 
 for (const [name, screen] of Object.entries(screens)) {

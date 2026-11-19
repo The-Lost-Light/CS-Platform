@@ -8,6 +8,8 @@ export type SaveStatus =
   | "draft.saving"
   | "draft.unsaved";
 
+const AUTOSAVE_DELAY_MS = 1000;
+
 // A page may unmount while a write is in flight. Each subsequent write must use the last accepted revision.
 export function createSaveQueue(
   draft: PersonalWorkspace,
@@ -54,7 +56,7 @@ export function createSaveQueue(
       }
     } finally {
       busy = false;
-      if (!blocked && latest !== writing) schedule(mounted ? 750 : 0);
+      if (!blocked && latest !== writing) schedule(mounted ? AUTOSAVE_DELAY_MS : 0);
     }
   }
   return {
@@ -71,7 +73,7 @@ export function createSaveQueue(
       if (latest === next || blocked) return;
       latest = next;
       setStatus("draft.unsaved");
-      schedule(750);
+      schedule(AUTOSAVE_DELAY_MS);
     },
   };
 }

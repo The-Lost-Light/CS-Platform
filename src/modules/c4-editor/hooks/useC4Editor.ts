@@ -19,15 +19,25 @@ import type { C4ArchitectProps } from "../model/types";
 import { downloadC4Model } from "../services/c4Download";
 import { useNodeDrawing } from "./useNodeDrawing";
 
+type FileStatus = "importSuccess" | "importError" | "fileTooLarge" | "exportError";
+
+const FILE_STATUS_DURATION_MS: Record<FileStatus, number> = {
+  importSuccess: 3500,
+  importError: 6000,
+  fileTooLarge: 5000,
+  exportError: 5000,
+};
+
 export function useC4Editor({
   designDoc,
+  designTab,
+  onChangeDesignTab,
   nodes,
   onChangeNodes,
   relationships,
   onChangeRelationships,
 }: C4ArchitectProps) {
   const { t } = useI18n();
-  const [designTab, setDesignTab] = useState<"readme" | "diagram">("readme");
   const [readmeMode, setReadmeMode] = useState<"reading" | "source">(
     designDoc ? "reading" : "source",
   );
@@ -37,9 +47,18 @@ export function useC4Editor({
   const fileInput = useRef<HTMLInputElement>(null);
   const flowInstance = useRef<ReactFlowInstance<CanvasNode> | null>(null);
   const [importing, setImporting] = useState(false);
-  const [fileStatus, setFileStatus] = useState<
-    "importSuccess" | "importError" | "fileTooLarge" | "exportError" | null
-  >(null);
+  const [fileNotice, setFileNotice] = useState<{ status: FileStatus; id: number } | null>(null);
+  const fileStatus = fileNotice?.status ?? null;
+  const setFileStatus = (status: FileStatus | null) => {
+    setFileNotice((previous) => (status ? { status, id: (previous?.id ?? 0) + 1 } : null));
+  };
+  useEffect(() => {
+    if (!fileNotice) return;
+    const timer = setTimeout(() => {
+      setFileNotice((current) => (current?.id === fileNotice.id ? null : current));
+    }, FILE_STATUS_DURATION_MS[fileNotice.status]);
+    return () => clearTimeout(timer);
+  }, [fileNotice]);
   const [importRevision, setImportRevision] = useState(0);
   const nodeClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelNodeClick = () => {
@@ -77,7 +96,7 @@ export function useC4Editor({
       setSelectedId("");
       setEdgeId("");
       setImportRevision((value) => value + 1);
-      setDesignTab("diagram");
+      onChangeDesignTab("diagram");
       setFileStatus("importSuccess");
     } catch {
       setFileStatus("importError");
@@ -137,7 +156,7 @@ export function useC4Editor({
     );
     if (!node) return;
     onChangeNodes([...nodes, { ...node, ...size }]);
-    setDesignTab("diagram");
+    onChangeDesignTab("diagram");
     setSelectedId(node.id);
     setEdgeId("");
   };
@@ -209,7 +228,6 @@ export function useC4Editor({
     selectAfterClick,
     t,
     designTab,
-    setDesignTab,
     readmeMode,
     setReadmeMode,
     setSelectedId,

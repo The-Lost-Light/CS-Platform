@@ -29,7 +29,7 @@ test("autosave debounces edits and flushes the newest draft after an in-flight w
     const edited = { ...template, designDoc: "edited" };
     queue.update({ ...template, designDoc: "first" });
     queue.update(edited);
-    await vi.advanceTimersByTimeAsync(749);
+    await vi.advanceTimersByTimeAsync(999);
     assert.equal(write.mock.calls.length, 0);
     await vi.advanceTimersByTimeAsync(1);
     assert.deepEqual(write.mock.calls, [[null, edited]]);
@@ -60,7 +60,7 @@ test("transient failures retry while conflicts stop later writes", async () => {
     const queue = createSaveQueue(template, "original", write, vi.fn(), status);
     const unmount = queue.mount();
     queue.update({ ...template, designDoc: "a" });
-    await vi.advanceTimersByTimeAsync(750);
+    await vi.advanceTimersByTimeAsync(1000);
     assert.equal(status.mock.lastCall?.[0], "draft.saveError");
     await vi.advanceTimersByTimeAsync(5000);
     assert.equal(status.mock.lastCall?.[0], "draft.conflict");

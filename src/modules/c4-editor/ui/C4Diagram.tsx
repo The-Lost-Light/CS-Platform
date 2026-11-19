@@ -85,7 +85,24 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               ))}
             </nav>
           </div>
-          <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center gap-2">
+          <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
+            {fileStatus && (
+              <div
+                role={fileStatus === "importSuccess" ? "status" : "alert"}
+                className={`inline-flex items-center gap-1.5 max-w-sm px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  fileStatus === "importSuccess"
+                    ? "bg-success-container border-success-outline text-on-success-container"
+                    : "bg-danger-container border-danger-outline text-on-danger-container"
+                }`}
+              >
+                {fileStatus === "importSuccess" ? (
+                  <CheckCircle2 aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <AlertCircle aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span>{t(`c4.${fileStatus}`)}</span>
+              </div>
+            )}
             <button
               type="button"
               disabled={importing}
@@ -150,23 +167,6 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             </details>
           </div>
         </div>
-        {fileStatus && (
-          <div className="px-5 sm:px-6 py-2.5 bg-surface border-b border-outline-subtle">
-            <div
-              role={fileStatus === "importSuccess" ? "status" : "alert"}
-              className={fileStatus === "importSuccess" ? "ui-banner-success" : "ui-banner-danger"}
-            >
-              <div className="flex items-center gap-2">
-                {fileStatus === "importSuccess" ? (
-                  <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
-                ) : (
-                  <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-                )}
-                <span>{t(`c4.${fileStatus}`)}</span>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="relative">
           <div
             style={{

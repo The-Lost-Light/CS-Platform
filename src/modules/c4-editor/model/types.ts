@@ -1,5 +1,7 @@
 import type { C4Node, C4Relationship } from "@modules/c4-model";
 
+export type DesignTab = "readme" | "diagram";
+
 export type C4ArchitectProps = {
   nodes: C4Node[];
   onChangeNodes: (nodes: C4Node[]) => void;
@@ -7,4 +9,6 @@ export type C4ArchitectProps = {
   onChangeRelationships: (edges: C4Relationship[]) => void;
   designDoc: string;
   onChangeDesignDoc: (doc: string) => void;
+  designTab: DesignTab;
+  onChangeDesignTab: (tab: DesignTab) => void;
 };

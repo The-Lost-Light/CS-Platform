@@ -1,3 +1,4 @@
+import type { DesignTab } from "@modules/c4-editor";
 import {
   useRepository,
   fetchGitHubProjectBundle,
@@ -20,5 +21,15 @@ export function useProjectWorkspace(
     if (initialRepoUrl) void repository.handleLoadRepo(initialRepoUrl);
   }, []);
   const [activeTab, setActiveTab] = useState<"assignment" | "design" | "github">("assignment");
-  return { repository, draft, revision, setRevision, activeTab, setActiveTab };
+  const [designTab, setDesignTab] = useState<DesignTab>("readme");
+  return {
+    repository,
+    draft,
+    revision,
+    setRevision,
+    activeTab,
+    setActiveTab,
+    designTab,
+    setDesignTab,
+  };
 }

@@ -1,6 +1,7 @@
 import { useI18n } from "@modules/i18n";
 import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
+import { useId } from "react";
 
 import { useCreateAccount } from "../hooks/useCreateAccount";
 
@@ -12,6 +13,7 @@ export function AccountManagement({
   onBack: () => void;
 }) {
   const { t } = useI18n();
+  const passwordHelpId = useId();
   const { pending, status, submit } = useCreateAccount(onCreated);
   return (
     <section className="ui-card overflow-hidden">
@@ -37,18 +39,24 @@ export function AccountManagement({
             {t("auth.nameLabel")}
             <input className="ui-input mt-1.5" name="name" required maxLength={100} />
           </label>
-          <label className="ui-field-label">
-            {t("auth.passwordLabel")}
-            <input
-              className="ui-input mt-1.5"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
-              maxLength={MAX_PASSWORD_LENGTH}
-              required
-            />
-          </label>
+          <div>
+            <label className="ui-field-label">
+              {t("auth.passwordLabel")}
+              <input
+                className="ui-input mt-1.5"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                minLength={MIN_PASSWORD_LENGTH}
+                maxLength={MAX_PASSWORD_LENGTH}
+                aria-describedby={passwordHelpId}
+                required
+              />
+            </label>
+            <p id={passwordHelpId} className="ui-field-help">
+              {t("admin.passwordHelp", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH })}
+            </p>
+          </div>
           <label className="ui-field-label">
             {t("auth.roleLabel")}
             <select className="ui-input mt-1.5" name="role">
@@ -56,9 +64,6 @@ export function AccountManagement({
               <option value="admin">{t("admin.role")}</option>
             </select>
           </label>
-          <p className="ui-field-help">
-            {t("admin.passwordHelp", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH })}
-          </p>
           <div className="flex flex-wrap items-center gap-2.5 pt-2">
             <button type="submit" className="ui-btn-primary" disabled={pending}>
               {t(pending ? "common.loading" : "admin.create")}

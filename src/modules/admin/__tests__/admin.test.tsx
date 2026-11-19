@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { test, vi } from "vite-plus/test";
 
 import AdminPage from "../../../../pages/admin";
+import { AccountManagement } from "../ui/AccountManagement";
 import { ConfirmDelete } from "../ui/ConfirmDelete";
 import { CreateProject } from "../ui/CreateProject";
 vi.mock("@void/react", () => ({
@@ -106,4 +107,25 @@ test("deletion confirmation identifies the record and explains session revocatio
   assert.match(html, /all sessions will be revoked/i);
   assert.ok(html.includes("saved workspaces across all projects"));
   assert.ok(html.includes("Cancel"));
+});
+
+test("account creation places password help directly beneath password input before role", () => {
+  const html = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <AccountManagement onCreated={() => {}} onBack={() => {}} />
+    </I18nProvider>,
+  );
+  const helpText = "請使用 8 到 16 個字元的密碼。";
+  const passwordIndex = html.indexOf('name="password"');
+  const helpIndex = html.indexOf(helpText);
+  const roleIndex = html.indexOf('name="role"');
+  assert.ok(passwordIndex !== -1 && helpIndex !== -1 && roleIndex !== -1);
+  assert.ok(passwordIndex < helpIndex && helpIndex < roleIndex);
+
+  const passwordInputMatch = html.match(/<input[^>]*name="password"[^>]*>/);
+  assert.ok(passwordInputMatch);
+  const describedByMatch = passwordInputMatch[0].match(/aria-describedby="([^"]+)"/);
+  assert.ok(describedByMatch);
+  const helpId = describedByMatch[1];
+  assert.ok(html.includes(`<p id="${helpId}" class="ui-field-help">${helpText}</p>`));
 });

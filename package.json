@@ -5,17 +5,17 @@
   "description": "CS course assignment platform",
   "type": "module",
   "scripts": {
-    "dev": "vp dev",
-    "build": "vp check --no-fmt --no-lint && vp build",
-    "preview": "vp preview",
-    "deploy": "void deploy --platform cloudflare",
-    "check": "vp check",
-    "lint": "vp lint",
-    "fmt": "vp fmt",
-    "typecheck": "vp check --no-fmt --no-lint",
-    "test": "vp test",
-    "test:watch": "vp test watch",
-    "prepare": "vp config && void prepare"
+    "Dev": "vp dev",
+    "Build": "vp check --no-fmt --no-lint && vp build",
+    "Preview": "vp preview",
+    "Deploy": "void deploy --platform cloudflare",
+    "Check": "vp check",
+    "Lint": "vp lint",
+    "Fmt": "vp fmt",
+    "Typecheck": "vp check --no-fmt --no-lint",
+    "Test": "vp test",
+    "Test:watch": "vp test watch",
+    "Prepare": "vp config && void prepare"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

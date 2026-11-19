@@ -1,18 +1,17 @@
 import { hashPassword } from "better-auth/crypto";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
+import {
+  isValidPasswordLength,
+  MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
+} from "../src/shared/passwordPolicy.ts";
 const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
 const password = process.env.ADMIN_PASSWORD;
 const name = process.env.ADMIN_NAME?.trim() || "Administrator";
-if (
-  !email ||
-  !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ||
-  !password ||
-  password.length < 12 ||
-  password.length > 128
-) {
+if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !isValidPasswordLength(password)) {
   throw new Error(
-    "Set ADMIN_EMAIL, ADMIN_PASSWORD (12–128 characters), and optionally ADMIN_NAME. No database changes were made.",
+    `Set ADMIN_EMAIL, ADMIN_PASSWORD (${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} characters), and optionally ADMIN_NAME. No database changes were made.`,
   );
 }
 const quote = (value) => "'" + value.replaceAll("'", "''") + "'";

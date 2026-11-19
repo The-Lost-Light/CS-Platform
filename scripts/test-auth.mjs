@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomInt } from "node:crypto";
 import { writeFileSync } from "node:fs";
 const base = "http://127.0.0.1:5177";
 const email = process.env.ADMIN_EMAIL;
@@ -27,7 +28,26 @@ const cookies = login.headers.getSetCookie();
 assert.ok(cookies.some((c) => /HttpOnly/i.test(c)));
 const adminCookie = cookies.map((c) => c.split(";")[0]).join("; ");
 assert.equal((await request("/admin", null, adminCookie)).status, 200);
-const student = { email: studentEmail, password, name: "Test Student", role: "user" };
+const studentPassword = String(randomInt(10000000, 100000000));
+const newPassword = studentPassword.repeat(2);
+const student = {
+  email: studentEmail,
+  password: studentPassword,
+  name: "Test Student",
+  role: "user",
+};
+for (const invalidPassword of [studentPassword.slice(1), newPassword + "a"]) {
+  assert.equal(
+    (
+      await request(
+        "/api/auth/admin/create-user",
+        { ...student, password: invalidPassword },
+        adminCookie,
+      )
+    ).status,
+    400,
+  );
+}
 const created = await request("/api/auth/admin/create-user", student, adminCookie);
 assert.equal(created.status, 200, await created.clone().text());
 const studentLogin = await request("/api/auth/sign-in/email", student);
@@ -125,7 +145,7 @@ const studentId = accountData.users.find((user) => user.email === studentEmail).
 const adminId = accountData.currentUserId;
 assert.ok(accountData.users.every((user) => !("password" in user) && !("token" in user)));
 assert.equal((await request("/api/admin/accounts")).status, 401);
-const relogin = await request("/api/auth/sign-in/email", { email: studentEmail, password });
+const relogin = await request("/api/auth/sign-in/email", student);
 assert.equal(relogin.status, 200);
 const currentStudentCookie = relogin.headers
   .getSetCookie()
@@ -133,6 +153,56 @@ const currentStudentCookie = relogin.headers
   .join("; ");
 assert.equal((await request("/api/admin/accounts", null, currentStudentCookie)).status, 403);
 const accountUpdate = { name: "Updated student", email: "edited-" + studentEmail, role: "user" };
+const profilePath = "/api/admin/accounts/" + studentId;
+const passwordPath = profilePath + "/password";
+const passwordUpdate = { currentPassword: studentPassword, newPassword };
+// Each operation rejects a combined submission before applying either change.
+for (const path of [profilePath, passwordPath]) {
+  assert.equal(
+    (await request(path, { ...accountUpdate, ...passwordUpdate }, adminCookie, "PATCH")).status,
+    400,
+  );
+}
+assert.equal(
+  (await request(passwordPath, passwordUpdate, currentStudentCookie, "PATCH")).status,
+  403,
+);
+for (const invalidPassword of [studentPassword.slice(1), newPassword + "a"]) {
+  assert.equal(
+    (
+      await request(
+        passwordPath,
+        { ...passwordUpdate, newPassword: invalidPassword },
+        adminCookie,
+        "PATCH",
+      )
+    ).status,
+    400,
+  );
+}
+for (const currentPassword of [undefined, "", "wrong-password"]) {
+  const rejected = await request(
+    passwordPath,
+    { ...passwordUpdate, currentPassword },
+    adminCookie,
+    "PATCH",
+  );
+  assert.equal(rejected.status, 400);
+  assert.equal((await rejected.json()).error, "invalidCurrentPassword");
+}
+assert.equal(
+  (await (await request("/api/session", null, currentStudentCookie)).json()).user.studentId,
+  studentEmail,
+);
+assert.ok(
+  !(
+    await request(
+      "/api/auth/admin/set-user-password",
+      { userId: studentId, newPassword },
+      adminCookie,
+    )
+  ).ok,
+);
 assert.equal(
   (await request("/api/admin/accounts/" + studentId, accountUpdate, currentStudentCookie, "PATCH"))
     .status,
@@ -187,26 +257,31 @@ assert.equal(changedAccount.status, 200, await changedAccount.clone().text());
 assert.equal((await (await request("/api/session", null, currentStudentCookie)).json()).user, null);
 const editedLogin = await request("/api/auth/sign-in/email", {
   email: accountUpdate.email,
-  password,
+  password: studentPassword,
 });
 assert.equal(editedLogin.status, 200, await editedLogin.clone().text());
 const editedCookie = editedLogin.headers
   .getSetCookie()
   .map((c) => c.split(";")[0])
   .join("; ");
-assert.equal(
-  (
-    await request(
-      "/api/admin/accounts/" + studentId,
-      { ...accountUpdate, role: "admin" },
-      adminCookie,
-      "PATCH",
-    )
-  ).status,
-  200,
+const changePassword = () => request(passwordPath, passwordUpdate, adminCookie, "PATCH");
+const attempts = await Promise.all([changePassword(), changePassword()]);
+assert.equal(attempts.filter((r) => r.status === 200).length, 1);
+assert.ok(attempts.some((r) => r.status === 400 || r.status === 409));
+const profiles = await (await request("/api/admin/accounts", null, adminCookie)).json();
+const edited = profiles.users.find((user) => user.id === studentId);
+assert.deepEqual({ name: edited.name, email: edited.email, role: edited.role }, accountUpdate);
+assert.equal((await (await request("/api/session", null, editedCookie)).json()).user, null);
+assert.ok(
+  !(
+    await request("/api/auth/sign-in/email", {
+      email: accountUpdate.email,
+      password: studentPassword,
+    })
+  ).ok,
 );
 assert.equal(
-  (await request("/api/admin/accounts/" + studentId, accountUpdate, adminCookie, "PATCH")).status,
+  (await request(profilePath, { ...accountUpdate, role: "admin" }, adminCookie, "PATCH")).status,
   200,
 );
 const editedProject = { ...projectInput, title: "Updated project", initialDesignDoc: "# Updated" };
@@ -255,7 +330,7 @@ assert.equal(
 );
 const lastLogin = await request("/api/auth/sign-in/email", {
   email: accountUpdate.email,
-  password,
+  password: newPassword,
 });
 assert.equal(lastLogin.status, 200);
 const lastCookie = lastLogin.headers
@@ -267,7 +342,10 @@ assert.equal(
   200,
 );
 assert.equal((await (await request("/api/session", null, lastCookie)).json()).user, null);
-assert.ok(!(await request("/api/auth/sign-in/email", { email: accountUpdate.email, password })).ok);
+assert.ok(
+  !(await request("/api/auth/sign-in/email", { email: accountUpdate.email, password: newPassword }))
+    .ok,
+);
 assert.ok(
   !(await (await request("/api/admin/accounts", null, adminCookie)).json()).users.some(
     (user) => user.id === studentId,

@@ -1,4 +1,5 @@
 import { useI18n } from "@modules/i18n";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 
 import { useCreateAccount } from "../hooks/useCreateAccount";
 
@@ -24,8 +25,8 @@ export function AccountManagement({ onCreated }: { onCreated?: () => void }) {
             name="password"
             type="password"
             autoComplete="new-password"
-            minLength={12}
-            maxLength={128}
+            minLength={MIN_PASSWORD_LENGTH}
+            maxLength={MAX_PASSWORD_LENGTH}
             required
           />
         </label>
@@ -36,7 +37,7 @@ export function AccountManagement({ onCreated }: { onCreated?: () => void }) {
             <option value="admin">{t("admin.role")}</option>
           </select>
         </label>
-        <p>{t("admin.passwordHelp")}</p>
+        <p>{t("admin.passwordHelp", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH })}</p>
         <button className="ui-input" disabled={pending}>
           {t(pending ? "common.loading" : "admin.create")}
         </button>

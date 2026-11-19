@@ -32,10 +32,20 @@ export default {
     "This permanently deletes the project and every account’s saved workspace for it.",
   "admin.protectedAccount":
     "You cannot delete yourself, demote yourself or remove the last active administrator.",
-  "admin.invalidAccount": "Enter a valid name, email and role.",
+  "admin.invalidAccount": "Check the name, email and role.",
   "admin.duplicateEmail": "This email is already used by another account.",
-  "admin.accountEditHelp":
-    "After changing the name, email or role, this account must sign in again. The password remains unchanged.",
+  "admin.accountEditHelp": "This account must sign in again after you save changes.",
+  "admin.changePassword": "Change password",
+  "admin.changePasswordFor": "Change password for {email}",
+  "admin.savePassword": "Save new password",
+  "admin.passwordChanged": "Password updated.",
+  "admin.selfPasswordHelp":
+    "Changing your own password signs you out immediately. Save any pending profile edits first.",
+  "admin.currentPassword": "Current password for this account",
+  "admin.newPassword": "New password",
+  "admin.invalidCurrentPassword":
+    "Incorrect current password. Enter this account’s current password.",
+  "admin.accountConflict": "The account or your permissions changed. Refresh and try again.",
   "admin.you": "You",
   "admin.banned": "Banned",
   "admin.mode": "Management",
@@ -65,7 +75,7 @@ export default {
   "admin.title": "Account management",
   "admin.role": "Administrator",
   "admin.create": "Create account",
-  "admin.passwordHelp": "Use a unique password of 12–128 characters.",
+  "admin.passwordHelp": "Use a password of {min}–{max} characters.",
   "admin.success": "Account created.",
   "admin.error": "Could not create the account. Check the email or your administrator session.",
   "auth.errors.invalidCredentials": "Incorrect email or password, or the account is unavailable.",

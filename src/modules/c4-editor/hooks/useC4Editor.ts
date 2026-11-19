@@ -2,7 +2,6 @@ import {
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
-  removeC4Nodes,
   type C4Node,
   type C4Relationship,
   C4_FILE_MAX_BYTES,
@@ -15,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { applyCanvasLayout, SCOPE_OFFSET } from "../model/canvasLayout";
 import { buildFlowElements } from "../model/flowElements";
 import type { CanvasNode } from "../model/flowTypes";
+import { removeC4Elements, type C4Graph } from "../model/modelHistory";
 import type { C4ArchitectProps } from "../model/types";
 import { downloadC4Model } from "../services/c4Download";
 import { useNodeDrawing } from "./useNodeDrawing";
@@ -32,12 +32,18 @@ export function useC4Editor({
   designDoc,
   designTab,
   onChangeDesignTab,
-  nodes,
-  onChangeNodes,
-  relationships,
-  onChangeRelationships,
+  history,
+  dispatchModel,
 }: C4ArchitectProps) {
   const { t } = useI18n();
+  const { nodes, relationships } = history.present;
+  const editGroup = useRef<symbol | undefined>(undefined);
+  function beginEditGroup() {
+    editGroup.current = Symbol();
+  }
+  function edit(apply: (graph: C4Graph) => C4Graph, group?: symbol) {
+    dispatchModel({ type: "edit", apply, group });
+  }
   const [readmeMode, setReadmeMode] = useState<"reading" | "source">(
     designDoc ? "reading" : "source",
   );
@@ -90,8 +96,7 @@ export function useC4Editor({
     setImporting(true);
     try {
       const model = parseC4File(await file.text());
-      onChangeNodes(model.nodes);
-      onChangeRelationships(model.relationships);
+      edit(() => model);
       setScopeId("");
       setSelectedId("");
       setEdgeId("");
@@ -123,21 +128,32 @@ export function useC4Editor({
     setSelectedId("");
     setEdgeId("");
   };
+  function stepHistory(type: "undo" | "redo") {
+    const target = (type === "undo" ? history.past : history.future).at(-1);
+    if (!target || importing) return;
+    cancelNodeClick();
+    if (scopeId && !canExploreC4Node(target.nodes, scopeId)) {
+      setScopeId(path.findLast((node) => canExploreC4Node(target.nodes, node.id))?.id ?? "");
+    }
+    if (!target.nodes.some((node) => node.id === selectedId)) setSelectedId("");
+    if (!target.relationships.some((edge) => edge.id === edgeId)) setEdgeId("");
+    dispatchModel({ type });
+  }
   const update = (patch: Partial<C4Node>) => {
     if (patch.external && expandableIds.has(selectedId)) return;
-    onChangeNodes(nodes.map((node) => (node.id === selectedId ? { ...node, ...patch } : node)));
+    edit(
+      (graph) => ({
+        ...graph,
+        nodes: graph.nodes.map((node) => (node.id === selectedId ? { ...node, ...patch } : node)),
+      }),
+      patch.external === undefined ? editGroup.current : undefined,
+    );
   };
-  const remove = (ids: string[]) => {
-    const remaining = removeC4Nodes(nodes, ids);
+  const remove = (nodeIds: string[], edgeIds: string[] = []) => {
+    cancelNodeClick();
     setSelectedId("");
     setEdgeId("");
-    const remainingIds = new Set(remaining.map((node) => node.id));
-    onChangeNodes(remaining);
-    onChangeRelationships(
-      relationships.filter(
-        (edge) => remainingIds.has(edge.source) && remainingIds.has(edge.target),
-      ),
-    );
+    edit((graph) => removeC4Elements(graph, nodeIds, edgeIds));
   };
   const addNode = (
     position: { x: number; y: number },
@@ -155,7 +171,7 @@ export function useC4Editor({
       },
     );
     if (!node) return;
-    onChangeNodes([...nodes, { ...node, ...size }]);
+    edit((graph) => ({ ...graph, nodes: [...graph.nodes, { ...node, ...size }] }));
     onChangeDesignTab("diagram");
     setSelectedId(node.id);
     setEdgeId("");
@@ -176,15 +192,24 @@ export function useC4Editor({
     }, 350);
   }
   function updateLayout(changes: NodeChangeset<CanvasNode>) {
-    onChangeNodes(applyCanvasLayout(nodes, changes, scope, boundary));
-  }
-  function removeEdges(ids: string[]) {
-    const removed = new Set(ids);
-    onChangeRelationships(relationships.filter((edge) => !removed.has(edge.id)));
+    const resizing = changes.getByType("dimensions").some((change) => change.resizing);
+    edit(
+      (graph) => ({
+        ...graph,
+        nodes: applyCanvasLayout(graph.nodes, changes, scope, boundary),
+      }),
+      resizing ? editGroup.current : undefined,
+    );
   }
   function updateEdge(patch: Partial<Pick<C4Relationship, "label" | "technology">>) {
-    onChangeRelationships(
-      relationships.map((edge) => (edge.id === edgeId ? { ...edge, ...patch } : edge)),
+    edit(
+      (graph) => ({
+        ...graph,
+        relationships: graph.relationships.map((edge) =>
+          edge.id === edgeId ? { ...edge, ...patch } : edge,
+        ),
+      }),
+      editGroup.current,
     );
   }
   function canConnect({ source, target }: Pick<Connection, "source" | "target">) {
@@ -194,12 +219,9 @@ export function useC4Editor({
     );
   }
   function connect({ source, target }: Connection) {
-    const id = crypto.randomUUID();
-    onChangeRelationships([
-      ...relationships,
-      { id, source, target, label: t("c4.uses"), technology: "" },
-    ]);
-    setEdgeId(id);
+    const edge = { id: crypto.randomUUID(), source, target, label: t("c4.uses"), technology: "" };
+    edit((graph) => ({ ...graph, relationships: [...graph.relationships, edge] }));
+    setEdgeId(edge.id);
     setSelectedId("");
   }
   const drawing = useNodeDrawing(flowInstance, addNode);
@@ -221,7 +243,10 @@ export function useC4Editor({
     selectedTargetLabel:
       selectedEdge && nodes.find((node) => node.id === selectedEdge.target)?.label,
     updateEdge,
-    removeEdges,
+    beginEditGroup,
+    canUndo: !importing && history.past.length > 0,
+    canRedo: !importing && history.future.length > 0,
+    stepHistory,
     canConnect,
     connect,
     updateLayout,

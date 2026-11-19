@@ -102,7 +102,13 @@ export function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps
   useEffect(() => {
     setCanvasNodes((previous) => {
       const byId = new Map(previous.map((node) => [node.id, node]));
-      return nodes.map((node) => ({ ...byId.get(node.id), ...node }));
+      // Drop transient React Flow resize attributes when applying model geometry.
+      return nodes.map((node) => ({
+        ...byId.get(node.id),
+        width: undefined,
+        height: undefined,
+        ...node,
+      }));
     });
   }, [nodes]);
   return (

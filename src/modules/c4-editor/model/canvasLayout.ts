@@ -32,10 +32,23 @@ export function applyCanvasLayout(
     }
     patches.set(change.id, patch);
   }
-  return nodes.map((node) => {
-    if (scope && node.id === scope.id) return { ...node, boundary: frame };
+  const updated = nodes.map((node) => {
     if (scope && node.parentId !== scope.id) return node;
     const patch = patches.get(node.id);
-    return patch ? { ...node, ...patch } : node;
+    if (!patch) return node;
+    const changed = (Object.keys(patch) as (keyof typeof patch)[]).some(
+      (key) => patch[key] !== node[key],
+    );
+    return changed ? { ...node, ...patch } : node;
   });
+  const moved = updated.some((node, index) => node !== nodes[index]);
+  const frameChanged =
+    frame.x !== boundary.x ||
+    frame.y !== boundary.y ||
+    frame.width !== boundary.width ||
+    frame.height !== boundary.height;
+  if (scope && (frameChanged || (moved && !scope.boundary))) {
+    return updated.map((node) => (node.id === scope.id ? { ...node, boundary: frame } : node));
+  }
+  return moved ? updated : nodes;
 }

@@ -27,14 +27,7 @@ export function ProjectWorkspace({
     designTab,
     setDesignTab,
   } = useProjectWorkspace(snapshot);
-  const {
-    mindMapNodes,
-    setMindMapNodes,
-    relationships,
-    setRelationships,
-    designDoc,
-    setDesignDoc,
-  } = draft;
+  const { history, dispatchModel, designDoc, setDesignDoc } = draft;
 
   return (
     <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6">
@@ -63,8 +56,8 @@ export function ProjectWorkspace({
                 revision={revision}
                 onSaved={setRevision}
                 designDoc={designDoc}
-                nodes={mindMapNodes}
-                relationships={relationships}
+                nodes={history.present.nodes}
+                relationships={history.present.relationships}
                 repoUrl={repository.repoUrlInput}
               />
               <div
@@ -129,10 +122,8 @@ export function ProjectWorkspace({
       >
         <C4Architect
           key={project.id}
-          relationships={relationships}
-          onChangeRelationships={setRelationships}
-          nodes={mindMapNodes}
-          onChangeNodes={setMindMapNodes}
+          history={history}
+          dispatchModel={dispatchModel}
           designDoc={designDoc}
           onChangeDesignDoc={setDesignDoc}
           designTab={designTab}

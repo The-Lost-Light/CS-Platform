@@ -6,6 +6,8 @@ import {
   Download,
   HelpCircle,
   Layers,
+  Redo2,
+  Undo2,
   Upload,
 } from "lucide-react";
 
@@ -43,7 +45,10 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     updateLayout,
     canConnect,
     connect,
-    removeEdges,
+    canUndo,
+    canRedo,
+    stepHistory,
+    beginEditGroup,
   } = editor;
   return (
     <div
@@ -103,6 +108,24 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                 <span>{t(`c4.${fileStatus}`)}</span>
               </div>
             )}
+            <button
+              type="button"
+              disabled={!canUndo}
+              onClick={() => stepHistory("undo")}
+              className="ui-btn-outlined px-3 py-1.5 text-xs"
+            >
+              <Undo2 aria-hidden="true" className="w-3.5 h-3.5" />
+              {t("c4.undo")}
+            </button>
+            <button
+              type="button"
+              disabled={!canRedo}
+              onClick={() => stepHistory("redo")}
+              className="ui-btn-outlined px-3 py-1.5 text-xs"
+            >
+              <Redo2 aria-hidden="true" className="w-3.5 h-3.5" />
+              {t("c4.redo")}
+            </button>
             <button
               type="button"
               disabled={importing}
@@ -175,7 +198,10 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               position: "relative",
             }}
             onContextMenu={(event) => event.preventDefault()}
-            onPointerDownCapture={drawing.startDrawing}
+            onPointerDownCapture={(event) => {
+              beginEditGroup();
+              drawing.startDrawing(event);
+            }}
             onPointerMove={drawing.previewDrawing}
             onPointerUp={drawing.finishDrawing}
             onLostPointerCapture={drawing.cancelDrawing}
@@ -217,8 +243,12 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                 setSelectedId("");
               }}
               onNodesChange={updateLayout}
-              onNodesDelete={(deleted) => remove(deleted.map((node) => node.id))}
-              onEdgesDelete={(deleted) => removeEdges(deleted.map((edge) => edge.id))}
+              onDelete={({ nodes, edges }) =>
+                remove(
+                  nodes.map((node) => node.id),
+                  edges.map((edge) => edge.id),
+                )
+              }
               isValidConnection={canConnect}
               onConnect={connect}
             >

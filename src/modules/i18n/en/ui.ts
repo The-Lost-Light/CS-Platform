@@ -170,6 +170,8 @@ export default {
   "github.fileTree": "GitHub file tree ({count} files)",
   "home.projectCount": "Projects: {count}",
   "c4.newElement": "New element",
+  "c4.undo": "Undo",
+  "c4.redo": "Redo",
   "c4.importModel": "Import C4 JSON",
   "c4.exportModel": "Export C4 JSON",
   "c4.importing": "Importing…",

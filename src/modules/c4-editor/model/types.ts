@@ -1,12 +1,10 @@
-import type { C4Node, C4Relationship } from "@modules/c4-model";
+import type { C4History, C4HistoryAction } from "./modelHistory";
 
 export type DesignTab = "readme" | "diagram";
 
 export type C4ArchitectProps = {
-  nodes: C4Node[];
-  onChangeNodes: (nodes: C4Node[]) => void;
-  relationships: C4Relationship[];
-  onChangeRelationships: (edges: C4Relationship[]) => void;
+  history: C4History;
+  dispatchModel: (action: C4HistoryAction) => void;
   designDoc: string;
   onChangeDesignDoc: (doc: string) => void;
   designTab: DesignTab;

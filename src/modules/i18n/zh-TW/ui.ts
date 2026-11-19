@@ -164,6 +164,8 @@ export default {
   "github.fileTree": "GitHub 實際檔案結構樹（{count} 個檔案）",
   "home.projectCount": "專案數：{count}",
   "c4.newElement": "新元素",
+  "c4.undo": "上一步",
+  "c4.redo": "下一步",
   "c4.importModel": "匯入 C4 JSON",
   "c4.exportModel": "匯出 C4 JSON",
   "c4.importing": "匯入中…",

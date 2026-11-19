@@ -17,7 +17,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
     selectedSourceLabel,
     selectedTargetLabel,
     updateEdge,
-    removeEdges,
+    beginEditGroup,
   } = editor;
   const field = (label: string, content: ReactNode) => (
     <label className="ui-field-label space-y-1.5">
@@ -30,6 +30,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
     <>
       {(selected || selectedEdge) && (
         <aside
+          onFocusCapture={beginEditGroup}
           aria-label={t(selected ? "c4.editElement" : "c4.editRelationship")}
           className="ui-card shadow-m3-3 absolute right-4 top-4 z-20 w-80 max-w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] overflow-y-auto p-5"
           onKeyDown={(event) => {
@@ -145,7 +146,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
               <button
                 type="button"
                 className="ui-btn-danger-tonal w-full mt-2 py-2"
-                onClick={() => removeEdges([selectedEdge.id])}
+                onClick={() => remove([], [selectedEdge.id])}
               >
                 <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
                 <span>{t("c4.deleteRelationship")}</span>

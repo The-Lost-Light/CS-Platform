@@ -26,7 +26,20 @@ function SettingsShell({ children }: { children: ReactNode }) {
           )}
         </AuthGate>
       </div>
-      <SettingsDialog showGithubToken={Boolean(currentUser)} />
+      <SettingsDialog
+        key={accountScope}
+        showGithubToken={Boolean(currentUser)}
+        account={
+          currentUser
+            ? {
+                id: currentUser.id,
+                name: currentUser.name,
+                email: currentUser.studentId,
+                role: currentUser.role,
+              }
+            : undefined
+        }
+      />
     </SettingsProvider>
   );
 }

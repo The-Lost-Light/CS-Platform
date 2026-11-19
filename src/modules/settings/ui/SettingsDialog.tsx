@@ -1,3 +1,4 @@
+import { EditAccountDialog, type AccountProfile } from "@modules/accounts";
 import { SUPPORTED_LOCALES, useI18n, type LanguagePreference } from "@modules/i18n";
 import {
   THEME_PALETTE_SWATCHES,
@@ -8,6 +9,7 @@ import {
 import {
   Eye,
   EyeOff,
+  ChevronRight,
   KeyRound,
   Languages,
   Monitor,
@@ -17,6 +19,7 @@ import {
   Sun,
   SunMoon,
   Trash2,
+  UserRound,
   X,
 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
@@ -24,7 +27,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useSettings } from "../hooks/SettingsProvider";
 import { SettingChoiceGroup, SettingSection, type SettingChoiceOption } from "./SettingSection";
 
-export function SettingsDialog({ showGithubToken = true }: { showGithubToken?: boolean }) {
+export function SettingsDialog({
+  showGithubToken = true,
+  account,
+}: {
+  showGithubToken?: boolean;
+  account?: AccountProfile & { id?: string; role: string };
+}) {
   const { locale, preference, setPreference, t } = useI18n();
   const { mode, setMode, palette, setPalette, isDark } = useTheme();
   const {
@@ -39,6 +48,7 @@ export function SettingsDialog({ showGithubToken = true }: { showGithubToken?: b
   } = useSettings();
 
   const [showToken, setShowToken] = useState(false);
+  const [editingAccount, setEditingAccount] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const githubSectionRef = useRef<HTMLElement>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
@@ -142,7 +152,9 @@ export function SettingsDialog({ showGithubToken = true }: { showGithubToken?: b
       onClick={(event) => {
         if (event.target === dialogRef.current) closeSettings();
       }}
-      onClose={() => {
+      onClose={(event) => {
+        if (event.target !== event.currentTarget) return;
+        setEditingAccount(false);
         setShowToken(false);
         if (isOpen) closeSettings();
       }}
@@ -168,6 +180,39 @@ export function SettingsDialog({ showGithubToken = true }: { showGithubToken?: b
         </header>
 
         <div className="p-5 sm:p-6 space-y-3 overflow-y-auto">
+          {account && (
+            <div className="ui-setting-section">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setEditingAccount(true)}
+                className="w-full flex items-center gap-3 p-4 text-left hover:bg-surface-hover cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+              >
+                <span className="ui-icon-badge-tonal w-9 h-9 rounded-xl">
+                  <UserRound aria-hidden="true" className="w-4 h-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{t("settings.account.edit")}</span>
+                  <span className="block truncate text-xs text-on-muted mt-0.5">
+                    {account.email}
+                  </span>
+                </span>
+                <ChevronRight aria-hidden="true" className="w-4 h-4 text-on-subtle shrink-0" />
+              </button>
+              {isOpen && editingAccount && (
+                <EditAccountDialog
+                  account={account}
+                  management={
+                    account.role === "admin" && account.id
+                      ? { id: account.id, role: account.role, isSelf: true }
+                      : undefined
+                  }
+                  onDismiss={() => setEditingAccount(false)}
+                  onSaved={() => setEditingAccount(false)}
+                />
+              )}
+            </div>
+          )}
           <SettingSection
             id={languageHeadingId}
             panelId={languagePanelId}

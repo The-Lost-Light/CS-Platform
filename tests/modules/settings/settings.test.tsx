@@ -30,7 +30,14 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
     <ThemeProvider initialMode="dark" initialPalette="sage">
       <I18nProvider initialLanguage="en">
         <SettingsProvider initialGithubToken="ghp_test_token">
-          <SettingsDialog />
+          <SettingsDialog
+            account={{
+              id: "student-1",
+              name: "Student",
+              email: "student@example.com",
+              role: "user",
+            }}
+          />
         </SettingsProvider>
       </I18nProvider>
     </ThemeProvider>,
@@ -38,6 +45,8 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
 
   for (const label of [
     "Settings",
+    "Edit current account",
+    "student@example.com",
     "Language",
     "Appearance",
     "Color palette",
@@ -137,6 +146,7 @@ test("SettingsDialog hides the GitHub token section when unauthenticated", () =>
   assert.ok(html.includes("Color palette"));
   assert.ok(!html.includes("Project Repo GitHub Token"));
   assert.ok(!html.includes("Personal Access Token"));
+  assert.ok(!html.includes("Edit current account"));
 });
 
 test("Navbar, LoginView, and ProjectWorkspace integrate SettingsButton and Settings token state", () => {

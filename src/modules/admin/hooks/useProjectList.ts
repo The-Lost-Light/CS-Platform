@@ -8,19 +8,19 @@ export function useProjectList() {
   const [deleting, setDeleting] = useState<Project | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<Project | "updated" | null>(null);
   const [search, setSearch] = useState("");
   async function remove() {
     if (!deleting || pending) return;
     setPending(true);
     setError(false);
-    setSaved(false);
+    setSaved(null);
     try {
       const response = await fetch(`/api/projects/${deleting.id}`, { method: "DELETE" });
       if (!response.ok && response.status !== 404) throw new Error("Delete failed");
       removeProject(deleting.id);
       setDeleting(null);
-      setSaved(true);
+      setSaved("updated");
     } catch {
       setError(true);
     } finally {
@@ -43,18 +43,19 @@ export function useProjectList() {
     remove,
     edit: (project: Project) => {
       setEditing(project);
-      setSaved(false);
+      setSaved(null);
       setError(false);
     },
     requestDelete: (project: Project) => {
       setDeleting(project);
-      setSaved(false);
+      setSaved(null);
       setError(false);
     },
     cancelEdit: () => setEditing(null),
+    finishCreate: (project: Project) => setSaved(project),
     finishEdit: () => {
       setEditing(null);
-      setSaved(true);
+      setSaved("updated");
     },
     cancelDelete: () => setDeleting(null),
   };

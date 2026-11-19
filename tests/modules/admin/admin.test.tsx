@@ -1,4 +1,5 @@
 import { Navbar } from "@app/Navbar";
+import { EditAccountDialog } from "@modules/accounts";
 import { I18nProvider } from "@modules/i18n";
 import { PROJECTS } from "@modules/projects";
 import type { ReactNode } from "react";
@@ -54,15 +55,16 @@ test("each management list has an Add button in its header", () => {
   assert.ok(!html.includes("<form"));
 });
 
-test("project creation offers a return to the list and constrains inputs", () => {
+test("project creation opens in a cancellable dialog and constrains inputs", () => {
   const html = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
-      <CreateProject onCancel={() => {}} />
+      <CreateProject onCancel={() => {}} onSaved={() => {}} />
     </I18nProvider>,
   );
   assert.ok(html.includes("Create project"));
   assert.ok(html.includes("Taipei time"));
-  assert.ok(html.includes("Back to list"));
+  assert.match(html, /<dialog\b[^>]*aria-labelledby=/);
+  assert.ok(html.includes("Cancel"));
   assert.match(html, /<input(?=[^>]*name="title")(?=[^>]*required)[^>]*>/);
   assert.match(html, /<input(?=[^>]*name="codeName")(?=[^>]*required)[^>]*>/);
   assert.match(html, /type="datetime-local"/);
@@ -79,10 +81,11 @@ test("project editor prepopulates the selected project and preserves its identif
   const project = { ...PROJECTS[0], title: "Editable example" };
   const html = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
-      <CreateProject project={project} onCancel={() => {}} />
+      <CreateProject project={project} onCancel={() => {}} onSaved={() => {}} />
     </I18nProvider>,
   );
   assert.ok(html.includes("Edit project"));
+  assert.match(html, /<dialog\b[^>]*aria-labelledby=/);
   assert.ok(html.includes('value="Editable example"'));
   assert.ok(html.includes('value="' + project.codeName + '"'));
   assert.ok(html.includes("Save changes"));
@@ -111,10 +114,11 @@ test("deletion confirmation identifies the record and explains session revocatio
 test("account creation places password help directly beneath password input before role", () => {
   const html = renderToStaticMarkup(
     <I18nProvider initialLanguage="zh-TW">
-      <AccountManagement onCreated={() => {}} onBack={() => {}} />
+      <AccountManagement onCreated={() => {}} onDismiss={() => {}} />
     </I18nProvider>,
   );
   const helpText = "請使用 8 到 16 個字元的密碼。";
+  assert.match(html, /<dialog\b[^>]*aria-labelledby=/);
   const passwordIndex = html.indexOf('name="password"');
   const helpIndex = html.indexOf(helpText);
   const roleIndex = html.indexOf('name="role"');
@@ -127,4 +131,35 @@ test("account creation places password help directly beneath password input befo
   assert.ok(describedByMatch);
   const helpId = describedByMatch[1];
   assert.ok(html.includes(`<p id="${helpId}" class="ui-field-help">${helpText}</p>`));
+});
+
+test("account editor has a password action in the header and role controls for administrators", () => {
+  for (const management of [
+    undefined,
+    { id: "42", role: "admin", isSelf: true },
+    { id: "43", role: "user", isSelf: false },
+  ]) {
+    const html = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <EditAccountDialog
+          account={{ name: "Example", email: "example@test.local" }}
+          management={management}
+          onDismiss={() => {}}
+          onSaved={() => {}}
+        />
+      </I18nProvider>,
+    );
+    assert.match(html, /<dialog\b[^>]*aria-labelledby=/);
+    assert.ok(html.includes('value="example@test.local"'));
+    assert.ok(html.includes('value="Example"'));
+    const header = html.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)?.[1] ?? "";
+    assert.ok(header.includes("Edit account"));
+    assert.ok(header.includes("Change password"));
+    assert.strictEqual(html.includes('name="role"'), Boolean(management));
+    if (management) {
+      const studentOption = html.match(/<option[^>]*value="user"[^>]*>/)?.[0];
+      assert.ok(studentOption);
+      assert.strictEqual(studentOption.includes("disabled"), management.isSelf);
+    }
+  }
 });

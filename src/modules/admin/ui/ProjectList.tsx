@@ -26,6 +26,7 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
     requestDelete,
     cancelEdit,
     finishEdit,
+    finishCreate,
     cancelDelete,
   } = useProjectList();
   useImperativeHandle(ref, () => ({
@@ -35,17 +36,6 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
       cancelDelete();
     },
   }));
-  if (creating) return <CreateProject onCancel={() => setCreating(false)} />;
-  if (editing)
-    return (
-      <CreateProject
-        key={editing.id}
-        project={editing}
-        onCancel={cancelEdit}
-        onSaved={finishEdit}
-      />
-    );
-
   return (
     <section className="ui-card overflow-hidden">
       <header className="ui-card-header flex flex-wrap items-center justify-between gap-3">
@@ -60,6 +50,7 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
         <button
           type="button"
           disabled={!!deleting}
+          aria-haspopup="dialog"
           onClick={() => setCreating(true)}
           className="ui-btn-primary px-4 py-2 text-xs sm:text-sm shrink-0"
         >
@@ -89,7 +80,16 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
           <div role="status" className="ui-banner-success">
             <div className="flex items-center gap-2">
               <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
-              <span>{t("admin.saved")}</span>
+              {saved === "updated" ? (
+                <span>{t("admin.saved")}</span>
+              ) : (
+                <>
+                  <span>{t("admin.projects.success")}</span>
+                  <Link href={`/projects/${saved.id}`} className="underline font-semibold">
+                    {t("admin.projects.open")} — {saved.title}
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -147,6 +147,7 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
                           type="button"
                           disabled={!!deleting}
                           className="ui-btn-tonal px-3 py-1.5"
+                          aria-haspopup="dialog"
                           onClick={() => edit(project)}
                         >
                           {t("admin.edit")}
@@ -170,6 +171,23 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
           <p className="ui-empty">{t("admin.empty")}</p>
         )}
       </div>
+      {creating && (
+        <CreateProject
+          onCancel={() => setCreating(false)}
+          onSaved={(project) => {
+            setCreating(false);
+            finishCreate(project);
+          }}
+        />
+      )}
+      {editing && (
+        <CreateProject
+          key={editing.id}
+          project={editing}
+          onCancel={cancelEdit}
+          onSaved={finishEdit}
+        />
+      )}
     </section>
   );
 }

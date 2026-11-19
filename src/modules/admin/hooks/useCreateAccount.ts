@@ -1,15 +1,14 @@
 import { useState, type FormEvent } from "react";
 
-export function useCreateAccount(onCreated?: () => void) {
+export function useCreateAccount(onCreated: () => void) {
   const [pending, setPending] = useState(false);
-  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [error, setError] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-    const form = event.currentTarget;
-    const data = new FormData(form);
+    const data = new FormData(event.currentTarget);
     setPending(true);
-    setStatus(null);
+    setError(false);
     try {
       const response = await fetch("/api/auth/admin/create-user", {
         method: "POST",
@@ -23,14 +22,12 @@ export function useCreateAccount(onCreated?: () => void) {
         }),
       });
       if (!response.ok) throw new Error("Create failed");
-      form.reset();
-      setStatus("success");
-      onCreated?.();
+      onCreated();
     } catch {
-      setStatus("error");
+      setError(true);
     } finally {
       setPending(false);
     }
   }
-  return { pending, status, submit };
+  return { pending, error, submit };
 }

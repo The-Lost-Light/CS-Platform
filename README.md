@@ -144,7 +144,7 @@ pnpm exec void db execute --file .void/bootstrap-admin.sql
 
 啟動本機開發伺服器後，執行 `pnpm exec node tests/integration/test-personal-workspace.mjs` 可驗證個人工作區。測試預設使用連接埠 5173，可透過 `WORKSPACE_TEST_PORT` 指定。它會建立兩個臨時一般帳號，驗證資料隔離、重新登入、大型 C4 模型及同時儲存，並在結束時清除測試帳號與其資料。
 
-pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建置。tests/integration/test-auth.mjs 是本機整合測試，固定連線 127.0.0.1:5177，需先用上述工具建立一次性 ADMIN_EMAIL / ADMIN_PASSWORD 測試帳號；會建立 student- 前綴的測試使用者。測試後刪除兩個測試帳號。涵蓋禁止註冊、錯誤密碼、工作階段、HttpOnly cookie、專案保護、管理者建立帳號、學生越權、跨來源請求與登出撤銷。
+pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建置。tests/integration/test-auth.mjs 是本機整合測試，預設連線 127.0.0.1:5177，可用 `AUTH_TEST_PORT` 指定連接埠。需先用上述工具建立一次性 ADMIN_EMAIL / ADMIN_PASSWORD 測試帳號，測試會建立 student- 前綴的測試使用者。測試後刪除兩個測試帳號。涵蓋禁止註冊、錯誤密碼、工作階段、HttpOnly cookie、專案保護、管理者建立帳號、個人帳號編輯、學生越權、跨來源請求與登出撤銷。
 
 ## 多國語言
 
@@ -170,8 +170,10 @@ GET /api/projects 只允許登入者讀取完整專案列表（內建題庫、�
 
 專案列表合併所有內建題庫與 D1 新增專案。編輯內建題庫會儲存 D1 覆寫版本，保留原 ID 與學生的個人作業；刪除會記錄 removed_project，避免題庫在重新載入後復活。刪除後首頁不再列出，專案網址回傳 404。編輯後的專案內容使用管理員儲存時的語言，未修改題庫仍隨語言切換。內建題庫的原始代碼保留給原專案，不能由其他專案重用。
 
-編輯帳號時，按「修改密碼」可開啟獨立視窗。輸入該帳號的原密碼及 8–16 個字元的新密碼，再按「儲存新密碼」。既有超過 16 個字元的密碼仍可用於登入及驗證。姓名、電子郵件與角色由編輯畫面的「儲存修改」另行儲存。
+管理員可在專案或帳號列表按「新增」或「編輯」開啟浮動視窗。儲存或取消後會回到原本的搜尋結果。「設定 → 編輯目前帳號」與帳號管理使用同一個「編輯帳號」視窗。學生可修改自己的姓名與電子郵件，管理員另可看到登入身分欄位。
+
+編輯帳號時，按卡片右上角的「修改密碼」可開啟獨立視窗。輸入該帳號的原密碼及 8–16 個字元的新密碼，再按「儲存新密碼」。既有超過 16 個字元的密碼仍可用於登入及驗證。編輯自己的帳號資料或密碼後須重新登入。
 
 帳號列表只回傳 ID、姓名、電子郵件、角色與停權狀態。儲存帳號資料或密碼後會撤銷該帳號所有工作階段。變更電子郵件也會重設驗證狀態。刪除帳號會一併清除其憑證與工作階段。禁止自我刪除與自我降權，資料庫修改條件同時檢查操作者仍是管理員及其他可用管理員存在，避免並行操作造成失去管理員。原 Better Auth 的 update-user、set-user-password、set-role、remove-user、ban-user 管理端點已停用。帳號資料由 `/api/admin/accounts/:id` 更新，密碼由 `/api/admin/accounts/:id/password` 更新。
 
-專案與帳號刪除都先顯示名稱與不可復原提示，確認後才送出 DELETE；所有修改 API 檢查管理員角色及同來源 Origin。請先套用最新 migration，再部署。安裝後 prepare 會產生 Void 的驗證資料表型別。
+專案與帳號刪除都先顯示名稱與不可復原提示，確認後才送出 DELETE。管理員從帳號管理或設定編輯帳號時，管理 API 會檢查管理員角色及同來源 Origin。學生編輯自己的帳號時使用 `/api/account` 與 `/api/account/password`，依登入工作階段識別帳號並檢查同來源 Origin。請先套用最新 migration，再部署。安裝後 prepare 會產生 Void 的驗證資料表型別。

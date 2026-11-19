@@ -1,44 +1,33 @@
+import { AccountProfileFields } from "@modules/accounts";
 import { useI18n } from "@modules/i18n";
 import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@shared/passwordPolicy";
-import { AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
+import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
+import { UserPlus } from "lucide-react";
 import { useId } from "react";
 
 import { useCreateAccount } from "../hooks/useCreateAccount";
 
 export function AccountManagement({
   onCreated,
-  onBack,
+  onDismiss,
 }: {
   onCreated: () => void;
-  onBack: () => void;
+  onDismiss: () => void;
 }) {
   const { t } = useI18n();
   const passwordHelpId = useId();
-  const { pending, status, submit } = useCreateAccount(onCreated);
+  const { pending, error, submit } = useCreateAccount(onCreated);
   return (
-    <section className="ui-card overflow-hidden">
-      <div className="ui-card-header flex items-center gap-3">
-        <div className="ui-icon-badge w-9 h-9">
-          <UserPlus aria-hidden="true" className="w-4 h-4" />
-        </div>
-        <h2 className="text-base font-bold text-on-primary-container">{t("admin.create")}</h2>
-      </div>
-      <div className="p-5 sm:p-6 space-y-5">
-        <form onSubmit={submit} className="max-w-lg space-y-4">
-          <label className="ui-field-label">
-            {t("auth.accountLabel")}
-            <input
-              className="ui-input mt-1.5"
-              name="email"
-              type="email"
-              autoComplete="off"
-              required
-            />
-          </label>
-          <label className="ui-field-label">
-            {t("auth.nameLabel")}
-            <input className="ui-input mt-1.5" name="name" required maxLength={100} />
-          </label>
+    <FormDialog
+      title={t("admin.create")}
+      icon={UserPlus}
+      closeLabel={t("common.close")}
+      onDismiss={onDismiss}
+      pending={pending}
+    >
+      <form onSubmit={submit}>
+        <fieldset disabled={pending} className="space-y-4">
+          <AccountProfileFields />
           <div>
             <label className="ui-field-label">
               {t("auth.passwordLabel")}
@@ -64,31 +53,18 @@ export function AccountManagement({
               <option value="admin">{t("admin.role")}</option>
             </select>
           </label>
-          <div className="flex flex-wrap items-center gap-2.5 pt-2">
-            <button type="submit" className="ui-btn-primary" disabled={pending}>
-              {t(pending ? "common.loading" : "admin.create")}
-            </button>
-            <button type="button" className="ui-btn-text-muted" disabled={pending} onClick={onBack}>
-              {t("admin.backToList")}
-            </button>
-          </div>
-        </form>
-        {status && (
-          <div
-            role="status"
-            className={status === "success" ? "ui-banner-success" : "ui-banner-danger"}
-          >
-            <div className="flex items-center gap-2">
-              {status === "success" ? (
-                <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
-              ) : (
-                <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-              )}
-              <span>{t(status === "success" ? "admin.success" : "admin.error")}</span>
+          {error && (
+            <div role="alert" className="ui-banner-danger">
+              {t("admin.error")}
             </div>
-          </div>
-        )}
-      </div>
-    </section>
+          )}
+          <FormDialogActions
+            cancelLabel={t("admin.cancel")}
+            submitLabel={t(pending ? "common.loading" : "admin.create")}
+            onDismiss={onDismiss}
+          />
+        </fieldset>
+      </form>
+    </FormDialog>
   );
 }

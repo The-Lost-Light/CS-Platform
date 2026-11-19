@@ -3,5 +3,9 @@ export function isAdmin(user: object): boolean {
 }
 
 export function allowsAdminMutation(user: object, request: Request): boolean {
-  return isAdmin(user) && request.headers.get("origin") === new URL(request.url).origin;
+  return isAdmin(user) && isSameOrigin(request);
+}
+
+export function isSameOrigin(request: Request): boolean {
+  return request.headers.get("origin") === new URL(request.url).origin;
 }

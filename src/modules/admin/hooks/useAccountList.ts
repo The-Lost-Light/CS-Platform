@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 
 interface Account {
   id: string;
@@ -15,7 +15,7 @@ export function useAccountList() {
   const [attempt, setAttempt] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<"admin.saved" | "admin.success" | null>(null);
   const [editing, setEditing] = useState<Account | null>(null);
   const [deleting, setDeleting] = useState<Account | null>(null);
   const [search, setSearch] = useState("");
@@ -46,44 +46,38 @@ export function useAccountList() {
     return () => controller.abort();
   }, [attempt]);
 
-  async function mutate(
-    id: string,
-    method: "PATCH" | "DELETE",
-    body?: Record<string, FormDataEntryValue>,
-  ) {
-    if (pending) return;
+  function reload() {
+    setAttempt((current) => current + 1);
+  }
+
+  function finishEdit() {
+    setEditing(null);
+    setSaved("admin.saved");
+    reload();
+  }
+
+  async function confirmDelete() {
+    if (!deleting || pending) return;
     setPending(true);
     setError(null);
-    setSaved(false);
+    setSaved(null);
     try {
-      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(id)}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        ...(body ? { body: JSON.stringify(body) } : {}),
+      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(deleting.id)}`, {
+        method: "DELETE",
       });
-      const result = (await response.json()) as { error?: string; signedOut?: boolean };
+      const result = (await response.json()) as { error?: string };
       if (!response.ok) {
         setError(result.error ?? "failed");
         return;
       }
-      if (result.signedOut) {
-        window.location.assign("/");
-        return;
-      }
-      setEditing(null);
       setDeleting(null);
-      setSaved(true);
-      setAttempt((current) => current + 1);
+      setSaved("admin.saved");
+      reload();
     } catch {
       setError("failed");
     } finally {
       setPending(false);
     }
-  }
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (editing)
-      void mutate(editing.id, "PATCH", Object.fromEntries(new FormData(event.currentTarget)));
   }
   const visible = users.filter((user) =>
     `${user.name} ${user.email}`.toLowerCase().includes(search.toLowerCase()),
@@ -92,12 +86,12 @@ export function useAccountList() {
   function edit(user: Account) {
     setEditing(user);
     setError(null);
-    setSaved(false);
+    setSaved(null);
   }
   function requestDelete(user: Account) {
     setDeleting(user);
     setError(null);
-    setSaved(false);
+    setSaved(null);
   }
   return {
     count: users.length,
@@ -111,17 +105,19 @@ export function useAccountList() {
     deleting,
     search,
     setSearch,
-    submit,
+    finishEdit,
+    finishCreate: () => {
+      setSaved("admin.success");
+      reload();
+    },
     edit,
     requestDelete,
-    reload: () => setAttempt((current) => current + 1),
+    reload,
     cancelEdit: () => {
       setEditing(null);
       setError(null);
     },
     cancelDelete: () => setDeleting(null),
-    confirmDelete: () => {
-      if (deleting) void mutate(deleting.id, "DELETE");
-    },
+    confirmDelete,
   };
 }

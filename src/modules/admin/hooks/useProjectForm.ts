@@ -8,14 +8,13 @@ import {
 } from "@modules/projects";
 import { useState, type FormEvent } from "react";
 
-export function useProjectForm(original?: Project, onSaved?: () => void) {
+export function useProjectForm(original: Project | undefined, onSaved: (project: Project) => void) {
   const { locale } = useI18n();
   const { addProject } = useProjectCatalog();
   const [attachments, setAttachments] = useState<(ProjectAttachment | File)[]>(
     original?.attachments ?? [],
   );
   const [pending, setPending] = useState(false);
-  const [created, setCreated] = useState<Project | null>(null);
   const [error, setError] = useState<"duplicate" | "invalid" | "failed" | "attachments" | null>(
     null,
   );
@@ -38,13 +37,11 @@ export function useProjectForm(original?: Project, onSaved?: () => void) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-    const form = event.currentTarget;
-    const data = new FormData(form);
+    const data = new FormData(event.currentTarget);
     data.delete("attachments");
     for (const file of attachments) data.append("attachments", "id" in file ? file.id : file);
     setPending(true);
     setError(null);
-    setCreated(null);
     try {
       const response = await fetch(
         original ? `/api/projects/${original.id}?locale=${locale}` : "/api/projects",
@@ -61,17 +58,12 @@ export function useProjectForm(original?: Project, onSaved?: () => void) {
       }
       const { project } = (await response.json()) as { project: Project };
       addProject(project);
-      setCreated(project);
-      if (!original) {
-        form.reset();
-        setAttachments([]);
-      }
-      onSaved?.();
+      onSaved(project);
     } catch {
       setError("failed");
     } finally {
       setPending(false);
     }
   }
-  return { pending, created, error, submit, attachments, addFiles, removeFile };
+  return { pending, error, submit, attachments, addFiles, removeFile };
 }

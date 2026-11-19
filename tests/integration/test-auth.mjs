@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomInt } from "node:crypto";
 import { writeFileSync } from "node:fs";
-const base = "http://127.0.0.1:5177";
+const base = "http://127.0.0.1:" + (Number(process.env.AUTH_TEST_PORT) || 5177);
 const email = process.env.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD;
 assert.ok(email && password, "Temporary local admin credentials required");
@@ -355,10 +355,6 @@ assert.ok(
     })
   ).ok,
 );
-assert.equal(
-  (await request(profilePath, { ...accountUpdate, role: "admin" }, adminCookie, "PATCH")).status,
-  200,
-);
 const editedProject = { ...projectInput, title: "Updated project", content: "# Updated" };
 assert.equal(
   (await request("/api/projects/" + project.id, editedProject, editedCookie, "PATCH")).status,
@@ -412,14 +408,64 @@ const lastCookie = lastLogin.headers
   .getSetCookie()
   .map((c) => c.split(";")[0])
   .join("; ");
+const ownProfile = { name: "Personal profile", email: "self-" + studentEmail };
+const patchOwnProfile = (body) => request("/api/account", body, lastCookie, "PATCH");
+assert.equal((await request("/api/account", ownProfile, "", "PATCH")).status, 401);
+const crossOriginEdit = await request(
+  "/api/account",
+  ownProfile,
+  lastCookie,
+  "PATCH",
+  "https://untrusted.example",
+);
+assert.ok([401, 403].includes(crossOriginEdit.status));
+assert.equal((await patchOwnProfile({ ...ownProfile, id: adminId })).status, 400);
+assert.equal((await patchOwnProfile({ ...ownProfile, role: "admin" })).status, 400);
+assert.equal((await patchOwnProfile({ ...ownProfile, email })).status, 409);
+assert.equal((await (await patchOwnProfile(ownProfile)).json()).signedOut, true);
+assert.equal((await (await request("/api/session", null, lastCookie)).json()).user, null);
+
+async function signInToEditedAccount(password) {
+  const response = await request("/api/auth/sign-in/email", { email: ownProfile.email, password });
+  assert.equal(response.status, 200);
+  return response.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .join("; ");
+}
+const ownCookie = await signInToEditedAccount(newPassword);
+const ownSession = await (await request("/api/session", null, ownCookie)).json();
+assert.deepEqual(ownSession.user, {
+  id: studentId,
+  name: ownProfile.name,
+  studentId: ownProfile.email,
+  role: "user",
+});
+const patchOwnPassword = (currentPassword) =>
+  request(
+    "/api/account/password",
+    { currentPassword, newPassword: studentPassword },
+    ownCookie,
+    "PATCH",
+  );
+assert.equal((await patchOwnPassword("wrong-password")).status, 400);
+assert.equal((await (await patchOwnPassword(newPassword)).json()).signedOut, true);
+assert.equal((await (await request("/api/session", null, ownCookie)).json()).user, null);
+await signInToEditedAccount(studentPassword);
+assert.equal(
+  (await request(profilePath, { ...ownProfile, role: "admin" }, adminCookie, "PATCH")).status,
+  200,
+);
+const promotedCookie = await signInToEditedAccount(studentPassword);
 assert.equal(
   (await request("/api/admin/accounts/" + studentId, null, adminCookie, "DELETE")).status,
   200,
 );
-assert.equal((await (await request("/api/session", null, lastCookie)).json()).user, null);
+assert.equal((await (await request("/api/session", null, promotedCookie)).json()).user, null);
 assert.ok(
-  !(await request("/api/auth/sign-in/email", { email: accountUpdate.email, password: newPassword }))
-    .ok,
+  !(
+    await request("/api/auth/sign-in/email", { email: ownProfile.email, password: studentPassword })
+  ).ok,
 );
 assert.ok(
   !(await (await request("/api/admin/accounts", null, adminCookie)).json()).users.some(

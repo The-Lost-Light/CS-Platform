@@ -1,6 +1,8 @@
-import { createGitHubService, parseGitHubRepoUrl } from "@modules/repository";
 import assert from "node:assert/strict";
+
+import { createGitHubService, parseGitHubRepoUrl } from "@modules/repository";
 import { test } from "vite-plus/test";
+
 import { createRepoFixture } from "./fixtures/repository";
 
 test("repository URL parsing retains supported URL and shorthand forms", () => {

@@ -1,10 +1,12 @@
-import { applyCanvasLayout, BOUNDARY_ID } from "../model/canvasLayout";
-import { createC4NodeInScope } from "@modules/c4-model";
-import { prepareC4CanvasChanges } from "../model/canvasChanges";
-import type { CanvasNode, FlowNode } from "../model/flowTypes";
-import { NodeChangeset } from "@xyflow/react";
 import assert from "node:assert/strict";
+
+import { createC4NodeInScope } from "@modules/c4-model";
+import { NodeChangeset } from "@xyflow/react";
 import { test } from "vite-plus/test";
+
+import { prepareC4CanvasChanges } from "../model/canvasChanges";
+import { applyCanvasLayout, BOUNDARY_ID } from "../model/canvasLayout";
+import type { CanvasNode, FlowNode } from "../model/flowTypes";
 
 function card(id: string, x: number, y: number): FlowNode {
   return {

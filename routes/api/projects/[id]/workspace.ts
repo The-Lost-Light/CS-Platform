@@ -1,11 +1,11 @@
-import { defineHandler } from "void";
-import { requireAuth } from "void/auth";
 import {
   getWorkspaceRevision,
   loadWorkspace,
   readWorkspaceInput,
   saveWorkspace,
 } from "@server/workspaces";
+import { defineHandler } from "void";
+import { requireAuth } from "void/auth";
 
 export const GET = defineHandler(async (c) => {
   const { id: userId } = requireAuth(c);

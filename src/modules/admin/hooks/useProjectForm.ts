@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useProjectCatalog } from "@modules/catalog";
 import { useI18n } from "@modules/i18n";
 import {
   MAX_ATTACHMENTS,
@@ -6,7 +6,7 @@ import {
   type Project,
   type ProjectAttachment,
 } from "@modules/projects";
-import { useProjectCatalog } from "@modules/catalog";
+import { useState, type FormEvent } from "react";
 
 export function useProjectForm(original?: Project, onSaved?: () => void) {
   const { locale } = useI18n();

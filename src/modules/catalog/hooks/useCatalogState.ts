@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "@void/react";
-import type { Project } from "@modules/projects";
 import type { Locale } from "@modules/i18n";
+import type { Project } from "@modules/projects";
+import { useRouter } from "@void/react";
+import { useEffect, useState } from "react";
 export function useCatalogState(locale: Locale) {
   const pathname = useRouter().url.pathname;
   const [projects, setProjects] = useState<Project[]>([]);

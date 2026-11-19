@@ -1,7 +1,7 @@
-import type { RepoBundle } from "../model/repository";
 import { ChevronRight, FileCode2, Folder } from "lucide-react";
 
 import { buildRepoFileTree, type TreeNode } from "../model/fileTree";
+import type { RepoBundle } from "../model/repository";
 
 function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searching: boolean }) {
   const sorted = [...nodes.values()].sort(

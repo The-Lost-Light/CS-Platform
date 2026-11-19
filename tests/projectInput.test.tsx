@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { test } from "vite-plus/test";
+
 import { parseProjectInput } from "@modules/projects";
+import { test } from "vite-plus/test";
 
 const valid = {
   codeName: "new-01",

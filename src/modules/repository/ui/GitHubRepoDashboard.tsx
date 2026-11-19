@@ -1,10 +1,11 @@
+import { useState } from "react";
+
 import type { DiffMode } from "../model/diff";
 import type { RepoBundle } from "../model/repository";
 import { CommitHistory } from "./CommitHistory";
 import { RepositoryLanguages } from "./RepositoryLanguages";
 import { RepositoryMetrics } from "./RepositoryMetrics";
 import { RepositoryTree } from "./RepositoryTree";
-import { useState } from "react";
 
 export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | null }) {
   if (!repoBundle?.repo) return null;

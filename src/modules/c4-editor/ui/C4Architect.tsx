@@ -1,9 +1,10 @@
 import { LoadingPanel } from "@shared/ui/LoadingPanel";
-import { DesignDocument } from "./DesignDocument";
-import type { C4ArchitectProps } from "../model/types";
-import { useC4Editor } from "../hooks/useC4Editor";
 import { ChevronRight, Download, FileText, Network, Upload } from "lucide-react";
 import { lazy, Suspense } from "react";
+
+import { useC4Editor } from "../hooks/useC4Editor";
+import type { C4ArchitectProps } from "../model/types";
+import { DesignDocument } from "./DesignDocument";
 
 const C4Diagram = lazy(() =>
   import("./C4Diagram").then((module) => ({

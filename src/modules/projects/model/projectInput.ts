@@ -1,4 +1,5 @@
 import { isRecord } from "@shared/isRecord";
+
 import { MAX_CONTENT_LENGTH, type Project } from "./project";
 
 export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachments"> | null {

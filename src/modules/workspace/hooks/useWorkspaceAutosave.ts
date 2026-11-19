@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
 import type { C4Node, C4Relationship } from "@modules/c4-model";
+import { useState, useEffect, useMemo } from "react";
+
 import type { PersonalWorkspace } from "../model/personalWorkspace";
 import { createSaveQueue, type SaveStatus } from "../services/saveQueue";
 import { saveDraft } from "../services/workspaceApi";

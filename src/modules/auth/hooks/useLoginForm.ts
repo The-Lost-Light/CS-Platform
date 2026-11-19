@@ -1,6 +1,7 @@
-import type { LoginCredentials, LoginResult } from "../model/types";
 import type { MessageKey } from "@modules/i18n";
 import { useState, type FormEvent } from "react";
+
+import type { LoginCredentials, LoginResult } from "../model/types";
 
 export type LoginHandler = (credentials: LoginCredentials) => LoginResult | Promise<LoginResult>;
 

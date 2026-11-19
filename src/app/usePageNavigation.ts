@@ -1,6 +1,6 @@
+import { useProjectCatalog } from "@modules/catalog";
 import type { Project } from "@modules/projects";
 import { useParams, useRouter } from "@void/react";
-import { useProjectCatalog } from "@modules/catalog";
 
 export function usePageNavigation() {
   const catalog = useProjectCatalog();

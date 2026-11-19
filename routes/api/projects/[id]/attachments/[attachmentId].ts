@@ -1,6 +1,6 @@
+import { downloadProjectAttachment } from "@server/projects";
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
-import { downloadProjectAttachment } from "@server/projects";
 
 export const GET = defineHandler(async (c) => {
   requireAuth(c);

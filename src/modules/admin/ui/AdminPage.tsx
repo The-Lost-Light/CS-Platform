@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
 import { useI18n } from "@modules/i18n";
-import { ProjectList } from "./ProjectList";
+import { useRef, useState } from "react";
+
 import { AccountList } from "./AccountList";
 import type { ManagementListHandle } from "./ManagementListHandle";
+import { ProjectList } from "./ProjectList";
 export default function AdminPage() {
   const { t } = useI18n();
   const [tab, setTab] = useState<"projects" | "accounts">("projects");

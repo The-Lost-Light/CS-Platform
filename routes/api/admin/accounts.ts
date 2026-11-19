@@ -1,7 +1,7 @@
-import { defineHandler } from "void";
-import { requireAuth } from "void/auth";
 import { isAdmin } from "@server/access";
 import { listAccounts } from "@server/accounts";
+import { defineHandler } from "void";
+import { requireAuth } from "void/auth";
 
 export const GET = defineHandler(async (c) => {
   const user = requireAuth(c);

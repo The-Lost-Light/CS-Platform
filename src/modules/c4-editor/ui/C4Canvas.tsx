@@ -1,5 +1,3 @@
-import { prepareC4CanvasChanges } from "../model/canvasChanges";
-import type { BoundaryNode, CanvasNode, FlowNode } from "../model/flowTypes";
 import {
   Handle,
   NodeResizer,
@@ -9,6 +7,9 @@ import {
   type ReactFlowProps,
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
+
+import { prepareC4CanvasChanges } from "../model/canvasChanges";
+import type { BoundaryNode, CanvasNode, FlowNode } from "../model/flowTypes";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (

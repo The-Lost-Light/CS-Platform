@@ -1,6 +1,7 @@
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { admin } from "better-auth/plugins";
 import { defineAuth } from "void/auth";
+
 import {
   isValidPasswordLength,
   MAX_CURRENT_PASSWORD_LENGTH,

@@ -1,5 +1,5 @@
-import { useAuth } from "@modules/auth";
 import { usePageNavigation } from "@app/usePageNavigation";
+import { useAuth } from "@modules/auth";
 import { HomeDashboard } from "@modules/catalog";
 
 export default function HomePage() {

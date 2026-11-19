@@ -1,7 +1,8 @@
-import type { Project } from "@modules/projects";
-import { useWorkspaceSnapshot } from "../hooks/useWorkspaceSnapshot";
 import { useI18n } from "@modules/i18n";
+import type { Project } from "@modules/projects";
 import { LoadingPanel } from "@shared/ui/LoadingPanel";
+
+import { useWorkspaceSnapshot } from "../hooks/useWorkspaceSnapshot";
 import { ProjectWorkspace } from "./ProjectWorkspace";
 
 export function PersonalProject({ project, accountId }: { project: Project; accountId: string }) {

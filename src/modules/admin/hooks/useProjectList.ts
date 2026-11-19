@@ -1,6 +1,6 @@
-import { useState } from "react";
-import type { Project } from "@modules/projects";
 import { useProjectCatalog } from "@modules/catalog";
+import type { Project } from "@modules/projects";
+import { useState } from "react";
 
 export function useProjectList() {
   const { projects, removeProject } = useProjectCatalog();

@@ -1,9 +1,10 @@
-import type { Project } from "@modules/projects";
-import { useProjectWorkspace } from "../hooks/useProjectWorkspace";
-import { useI18n } from "@modules/i18n";
 import { C4Architect } from "@modules/c4-editor";
-import { RepositoryConnection, GitHubRepoDashboard } from "@modules/repository";
+import { useI18n } from "@modules/i18n";
+import type { Project } from "@modules/projects";
+import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
 import { Compass, FileText, FolderGit2, GitBranch } from "lucide-react";
+
+import { useProjectWorkspace } from "../hooks/useProjectWorkspace";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
 import { AssignmentPanel } from "./AssignmentPanel";
 import { SaveWorkspace } from "./SaveWorkspace";
@@ -45,7 +46,7 @@ export function ProjectWorkspace({
                 {project.title}
               </h1>
             </div>
-            <p className="text-xs text-on-muted mt-1 break-words">{project.summary}</p>
+            <p className="text-xs text-on-muted mt-1 wrap-break-word">{project.summary}</p>
           </div>
         </div>
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">

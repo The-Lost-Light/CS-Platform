@@ -1,6 +1,8 @@
-import { hashPassword } from "better-auth/crypto";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
+
+import { hashPassword } from "better-auth/crypto";
+
 import {
   isValidPasswordLength,
   MIN_PASSWORD_LENGTH,

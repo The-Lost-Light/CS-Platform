@@ -1,6 +1,6 @@
-import { useId, useRef, useState, type FormEvent } from "react";
 import { useI18n, type MessageKey } from "@modules/i18n";
-import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@shared/passwordPolicy";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@shared/passwordPolicy";
+import { useId, useRef, useState, type FormEvent } from "react";
 
 export function ChangeAccountPassword({
   accountId,
@@ -93,7 +93,7 @@ export function ChangeAccountPassword({
         onClose={() => form.current?.reset()}
       >
         <form ref={form} onSubmit={submit} className="space-y-4">
-          <h3 id={id} className="text-lg font-bold break-words">
+          <h3 id={id} className="text-lg font-bold wrap-break-word">
             {t("admin.changePasswordFor", { email })}
           </h3>
           <fieldset disabled={pending} className="space-y-4">

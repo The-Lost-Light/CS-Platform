@@ -1,6 +1,7 @@
+import { useI18n } from "@modules/i18n";
+
 import { languageDistribution } from "../model/languages";
 import type { RepoBundle } from "../model/repository";
-import { useI18n } from "@modules/i18n";
 const LANG_CHART_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",

@@ -1,6 +1,7 @@
-import { useLoginForm, type LoginHandler } from "../hooks/useLoginForm";
 import { useI18n } from "@modules/i18n";
 import { ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
+
+import { useLoginForm, type LoginHandler } from "../hooks/useLoginForm";
 
 export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
   const { t } = useI18n();

@@ -1,8 +1,9 @@
+import { useI18n } from "@modules/i18n";
+import type { ReactNode } from "react";
+
 import { useAuth } from "../hooks/AuthProvider";
 import type { AuthenticatedSession } from "../model/types";
 import { LoginView } from "./LoginView";
-import { useI18n } from "@modules/i18n";
-import type { ReactNode } from "react";
 
 export function AuthGate({ children }: { children: (session: AuthenticatedSession) => ReactNode }) {
   const { currentUser, login, logout, loading, sessionError } = useAuth();

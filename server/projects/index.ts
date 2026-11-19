@@ -1,3 +1,5 @@
+import { projectAttachmentParts as parts, projects, removedProjects, workspaces } from "@db/schema";
+import type { Locale } from "@modules/i18n";
 import {
   PROJECTS,
   getLocalizedProjects,
@@ -6,8 +8,7 @@ import {
 } from "@modules/projects";
 import { isUniqueViolation } from "@server/errors";
 import { and, db, desc, eq, notInArray, sql } from "void/db";
-import { projectAttachmentParts as parts, projects, removedProjects, workspaces } from "@db/schema";
-import type { Locale } from "@modules/i18n";
+
 import { attachmentMetadata, insertAttachmentParts } from "./attachments";
 import type { ProjectInput } from "./input";
 

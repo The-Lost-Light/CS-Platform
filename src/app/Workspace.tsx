@@ -1,7 +1,8 @@
 import type { AuthenticatedSession } from "@modules/auth";
-import { usePageNavigation } from "./usePageNavigation";
-import { Navbar } from "./Navbar";
 import type { ReactNode } from "react";
+
+import { Navbar } from "./Navbar";
+import { usePageNavigation } from "./usePageNavigation";
 
 export function WorkSpace({
   currentUser,

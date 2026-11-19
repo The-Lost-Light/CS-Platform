@@ -1,11 +1,11 @@
-import { useImperativeHandle, useState, type Ref } from "react";
 import { useI18n, type MessageKey } from "@modules/i18n";
+import { useImperativeHandle, useState, type Ref } from "react";
+
+import { useAccountList } from "../hooks/useAccountList";
 import { AccountManagement } from "./AccountManagement";
 import { ChangeAccountPassword } from "./ChangeAccountPassword";
 import { ConfirmDelete } from "./ConfirmDelete";
 import type { ManagementListHandle } from "./ManagementListHandle";
-
-import { useAccountList } from "../hooks/useAccountList";
 
 const accountErrors = new Map<string, MessageKey>([
   ["duplicate", "admin.duplicateEmail"],

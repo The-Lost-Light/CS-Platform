@@ -1,4 +1,5 @@
-import { legacyNodes } from "./fixtures/mindMap";
+import assert from "node:assert/strict";
+
 import {
   c4Drilldown,
   createC4NodeInScope,
@@ -8,8 +9,9 @@ import {
   visibleC4Nodes,
   type C4Node,
 } from "@modules/c4-model";
-import assert from "node:assert/strict";
 import { test } from "vite-plus/test";
+
+import { legacyNodes } from "./fixtures/mindMap";
 
 const nodes = migrateC4Nodes(legacyNodes);
 

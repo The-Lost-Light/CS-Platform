@@ -1,7 +1,9 @@
-import { legacyNodes } from "./fixtures/mindMap";
-import { migrateC4Nodes, parseC4File, serializeC4File } from "@modules/c4-model";
 import assert from "node:assert/strict";
+
+import { migrateC4Nodes, parseC4File, serializeC4File } from "@modules/c4-model";
 import { test } from "vite-plus/test";
+
+import { legacyNodes } from "./fixtures/mindMap";
 
 const nodes = migrateC4Nodes(legacyNodes);
 const relationships = [

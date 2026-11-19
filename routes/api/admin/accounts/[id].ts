@@ -1,7 +1,7 @@
-import { defineHandler } from "void";
-import { requireAuth } from "void/auth";
 import { allowsAdminMutation } from "@server/access";
 import { updateAccount, deleteAccount } from "@server/accounts";
+import { defineHandler } from "void";
+import { requireAuth } from "void/auth";
 
 export const PATCH = defineHandler(async (c) => {
   const actor = requireAuth(c);

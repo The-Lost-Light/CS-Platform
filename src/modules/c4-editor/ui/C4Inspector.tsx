@@ -1,6 +1,7 @@
-import type { C4Editor } from "../hooks/useC4Editor";
 import { Trash2, X } from "lucide-react";
 import type { ReactNode } from "react";
+
+import type { C4Editor } from "../hooks/useC4Editor";
 const fieldClass = "ui-input px-3 py-2";
 
 export function C4Inspector({ editor }: { editor: C4Editor }) {

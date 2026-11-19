@@ -1,4 +1,5 @@
 import { isRecord } from "@shared/isRecord";
+
 import { type C4Kind, type C4Node, type C4Relationship, C4_MAX_LEVELS } from "./c4";
 
 export interface C4File {

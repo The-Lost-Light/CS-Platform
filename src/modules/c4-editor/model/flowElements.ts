@@ -1,8 +1,9 @@
 import type { C4Node, C4Relationship } from "@modules/c4-model";
 import type { Translator } from "@modules/i18n";
 import { MarkerType } from "@xyflow/react";
-import type { CanvasNode } from "./flowTypes";
+
 import { BOUNDARY_ID, SCOPE_OFFSET } from "./canvasLayout";
+import type { CanvasNode } from "./flowTypes";
 
 interface FlowView {
   visible: C4Node[];

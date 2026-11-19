@@ -1,5 +1,9 @@
+import assert from "node:assert/strict";
+
+import { Navbar } from "@app/Navbar";
+import { WorkSpace } from "@app/Workspace";
 import { AuthProvider, DEMO_ACCOUNTS, demoAuthService, AuthGate, LoginView } from "@modules/auth";
-import { getLocalizedProjects } from "@modules/projects";
+import { HomeDashboard } from "@modules/catalog";
 import {
   I18nProvider,
   createTranslator,
@@ -9,15 +13,13 @@ import {
   traditionalChineseMessages,
   type MessageKey,
 } from "@modules/i18n";
-import { HomeDashboard } from "@modules/catalog";
-import { Navbar } from "@app/Navbar";
+import { getLocalizedProjects } from "@modules/projects";
 import { GitHubRepoDashboard, fetchGitHubProjectBundle } from "@modules/repository";
-import { ProjectWorkspace } from "@modules/workspace";
-import { WorkSpace } from "@app/Workspace";
 import { ThemeProvider, isThemeMode, resolveTheme } from "@modules/theme";
-import assert from "node:assert/strict";
+import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
 import { test } from "vite-plus/test";
+
 import { createRepoFixture } from "./fixtures/repository";
 
 const en = getLocalizedProjects("en");

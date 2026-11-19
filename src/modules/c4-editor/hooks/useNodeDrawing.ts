@@ -1,5 +1,6 @@
-import { useRef, useState, type PointerEvent, type RefObject } from "react";
 import type { ReactFlowInstance, XYPosition } from "@xyflow/react";
+import { useRef, useState, type PointerEvent, type RefObject } from "react";
+
 import type { CanvasNode } from "../model/flowTypes";
 
 export function useNodeDrawing(

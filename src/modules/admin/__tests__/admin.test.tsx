@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
-import { renderToStaticMarkup } from "react-dom/server";
-import { test, vi } from "vite-plus/test";
-import { I18nProvider } from "@modules/i18n";
+
 import { Navbar } from "@app/Navbar";
-import AdminPage from "../../../../pages/admin";
-import { CreateProject } from "../ui/CreateProject";
-import { ConfirmDelete } from "../ui/ConfirmDelete";
+import { I18nProvider } from "@modules/i18n";
 import { PROJECTS } from "@modules/projects";
 import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { test, vi } from "vite-plus/test";
+
+import AdminPage from "../../../../pages/admin";
+import { ConfirmDelete } from "../ui/ConfirmDelete";
+import { CreateProject } from "../ui/CreateProject";
 vi.mock("@void/react", () => ({
   Link: ({ children, ...props }: { children: ReactNode; href: string }) => (
     <a {...props}>{children}</a>

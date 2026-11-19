@@ -1,4 +1,5 @@
 import { createTranslator, DEFAULT_LOCALE, type Translator } from "@modules/i18n";
+
 import type { Project } from "../model/project";
 
 export function createProjects(t: Translator): Project[] {

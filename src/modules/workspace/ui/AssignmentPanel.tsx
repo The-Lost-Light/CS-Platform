@@ -1,8 +1,8 @@
+import { useI18n } from "@modules/i18n";
+import type { Project } from "@modules/projects";
 import { Download } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
 
 export function AssignmentPanel({ project }: { project: Project }) {
   const { t } = useI18n();

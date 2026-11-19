@@ -1,7 +1,8 @@
-import type { RepoBundle } from "../model/repository";
 import { useI18n } from "@modules/i18n";
-import { RepoFileTree } from "./RepoFileTree";
 import { FolderTree, GitBranch } from "lucide-react";
+
+import type { RepoBundle } from "../model/repository";
+import { RepoFileTree } from "./RepoFileTree";
 
 export function RepositoryTree({
   repo,

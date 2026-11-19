@@ -1,11 +1,12 @@
-import type { WorkspaceSnapshot } from "../model/personalWorkspace";
-import { useProjectDraft } from "./useProjectDraft";
 import {
   useRepository,
   fetchGitHubProjectBundle,
   type GitHubProjectLoader,
 } from "@modules/repository";
 import { useEffect, useState } from "react";
+
+import type { WorkspaceSnapshot } from "../model/personalWorkspace";
+import { useProjectDraft } from "./useProjectDraft";
 
 export function useProjectWorkspace(
   snapshot: WorkspaceSnapshot,

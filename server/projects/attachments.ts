@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
-import { and, db, eq } from "void/db";
+
 import { projectAttachmentParts as parts } from "@db/schema";
+import { and, db, eq } from "void/db";
 
 export const attachmentMetadata = { id: parts.attachmentId, name: parts.name, size: parts.size };
 

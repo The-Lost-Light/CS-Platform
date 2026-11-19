@@ -1,8 +1,9 @@
+import { isUniqueViolation } from "@server/errors";
 import { isRecord } from "@shared/isRecord";
 import { isValidPasswordLength, MAX_CURRENT_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 import { db, desc, eq, and, exists, sql } from "void/db";
+
 import { userTable, sessionTable, accountTable } from "../../.void/better-auth-schema";
-import { isUniqueViolation } from "@server/errors";
 
 // The predicate runs in the mutation statement, so concurrent administrators
 // cannot remove each other's access based on an outdated role/count check.

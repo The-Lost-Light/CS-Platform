@@ -2,12 +2,12 @@ import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { reactCompilerPreset } from "@vitejs/plugin-react";
 import { voidReact } from "@void/react/plugin";
-import { voidPlugin } from "void";
 import { defineConfig, lazyPlugins } from "vite-plus";
+import { voidPlugin } from "void";
 
 export default defineConfig({
   staged: { "*": "vp check --fix" },
-  fmt: {},
+  fmt: { sortImports: true },
   lint: {
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },

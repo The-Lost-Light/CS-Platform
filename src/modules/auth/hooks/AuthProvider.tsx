@@ -1,6 +1,7 @@
-import { serverAuthService, loadSession, signOut } from "../services/serverAuthService";
-import type { AuthService, LoginCredentials, LoginResult, User } from "../model/types";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+
+import type { AuthService, LoginCredentials, LoginResult, User } from "../model/types";
+import { serverAuthService, loadSession, signOut } from "../services/serverAuthService";
 
 interface AuthContextValue {
   currentUser: User | null;

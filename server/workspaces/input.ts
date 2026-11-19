@@ -1,7 +1,7 @@
-import { isRecord } from "@shared/isRecord";
 import { validateC4File, C4_FILE_MAX_BYTES } from "@modules/c4-model";
 import type { PersonalWorkspace } from "@modules/workspace";
 import { readLimitedText } from "@shared/http/readLimitedText";
+import { isRecord } from "@shared/isRecord";
 type WorkspaceInput =
   | { ok: true; draft: PersonalWorkspace; previous: string | null }
   | { ok: false; error: "tooLarge" | "invalid" | "repo" };

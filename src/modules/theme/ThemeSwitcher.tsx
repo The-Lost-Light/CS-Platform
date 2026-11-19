@@ -1,5 +1,6 @@
-import { Monitor, Sun, Moon } from "lucide-react";
 import { useI18n } from "@modules/i18n";
+import { Monitor, Sun, Moon } from "lucide-react";
+
 import { useTheme, type ThemeMode } from "./ThemeProvider";
 
 export function ThemeSwitcher({ size = "sm" }: { size?: "xs" | "sm" }) {

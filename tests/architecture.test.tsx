@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+
 import { test } from "vite-plus/test";
+
 import tsconfig from "../tsconfig.json";
 
 function files(directory: string): string[] {

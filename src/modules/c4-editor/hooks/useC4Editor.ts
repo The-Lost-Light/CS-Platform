@@ -1,6 +1,3 @@
-import { useNodeDrawing } from "./useNodeDrawing";
-import { applyCanvasLayout, SCOPE_OFFSET } from "../model/canvasLayout";
-import { buildFlowElements } from "../model/flowElements";
 import {
   c4Drilldown,
   canExploreC4Node,
@@ -12,11 +9,15 @@ import {
   parseC4File,
 } from "@modules/c4-model";
 import { useI18n } from "@modules/i18n";
+import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xyflow/react";
+import { useEffect, useRef, useState } from "react";
+
+import { applyCanvasLayout, SCOPE_OFFSET } from "../model/canvasLayout";
+import { buildFlowElements } from "../model/flowElements";
 import type { CanvasNode } from "../model/flowTypes";
 import type { C4ArchitectProps } from "../model/types";
 import { downloadC4Model } from "../services/c4Download";
-import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xyflow/react";
-import { useEffect, useRef, useState } from "react";
+import { useNodeDrawing } from "./useNodeDrawing";
 
 export function useC4Editor({
   designDoc,

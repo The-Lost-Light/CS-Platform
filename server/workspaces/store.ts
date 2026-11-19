@@ -1,8 +1,8 @@
-import { db, eq, sql, and } from "void/db";
 import { workspaces, workspaceParts } from "@db/schema";
-import { availableProject } from "@server/projects";
-import { isUniqueViolation } from "@server/errors";
 import type { PersonalWorkspace, WorkspaceSnapshot } from "@modules/workspace";
+import { isUniqueViolation } from "@server/errors";
+import { availableProject } from "@server/projects";
+import { db, eq, sql, and } from "void/db";
 
 const workspaceKey = (userId: string, projectId: string) =>
   and(eq(workspaces.userId, userId), eq(workspaces.projectId, projectId));

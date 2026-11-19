@@ -1,3 +1,6 @@
+import assert from "node:assert/strict";
+
+import { WorkSpace } from "@app/Workspace";
 import {
   AuthProvider,
   useAuth,
@@ -9,9 +12,7 @@ import {
   AuthGate,
 } from "@modules/auth";
 import { I18nProvider, createTranslator } from "@modules/i18n";
-import { WorkSpace } from "@app/Workspace";
 import { ThemeProvider } from "@modules/theme";
-import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { test } from "vite-plus/test";
 

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { test } from "vite-plus/test";
+
 import { PROJECTS, getLocalizedProjects, mergeProjectCatalog } from "@modules/projects";
 import { isUniqueViolation } from "@server/errors";
+import { test } from "vite-plus/test";
 
 test("catalog includes templates and custom projects once, honoring template edits", () => {
   const edited = { ...PROJECTS[0], title: "Edited template" };

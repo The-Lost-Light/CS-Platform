@@ -1,6 +1,6 @@
+import { listProjects } from "@server/projects";
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
-import { listProjects } from "@server/projects";
 
 export const ssr = false;
 

@@ -1,8 +1,9 @@
-import { CheckCircle2, Code2 } from "lucide-react";
 import { useI18n, LanguageSwitcher } from "@modules/i18n";
 import { ThemeSwitcher } from "@modules/theme";
-import { LoginForm } from "./LoginForm";
+import { CheckCircle2, Code2 } from "lucide-react";
+
 import type { LoginHandler } from "../hooks/useLoginForm";
+import { LoginForm } from "./LoginForm";
 
 export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
   const { t } = useI18n();

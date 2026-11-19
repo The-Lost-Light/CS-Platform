@@ -1,6 +1,7 @@
-import { sqliteTable, text, integer, primaryKey, unique } from "void/schema-d1";
-import { userTable } from "../.void/better-auth-schema";
 import type { Project } from "@modules/projects";
+import { sqliteTable, text, integer, primaryKey, unique } from "void/schema-d1";
+
+import { userTable } from "../.void/better-auth-schema";
 
 export const projects = sqliteTable("course_project", {
   id: text("id").primaryKey(),

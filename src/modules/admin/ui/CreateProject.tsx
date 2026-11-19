@@ -1,4 +1,3 @@
-import { Link } from "@void/react";
 import { useI18n } from "@modules/i18n";
 import {
   MAX_ATTACHMENTS,
@@ -6,6 +5,8 @@ import {
   MAX_CONTENT_LENGTH,
   type Project,
 } from "@modules/projects";
+import { Link } from "@void/react";
+
 import { useProjectForm } from "../hooks/useProjectForm";
 
 export function CreateProject({

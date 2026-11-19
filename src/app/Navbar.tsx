@@ -1,8 +1,8 @@
-import { Link } from "@void/react";
 import type { User } from "@modules/auth";
-import type { Project } from "@modules/projects";
 import { useI18n, LanguageSwitcher } from "@modules/i18n";
+import type { Project } from "@modules/projects";
 import { ThemeSwitcher } from "@modules/theme";
+import { Link } from "@void/react";
 import { Code2, FolderGit2, Home, LogOut } from "lucide-react";
 
 export function Navbar({

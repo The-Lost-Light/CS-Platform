@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { writeFileSync, unlinkSync } from "node:fs";
+
 import { hashPassword } from "better-auth/crypto";
 
 // Run against a local Void dev server with its local D1 migrations applied.

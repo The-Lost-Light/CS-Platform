@@ -1,7 +1,8 @@
-import { ShieldCheck } from "lucide-react";
-import { DEMO_ACCOUNTS } from "../services/demoAccounts";
-import type { User } from "../model/types";
 import { useI18n } from "@modules/i18n";
+import { ShieldCheck } from "lucide-react";
+
+import type { User } from "../model/types";
+import { DEMO_ACCOUNTS } from "../services/demoAccounts";
 
 export function DemoAccountPicker({
   selectedAccount,

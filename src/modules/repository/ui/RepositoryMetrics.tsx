@@ -1,6 +1,7 @@
-import type { RepoBundle } from "../model/repository";
 import { useI18n } from "@modules/i18n";
 import { AlertCircle, Code2, FolderTree, GitBranch, GitFork, Star } from "lucide-react";
+
+import type { RepoBundle } from "../model/repository";
 
 export function RepositoryMetrics({
   repo,

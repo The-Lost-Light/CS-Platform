@@ -1,13 +1,15 @@
-import { splitPatch } from "../model/diff";
+import assert from "node:assert/strict";
+
 import { I18nProvider } from "@modules/i18n";
+import { renderToStaticMarkup } from "react-dom/server";
+import { test } from "vite-plus/test";
+
+import { createRepoFixture } from "../../../../tests/fixtures/repository";
+import { splitPatch } from "../model/diff";
+import { createGitHubService } from "../services/github";
 import { CommitHistory } from "../ui/CommitHistory";
 import { GitHubRepoDashboard } from "../ui/GitHubRepoDashboard";
 import { RepoDiff } from "../ui/RepoDiff";
-import { createGitHubService } from "../services/github";
-import assert from "node:assert/strict";
-import { renderToStaticMarkup } from "react-dom/server";
-import { test } from "vite-plus/test";
-import { createRepoFixture } from "../../../../tests/fixtures/repository";
 
 test("split diff pairs replacements and pads unequal changes within each hunk", () => {
   const rows = splitPatch("@@ -1,3 +1,2 @@\n same\n-old\n-extra\n+new\n@@ -9,0 +9 @@\n+added");

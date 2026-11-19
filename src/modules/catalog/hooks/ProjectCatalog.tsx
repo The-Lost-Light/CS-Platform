@@ -1,6 +1,7 @@
-import { createContext, useContext, type ReactNode } from "react";
-import type { Project } from "@modules/projects";
 import { useI18n } from "@modules/i18n";
+import type { Project } from "@modules/projects";
+import { createContext, useContext, type ReactNode } from "react";
+
 import { useCatalogState } from "./useCatalogState";
 
 const CatalogContext = createContext<{

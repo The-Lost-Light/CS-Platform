@@ -1,7 +1,7 @@
-import { defineHandler } from "void";
-import { requireAuth } from "void/auth";
 import { allowsAdminMutation } from "@server/access";
 import { saveProject, listProjects, readProjectInput } from "@server/projects";
+import { defineHandler } from "void";
+import { requireAuth } from "void/auth";
 
 export const GET = defineHandler(async (c) => {
   requireAuth(c);

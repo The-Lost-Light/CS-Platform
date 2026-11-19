@@ -1,5 +1,6 @@
 import type { C4Node } from "@modules/c4-model";
 import type { NodeChangeset } from "@xyflow/react";
+
 import type { CanvasNode } from "./flowTypes";
 
 export const BOUNDARY_ID = "__c4_boundary__";

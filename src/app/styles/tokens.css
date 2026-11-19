@@ -1,180 +1,222 @@
 :root {
   color-scheme: light;
 
-  /* 背景與容器層級 (Canvas & Surface Tokens) */
-  --bg-canvas: #f0f4f9;
+  /* Canvas & Tonal Surface Hierarchy (Material You 3 Light) */
+  --bg-canvas: #f3f5fa;
   --surface: #ffffff;
-  --surface-sunken: #f8fafd;
-  --surface-container: #f0f4f9;
-  --surface-container-high: #f0f4f9;
-  --surface-hover: rgba(243, 237, 247, 0.6);
+  --surface-sunken: #f7f8fc;
+  --surface-container: #eef0f7;
+  --surface-container-high: #e5e8f2;
+  --surface-container-highest: #dce0ed;
   --surface-tonal: #f3edf7;
+  --surface-hover: rgba(103, 80, 164, 0.08);
+  --surface-active: rgba(103, 80, 164, 0.12);
 
-  /* 文字與圖示層級 (Typography & Iconography Tokens) */
-  --on-surface: #1f1f1f;
-  --on-surface-muted: #444746;
-  --on-surface-subtle: #5e5e5e;
+  /* Typography & Iconography */
+  --on-surface: #1c1b1f;
+  --on-surface-muted: #49454f;
+  --on-surface-subtle: #6f6a77;
 
-  /* 邊框與分隔線 (Outline & Divider Tokens) */
-  --outline: #e2e8f0;
-  --outline-subtle: rgba(226, 232, 240, 0.9);
-  --outline-tonal: #eaddff;
+  /* Outlines & Dividers */
+  --outline: #c8cbd6;
+  --outline-subtle: #e3e5ef;
+  --outline-tonal: #e3d6f7;
 
-  /* 主強調色：Material 3 Purple (Primary Accent Tokens) */
+  /* Primary Accent: Material You 3 Violet */
   --primary: #6750a4;
-  --primary-hover: #4f378b;
+  --primary-hover: #563f94;
   --on-primary: #ffffff;
   --primary-container: #eaddff;
-  --on-primary-container: #4f378b;
-  --primary-outline: #eaddff;
+  --primary-container-hover: #dfd0fc;
+  --on-primary-container: #381e72;
+  --primary-outline: #d0bcff;
 
-  /* 次強調色：Material 3 Blue (Secondary / Info Accent Tokens) */
+  /* Secondary Accent: Material You 3 Cobalt */
   --secondary: #0b57d0;
   --secondary-hover: #0842a0;
   --on-secondary: #ffffff;
   --secondary-container: #d3e3fd;
+  --secondary-container-hover: #c2d7fb;
   --on-secondary-container: #041e49;
   --secondary-outline: #a8c7fa;
-  --brand-banner: #0b57d0;
-  --on-brand-banner-muted: #d3e3fd;
 
-  /* 語意狀態色：成功 / 警告 / 錯誤 (Semantic Status Tokens) */
-  --success: #137333;
-  --success-container: #ceead6;
-  --on-success-container: #0d652d;
-  --success-outline: #81c995;
+  /* Brand Banner */
+  --brand-banner: #533b96;
+  --brand-banner-accent: #6750a4;
+  --on-brand-banner: #ffffff;
+  --on-brand-banner-muted: #eaddff;
 
-  --warning: #b06000;
-  --warning-container: #fef7e0;
-  --on-warning-container: #b06000;
-  --warning-outline: #fdd663;
+  /* Semantic Status Tokens */
+  --success: #146c2e;
+  --on-success: #ffffff;
+  --success-container: #d7f3df;
+  --on-success-container: #0c5222;
+  --success-outline: #86cfa0;
 
-  --danger: #c5221f;
-  --danger-container: #fad2cf;
-  --on-danger-container: #b3261e;
-  --danger-outline: #f28b82;
+  --warning: #9a5700;
+  --on-warning: #ffffff;
+  --warning-container: #fef3d6;
+  --on-warning-container: #734000;
+  --warning-outline: #f5c65c;
 
-  /* C4 架構圖與視覺化統計圖表專用變數 (C4 & Visualization Tokens) */
+  --danger: #b3261e;
+  --danger-hover: #8c1d18;
+  --on-danger: #ffffff;
+  --danger-container: #f9dedc;
+  --danger-container-hover: #f2c8c5;
+  --on-danger-container: #410e0b;
+  --danger-outline: #e4a39e;
+
+  /* M3 Elevation Shadows */
+  --elevation-1: 0 1px 2px rgba(28, 27, 31, 0.06), 0 1px 3px 1px rgba(28, 27, 31, 0.04);
+  --elevation-2: 0 2px 6px 2px rgba(28, 27, 31, 0.06), 0 1px 2px rgba(28, 27, 31, 0.08);
+  --elevation-3: 0 4px 12px 3px rgba(28, 27, 31, 0.1), 0 1px 3px rgba(28, 27, 31, 0.08);
+
+  /* C4 Architecture & Visualization */
   --c4-person-bg: #ffffff;
   --c4-system-bg: #ffffff;
-  --c4-container-bg: #f8fafd;
-  --c4-component-bg: #f8fafd;
-  --c4-internal-bg: #e4eafe;
-  --c4-external-bg: #e4e5e9;
+  --c4-container-bg: #f7f8fc;
+  --c4-component-bg: #f7f8fc;
+  --c4-internal-bg: #e7eefe;
+  --c4-external-bg: #eceef2;
   --c4-expandable-bg: #ffffff;
   --c4-expandable-border: #0b57d0;
-  --c4-leaf-bg: #f8fafd;
+  --c4-leaf-bg: #f7f8fc;
   --c4-leaf-border: rgba(103, 80, 164, 0.6);
   --c4-edge: #6750a4;
   --c4-edge-selected: #0b57d0;
   --c4-edge-label-bg: #f3edf7;
-  --c4-grid: #94a3b8;
+  --c4-grid: #b4bac9;
 
   --chart-1: #0b57d0;
   --chart-2: #6750a4;
-  --chart-3: #137333;
-  --chart-4: #b06000;
+  --chart-3: #146c2e;
+  --chart-4: #9a5700;
   --chart-5: #006a60;
 
-  /* 捲軸色票 (Scrollbar Tokens) */
-  --scrollbar-thumb: #c4c7c5;
-  --scrollbar-thumb-hover: #8e918f;
+  /* Scrollbars */
+  --scrollbar-thumb: #c8cbd6;
+  --scrollbar-thumb-hover: #969aa8;
 }
 
 .dark {
   color-scheme: dark;
 
-  /* 背景與容器層級 */
-  --bg-canvas: #121316;
-  --surface: #1e1f23;
-  --surface-sunken: #121316;
-  --surface-container: #121316;
-  --surface-container-high: #282a2f;
-  --surface-hover: #282a2f;
-  --surface-tonal: rgba(79, 55, 139, 0.4);
+  /* Canvas & Tonal Surface Hierarchy (Material You 3 Dark) */
+  --bg-canvas: #121318;
+  --surface: #1b1c22;
+  --surface-sunken: #15161b;
+  --surface-container: #22242c;
+  --surface-container-high: #2b2d37;
+  --surface-container-highest: #353844;
+  --surface-tonal: #2a2438;
+  --surface-hover: rgba(208, 188, 255, 0.08);
+  --surface-active: rgba(208, 188, 255, 0.14);
 
-  /* 文字與圖示層級 */
-  --on-surface: #e3e2e6;
-  --on-surface-muted: #c4c7c5;
-  --on-surface-subtle: #8e918f;
+  /* Typography & Iconography */
+  --on-surface: #e6e1e5;
+  --on-surface-muted: #cac4d0;
+  --on-surface-subtle: #938f99;
 
-  /* 邊框與分隔線 */
-  --outline: #33353a;
-  --outline-subtle: #33353a;
-  --outline-tonal: rgba(103, 80, 164, 0.5);
+  /* Outlines & Dividers */
+  --outline: #494a56;
+  --outline-subtle: #2f313b;
+  --outline-tonal: #4a3b72;
 
-  /* 主強調色：Material 3 Purple */
+  /* Primary Accent: Material You 3 Violet */
   --primary: #d0bcff;
-  --primary-hover: #eaddff;
+  --primary-hover: #e2d4ff;
   --on-primary: #381e72;
   --primary-container: #4f378b;
+  --primary-container-hover: #5e44a0;
   --on-primary-container: #eaddff;
-  --primary-outline: #6750a4;
+  --primary-outline: #7f67be;
 
-  /* 次強調色：Material 3 Blue */
+  /* Secondary Accent: Material You 3 Cobalt */
   --secondary: #a8c7fa;
-  --secondary-hover: #d3e3fd;
-  --on-secondary: #041e49;
-  --secondary-container: #004a77;
-  --on-secondary-container: #c2e7ff;
-  --secondary-outline: #004a77;
-  --brand-banner: #0842a0;
-  --on-brand-banner-muted: #d3e3fd;
+  --secondary-hover: #c7dcff;
+  --on-secondary: #062e6f;
+  --secondary-container: #0842a0;
+  --secondary-container-hover: #0b52c4;
+  --on-secondary-container: #d3e3fd;
+  --secondary-outline: #4c74b9;
 
-  /* 語意狀態色：成功 / 警告 / 錯誤 */
+  /* Brand Banner */
+  --brand-banner: #332161;
+  --brand-banner-accent: #4f378b;
+  --on-brand-banner: #f6edff;
+  --on-brand-banner-muted: #d8c8f8;
+
+  /* Semantic Status Tokens */
   --success: #81c995;
-  --success-container: rgba(15, 82, 35, 0.5);
+  --on-success: #003915;
+  --success-container: #154524;
   --on-success-container: #c4eed0;
-  --success-outline: #137333;
+  --success-outline: #2e7d47;
 
   --warning: #fdd663;
-  --warning-container: rgba(89, 67, 0, 0.5);
-  --on-warning-container: #fce8b2;
-  --warning-outline: #b06000;
+  --on-warning: #412d00;
+  --warning-container: #4d3800;
+  --on-warning-container: #ffdf8c;
+  --warning-outline: #9a6e00;
 
   --danger: #f2b8b5;
-  --danger-container: rgba(140, 29, 24, 0.4);
-  --on-danger-container: #f2b8b5;
-  --danger-outline: #8c1d18;
+  --danger-hover: #f9dedc;
+  --on-danger: #601410;
+  --danger-container: #631b18;
+  --danger-container-hover: #7a2320;
+  --on-danger-container: #f9dedc;
+  --danger-outline: #a63a35;
 
-  /* C4 架構圖與視覺化統計圖表專用變數 */
-  --c4-person-bg: #1e1f23;
-  --c4-system-bg: #1e1f23;
-  --c4-container-bg: #121316;
-  --c4-component-bg: #121316;
-  --c4-internal-bg: #293550;
-  --c4-external-bg: #36373d;
-  --c4-expandable-bg: #1e1f23;
+  /* M3 Elevation Shadows */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px 1px rgba(0, 0, 0, 0.22);
+  --elevation-2: 0 2px 6px 2px rgba(0, 0, 0, 0.38), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --elevation-3: 0 6px 16px 4px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.35);
+
+  /* C4 Architecture & Visualization */
+  --c4-person-bg: #1b1c22;
+  --c4-system-bg: #1b1c22;
+  --c4-container-bg: #15161b;
+  --c4-component-bg: #15161b;
+  --c4-internal-bg: #25314d;
+  --c4-external-bg: #30333b;
+  --c4-expandable-bg: #1b1c22;
   --c4-expandable-border: #a8c7fa;
-  --c4-leaf-bg: #121316;
+  --c4-leaf-bg: #15161b;
   --c4-leaf-border: rgba(208, 188, 255, 0.6);
   --c4-edge: #d0bcff;
   --c4-edge-selected: #a8c7fa;
-  --c4-edge-label-bg: #282a2f;
-  --c4-grid: #33353a;
+  --c4-edge-label-bg: #2b2d37;
+  --c4-grid: #373a47;
 
-  --chart-1: #0b57d0;
-  --chart-2: #6750a4;
-  --chart-3: #137333;
-  --chart-4: #b06000;
-  --chart-5: #006a60;
+  --chart-1: #8ab4f8;
+  --chart-2: #d0bcff;
+  --chart-3: #81c995;
+  --chart-4: #fdd663;
+  --chart-5: #70d6c7;
 
-  /* 捲軸色票 */
-  --scrollbar-thumb: #444746;
-  --scrollbar-thumb-hover: #8e918f;
+  /* Scrollbars */
+  --scrollbar-thumb: #494a56;
+  --scrollbar-thumb-hover: #737585;
 }
 
 @theme {
   --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo;
 
-  /* 映射語意化 CSS Variables 為原生 Tailwind 工具類別 */
+  --shadow-m3-1: var(--elevation-1);
+  --shadow-m3-2: var(--elevation-2);
+  --shadow-m3-3: var(--elevation-3);
+
+  /* Semantic Color Mapping for Tailwind Utilities */
   --color-canvas: var(--bg-canvas);
   --color-surface: var(--surface);
   --color-surface-sunken: var(--surface-sunken);
   --color-surface-container: var(--surface-container);
   --color-surface-high: var(--surface-container-high);
+  --color-surface-highest: var(--surface-container-highest);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
   --color-surface-tonal: var(--surface-tonal);
 
   --color-on-surface: var(--on-surface);
@@ -189,6 +231,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-on-primary: var(--on-primary);
   --color-primary-container: var(--primary-container);
+  --color-primary-container-hover: var(--primary-container-hover);
   --color-on-primary-container: var(--on-primary-container);
   --color-primary-outline: var(--primary-outline);
 
@@ -196,23 +239,32 @@
   --color-secondary-hover: var(--secondary-hover);
   --color-on-secondary: var(--on-secondary);
   --color-secondary-container: var(--secondary-container);
+  --color-secondary-container-hover: var(--secondary-container-hover);
   --color-on-secondary-container: var(--on-secondary-container);
   --color-secondary-outline: var(--secondary-outline);
+
   --color-brand-banner: var(--brand-banner);
+  --color-brand-banner-accent: var(--brand-banner-accent);
+  --color-on-brand-banner: var(--on-brand-banner);
   --color-on-brand-banner-muted: var(--on-brand-banner-muted);
 
   --color-success: var(--success);
+  --color-on-success: var(--on-success);
   --color-success-container: var(--success-container);
   --color-on-success-container: var(--on-success-container);
   --color-success-outline: var(--success-outline);
 
   --color-warning: var(--warning);
+  --color-on-warning: var(--on-warning);
   --color-warning-container: var(--warning-container);
   --color-on-warning-container: var(--on-warning-container);
   --color-warning-outline: var(--warning-outline);
 
   --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-on-danger: var(--on-danger);
   --color-danger-container: var(--danger-container);
+  --color-danger-container-hover: var(--danger-container-hover);
   --color-on-danger-container: var(--on-danger-container);
   --color-danger-outline: var(--danger-outline);
 }

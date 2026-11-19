@@ -36,8 +36,8 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
             ? "var(--c4-expandable-border)"
             : "var(--c4-leaf-border)",
       }}
-      className={`rounded-2xl border-2 p-4 shadow-xs transition-colors flex flex-col justify-between text-on-surface ${
-        selected ? "ring-4 ring-primary/30 shadow-md" : "hover:shadow-md"
+      className={`rounded-[20px] border-2 p-4 shadow-m3-1 transition-all flex flex-col justify-between text-on-surface ${
+        selected ? "ring-4 ring-primary/25 shadow-m3-2" : "hover:shadow-m3-2"
       }`}
     >
       <NodeResizer isVisible={selected} minWidth={200} minHeight={160} color="var(--primary)" />
@@ -49,11 +49,9 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
       <div className="min-h-0 overflow-y-auto nowheel">
         <div className="flex items-center justify-between gap-2">
           <span
-            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono ${
-              data.expandable
-                ? "bg-secondary-container text-on-secondary-container"
-                : "bg-primary-container text-on-primary-container"
-            }`}
+            className={`${
+              data.expandable ? "ui-chip-secondary" : "ui-chip-primary"
+            } px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider font-mono`}
           >
             {data.kind} · {data.boundaryLabel}
           </span>
@@ -63,9 +61,9 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
             }`}
           />
         </div>
-        <div className="mt-2 text-sm font-bold text-on-surface wrap-break-word">{data.title}</div>
+        <div className="mt-2.5 text-sm font-bold text-on-surface wrap-break-word">{data.title}</div>
         {data.technology && (
-          <div className="mt-1.5 inline-block px-2 py-0.5 rounded-md bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
+          <div className="mt-1.5 inline-block px-2.5 py-0.5 rounded-lg bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
             [{data.technology}]
           </div>
         )}
@@ -74,7 +72,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         </p>
       </div>
       {data.status && (
-        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline pt-2 text-[11px] font-mono text-secondary wrap-break-word">
+        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline-subtle pt-2 text-[11px] font-mono text-secondary wrap-break-word">
           {data.status}
         </p>
       )}
@@ -89,7 +87,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
 
 function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
   return (
-    <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary bg-primary/5 cursor-move">
+    <div className="c4-boundary-drag h-full w-full rounded-[24px] border-2 border-dashed border-primary/70 bg-primary/5 cursor-move">
       <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
       <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
     </div>

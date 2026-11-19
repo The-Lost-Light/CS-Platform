@@ -1,5 +1,13 @@
 import { LoadingPanel } from "@shared/ui/LoadingPanel";
-import { ChevronRight, Download, FileText, Network, Upload } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronRight,
+  Download,
+  FileText,
+  Network,
+  Upload,
+} from "lucide-react";
 import { lazy, Suspense } from "react";
 
 import { useC4Editor } from "../hooks/useC4Editor";
@@ -32,13 +40,9 @@ export function C4Architect(props: C4ArchitectProps) {
   } = editor;
   return (
     <div className="space-y-5">
-      <div className="ui-card rounded-t-none p-4 sm:p-5 space-y-4">
+      <div className="ui-card rounded-t-none border-t border-outline-subtle p-4 sm:px-6 sm:py-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div
-            className="ui-pill-group gap-1"
-            role="tablist"
-            aria-label={t("workspace.tabs.design")}
-          >
+          <div className="ui-pill-group" role="tablist" aria-label={t("workspace.tabs.design")}>
             <button
               type="button"
               role="tab"
@@ -46,13 +50,11 @@ export function C4Architect(props: C4ArchitectProps) {
               aria-controls="design-panel-readme"
               aria-selected={designTab === "readme"}
               onClick={() => setDesignTab("readme")}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                designTab === "readme"
-                  ? "bg-secondary text-on-secondary shadow-2xs"
-                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
+              className={`ui-pill-item px-4 ${
+                designTab === "readme" ? "ui-pill-item-active" : "ui-pill-item-idle"
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText aria-hidden="true" className="w-3.5 h-3.5" />
               <span>README.md</span>
             </button>
             <button
@@ -62,20 +64,18 @@ export function C4Architect(props: C4ArchitectProps) {
               aria-controls="design-panel-diagram"
               aria-selected={designTab === "diagram"}
               onClick={() => setDesignTab("diagram")}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-                designTab === "diagram"
-                  ? "bg-primary text-on-primary shadow-2xs"
-                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
+              className={`ui-pill-item px-4 ${
+                designTab === "diagram" ? "ui-pill-item-active" : "ui-pill-item-idle"
               }`}
             >
-              <Network className="w-3.5 h-3.5" />
+              <Network aria-hidden="true" className="w-3.5 h-3.5" />
               <span>C4 Model</span>
             </button>
           </div>
         </div>
 
         {designTab === "diagram" && (
-          <div className="border-t border-outline pt-3.5 space-y-3">
+          <div className="border-t border-outline-subtle pt-3.5 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <nav
                 aria-label="Breadcrumb"
@@ -85,7 +85,7 @@ export function C4Architect(props: C4ArchitectProps) {
                   type="button"
                   onClick={() => navigate("")}
                   aria-current={!scope ? "page" : undefined}
-                  className="px-3 py-1 rounded-full font-mono text-xs transition border border-outline bg-surface-sunken text-secondary hover:bg-secondary-container/60 aria-[current=page]:bg-secondary-container aria-[current=page]:text-on-secondary-container aria-[current=page]:border-secondary aria-[current=page]:font-bold"
+                  className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface-sunken text-on-muted hover:bg-surface-hover hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold"
                 >
                   C1 · Context
                 </button>
@@ -96,7 +96,7 @@ export function C4Architect(props: C4ArchitectProps) {
                       type="button"
                       onClick={() => navigate(node.id)}
                       aria-current={node.id === scope?.id ? "page" : undefined}
-                      className="px-3 py-1 rounded-full font-mono text-xs transition border border-outline bg-surface-sunken text-primary hover:bg-primary-container/60 aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary aria-[current=page]:font-bold"
+                      className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface-sunken text-on-muted hover:bg-surface-hover hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold"
                     >
                       C{index + 2} · {node.label}
                     </button>
@@ -111,7 +111,7 @@ export function C4Architect(props: C4ArchitectProps) {
                   onClick={() => fileInput.current?.click()}
                   className="ui-btn-tonal"
                 >
-                  <Upload className="w-3.5 h-3.5 text-secondary" />
+                  <Upload aria-hidden="true" className="w-3.5 h-3.5" />
                   <span>{t(importing ? "c4.importing" : "c4.importModel")}</span>
                 </button>
                 <button
@@ -120,7 +120,7 @@ export function C4Architect(props: C4ArchitectProps) {
                   onClick={exportModel}
                   className="ui-btn-tonal"
                 >
-                  <Download className="w-3.5 h-3.5 text-primary" />
+                  <Download aria-hidden="true" className="w-3.5 h-3.5" />
                   <span>{t("c4.exportModel")}</span>
                 </button>
                 <input
@@ -139,16 +139,21 @@ export function C4Architect(props: C4ArchitectProps) {
             </div>
 
             {fileStatus && (
-              <p
+              <div
                 role={fileStatus === "importSuccess" ? "status" : "alert"}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold border ${
-                  fileStatus === "importSuccess"
-                    ? "bg-success-container border-success-outline text-on-success-container"
-                    : "bg-danger-container border-danger-outline text-on-danger-container"
-                }`}
+                className={
+                  fileStatus === "importSuccess" ? "ui-banner-success" : "ui-banner-danger"
+                }
               >
-                {t(`c4.${fileStatus}`)}
-              </p>
+                <div className="flex items-center gap-2">
+                  {fileStatus === "importSuccess" ? (
+                    <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{t(`c4.${fileStatus}`)}</span>
+                </div>
+              </div>
             )}
           </div>
         )}

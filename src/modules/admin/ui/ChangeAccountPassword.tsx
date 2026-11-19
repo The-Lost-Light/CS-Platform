@@ -1,5 +1,6 @@
 import { useI18n, type MessageKey } from "@modules/i18n";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@shared/passwordPolicy";
+import { AlertCircle, CheckCircle2, KeyRound, X } from "lucide-react";
 import { useId, useRef, useState, type FormEvent } from "react";
 
 export function ChangeAccountPassword({
@@ -76,64 +77,101 @@ export function ChangeAccountPassword({
           dialog.current?.showModal();
         }}
       >
-        {t("admin.changePassword")}
+        <KeyRound aria-hidden="true" className="w-3.5 h-3.5" />
+        <span>{t("admin.changePassword")}</span>
       </button>
       {saved && (
-        <p className="col-span-full" role="status">
-          {t("admin.passwordChanged")}
-        </p>
+        <div className="col-span-full ui-banner-success mt-2" role="status">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
+            <span>{t("admin.passwordChanged")}</span>
+          </div>
+        </div>
       )}
       <dialog
         ref={dialog}
         aria-labelledby={id}
-        className="ui-card fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md p-6 backdrop:bg-black/50"
+        className="ui-dialog fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md p-0 overflow-hidden"
         onCancel={(event) => {
           if (pending) event.preventDefault();
         }}
         onClose={() => form.current?.reset()}
       >
-        <form ref={form} onSubmit={submit} className="space-y-4">
-          <h3 id={id} className="text-lg font-bold wrap-break-word">
-            {t("admin.changePasswordFor", { email })}
-          </h3>
-          <fieldset disabled={pending} className="space-y-4">
-            <label className="block">
-              {t("admin.currentPassword")}
-              <input
-                className="ui-input mt-1"
-                name="currentPassword"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </label>
-            <label className="block">
-              {t("admin.newPassword")}
-              <input
-                className="ui-input mt-1"
-                name="newPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={MIN_PASSWORD_LENGTH}
-                maxLength={MAX_PASSWORD_LENGTH}
-                aria-describedby={`${id}-limits`}
-              />
-            </label>
-            <p id={`${id}-limits`} className="text-sm text-on-muted">
-              {t("admin.passwordHelp", limits)}
-            </p>
-            <p className="text-sm text-on-muted">
-              {t(isSelf ? "admin.selfPasswordHelp" : "admin.accountEditHelp")}
-            </p>
-            {error && <p role="alert">{t(error, limits)}</p>}
-            <button type="submit" className="ui-btn-primary px-5 py-2">
-              {t(pending ? "common.loading" : "admin.savePassword")}
+        <form ref={form} onSubmit={submit}>
+          <div className="ui-card-header flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="ui-icon-badge w-8 h-8">
+                <KeyRound aria-hidden="true" className="w-4 h-4" />
+              </div>
+              <h3
+                id={id}
+                className="text-base font-bold text-on-primary-container wrap-break-word min-w-0"
+              >
+                {t("admin.changePasswordFor", { email })}
+              </h3>
+            </div>
+            <button
+              type="button"
+              aria-label={t("admin.cancel")}
+              className="ui-btn-icon w-8 h-8 shrink-0"
+              onClick={() => dialog.current?.close()}
+            >
+              <X aria-hidden="true" className="w-4 h-4" />
             </button>
-            <button type="button" className="px-5 py-2" onClick={() => dialog.current?.close()}>
-              {t("admin.cancel")}
-            </button>
-          </fieldset>
+          </div>
+          <div className="p-6">
+            <fieldset disabled={pending} className="space-y-4">
+              <label className="ui-field-label">
+                {t("admin.currentPassword")}
+                <input
+                  className="ui-input mt-1.5"
+                  name="currentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                />
+              </label>
+              <label className="ui-field-label">
+                {t("admin.newPassword")}
+                <input
+                  className="ui-input mt-1.5"
+                  name="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  maxLength={MAX_PASSWORD_LENGTH}
+                  aria-describedby={`${id}-limits`}
+                />
+              </label>
+              <p id={`${id}-limits`} className="ui-field-help">
+                {t("admin.passwordHelp", limits)}
+              </p>
+              <p className="ui-field-help">
+                {t(isSelf ? "admin.selfPasswordHelp" : "admin.accountEditHelp")}
+              </p>
+              {error && (
+                <div role="alert" className="ui-banner-danger">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
+                    <span>{t(error, limits)}</span>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  className="ui-btn-text-muted"
+                  onClick={() => dialog.current?.close()}
+                >
+                  {t("admin.cancel")}
+                </button>
+                <button type="submit" className="ui-btn-primary">
+                  {t(pending ? "common.loading" : "admin.savePassword")}
+                </button>
+              </div>
+            </fieldset>
+          </div>
         </form>
       </dialog>
     </>

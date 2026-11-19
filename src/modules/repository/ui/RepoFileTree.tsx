@@ -16,23 +16,26 @@ function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searc
             <details open={searching || undefined} className="group/folder">
               <summary
                 title={node.path}
-                className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-2 text-on-surface hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden"
+                className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-2.5 py-2 text-on-surface hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary transition-colors [&::-webkit-details-marker]:hidden"
               >
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform group-open/folder:rotate-90" />
-                <Folder className="h-3.5 w-3.5 shrink-0 text-success" />
+                <ChevronRight
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 shrink-0 transition-transform group-open/folder:rotate-90"
+                />
+                <Folder aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-success" />
                 <span className="truncate">{node.name}</span>
               </summary>
-              <div className="ml-3 border-l border-outline pl-2">
+              <div className="ml-3 border-l border-outline-subtle pl-2">
                 <TreeEntries nodes={node.children} searching={searching} />
               </div>
             </details>
           ) : (
             <div
               title={node.path}
-              className="flex items-center justify-between gap-2 rounded-lg py-2 pl-7 pr-2 text-on-surface hover:bg-surface-hover"
+              className="flex items-center justify-between gap-2 rounded-xl py-2 pl-7 pr-2.5 text-on-surface hover:bg-surface-hover transition-colors"
             >
               <div className="flex min-w-0 items-center gap-2">
-                <FileCode2 className="h-3.5 w-3.5 shrink-0 text-secondary" />
+                <FileCode2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-secondary" />
                 <span className="truncate">{node.name}</span>
               </div>
               {node.size !== undefined && (

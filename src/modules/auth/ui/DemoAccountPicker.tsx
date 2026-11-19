@@ -14,9 +14,9 @@ export function DemoAccountPicker({
   const { t } = useI18n();
 
   return (
-    <div className="pt-4 border-t border-outline space-y-2.5">
+    <div className="pt-4 border-t border-outline-subtle space-y-2.5">
       <div className="text-xs font-semibold text-on-muted flex items-center gap-1.5">
-        <ShieldCheck className="w-4 h-4 text-secondary" />
+        <ShieldCheck aria-hidden="true" className="w-4 h-4 text-primary" />
         <span>{t("auth.demoAccounts")}</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -25,10 +25,10 @@ export function DemoAccountPicker({
             key={account.id}
             type="button"
             onClick={() => onSelect(account)}
-            className={`p-2.5 rounded-2xl border text-left transition flex items-center gap-2.5 ${
+            className={`p-2.5 rounded-2xl border text-left transition-colors cursor-pointer flex items-center gap-2.5 ${
               selectedAccount === account.studentId
-                ? "bg-secondary-container/60 border-secondary text-on-secondary-container"
-                : "bg-surface-sunken hover:bg-surface-hover border-outline text-on-surface"
+                ? "bg-primary-container border-primary-outline text-on-primary-container"
+                : "bg-surface-sunken hover:bg-surface-hover border-outline-subtle text-on-surface"
             }`}
           >
             <div

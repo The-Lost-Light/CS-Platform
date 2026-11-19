@@ -10,59 +10,74 @@ export function RepositoryMetrics({
 }: Pick<RepoBundle, "repo" | "branches" | "fileTree">) {
   const { t, locale } = useI18n();
   return (
-    <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t("github.stars")}</span>
-            <Star className="w-3.5 h-3.5 text-warning" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {repo.stargazers_count?.toLocaleString(locale) || 0}
-          </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="ui-card-sm">
+        <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
+          <span>{t("github.stars")}</span>
+          <span className="w-7 h-7 rounded-xl bg-warning-container text-on-warning-container inline-flex items-center justify-center shrink-0">
+            <Star aria-hidden="true" className="w-3.5 h-3.5" />
+          </span>
         </div>
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t("github.forks")}</span>
-            <GitFork className="w-3.5 h-3.5 text-secondary" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {repo.forks_count?.toLocaleString(locale) || 0}
-          </div>
-        </div>
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t("github.openIssues")}</span>
-            <AlertCircle className="w-3.5 h-3.5 text-danger" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">
-            {repo.open_issues_count?.toLocaleString(locale) || 0}
-          </div>
-        </div>
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t("github.branches")}</span>
-            <GitBranch className="w-3.5 h-3.5 text-success" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">{branches.length}</div>
-        </div>
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t("github.totalFiles")}</span>
-            <FolderTree className="w-3.5 h-3.5 text-secondary" />
-          </div>
-          <div className="text-lg font-bold text-on-surface font-mono mt-1">{fileTree.length}</div>
-        </div>
-        <div className="ui-card-sm">
-          <div className="text-xs font-medium text-on-muted flex items-center justify-between">
-            <span>{t("github.primaryLanguage")}</span>
-            <Code2 className="w-3.5 h-3.5 text-primary" />
-          </div>
-          <div className="text-lg font-bold text-on-surface mt-1 truncate">
-            {repo.language || "TypeScript"}
-          </div>
+        <div className="text-xl font-bold text-on-surface font-mono mt-2">
+          {repo.stargazers_count?.toLocaleString(locale) || 0}
         </div>
       </div>
-    </>
+
+      <div className="ui-card-sm">
+        <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
+          <span>{t("github.forks")}</span>
+          <span className="w-7 h-7 rounded-xl bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
+            <GitFork aria-hidden="true" className="w-3.5 h-3.5" />
+          </span>
+        </div>
+        <div className="text-xl font-bold text-on-surface font-mono mt-2">
+          {repo.forks_count?.toLocaleString(locale) || 0}
+        </div>
+      </div>
+
+      <div className="ui-card-sm">
+        <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
+          <span>{t("github.openIssues")}</span>
+          <span className="w-7 h-7 rounded-xl bg-danger-container text-on-danger-container inline-flex items-center justify-center shrink-0">
+            <AlertCircle aria-hidden="true" className="w-3.5 h-3.5" />
+          </span>
+        </div>
+        <div className="text-xl font-bold text-on-surface font-mono mt-2">
+          {repo.open_issues_count?.toLocaleString(locale) || 0}
+        </div>
+      </div>
+
+      <div className="ui-card-sm">
+        <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
+          <span>{t("github.branches")}</span>
+          <span className="w-7 h-7 rounded-xl bg-success-container text-on-success-container inline-flex items-center justify-center shrink-0">
+            <GitBranch aria-hidden="true" className="w-3.5 h-3.5" />
+          </span>
+        </div>
+        <div className="text-xl font-bold text-on-surface font-mono mt-2">{branches.length}</div>
+      </div>
+
+      <div className="ui-card-sm">
+        <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
+          <span>{t("github.totalFiles")}</span>
+          <span className="w-7 h-7 rounded-xl bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
+            <FolderTree aria-hidden="true" className="w-3.5 h-3.5" />
+          </span>
+        </div>
+        <div className="text-xl font-bold text-on-surface font-mono mt-2">{fileTree.length}</div>
+      </div>
+
+      <div className="ui-card-sm">
+        <div className="text-xs font-medium text-on-muted flex items-center justify-between gap-2">
+          <span>{t("github.primaryLanguage")}</span>
+          <span className="w-7 h-7 rounded-xl bg-primary-container text-on-primary-container inline-flex items-center justify-center shrink-0">
+            <Code2 aria-hidden="true" className="w-3.5 h-3.5" />
+          </span>
+        </div>
+        <div className="text-xl font-bold text-on-surface mt-2 truncate">
+          {repo.language || "TypeScript"}
+        </div>
+      </div>
+    </div>
   );
 }

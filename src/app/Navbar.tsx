@@ -3,7 +3,7 @@ import { useI18n, LanguageSwitcher } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { ThemeSwitcher } from "@modules/theme";
 import { Link } from "@void/react";
-import { Code2, FolderGit2, Home, LogOut } from "lucide-react";
+import { Code2, FolderGit2, Home, LogOut, ShieldCheck } from "lucide-react";
 
 export function Navbar({
   activeView,
@@ -25,99 +25,89 @@ export function Navbar({
   const { t } = useI18n();
 
   return (
-    <header className="sticky top-0 z-40 bg-surface border-b border-outline shadow-xs transition-colors">
-      <div className="w-full px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
+    <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-subtle shadow-m3-1 transition-colors">
+      <div className="w-full px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <button
             type="button"
             onClick={onNavigateHome}
-            className="flex items-center gap-2 text-left group focus:outline-hidden"
+            className="flex items-center gap-2.5 text-left group rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
           >
-            <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center text-on-secondary shadow-xs group-hover:opacity-90 transition">
-              <Code2 className="w-5 h-5" />
+            <div className="ui-icon-badge w-9 h-9 group-hover:opacity-90 transition">
+              <Code2 aria-hidden="true" className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold tracking-tight text-on-surface">
-                  CodePulse Edu
-                </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container">
-                  Material Design
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold tracking-tight text-on-surface">
+                CodePulse Edu
+              </span>
+              <span className="ui-chip-secondary text-[11px] px-2.5 py-0.5">Material You 3</span>
             </div>
           </button>
 
           {selectedProject && activeView === "project" && (
-            <div className="hidden xl:flex items-center gap-2 pl-2.5 ml-1 border-l border-outline text-xs">
-              <span className="px-2 py-0.5 rounded-full font-mono font-bold bg-primary-container text-on-primary-container">
-                {selectedProject.codeName}
-              </span>
+            <div className="hidden xl:flex items-center gap-2 pl-3 ml-1 border-l border-outline-subtle text-xs min-w-0">
+              <span className="ui-code-badge">{selectedProject.codeName}</span>
               <span className="text-on-surface font-semibold truncate max-w-60">
                 {selectedProject.title}
               </span>
             </div>
           )}
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
-          <nav className="flex max-w-full flex-wrap items-center gap-1 bg-surface-container p-1 rounded-2xl sm:rounded-full border border-outline">
+          <nav className="ui-pill-group max-w-full flex-wrap rounded-2xl sm:rounded-full">
             <button
               type="button"
               onClick={onNavigateHome}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
-                activeView === "home"
-                  ? "bg-secondary text-on-secondary shadow-xs"
-                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
+              className={`ui-pill-item ${
+                activeView === "home" ? "ui-pill-item-active" : "ui-pill-item-idle"
               }`}
             >
-              <Home className="w-3.5 h-3.5" />
+              <Home aria-hidden="true" className="w-3.5 h-3.5" />
               <span>{t("nav.home")}</span>
             </button>
             <button
               type="button"
               onClick={onSelectProjectDefault}
               disabled={!hasProjects}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${
-                activeView === "project"
-                  ? "bg-primary text-on-primary shadow-xs"
-                  : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
+              className={`ui-pill-item ${
+                activeView === "project" ? "ui-pill-item-active" : "ui-pill-item-idle"
               }`}
             >
-              <FolderGit2 className="w-3.5 h-3.5" />
+              <FolderGit2 aria-hidden="true" className="w-3.5 h-3.5" />
               <span>{t("common.projects")}</span>
             </button>
             {currentUser.role === "admin" && (
               <Link
                 href="/admin"
-                className={
-                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition " +
-                  (activeView === "admin"
-                    ? "bg-primary text-on-primary shadow-xs"
-                    : "text-on-muted hover:bg-surface-hover hover:text-on-surface")
-                }
+                className={`ui-pill-item ${
+                  activeView === "admin" ? "ui-pill-item-active" : "ui-pill-item-idle"
+                }`}
               >
-                {t("admin.mode")}
+                <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5" />
+                <span>{t("admin.mode")}</span>
               </Link>
             )}
           </nav>
+
           <LanguageSwitcher />
           <ThemeSwitcher size="xs" />
 
           {currentUser && (
-            <div className="flex items-center gap-1.5 pl-2 border-l border-outline">
-              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-sunken border border-outline text-xs">
-                <div className="w-5 h-5 rounded-full bg-secondary text-on-secondary text-[11px] font-bold flex items-center justify-center">
+            <div className="flex items-center gap-1.5 pl-2 border-l border-outline-subtle">
+              <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container border border-outline-subtle text-xs">
+                <div className="w-5 h-5 rounded-full bg-primary-container text-on-primary-container text-[11px] font-bold flex items-center justify-center shrink-0">
                   {currentUser.name?.slice(0, 1) || "S"}
                 </div>
-                <span className="font-bold text-on-surface">{currentUser.name}</span>
+                <span className="font-semibold text-on-surface">{currentUser.name}</span>
               </div>
               <button
                 type="button"
                 onClick={onLogout}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-container hover:bg-danger-container text-on-muted hover:text-on-danger-container border border-outline text-xs font-bold transition"
+                className="ui-btn-outlined px-3 py-1.5 hover:bg-danger-container hover:text-on-danger-container hover:border-danger-outline/60"
                 title={t("auth.signOutDescription")}
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut aria-hidden="true" className="w-3.5 h-3.5" />
                 <span>{t("auth.signOut")}</span>
               </button>
             </div>

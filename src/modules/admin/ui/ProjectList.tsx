@@ -1,5 +1,6 @@
 import { useI18n } from "@modules/i18n";
 import { Link } from "@void/react";
+import { AlertCircle, CheckCircle2, FolderGit2, Plus, Search } from "lucide-react";
 import { useImperativeHandle, useState, type Ref } from "react";
 
 import { useProjectList } from "../hooks/useProjectList";
@@ -46,83 +47,129 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
     );
 
   return (
-    <section className="ui-card p-5 space-y-4">
-      <header className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">{t("admin.allProjects", { count })}</h2>
+    <section className="ui-card overflow-hidden">
+      <header className="ui-card-header flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="ui-icon-badge w-9 h-9">
+            <FolderGit2 aria-hidden="true" className="w-4 h-4" />
+          </div>
+          <h2 className="text-base font-bold text-on-primary-container truncate">
+            {t("admin.allProjects", { count })}
+          </h2>
+        </div>
         <button
           type="button"
           disabled={!!deleting}
           onClick={() => setCreating(true)}
-          className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary disabled:opacity-40"
+          className="ui-btn-primary px-4 py-2 text-xs sm:text-sm shrink-0"
         >
+          <Plus aria-hidden="true" className="w-4 h-4" />
           {t("admin.add")}
         </button>
       </header>
-      <label className="block">
-        {t("admin.search")}
-        <input
-          type="search"
-          className="ui-input p-2 mt-1"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-      </label>
-      {saved && <p role="status">{t("admin.saved")}</p>}
-      {error && <p role="alert">{t("admin.operationFailed")}</p>}
-      {deleting && (
-        <ConfirmDelete
-          name={deleting.title}
-          pending={pending}
-          onCancel={cancelDelete}
-          onConfirm={() => {
-            void remove();
-          }}
-        />
-      )}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr>
-              <th className="p-3">{t("admin.projects.code")}</th>
-              <th className="p-3">{t("admin.projects.name")}</th>
-              <th className="p-3">{t("admin.projects.dueDate")}</th>
-              <th className="p-3">{t("admin.actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((project) => (
-              <tr key={project.id} className="border-t border-outline">
-                <td className="p-3 font-mono">{project.codeName}</td>
-                <td className="p-3">
-                  <Link href={`/projects/${project.id}`} className="underline">
-                    {project.title}
-                  </Link>
-                </td>
-                <td className="p-3 whitespace-nowrap">{project.dueDate || "—"}</td>
-                <td className="p-3 whitespace-nowrap">
-                  <button
-                    type="button"
-                    disabled={!!deleting}
-                    className="px-3 py-2"
-                    onClick={() => edit(project)}
-                  >
-                    {t("admin.edit")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!!deleting}
-                    className="px-3 py-2"
-                    onClick={() => requestDelete(project)}
-                  >
-                    {t("admin.delete")}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="p-5 sm:p-6 space-y-4">
+        <label className="ui-field-label">
+          {t("admin.search")}
+          <div className="relative mt-1.5">
+            <Search
+              aria-hidden="true"
+              className="w-4 h-4 text-on-subtle absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <input
+              type="search"
+              className="ui-input pl-10"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+        </label>
+
+        {saved && (
+          <div role="status" className="ui-banner-success">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
+              <span>{t("admin.saved")}</span>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div role="alert" className="ui-banner-danger">
+            <div className="flex items-center gap-2">
+              <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
+              <span>{t("admin.operationFailed")}</span>
+            </div>
+          </div>
+        )}
+
+        {deleting && (
+          <ConfirmDelete
+            name={deleting.title}
+            pending={pending}
+            onCancel={cancelDelete}
+            onConfirm={() => {
+              void remove();
+            }}
+          />
+        )}
+
+        {visible.length > 0 ? (
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead>
+                <tr>
+                  <th>{t("admin.projects.code")}</th>
+                  <th>{t("admin.projects.name")}</th>
+                  <th>{t("admin.projects.dueDate")}</th>
+                  <th>{t("admin.actions")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((project) => (
+                  <tr key={project.id}>
+                    <td>
+                      <span className="ui-code-badge">{project.codeName}</span>
+                    </td>
+                    <td>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="font-semibold text-on-surface hover:text-primary underline decoration-outline underline-offset-4 transition-colors"
+                      >
+                        {project.title}
+                      </Link>
+                    </td>
+                    <td className="whitespace-nowrap font-mono text-xs text-on-muted">
+                      {project.dueDate || "—"}
+                    </td>
+                    <td className="whitespace-nowrap">
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={!!deleting}
+                          className="ui-btn-tonal px-3 py-1.5"
+                          onClick={() => edit(project)}
+                        >
+                          {t("admin.edit")}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!!deleting}
+                          className="ui-btn-danger-tonal px-3 py-1.5"
+                          onClick={() => requestDelete(project)}
+                        >
+                          {t("admin.delete")}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="ui-empty">{t("admin.empty")}</p>
+        )}
       </div>
-      {!visible.length && <p>{t("admin.empty")}</p>}
     </section>
   );
 }

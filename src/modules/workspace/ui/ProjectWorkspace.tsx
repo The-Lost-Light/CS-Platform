@@ -31,25 +31,26 @@ export function ProjectWorkspace({
   return (
     <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6">
       <section
-        className={`ui-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${activeTab === "design" ? "rounded-b-none border-b-0" : ""}`}
+        className={`ui-card p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${activeTab === "design" ? "rounded-b-none border-b-0" : ""}`}
       >
         <div className="flex items-center gap-3.5 min-w-0">
-          <div className="w-10 h-10 rounded-2xl bg-primary text-on-primary flex items-center justify-center shadow-2xs shrink-0">
-            <FolderGit2 className="w-5 h-5" />
+          <div className="ui-icon-badge w-11 h-11 rounded-2xl">
+            <FolderGit2 aria-hidden="true" className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-lg bg-primary-container text-on-primary-container font-mono text-xs font-bold">
-                {project.codeName}
-              </span>
-              <h1 className="text-base sm:text-xl font-bold text-on-surface truncate">
+              <span className="ui-code-badge">{project.codeName}</span>
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-on-surface truncate">
                 {project.title}
               </h1>
             </div>
-            <p className="text-xs text-on-muted mt-1 wrap-break-word">{project.summary}</p>
+            <p className="text-xs sm:text-sm text-on-muted mt-1 wrap-break-word">
+              {project.summary}
+            </p>
           </div>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5 lg:justify-end">
           <SaveWorkspace
             projectId={project.id}
             accountId={snapshot.accountId}
@@ -63,7 +64,7 @@ export function ProjectWorkspace({
           <div
             role="tablist"
             aria-label={t("workspace.tabs.label")}
-            className="ui-pill-group gap-1 self-start sm:self-auto shrink-0"
+            className="ui-pill-group self-start sm:self-auto shrink-0"
           >
             {(
               [
@@ -80,25 +81,23 @@ export function ProjectWorkspace({
                 aria-controls={`workspace-panel-${tab}`}
                 aria-selected={activeTab === tab}
                 onClick={() => setActiveTab(tab)}
-                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-bold transition ${
-                  activeTab === tab
-                    ? tab === "design"
-                      ? "bg-primary text-on-primary shadow-2xs"
-                      : "bg-secondary text-on-secondary shadow-2xs"
-                    : "text-on-muted hover:bg-surface-hover hover:text-on-surface"
+                className={`ui-pill-item px-3 sm:px-4 ${
+                  activeTab === tab ? "ui-pill-item-active" : "ui-pill-item-idle"
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon aria-hidden="true" className="w-3.5 h-3.5" />
                 <span>{t(`workspace.tabs.${tab}`)}</span>
               </button>
             ))}
           </div>
         </div>
       </section>
+
       <div
         role="tabpanel"
         id="workspace-panel-assignment"
         aria-labelledby="workspace-tab-assignment"
+        className="mt-6"
         hidden={activeTab !== "assignment"}
       >
         <AssignmentPanel project={project} />

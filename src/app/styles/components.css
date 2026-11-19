@@ -1,36 +1,236 @@
 @layer components {
+  /* Cards & Containers */
   .ui-card {
-    @apply bg-surface text-on-surface border border-outline-subtle rounded-3xl shadow-xs transition-colors;
+    @apply rounded-[28px] bg-surface text-on-surface border border-outline-subtle shadow-m3-1 transition-colors;
   }
 
   .ui-card-sm {
-    @apply bg-surface text-on-surface border border-outline-subtle rounded-2xl p-4 shadow-xs transition-colors;
+    @apply rounded-[20px] bg-surface text-on-surface border border-outline-subtle p-4 shadow-m3-1 transition-colors;
   }
 
   .ui-panel {
-    @apply bg-surface-sunken text-on-surface border border-outline rounded-2xl transition-colors;
+    @apply rounded-2xl bg-surface-sunken text-on-surface border border-outline-subtle transition-colors;
   }
 
   .ui-card-header {
-    @apply px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
+    @apply px-5 sm:px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
   }
 
-  .ui-pill-group {
-    @apply inline-flex items-center bg-surface-container p-1 rounded-full border border-outline;
+  .ui-dialog {
+    @apply rounded-[28px] bg-surface text-on-surface border border-outline-subtle shadow-m3-3 backdrop:bg-black/50 backdrop:backdrop-blur-[2px];
   }
 
-  .ui-input {
-    @apply w-full rounded-xl border border-outline bg-surface-sunken px-3.5 py-2 text-xs sm:text-sm text-on-surface placeholder-on-subtle focus:outline-hidden focus:ring-2 focus:ring-secondary transition;
+  .ui-menu {
+    @apply rounded-2xl bg-surface text-on-surface border border-outline-subtle p-1.5 shadow-m3-3;
+  }
+
+  .ui-icon-badge {
+    @apply inline-flex items-center justify-center rounded-xl bg-primary text-on-primary shadow-m3-1 shrink-0;
+  }
+
+  .ui-icon-badge-tonal {
+    @apply inline-flex items-center justify-center rounded-xl bg-primary-container text-on-primary-container shrink-0;
+  }
+
+  /* Buttons (Material You 3 Full Pill) */
+  .ui-btn-primary,
+  .ui-btn-tonal,
+  .ui-btn-outlined,
+  .ui-btn-text,
+  .ui-btn-text-muted,
+  .ui-btn-danger,
+  .ui-btn-danger-tonal {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-45 disabled:pointer-events-none;
   }
 
   .ui-btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-2xs transition disabled:opacity-50;
+    @apply bg-primary hover:bg-primary-hover text-on-primary shadow-m3-1 hover:shadow-m3-2 px-5 py-2.5 text-xs sm:text-sm;
   }
 
   .ui-btn-tonal {
-    @apply inline-flex items-center gap-1.5 rounded-xl bg-surface-high hover:bg-secondary-container text-on-surface hover:text-on-secondary-container border border-outline px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40;
+    @apply bg-primary-container hover:bg-primary-container-hover text-on-primary-container px-4 py-2 text-xs;
   }
 
+  .ui-btn-outlined {
+    @apply bg-surface hover:bg-surface-hover text-on-surface border border-outline hover:border-primary/40 px-4 py-2 text-xs;
+  }
+
+  .ui-btn-text {
+    @apply bg-transparent hover:bg-surface-hover text-primary px-3.5 py-2 text-xs sm:text-sm;
+  }
+
+  .ui-btn-text-muted {
+    @apply bg-transparent hover:bg-surface-hover text-on-muted hover:text-on-surface px-4 py-2 text-xs sm:text-sm;
+  }
+
+  .ui-btn-danger {
+    @apply bg-danger hover:bg-danger-hover text-on-danger shadow-m3-1 px-5 py-2 text-xs sm:text-sm;
+  }
+
+  .ui-btn-danger-tonal {
+    @apply bg-danger-container hover:bg-danger-container-hover text-on-danger-container border border-danger-outline/60 px-3.5 py-1.5 text-xs;
+  }
+
+  .ui-btn-icon {
+    @apply inline-flex items-center justify-center rounded-full text-on-muted hover:bg-surface-hover hover:text-on-surface transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-45 disabled:pointer-events-none;
+  }
+
+  /* Segmented Pill Groups & Tabs */
+  .ui-pill-group {
+    @apply inline-flex items-center gap-1 bg-surface-container p-1 rounded-full border border-outline-subtle;
+  }
+
+  .ui-pill-item {
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-45 disabled:pointer-events-none;
+  }
+
+  .ui-pill-item-active {
+    @apply bg-primary text-on-primary shadow-m3-1;
+  }
+
+  .ui-pill-item-tonal {
+    @apply bg-primary-container text-on-primary-container;
+  }
+
+  .ui-pill-item-idle {
+    @apply text-on-muted hover:bg-surface-hover hover:text-on-surface;
+  }
+
+  /* Chips & Badges */
+  .ui-chip-primary,
+  .ui-chip-secondary,
+  .ui-chip-neutral,
+  .ui-chip-success,
+  .ui-chip-warning,
+  .ui-chip-danger {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .ui-chip-primary {
+    @apply bg-primary-container text-on-primary-container;
+  }
+
+  .ui-chip-secondary {
+    @apply bg-secondary-container text-on-secondary-container;
+  }
+
+  .ui-chip-neutral {
+    @apply bg-surface-container text-on-muted border border-outline-subtle;
+  }
+
+  .ui-chip-success {
+    @apply bg-success-container text-on-success-container;
+  }
+
+  .ui-chip-warning {
+    @apply bg-warning-container text-on-warning-container;
+  }
+
+  .ui-chip-danger {
+    @apply bg-danger-container text-on-danger-container;
+  }
+
+  .ui-code-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-lg bg-primary-container text-on-primary-container font-mono text-xs font-bold shrink-0;
+  }
+
+  /* Form Fields & M3 Switch */
+  .ui-field-label {
+    @apply block text-xs font-semibold text-on-muted;
+  }
+
+  .ui-field-help {
+    @apply mt-1.5 block text-xs text-on-subtle leading-relaxed;
+  }
+
+  .ui-input {
+    @apply w-full rounded-2xl border border-outline bg-surface-sunken px-3.5 py-2.5 text-sm text-on-surface placeholder:text-on-subtle transition-colors hover:border-on-subtle focus:bg-surface focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:opacity-55 file:mr-3 file:rounded-full file:border-0 file:bg-primary-container file:px-3.5 file:py-1.5 file:text-xs file:font-semibold file:text-on-primary-container hover:file:bg-primary-container-hover file:cursor-pointer;
+  }
+
+  .ui-switch {
+    @apply appearance-none relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-outline bg-surface-highest transition-colors checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-45 disabled:cursor-not-allowed;
+  }
+
+  .ui-switch::before {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: var(--on-surface-subtle);
+    transform: translateX(0.1875rem);
+    transition:
+      transform 150ms cubic-bezier(0.2, 0, 0, 1),
+      width 150ms cubic-bezier(0.2, 0, 0, 1),
+      height 150ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 150ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .ui-switch:checked::before {
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: var(--on-primary);
+    transform: translateX(1.3125rem);
+  }
+
+  /* Banners & Alerts */
+  .ui-banner-neutral,
+  .ui-banner-info,
+  .ui-banner-primary,
+  .ui-banner-success,
+  .ui-banner-danger {
+    @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-xs sm:text-sm font-medium;
+  }
+
+  .ui-banner-neutral {
+    @apply bg-surface-sunken border-outline-subtle text-on-muted;
+  }
+
+  .ui-banner-info {
+    @apply bg-secondary-container border-secondary-outline text-on-secondary-container;
+  }
+
+  .ui-banner-primary {
+    @apply bg-primary-container border-primary-outline text-on-primary-container;
+  }
+
+  .ui-banner-success {
+    @apply bg-success-container border-success-outline text-on-success-container;
+  }
+
+  .ui-banner-danger {
+    @apply bg-danger-container border-danger-outline text-on-danger-container;
+  }
+
+  /* Tables & Empty State */
+  .ui-table-wrap {
+    @apply overflow-x-auto rounded-2xl border border-outline-subtle bg-surface;
+  }
+
+  .ui-table {
+    @apply w-full text-sm text-left border-collapse;
+  }
+
+  .ui-table thead {
+    @apply bg-surface-sunken border-b border-outline-subtle;
+  }
+
+  .ui-table th {
+    @apply px-4 py-3 text-xs font-semibold text-on-muted tracking-wide;
+  }
+
+  .ui-table tbody tr {
+    @apply border-t border-outline-subtle hover:bg-surface-hover transition-colors;
+  }
+
+  .ui-table td {
+    @apply px-4 py-3.5 text-on-surface;
+  }
+
+  .ui-empty {
+    @apply rounded-2xl border border-dashed border-outline bg-surface-sunken px-6 py-10 text-center text-sm text-on-muted;
+  }
+
+  /* Markdown Body */
   .ui-markdown {
     @apply min-h-96 wrap-break-word text-sm leading-7 text-on-surface
       [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg
@@ -40,13 +240,14 @@
       [&_p]:my-3 [&_p]:text-on-muted [&_li]:text-on-muted
       [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
       [&_a]:text-secondary [&_a]:underline
-      [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-surface-sunken [&_pre]:border [&_pre]:border-outline [&_pre]:p-4
+      [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:bg-surface-sunken [&_pre]:border [&_pre]:border-outline-subtle [&_pre]:p-4
       [&_code]:font-mono
+      [&_:not(pre)>code]:rounded-md [&_:not(pre)>code]:bg-surface-container [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:text-[0.875em] [&_:not(pre)>code]:text-primary
       [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:bg-surface-tonal [&_blockquote]:py-1 [&_blockquote]:pl-4 [&_blockquote]:rounded-r-xl
       [&_table]:block [&_table]:overflow-x-auto
-      [&_th]:border [&_th]:border-outline [&_th]:bg-surface-high [&_th]:p-2.5
-      [&_td]:border [&_td]:border-outline [&_td]:p-2.5
-      [&_hr]:my-5 [&_hr]:border-outline
+      [&_th]:border [&_th]:border-outline-subtle [&_th]:bg-surface-high [&_th]:p-2.5
+      [&_td]:border [&_td]:border-outline-subtle [&_td]:p-2.5
+      [&_hr]:my-5 [&_hr]:border-outline-subtle
       [&_img]:max-w-full;
   }
 }

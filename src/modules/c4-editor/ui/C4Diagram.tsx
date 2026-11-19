@@ -39,25 +39,25 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
       className="space-y-5"
     >
       <div className="relative">
-        <div className="overflow-hidden rounded-3xl border border-outline-subtle bg-surface-sunken shadow-xs transition-colors">
-          <div className="flex items-center justify-between border-b border-outline-tonal bg-surface-tonal px-5 py-3 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-primary text-on-primary flex items-center justify-center">
-                <Layers className="w-3.5 h-3.5" />
+        <div className="ui-card overflow-hidden bg-surface-sunken">
+          <div className="ui-card-header flex items-center justify-between py-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="ui-icon-badge w-7 h-7 rounded-lg">
+                <Layers aria-hidden="true" className="w-3.5 h-3.5" />
               </div>
               <span className="font-bold text-on-primary-container">
                 {scope ? scope.label : "System Context"}
               </span>
             </div>
             <details className="relative group">
-              <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface text-primary border border-primary-outline font-bold hover:bg-primary-container/50 transition">
-                <HelpCircle className="w-3.5 h-3.5" />
+              <summary className="ui-btn-outlined bg-surface text-primary border-primary-outline px-3 py-1 text-xs list-none [&::-webkit-details-marker]:hidden">
+                <HelpCircle aria-hidden="true" className="w-3.5 h-3.5" />
                 <span>{t("c4.help")}</span>
               </summary>
-              <div className="absolute right-0 top-9 z-30 w-80 rounded-2xl border border-outline bg-surface p-4 shadow-xl space-y-2.5 text-xs text-on-muted">
+              <div className="ui-menu absolute right-0 top-9 z-30 w-80 p-4 space-y-2.5 text-xs text-on-muted">
                 <p className="leading-relaxed">{t("c4.canvasInstructions")}</p>
                 <p className="leading-relaxed">{t("c4.levelsDescription")}</p>
-                <div className="pt-1 border-t border-outline space-y-1">
+                <div className="pt-2 border-t border-outline-subtle space-y-1.5">
                   <p className="flex items-center gap-2">
                     <span
                       className="h-3 w-3 rounded border border-outline"
@@ -75,7 +75,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                   <p className="font-semibold text-secondary">● {t("c4.expandable")}</p>
                   <p className="font-semibold text-primary">● {t("c4.leaf")}</p>
                 </div>
-                <p className="text-[11px] text-on-subtle pt-1 border-t border-outline">
+                <p className="text-[11px] text-on-subtle pt-2 border-t border-outline-subtle">
                   {t("c4.fileHelp")}
                 </p>
               </div>
@@ -157,12 +157,12 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                   pointerEvents: "none",
                   zIndex: 10,
                 }}
-                className="border-2 border-dashed border-primary bg-primary/10 rounded-2xl"
+                className="border-2 border-dashed border-primary bg-primary/10 rounded-[20px]"
               />
             )}
           </div>
           {!inside.length && (
-            <p className="p-4 text-xs sm:text-sm font-medium text-on-muted bg-surface border-t border-outline">
+            <p className="px-5 py-3.5 text-xs sm:text-sm font-medium text-on-muted bg-surface-sunken border-t border-outline-subtle">
               {t("c4.emptyLevel")}
             </p>
           )}

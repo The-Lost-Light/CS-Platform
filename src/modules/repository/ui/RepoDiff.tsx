@@ -21,7 +21,7 @@ export function RepoDiff({ patch, mode }: { patch: string; mode: DiffMode }) {
             {splitPatch(patch).map((row, index) => (
               <tr key={index}>
                 <td
-                  className={`${lineClass(row.left)} w-1/2 border-r border-outline whitespace-pre-wrap break-all`}
+                  className={`${lineClass(row.left)} w-1/2 border-r border-outline-subtle whitespace-pre-wrap break-all`}
                 >
                   {row.left?.text ?? "\u00a0"}
                 </td>

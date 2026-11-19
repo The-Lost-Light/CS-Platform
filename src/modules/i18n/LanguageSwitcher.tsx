@@ -53,13 +53,13 @@ export function LanguageSwitcher() {
             setOpen(true);
           }
         }}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-secondary ${
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
           open
-            ? "border-secondary bg-secondary-container text-on-secondary-container shadow-2xs"
-            : "border-outline bg-surface-container text-on-muted hover:bg-surface-hover hover:text-on-surface"
+            ? "border-primary-outline bg-primary-container text-on-primary-container"
+            : "border-outline-subtle bg-surface-container text-on-muted hover:bg-surface-hover hover:text-on-surface"
         }`}
       >
-        <Languages className="h-3.5 w-3.5 text-secondary" aria-hidden="true" />
+        <Languages className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
         <span>{options[selected].label}</span>
         <ChevronDown
           className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
@@ -71,7 +71,7 @@ export function LanguageSwitcher() {
           id={menuId}
           role="menu"
           aria-label={t("language.label")}
-          className="absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-2xl border border-outline bg-surface p-1.5 text-on-surface shadow-xl"
+          className="ui-menu absolute right-0 top-full z-50 mt-2 w-56 max-w-[calc(100vw-2rem)]"
           onKeyDown={(event) => {
             const index = items.current.indexOf(document.activeElement as HTMLButtonElement);
             if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
@@ -102,14 +102,14 @@ export function LanguageSwitcher() {
               aria-checked={preference === option.value}
               tabIndex={-1}
               onClick={() => choose(option.value)}
-              className={`flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3.5 py-2 text-left text-xs font-semibold transition-colors focus:outline-hidden ${
+              className={`flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3.5 py-2 text-left text-xs transition-colors cursor-pointer focus:outline-hidden ${
                 preference === option.value
-                  ? "bg-secondary-container text-on-secondary-container font-bold"
-                  : "text-on-muted hover:bg-surface-high focus:bg-surface-high"
+                  ? "bg-primary-container text-on-primary-container font-semibold"
+                  : "text-on-surface hover:bg-surface-hover focus:bg-surface-hover font-medium"
               }`}
             >
               {option.value === "auto" ? (
-                <Monitor className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
+                <Monitor className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               ) : (
                 <Languages className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               )}

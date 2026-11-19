@@ -1,12 +1,10 @@
-import assert from "node:assert/strict";
-
 import { createC4NodeInScope } from "@modules/c4-model";
 import { NodeChangeset } from "@xyflow/react";
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
-import { prepareC4CanvasChanges } from "../model/canvasChanges";
-import { applyCanvasLayout, BOUNDARY_ID } from "../model/canvasLayout";
-import type { CanvasNode, FlowNode } from "../model/flowTypes";
+import { prepareC4CanvasChanges } from "@/modules/c4-editor/model/canvasChanges";
+import { applyCanvasLayout, BOUNDARY_ID } from "@/modules/c4-editor/model/canvasLayout";
+import type { CanvasNode, FlowNode } from "@/modules/c4-editor/model/flowTypes";
 
 function card(id: string, x: number, y: number): FlowNode {
   return {
@@ -45,8 +43,8 @@ test("canvas measurements and selection stay local while user resizes persist", 
   );
   const local = measured.changes.applyTo(nodes);
   assert.deepEqual(local[0].measured, { width: 100, height: 100 });
-  assert.equal(local[0].selected, true);
-  assert.equal(measured.completedMoves.toArray().length, 0);
+  assert.strictEqual(local[0].selected, true);
+  assert.strictEqual(measured.completedMoves.toArray().length, 0);
 
   const resized = prepareC4CanvasChanges(
     new NodeChangeset<CanvasNode>([
@@ -61,9 +59,9 @@ test("canvas measurements and selection stay local while user resizes persist", 
     null,
   );
   const saved = resized.completedMoves.applyTo(nodes);
-  assert.equal(saved[0].width, 320);
-  assert.equal(saved[0].height, 240);
-  assert.equal(nodes[0].width, undefined);
+  assert.strictEqual(saved[0].width, 320);
+  assert.strictEqual(saved[0].height, 240);
+  assert.strictEqual(nodes[0].width, undefined);
 });
 
 test("node drags update the canvas immediately and persist only on completion", () => {
@@ -84,7 +82,7 @@ test("node drags update the canvas immediately and persist only on completion", 
     x: 25,
     y: 40,
   });
-  assert.equal(dragged.completedMoves.toArray().length, 0);
+  assert.strictEqual(dragged.completedMoves.toArray().length, 0);
 
   const stopped = prepareC4CanvasChanges(
     new NodeChangeset<CanvasNode>([
@@ -137,8 +135,8 @@ test("boundary drags keep the original overlapping group and persist its final p
       { x: 500, y: 50 },
     ],
   );
-  assert.equal(dragged.completedMoves.toArray().length, 0);
-  assert.equal(incoming.toArray().length, 1);
+  assert.strictEqual(dragged.completedMoves.toArray().length, 0);
+  assert.strictEqual(incoming.toArray().length, 1);
 
   const stopped = prepareC4CanvasChanges(
     new NodeChangeset<CanvasNode>([
@@ -152,7 +150,7 @@ test("boundary drags keep the original overlapping group and persist its final p
     local,
     dragged.movingIds,
   );
-  assert.equal(stopped.movingIds, null);
+  assert.strictEqual(stopped.movingIds, null);
   assert.deepEqual(
     stopped.completedMoves.applyTo(nodes).map((node) => node.position),
     [
@@ -183,6 +181,6 @@ test("persisted geometry uses scope coordinates and leaves other levels alone", 
   );
   assert.deepEqual(result[0].boundary, { x: 0, y: 5, width: 700, height: 500 });
   assert.deepEqual(result[1], { ...child, x: 10, y: 20, width: 250, height: 161 });
-  assert.equal(result[2], outside);
-  assert.equal(scope.boundary, undefined);
+  assert.strictEqual(result[2], outside);
+  assert.strictEqual(scope.boundary, undefined);
 });

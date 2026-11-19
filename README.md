@@ -54,7 +54,7 @@ pnpm preview
 - `pnpm check`：以 Oxfmt、Oxlint 與 Vite+ 型別檢查器執行格式、含型別資訊的 lint 和 TypeScript strict 檢查。
 - `pnpm fmt` / `pnpm lint`：格式化專案／單獨執行 lint；`pnpm exec vp check --fix` 可格式化並套用安全的 lint 修正。
 - `pnpm typecheck`：使用 `vp check --no-fmt --no-lint` 單獨檢查型別。
-- `pnpm test` / `pnpm test:watch`：透過 Vite+ 內建 Vitest 執行全部測試／監看模式。測試使用 `vite-plus/test`，保留 Node strict assertions，並共用應用的模組別名與 React Compiler 設定。
+- `pnpm test` 透過 Vite+ 單次執行 `tests/` 下的所有 `*.test.ts` 和 `*.test.tsx`。開發時可用 `pnpm test:watch` 監看變更。測試案例、斷言與 mock API 統一從 `vite-plus/test` 匯入。
 - `pnpm build`：先執行 strict 型別檢查，再透過 `vp build` 產生 `.cloudflare/output/` 的 Worker 與前端資產。
 
 Vite+ 版本與 Vite 相容別名由 `pnpm-workspace.yaml` catalog 管理，`vite` 指向 Vite+ core，讓 React 與 Tailwind 外掛共用同一份建置引擎；Vitest override 對齊 Vite+ 內建版本。`pnpm-lock.yaml` 納入版本控制，CI 或乾淨環境請執行 `pnpm install --frozen-lockfile`、`pnpm check`、`pnpm test` 與 `pnpm build`。升級時依 [Vite+ 官方遷移指南](https://viteplus.dev/guide/migrate) 執行目標版本的 migrator，並重新驗證上述指令。
@@ -92,7 +92,7 @@ Cloudflare 帳號必須先在 [Workers & Pages](https://dash.cloudflare.com/?to=
 
 React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲存佇列依序送出修改並沿用上一筆成功寫入的 revision。C4 的檔案驗證與畫布座標轉換可獨立測試。GitHub 服務可注入 HTTP 傳輸，在測試中使用本地 fixture。
 
-`tests/architecture.test.tsx` 檢查公開入口、共用層依賴方向，以及檔案和模組之間的循環相依。跨功能測試位於 `tests/`，需要驗證私有實作的測試可放在功能自己的 `__tests__/`。
+`tests/architecture.test.tsx` 檢查公開入口、共用層依賴方向，以及檔案和模組之間的循環相依。跨功能測試位於 `tests/`，各模組的測試集中在 `tests/modules/<模組名稱>/`，可直接驗證該模組的內部實作。需要本機伺服器的整合測試腳本位於 `tests/integration/`，執行方式見下方說明。
 
 ## 登入、資料庫與權限
 
@@ -142,9 +142,9 @@ pnpm exec void db execute --file .void/bootstrap-admin.sql
 
 ### 驗證
 
-啟動本機開發伺服器後，執行 `pnpm exec node scripts/test-personal-workspace.mjs` 可驗證個人工作區。測試預設使用連接埠 5173，可透過 `WORKSPACE_TEST_PORT` 指定。它會建立兩個臨時一般帳號，驗證資料隔離、重新登入、大型 C4 模型及同時儲存，並在結束時清除測試帳號與其資料。
+啟動本機開發伺服器後，執行 `pnpm exec node tests/integration/test-personal-workspace.mjs` 可驗證個人工作區。測試預設使用連接埠 5173，可透過 `WORKSPACE_TEST_PORT` 指定。它會建立兩個臨時一般帳號，驗證資料隔離、重新登入、大型 C4 模型及同時儲存，並在結束時清除測試帳號與其資料。
 
-pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建置。scripts/test-auth.mjs 是本機整合測試，固定連線 127.0.0.1:5177，需先用上述工具建立一次性 ADMIN_EMAIL / ADMIN_PASSWORD 測試帳號；會建立 student- 前綴的測試使用者。測試後刪除兩個測試帳號。涵蓋禁止註冊、錯誤密碼、工作階段、HttpOnly cookie、專案保護、管理者建立帳號、學生越權、跨來源請求與登出撤銷。
+pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建置。tests/integration/test-auth.mjs 是本機整合測試，固定連線 127.0.0.1:5177，需先用上述工具建立一次性 ADMIN_EMAIL / ADMIN_PASSWORD 測試帳號；會建立 student- 前綴的測試使用者。測試後刪除兩個測試帳號。涵蓋禁止註冊、錯誤密碼、工作階段、HttpOnly cookie、專案保護、管理者建立帳號、學生越權、跨來源請求與登出撤銷。
 
 ## 多國語言
 
@@ -164,7 +164,7 @@ pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建�
 
 GET /api/projects 只允許登入者讀取完整專案列表（內建題庫、覆寫版本與新增專案，排除已刪除項目）；POST /api/projects 只允許管理員且需同來源 Origin。伺服器驗證欄位、拒絕既有題庫代碼，並以資料庫唯一約束避免重複代碼。新專案沿用 /projects/:id 路由。
 
-新增 migration 後執行 pnpm exec void db migrate 更新本機資料庫。scripts/test-auth.mjs 現在會建立一個暫存測試專案；清理測試資料時，先依測試管理員的 user.id 刪除 course_project.created_by 對應資料，再刪除測試帳號。
+新增 migration 後執行 pnpm exec void db migrate 更新本機資料庫。tests/integration/test-auth.mjs 現在會建立一個暫存測試專案；清理測試資料時，先依測試管理員的 user.id 刪除 course_project.created_by 對應資料，再刪除測試帳號。
 
 ### 檢視、編輯與刪除
 

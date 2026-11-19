@@ -1,7 +1,5 @@
-import assert from "node:assert/strict";
-
 import { parseProjectInput } from "@modules/projects";
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
 const valid = {
   codeName: "new-01",
@@ -21,14 +19,14 @@ test("project creation normalizes identifiers and preserves Markdown without acc
     repoUrl: "private",
   });
   assert.ok(project);
-  assert.equal(project.codeName, "NEW-01");
-  assert.equal(project.title, "New project");
+  assert.strictEqual(project.codeName, "NEW-01");
+  assert.strictEqual(project.title, "New project");
   assert.deepEqual(project.tags, ["React", "D1"]);
-  assert.equal(project.content, valid.content);
-  assert.equal("initialDesignDoc" in project, false);
-  assert.equal("repoUrl" in project, false);
-  assert.equal("id" in project, false);
-  assert.equal("createdBy" in project, false);
+  assert.strictEqual(project.content, valid.content);
+  assert.strictEqual("initialDesignDoc" in project, false);
+  assert.strictEqual("repoUrl" in project, false);
+  assert.strictEqual("id" in project, false);
+  assert.strictEqual("createdBy" in project, false);
 });
 test("invalid project input cannot reach storage", () => {
   for (const patch of [
@@ -43,9 +41,9 @@ test("invalid project input cannot reach storage", () => {
     { content: [] },
     { content: "x".repeat(40001) },
   ]) {
-    assert.equal(parseProjectInput({ ...valid, ...patch }), null);
+    assert.strictEqual(parseProjectInput({ ...valid, ...patch }), null);
   }
-  for (const input of [null, [], "text", {}]) assert.equal(parseProjectInput(input), null);
+  for (const input of [null, [], "text", {}]) assert.strictEqual(parseProjectInput(input), null);
 });
 test("optional project fields can remain empty", () => {
   const project = parseProjectInput({
@@ -56,5 +54,5 @@ test("optional project fields can remain empty", () => {
   });
   assert.ok(project);
   assert.deepEqual(project.tags, []);
-  assert.equal(project.content, "");
+  assert.strictEqual(project.content, "");
 });

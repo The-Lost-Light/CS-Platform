@@ -15,7 +15,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.tsx", "src/modules/*/__tests__/*.test.tsx"],
+    include: ["tests/**/*.test.{ts,tsx}"],
   },
   plugins: lazyPlugins(() => [
     voidPlugin(),

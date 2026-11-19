@@ -1,5 +1,3 @@
-import assert from "node:assert/strict";
-
 import {
   c4Drilldown,
   createC4NodeInScope,
@@ -9,7 +7,7 @@ import {
   visibleC4Nodes,
   type C4Node,
 } from "@modules/c4-model";
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
 import { legacyNodes } from "./fixtures/mindMap";
 
@@ -20,12 +18,12 @@ test("new nodes are placed below the full height of resized siblings", () => {
     { ...nodes[0], y: 100, height: 600 },
     { ...nodes[0], id: "other", y: 400, height: 160 },
   ];
-  assert.equal(createC4NodeInScope(siblings, "", "new", "New")?.y, 750);
+  assert.strictEqual(createC4NodeInScope(siblings, "", "new", "New")?.y, 750);
 });
 
 test("an empty node opens its own boundary and accepts its first child", () => {
   const empty = c4Drilldown(nodes, "node-db");
-  assert.equal(empty.scope?.id, "node-db");
+  assert.strictEqual(empty.scope?.id, "node-db");
   assert.deepEqual(empty.inside, []);
   assert.deepEqual(
     empty.path.map((node) => node.id),
@@ -33,7 +31,7 @@ test("an empty node opens its own boundary and accepts its first child", () => {
   );
   assert.deepEqual(empty.outside, []);
   const child = createC4NodeInScope(nodes, "node-db", "db-child", "Database component")!;
-  assert.equal(child.kind, "component");
+  assert.strictEqual(child.kind, "component");
   const populated = c4Drilldown([...nodes, child], "node-db");
   assert.deepEqual(
     populated.inside.map((node) => node.id),
@@ -50,8 +48,8 @@ test("new nodes belong to the current scope and infer their C4 level", () => {
     ["node-editor", "code"],
   ]) {
     const created = createC4NodeInScope(nodes, scopeId, "new-node", "New node")!;
-    assert.equal(created.kind, kind);
-    assert.equal(created.parentId, scopeId || null);
+    assert.strictEqual(created.kind, kind);
+    assert.strictEqual(created.parentId, scopeId || null);
     const view = c4Drilldown([...nodes, created], scopeId);
     assert.ok(view.inside.some((node) => node.id === created.id));
     assert.ok(
@@ -61,13 +59,13 @@ test("new nodes belong to the current scope and infer their C4 level", () => {
     );
   }
   const created = createC4NodeInScope([], "", "root", "First system")!;
-  assert.equal(created.kind, "system");
-  assert.equal(created.y, 0);
-  assert.equal(createC4NodeInScope(nodes, "deleted", "new", "New"), undefined);
+  assert.strictEqual(created.kind, "system");
+  assert.strictEqual(created.y, 0);
+  assert.strictEqual(createC4NodeInScope(nodes, "deleted", "new", "New"), undefined);
   const leaf: C4Node = { ...created, kind: "code" };
-  assert.equal(createC4NodeInScope([leaf], leaf.id, "new", "New"), undefined);
+  assert.strictEqual(createC4NodeInScope([leaf], leaf.id, "new", "New"), undefined);
   const person = { ...leaf, kind: "person" as const };
-  assert.equal(createC4NodeInScope([person], person.id, "child", "New")?.parentId, person.id);
+  assert.strictEqual(createC4NodeInScope([person], person.id, "child", "New")?.parentId, person.id);
 });
 
 test("creation preserves the requested position and stops at four levels regardless of kind", () => {
@@ -78,17 +76,17 @@ test("creation preserves the requested position and stops at four levels regardl
       y: 88,
     })!;
     assert.ok(node);
-    assert.equal(node.x, -120.5);
-    assert.equal(node.y, 88);
+    assert.strictEqual(node.x, -120.5);
+    assert.strictEqual(node.y, 88);
     chain.push(node);
   }
-  assert.equal(createC4NodeInScope(chain, chain[3].id, "fifth", "Node"), undefined);
+  assert.strictEqual(createC4NodeInScope(chain, chain[3].id, "fifth", "Node"), undefined);
   const wrongKinds = chain.map((node) => ({
     ...node,
     kind: "system" as const,
   }));
-  assert.equal(createC4NodeInScope(wrongKinds, chain[3].id, "fifth", "Node"), undefined);
-  assert.equal(c4Drilldown(chain, chain[3].id).path.length, 3);
+  assert.strictEqual(createC4NodeInScope(wrongKinds, chain[3].id, "fifth", "Node"), undefined);
+  assert.strictEqual(c4Drilldown(chain, chain[3].id).path.length, 3);
 });
 
 test("drilldown hides enclosing peers by default and keeps them available for manual addition", () => {
@@ -115,7 +113,7 @@ test("drilldown hides enclosing peers by default and keeps them available for ma
     const next = c4Drilldown(all, id);
     assert.ok(next.inside.every((node) => node.parentId === id));
     assert.deepEqual(next.outside, []);
-    assert.equal(new Set(next.visible.map((node) => node.id)).size, next.visible.length);
+    assert.strictEqual(new Set(next.visible.map((node) => node.id)).size, next.visible.length);
   }
   const deep = c4Drilldown(all, "node-editor");
   assert.deepEqual(
@@ -131,7 +129,7 @@ test("drilldown hides enclosing peers by default and keeps them available for ma
 
 test("missing or deleted scope returns to context without stale boundary or breadcrumbs", () => {
   const view = c4Drilldown(removeC4Nodes(nodes, ["node-fe-core"]), "node-editor");
-  assert.equal(view.scope, undefined);
+  assert.strictEqual(view.scope, undefined);
   assert.deepEqual(view.path, []);
   assert.deepEqual(view.outside, []);
   assert.ok(view.visible.every((node) => !node.parentId));
@@ -141,8 +139,8 @@ test("legacy path mappings survive C4 migration and databases belong to the syst
     nodes.map((node) => [node.id, node.expectedPath]),
     legacyNodes.map((node) => [node.id, node.expectedPath]),
   );
-  assert.equal(nodes.find((node) => node.id === "node-db")?.parentId, "node-root");
-  assert.equal(nodes.find((node) => node.id === "node-tests")?.kind, "component");
+  assert.strictEqual(nodes.find((node) => node.id === "node-db")?.parentId, "node-root");
+  assert.strictEqual(nodes.find((node) => node.id === "node-tests")?.kind, "component");
 });
 test("C4 scopes show their own elements without peer containers", () => {
   assert.deepEqual(
@@ -170,8 +168,8 @@ test("removing a system recursively removes descendants including code elements"
 });
 test("external elements cannot receive children, but can become internal again", () => {
   const external = { ...nodes[0], external: true };
-  assert.equal(createC4NodeInScope([external], external.id, "child", "Child"), undefined);
-  assert.equal(
+  assert.strictEqual(createC4NodeInScope([external], external.id, "child", "Child"), undefined);
+  assert.strictEqual(
     createC4NodeInScope([{ ...external, external: false }], external.id, "child", "Child")
       ?.parentId,
     external.id,
@@ -188,7 +186,7 @@ test("boundary movement includes partial overlaps but excludes separated nodes",
     [150, 390],
     [50, 50],
   ]) {
-    assert.equal(overlapsC4Boundary({ x, y, width: 100, height: 100 }, boundary), true);
+    assert.strictEqual(overlapsC4Boundary({ x, y, width: 100, height: 100 }, boundary), true);
   }
   for (const [x, y] of [
     [0, 0],
@@ -196,6 +194,6 @@ test("boundary movement includes partial overlaps but excludes separated nodes",
     [150, 400],
     [-100, 150],
   ]) {
-    assert.equal(overlapsC4Boundary({ x, y, width: 100, height: 100 }, boundary), false);
+    assert.strictEqual(overlapsC4Boundary({ x, y, width: 100, height: 100 }, boundary), false);
   }
 });

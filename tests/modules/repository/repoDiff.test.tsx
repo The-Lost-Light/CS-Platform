@@ -1,15 +1,13 @@
-import assert from "node:assert/strict";
-
 import { I18nProvider } from "@modules/i18n";
+import { createGitHubService, GitHubRepoDashboard } from "@modules/repository";
 import { renderToStaticMarkup } from "react-dom/server";
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
-import { createRepoFixture } from "../../../../tests/fixtures/repository";
-import { splitPatch } from "../model/diff";
-import { createGitHubService } from "../services/github";
-import { CommitHistory } from "../ui/CommitHistory";
-import { GitHubRepoDashboard } from "../ui/GitHubRepoDashboard";
-import { RepoDiff } from "../ui/RepoDiff";
+import { splitPatch } from "@/modules/repository/model/diff";
+import { CommitHistory } from "@/modules/repository/ui/CommitHistory";
+import { RepoDiff } from "@/modules/repository/ui/RepoDiff";
+
+import { createRepoFixture } from "../../fixtures/repository";
 
 test("split diff pairs replacements and pads unequal changes within each hunk", () => {
   const rows = splitPatch("@@ -1,3 +1,2 @@\n same\n-old\n-extra\n+new\n@@ -9,0 +9 @@\n+added");
@@ -113,9 +111,9 @@ test("expanded commits explain missing patches, empty changes and detail failure
 
 test("missing newline markers stay with their respective sides", () => {
   const rows = splitPatch("-old\n\\ No newline at end of file\n+new\n\\ No newline at end of file");
-  assert.equal(rows.length, 1);
-  assert.equal(rows[0].left?.text, "-old\n\\ No newline at end of file");
-  assert.equal(rows[0].right?.text, "+new\n\\ No newline at end of file");
+  assert.strictEqual(rows.length, 1);
+  assert.strictEqual(rows[0].left?.text, "-old\n\\ No newline at end of file");
+  assert.strictEqual(rows[0].right?.text, "+new\n\\ No newline at end of file");
 });
 
 test("diff mode changes rendered layout while preserving and escaping code", () => {
@@ -124,7 +122,7 @@ test("diff mode changes rendered layout while preserving and escaping code", () 
   const split = renderToStaticMarkup(<RepoDiff patch={patch} mode="split" />);
   assert.ok(!unified.includes("<table"));
   assert.ok(split.includes("<table"));
-  assert.equal((split.match(/<td /g) ?? []).length, 4);
+  assert.strictEqual((split.match(/<td /g) ?? []).length, 4);
   for (const html of [unified, split]) {
     assert.ok(html.includes("-&lt;old&gt;"));
     assert.ok(html.includes("+&lt;new&gt;"));

@@ -1,10 +1,8 @@
-import assert from "node:assert/strict";
+import type { PersonalWorkspace } from "@modules/workspace";
+import { assert, test, vi } from "vite-plus/test";
 
-import { test, vi } from "vite-plus/test";
-
-import type { PersonalWorkspace } from "../model/personalWorkspace";
-import { createSaveQueue } from "../services/saveQueue";
-import type { SaveResult } from "../services/workspaceApi";
+import { createSaveQueue } from "@/modules/workspace/services/saveQueue";
+import type { SaveResult } from "@/modules/workspace/services/workspaceApi";
 
 const template: PersonalWorkspace = {
   designDoc: "",
@@ -25,12 +23,12 @@ test("autosave debounces edits and flushes the newest draft after an in-flight w
     const unmount = queue.mount();
     queue.update(template);
     await vi.advanceTimersByTimeAsync(1000);
-    assert.equal(write.mock.calls.length, 0);
+    assert.strictEqual(write.mock.calls.length, 0);
     const edited = { ...template, designDoc: "edited" };
     queue.update({ ...template, designDoc: "first" });
     queue.update(edited);
     await vi.advanceTimersByTimeAsync(999);
-    assert.equal(write.mock.calls.length, 0);
+    assert.strictEqual(write.mock.calls.length, 0);
     await vi.advanceTimersByTimeAsync(1);
     assert.deepEqual(write.mock.calls, [[null, edited]]);
     const latest = { ...edited, designDoc: "latest" };
@@ -42,8 +40,8 @@ test("autosave debounces edits and flushes the newest draft after an in-flight w
       [null, edited],
       ["first", latest],
     ]);
-    assert.equal(queue.hasPendingChanges(), false);
-    assert.equal(saved.mock.calls.length, 0);
+    assert.strictEqual(queue.hasPendingChanges(), false);
+    assert.strictEqual(saved.mock.calls.length, 0);
   } finally {
     vi.useRealTimers();
   }
@@ -61,13 +59,13 @@ test("transient failures retry while conflicts stop later writes", async () => {
     const unmount = queue.mount();
     queue.update({ ...template, designDoc: "a" });
     await vi.advanceTimersByTimeAsync(1000);
-    assert.equal(status.mock.lastCall?.[0], "draft.saveError");
+    assert.strictEqual(status.mock.lastCall?.[0], "draft.saveError");
     await vi.advanceTimersByTimeAsync(5000);
-    assert.equal(status.mock.lastCall?.[0], "draft.conflict");
+    assert.strictEqual(status.mock.lastCall?.[0], "draft.conflict");
     queue.update({ ...template, designDoc: "b" });
     unmount();
     await vi.runAllTimersAsync();
-    assert.equal(write.mock.calls.length, 2);
+    assert.strictEqual(write.mock.calls.length, 2);
   } finally {
     vi.useRealTimers();
   }

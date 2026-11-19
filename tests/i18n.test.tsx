@@ -1,5 +1,3 @@
-import assert from "node:assert/strict";
-
 import { Navbar } from "@app/Navbar";
 import { WorkSpace } from "@app/Workspace";
 import { AuthProvider, DEMO_ACCOUNTS, demoAuthService, AuthGate, LoginView } from "@modules/auth";
@@ -27,7 +25,7 @@ import {
 } from "@modules/theme";
 import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
-import { test } from "vite-plus/test";
+import { assert, expect, test } from "vite-plus/test";
 
 import { createRepoFixture } from "./fixtures/repository";
 
@@ -38,31 +36,31 @@ const han = /[\u3400-\u9fff]/;
 const bundle = createRepoFixture();
 
 test("saved language takes priority; unsupported values fall back to browser languages or English", () => {
-  assert.equal(resolveLocale("en", ["zh-TW"]), "en");
-  assert.equal(resolveLocale("zh-TW", ["en-US"]), "zh-TW");
-  assert.equal(resolveLocale("invalid", ["fr-FR", "en-GB"]), "en");
-  assert.equal(resolveLocale(null, ["zh-Hant-TW"]), "zh-TW");
-  assert.equal(resolveLocale(null, ["ja-JP"]), "en");
-  assert.equal(resolveLocale(null), "en");
+  assert.strictEqual(resolveLocale("en", ["zh-TW"]), "en");
+  assert.strictEqual(resolveLocale("zh-TW", ["en-US"]), "zh-TW");
+  assert.strictEqual(resolveLocale("invalid", ["fr-FR", "en-GB"]), "en");
+  assert.strictEqual(resolveLocale(null, ["zh-Hant-TW"]), "zh-TW");
+  assert.strictEqual(resolveLocale(null, ["ja-JP"]), "en");
+  assert.strictEqual(resolveLocale(null), "en");
 });
 
 test("theme mode validation and resolution follow system preference or explicit override", () => {
-  assert.equal(isThemeMode("system"), true);
-  assert.equal(isThemeMode("light"), true);
-  assert.equal(isThemeMode("dark"), true);
-  assert.equal(isThemeMode("invalid"), false);
-  assert.equal(resolveTheme("system", false), "light");
-  assert.equal(resolveTheme("system", true), "dark");
-  assert.equal(resolveTheme("light", true), "light");
-  assert.equal(resolveTheme("dark", false), "dark");
+  assert.strictEqual(isThemeMode("system"), true);
+  assert.strictEqual(isThemeMode("light"), true);
+  assert.strictEqual(isThemeMode("dark"), true);
+  assert.strictEqual(isThemeMode("invalid"), false);
+  assert.strictEqual(resolveTheme("system", false), "light");
+  assert.strictEqual(resolveTheme("system", true), "dark");
+  assert.strictEqual(resolveTheme("light", true), "light");
+  assert.strictEqual(resolveTheme("dark", false), "dark");
 });
 
 test("theme palette validation defaults to Mist Blue and preserves Soft Lavender", () => {
-  assert.equal(DEFAULT_THEME_PALETTE, "blue");
+  assert.strictEqual(DEFAULT_THEME_PALETTE, "blue");
   assert.ok(SUPPORTED_THEME_PALETTES.includes("blue"));
   assert.ok(SUPPORTED_THEME_PALETTES.includes("lavender"));
-  for (const palette of SUPPORTED_THEME_PALETTES) assert.equal(isThemePalette(palette), true);
-  assert.equal(isThemePalette("invalid"), false);
+  for (const palette of SUPPORTED_THEME_PALETTES) assert.strictEqual(isThemePalette(palette), true);
+  assert.strictEqual(isThemePalette("invalid"), false);
 
   const enHtml = renderToStaticMarkup(
     <ThemeProvider>
@@ -84,25 +82,25 @@ test("theme palette validation defaults to Mist Blue and preserves Soft Lavender
 
 test("semantic keys resolve in both languages and interpolation preserves literal code", () => {
   const input = "${value} {count} <script> $&";
-  assert.equal(t("common.count", { count: input }), `Count: ${input}`);
-  assert.equal(createTranslator("zh-TW")("common.count", { count: 3 }), "筆數：3");
-  assert.equal(t("auth.title"), "Sign in to CodePulse Edu");
-  assert.equal(createTranslator("zh-TW")("auth.title"), "登入課程作業系統");
-  assert.equal(t("language.autoDetected", { language: "English" }), "Auto (English)");
-  assert.equal(t("common.count"), "Count: {count}");
-  assert.equal(t("common.count", { count: undefined }), "Count: ");
+  assert.strictEqual(t("common.count", { count: input }), `Count: ${input}`);
+  assert.strictEqual(createTranslator("zh-TW")("common.count", { count: 3 }), "筆數：3");
+  assert.strictEqual(t("auth.title"), "Sign in to CodePulse Edu");
+  assert.strictEqual(createTranslator("zh-TW")("auth.title"), "登入課程作業系統");
+  assert.strictEqual(t("language.autoDetected", { language: "English" }), "Auto (English)");
+  assert.strictEqual(t("common.count"), "Count: {count}");
+  assert.strictEqual(t("common.count", { count: undefined }), "Count: ");
 });
 
 test("unknown keys fall back safely and literal text is rejected by the typed translator", () => {
   // @ts-expect-error Unknown keys must be rejected at compile time.
-  assert.equal(t("missing.key"), "missing.key");
+  assert.strictEqual(t("missing.key"), "missing.key");
   // @ts-expect-error Object prototype properties are not translation keys.
-  assert.equal(t("constructor"), "constructor");
+  assert.strictEqual(t("constructor"), "constructor");
   // @ts-expect-error Source text must not be used as a translation key.
-  assert.equal(t("登入課程作業系統"), "登入課程作業系統");
-  assert.equal(isMessageKey("auth.title"), true);
-  assert.equal(isMessageKey("constructor"), false);
-  assert.equal(isMessageKey("登入課程作業系統"), false);
+  assert.strictEqual(t("登入課程作業系統"), "登入課程作業系統");
+  assert.strictEqual(isMessageKey("auth.title"), true);
+  assert.strictEqual(isMessageKey("constructor"), false);
+  assert.strictEqual(isMessageKey("登入課程作業系統"), false);
 });
 
 test("locale dictionaries have identical semantic keys and interpolation parameters", () => {
@@ -125,13 +123,13 @@ test("locale dictionaries have identical semantic keys and interpolation paramet
 });
 
 test("GitHub validation exposes a key that can be translated after a language change", async () => {
-  await assert.rejects(fetchGitHubProjectBundle("invalid"), (error: Error) => {
+  await expect(fetchGitHubProjectBundle("invalid")).rejects.toSatisfy((error: Error) => {
     assert.ok(isMessageKey(error.message));
-    assert.equal(
+    assert.strictEqual(
       t(error.message),
       "Enter a valid GitHub repository URL (e.g. https://github.com/owner/repo)",
     );
-    assert.equal(
+    assert.strictEqual(
       createTranslator("zh-TW")(error.message),
       "請輸入有效的 GitHub 倉庫網址 (例如 https://github.com/owner/repo)",
     );
@@ -140,9 +138,9 @@ test("GitHub validation exposes a key that can be translated after a language ch
 });
 
 test("built-in assignment briefs are localized independently of student work", () => {
-  assert.equal(han.test(JSON.stringify(en)), false);
+  assert.strictEqual(han.test(JSON.stringify(en)), false);
   for (const [i, project] of en.projects.entries()) {
-    assert.equal(project.id, zh.projects[i].id);
+    assert.strictEqual(project.id, zh.projects[i].id);
     assert.ok(project.content.includes("## Assignment instructions"));
     assert.ok(zh.projects[i].content.includes("## 作業說明"));
     assert.deepEqual(project.attachments, []);
@@ -178,7 +176,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
       assert.ok(visibleText.includes(project.codeName));
       assert.ok(visibleText.includes(renderToStaticMarkup(<>{project.title}</>)));
     }
-    assert.doesNotMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
+    assert.notMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
     assert.ok(visibleText.includes(locale === "en" ? "Project overview" : "專案總覽首頁"));
     assert.ok(
       visibleText.includes(
@@ -237,7 +235,7 @@ test("the project editor renders a saved personal README and repository in the c
     .split('id="workspace-panel-assignment"')[1]
     .split('id="workspace-panel-design"')[0];
   assert.match(brief, /<h2>作業說明<\/h2>/);
-  assert.doesNotMatch(brief, /Private architecture notes/);
+  assert.notMatch(brief, /Private architecture notes/);
   assert.match(html, /Private architecture notes/);
   assert.match(html, /value="https:\/\/github\.com\/example\/my-assignment"/);
   assert.match(html, /已儲存至你的帳號/);
@@ -289,7 +287,7 @@ for (const [name, screen] of Object.entries(screens)) {
       .replaceAll("林博宇 (資工三乙)", "")
       .replaceAll("張簡助教 (Course TA)", "")
       .replace(/[陳林張]/g, "");
-    assert.equal(
+    assert.strictEqual(
       han.test(visibleText),
       false,
       visibleText.match(/.{0,30}[\u3400-\u9fff].{0,60}/g)?.join("\n") ?? "",

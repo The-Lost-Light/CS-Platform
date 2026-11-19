@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
 import tsconfig from "../tsconfig.json";
 
@@ -60,23 +59,24 @@ test("cross-feature imports use the public index, including route handlers and t
     }
   }
   for (const [file, dependencies] of graph) {
+    const importer = feature(file.replace(/^tests\/modules\//, "src/modules/"));
     for (const dep of dependencies) {
       const owner = feature(dep);
-      if (owner && owner !== feature(file))
-        assert.equal(dep, owner + "/index.ts", `${file} -> ${dep}`);
+      if (owner && owner !== importer)
+        assert.strictEqual(dep, owner + "/index.ts", `${file} -> ${dep}`);
     }
   }
 });
 
 test("shared utilities, domain rules and client features respect their layers", () => {
   for (const [file, dependencies] of graph) {
-    if (file.includes("/__tests__/")) continue;
+    if (file.startsWith("tests/")) continue;
     for (const dep of dependencies) {
       const edge = `${file} -> ${dep}`;
       if (file.startsWith("src/shared/") && graph.has(dep))
         assert.ok(dep.startsWith("src/shared/"), edge);
       if (file.startsWith("src/")) {
-        assert.doesNotMatch(
+        assert.notMatch(
           dep,
           /^(?:server|pages|routes|db|\.void)\/|^void\/(?:db|auth|schema-d1)$/,
           edge,
@@ -84,8 +84,9 @@ test("shared utilities, domain rules and client features respect their layers", 
         if (feature(file)) assert.ok(!dep.startsWith("src/app/"), edge);
       }
       if (file.includes("/model/") || file.startsWith("src/modules/c4-model/")) {
-        assert.doesNotMatch(dep, /\/(?:hooks|ui|services)\/|^react(?:-dom)?$/, edge);
-        if (!file.startsWith("src/modules/c4-editor/")) assert.notEqual(dep, "@xyflow/react", edge);
+        assert.notMatch(dep, /\/(?:hooks|ui|services)\/|^react(?:-dom)?$/, edge);
+        if (!file.startsWith("src/modules/c4-editor/"))
+          assert.notStrictEqual(dep, "@xyflow/react", edge);
       }
       if (/\/(services|hooks|data)\//.test(file)) assert.ok(!dep.includes("/ui/"), edge);
     }
@@ -107,7 +108,7 @@ test("files and features have no dependency cycles, including type imports", () 
   const features = new Map<string, string[]>();
   for (const [file, deps] of graph) {
     const owner = feature(file);
-    if (!owner || file.includes("/__tests__/")) continue;
+    if (!owner) continue;
     features.set(owner, [
       ...new Set([
         ...(features.get(owner) ?? []),

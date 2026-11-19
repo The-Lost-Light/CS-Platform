@@ -1,16 +1,15 @@
-import assert from "node:assert/strict";
-
 import { Navbar } from "@app/Navbar";
 import { I18nProvider } from "@modules/i18n";
 import { PROJECTS } from "@modules/projects";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { test, vi } from "vite-plus/test";
+import { assert, test, vi } from "vite-plus/test";
 
-import AdminPage from "../../../../pages/admin";
-import { AccountManagement } from "../ui/AccountManagement";
-import { ConfirmDelete } from "../ui/ConfirmDelete";
-import { CreateProject } from "../ui/CreateProject";
+import { AccountManagement } from "@/modules/admin/ui/AccountManagement";
+import { ConfirmDelete } from "@/modules/admin/ui/ConfirmDelete";
+import { CreateProject } from "@/modules/admin/ui/CreateProject";
+
+import AdminPage from "../../../pages/admin";
 vi.mock("@void/react", () => ({
   Link: ({ children, ...props }: { children: ReactNode; href: string }) => (
     <a {...props}>{children}</a>
@@ -33,7 +32,7 @@ test("only administrators have a management navigation entry", () => {
         />
       </I18nProvider>,
     );
-    assert.equal(html.includes('href="/admin"'), role === "admin");
+    assert.strictEqual(html.includes('href="/admin"'), role === "admin");
     assert.ok(!html.includes("Account management"));
   }
 });
@@ -72,7 +71,7 @@ test("project creation offers a return to the list and constrains inputs", () =>
     html,
     /<input(?=[^>]*type="file")(?=[^>]*multiple)(?=[^>]*name="attachments")[^>]*>/,
   );
-  assert.doesNotMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc)"/);
+  assert.notMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc)"/);
   assert.match(html, /<input(?=[^>]*name="points")(?=[^>]*min="0")(?=[^>]*max="10000")[^>]*>/);
 });
 

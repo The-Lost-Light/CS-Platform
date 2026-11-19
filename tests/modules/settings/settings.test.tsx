@@ -1,31 +1,28 @@
-import assert from "node:assert/strict";
-
 import { Navbar } from "@app/Navbar";
 import { LoginView, DEMO_ACCOUNTS, demoAuthService } from "@modules/auth";
 import { I18nProvider } from "@modules/i18n";
 import { getLocalizedProjects } from "@modules/projects";
-import { ThemeProvider } from "@modules/theme";
-import { ProjectWorkspace } from "@modules/workspace";
-import { renderToStaticMarkup } from "react-dom/server";
-import { test } from "vite-plus/test";
-
-import { SettingsProvider } from "../hooks/SettingsProvider";
 import {
   GITHUB_TOKEN_STORAGE_PREFIX,
   githubTokenStorageKey,
   normalizeGithubToken,
-} from "../model/settings";
-import { SettingsButton } from "../ui/SettingsButton";
-import { SettingsDialog } from "../ui/SettingsDialog";
+  SettingsButton,
+  SettingsDialog,
+  SettingsProvider,
+} from "@modules/settings";
+import { ThemeProvider } from "@modules/theme";
+import { ProjectWorkspace } from "@modules/workspace";
+import { renderToStaticMarkup } from "react-dom/server";
+import { assert, test } from "vite-plus/test";
 
 const enProjects = getLocalizedProjects("en").projects;
 
 test("githubTokenStorageKey scopes storage by account and normalizes tokens", () => {
-  assert.equal(githubTokenStorageKey(null), null);
-  assert.equal(githubTokenStorageKey(undefined), GITHUB_TOKEN_STORAGE_PREFIX);
-  assert.equal(githubTokenStorageKey("   "), null);
-  assert.equal(githubTokenStorageKey(" user-42 "), `${GITHUB_TOKEN_STORAGE_PREFIX}.user-42`);
-  assert.equal(normalizeGithubToken("  ghp_secret123 \n "), "ghp_secret123");
+  assert.strictEqual(githubTokenStorageKey(null), null);
+  assert.strictEqual(githubTokenStorageKey(undefined), GITHUB_TOKEN_STORAGE_PREFIX);
+  assert.strictEqual(githubTokenStorageKey("   "), null);
+  assert.strictEqual(githubTokenStorageKey(" user-42 "), `${GITHUB_TOKEN_STORAGE_PREFIX}.user-42`);
+  assert.strictEqual(normalizeGithubToken("  ghp_secret123 \n "), "ghp_secret123");
 });
 
 test("SettingsDialog renders localized language, dark mode, palette, and GitHub token sections", () => {
@@ -60,17 +57,17 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
   assert.ok(enHtml.includes("ui-setting-value-cell"));
   assert.ok(enHtml.includes("ui-setting-value-pill"));
   assert.ok(enHtml.includes("ui-choice-card"));
-  assert.doesNotMatch(enHtml, /<footer\b/);
+  assert.notMatch(enHtml, /<footer\b/);
   assert.ok(!enHtml.includes(">Done<"));
   const enHeader = enHtml.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)?.[1] ?? "";
-  assert.doesNotMatch(enHeader, /<p\b/);
+  assert.notMatch(enHeader, /<p\b/);
   const enTriggers = Array.from(enHtml.matchAll(/<button[^>]*class="ui-setting-trigger"[^>]*>/g));
-  assert.equal(enTriggers.length, 4);
+  assert.strictEqual(enTriggers.length, 4);
   for (const [trigger] of enTriggers) {
     assert.ok(trigger.includes('aria-expanded="false"'));
   }
   const enPanels = Array.from(enHtml.matchAll(/<div id="[^"]*-panel"[^>]*>/g));
-  assert.equal(enPanels.length, 4);
+  assert.strictEqual(enPanels.length, 4);
   for (const [panel] of enPanels) {
     assert.ok(panel.includes("hidden="));
   }
@@ -87,8 +84,8 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
   const expandedTriggers = Array.from(
     expandedGithubHtml.matchAll(/<button[^>]*class="ui-setting-trigger"[^>]*>/g),
   );
-  assert.equal(expandedTriggers.length, 4);
-  assert.equal(
+  assert.strictEqual(expandedTriggers.length, 4);
+  assert.strictEqual(
     expandedTriggers.filter(([trigger]) => trigger.includes('aria-expanded="true"')).length,
     1,
   );
@@ -120,7 +117,7 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
   ]) {
     assert.ok(zhHtml.includes(label), `missing Chinese label: ${label}`);
   }
-  assert.doesNotMatch(zhHtml, /<footer\b/);
+  assert.notMatch(zhHtml, /<footer\b/);
   assert.ok(!zhHtml.includes(">完成<"));
 });
 

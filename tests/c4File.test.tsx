@@ -1,7 +1,5 @@
-import assert from "node:assert/strict";
-
 import { migrateC4Nodes, parseC4File, serializeC4File } from "@modules/c4-model";
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
 import { legacyNodes } from "./fixtures/mindMap";
 
@@ -23,7 +21,7 @@ test("import accepts four levels and rejects a fifth regardless of node kinds or
     id: `level-${index}`,
     parentId: index ? `level-${index - 1}` : null,
   }));
-  assert.equal(parseC4File(serializeC4File(chain.slice(0, 4), [])).nodes.length, 4);
+  assert.strictEqual(parseC4File(serializeC4File(chain.slice(0, 4), [])).nodes.length, 4);
   assert.throws(() => parseC4File(serializeC4File(chain, [])));
   assert.throws(() => parseC4File(serializeC4File([...chain].reverse(), [])));
 });

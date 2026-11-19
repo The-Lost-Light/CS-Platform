@@ -1,5 +1,3 @@
-import assert from "node:assert/strict";
-
 import { WorkSpace } from "@app/Workspace";
 import {
   AuthProvider,
@@ -14,7 +12,7 @@ import {
 import { I18nProvider, createTranslator } from "@modules/i18n";
 import { ThemeProvider } from "@modules/theme";
 import { renderToStaticMarkup } from "react-dom/server";
-import { test } from "vite-plus/test";
+import { assert, test } from "vite-plus/test";
 
 function credentials(overrides: Partial<LoginCredentials> = {}): LoginCredentials {
   return {
@@ -61,8 +59,8 @@ test("successful login normalizes the profile without exposing the password or m
       role: "課程助教 (TA)",
     },
   });
-  assert.equal(input.studentId, "  custom-student  ");
-  assert.equal(input.name, "  Custom Name  ");
+  assert.strictEqual(input.studentId, "  custom-student  ");
+  assert.strictEqual(input.name, "  Custom Name  ");
 });
 
 test("a blank display name falls back to the normalized account", () => {
@@ -91,12 +89,12 @@ test("the initial demonstration form remains signable", () => {
 });
 
 test("every demo selection creates independent credentials and preserves its profile on login", () => {
-  assert.equal(DEMO_ACCOUNTS.length, 3);
+  assert.strictEqual(DEMO_ACCOUNTS.length, 3);
   for (const account of DEMO_ACCOUNTS) {
     const first = getDemoCredentials(account);
     const second = getDemoCredentials(account);
-    assert.notEqual(first, second);
-    assert.equal(first.password, "material2026");
+    assert.notStrictEqual(first, second);
+    assert.strictEqual(first.password, "material2026");
     assert.deepEqual(demoAuthService.login(first), {
       ok: true,
       user: {
@@ -108,8 +106,8 @@ test("every demo selection creates independent credentials and preserves its pro
 
     first.name = "Edited form name";
     first.password = "Edited form password";
-    assert.equal(second.name, account.name);
-    assert.equal(second.password, "material2026");
+    assert.strictEqual(second.name, account.name);
+    assert.strictEqual(second.password, "material2026");
   }
 });
 
@@ -119,7 +117,7 @@ function SessionStatus() {
 }
 
 test("authentication starts signed out and can render without browser storage", () => {
-  assert.equal(
+  assert.strictEqual(
     renderToStaticMarkup(
       <AuthProvider service={demoAuthService}>
         <SessionStatus />
@@ -150,5 +148,5 @@ test("AuthGate initially presents login and hides authenticated navigation and d
   assert.match(html, /<form\b/);
   assert.ok(!visibleText.includes(t("auth.signOut")));
   assert.ok(!visibleText.includes(t("home.dashboard")));
-  assert.doesNotMatch(html, /<(?:header|main)\b/);
+  assert.notMatch(html, /<(?:header|main)\b/);
 });

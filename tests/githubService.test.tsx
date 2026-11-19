@@ -1,7 +1,5 @@
-import assert from "node:assert/strict";
-
 import { createGitHubService, parseGitHubRepoUrl } from "@modules/repository";
-import { test } from "vite-plus/test";
+import { assert, expect, test } from "vite-plus/test";
 
 import { createRepoFixture } from "./fixtures/repository";
 
@@ -18,8 +16,8 @@ test("repository URL parsing retains supported URL and shorthand forms", () => {
       fullKey: "owner/repo",
     });
   }
-  assert.equal(parseGitHubRepoUrl("owner"), null);
-  assert.equal(parseGitHubRepoUrl(""), null);
+  assert.strictEqual(parseGitHubRepoUrl("owner"), null);
+  assert.strictEqual(parseGitHubRepoUrl(""), null);
 });
 
 test("invalid input has a translation key and performs no I/O", async () => {
@@ -28,7 +26,7 @@ test("invalid input has a translation key and performs no I/O", async () => {
       assert.fail("unexpected network request");
     },
   });
-  await assert.rejects(service("invalid"), {
+  await expect(service("invalid")).rejects.toMatchObject({
     message: "github.errors.invalidUrl",
   });
 });
@@ -41,10 +39,10 @@ test("former teaching repository uses the GitHub API", async () => {
       return new Response(null, { status: 404 });
     },
   });
-  await assert.rejects(service("student-team/course-oj-platform"), {
+  await expect(service("student-team/course-oj-platform")).rejects.toMatchObject({
     message: "HTTP 404",
   });
-  assert.equal(requested, "https://api.github.com/repos/student-team/course-oj-platform");
+  assert.strictEqual(requested, "https://api.github.com/repos/student-team/course-oj-platform");
 });
 
 test("live loading preserves headers, branch encoding, rate limits and the 250-file cap", async () => {
@@ -78,7 +76,7 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     },
   });
   const result = await service("facebook/react", "test-token");
-  assert.equal(requests.length, 5 + snapshot.commits.length);
+  assert.strictEqual(requests.length, 5 + snapshot.commits.length);
   for (const request of requests)
     assert.deepEqual(request.headers, {
       Accept: "application/vnd.github+json",
@@ -126,7 +124,7 @@ test("commit detail failures preserve live history, successful diffs and partial
       },
     });
     const result = await service("facebook/react");
-    assert.equal(result.sourceType, "live-api");
+    assert.strictEqual(result.sourceType, "live-api");
     assert.deepEqual(
       result.commits.map((c) => c.sha),
       [first.sha, second.sha],
@@ -146,7 +144,7 @@ test("commit detail pagination collects files using the same authenticated endpo
       const url = new Request(input).url;
       if (url.includes("/commits/")) {
         pages.push(url);
-        assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-token");
+        assert.strictEqual(new Headers(init?.headers).get("Authorization"), "Bearer test-token");
         return Response.json(
           {
             ...summary,
@@ -180,7 +178,7 @@ test("commit detail pagination collects files using the same authenticated endpo
   );
   assert.deepEqual(result.commits[0].files, files);
   assert.deepEqual(result.commits[0].stats, stats);
-  assert.equal(result.commits[0].diffError, undefined);
+  assert.strictEqual(result.commits[0].diffError, undefined);
 });
 
 test("secondary endpoint failures yield empty sections without replacing live metadata", async () => {
@@ -188,7 +186,7 @@ test("secondary endpoint failures yield empty sections without replacing live me
   let calls = 0;
   const service = createGitHubService({
     fetch: async (_url, init) => {
-      assert.equal(new Headers(init?.headers).has("Authorization"), false);
+      assert.strictEqual(new Headers(init?.headers).has("Authorization"), false);
       calls++;
       if (calls === 1) return Response.json(snapshot.repo);
       if (calls === 2) throw new Error("offline");
@@ -197,8 +195,8 @@ test("secondary endpoint failures yield empty sections without replacing live me
     },
   });
   const result = await service("facebook/react");
-  assert.equal(result.sourceType, "live-api");
-  assert.equal(result.rateLimit, "Live API");
+  assert.strictEqual(result.sourceType, "live-api");
+  assert.strictEqual(result.rateLimit, "Live API");
   assert.deepEqual(
     [result.languages, result.branches, result.commits, result.fileTree],
     [{}, [], [], []],
@@ -211,13 +209,13 @@ test("HTTP and transport errors propagate without substituting repository data",
       const service = createGitHubService({
         fetch: async () => new Response(null, { status }),
       });
-      await assert.rejects(service(repo), { message: "HTTP " + status });
+      await expect(service(repo)).rejects.toMatchObject({ message: "HTTP " + status });
     }
     const service = createGitHubService({
       fetch: async () => {
         throw new Error("offline");
       },
     });
-    await assert.rejects(service(repo), { message: "offline" });
+    await expect(service(repo)).rejects.toMatchObject({ message: "offline" });
   }
 });

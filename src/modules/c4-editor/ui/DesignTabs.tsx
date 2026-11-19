@@ -12,7 +12,7 @@ export function DesignTabs({
 }) {
   const { t } = useI18n();
   return (
-    <div className="ui-pill-group" role="tablist" aria-label={t("workspace.tabs.design")}>
+    <div className="ui-pill-group shrink-0" role="tablist" aria-label={t("workspace.tabs.design")}>
       <button
         type="button"
         role="tab"

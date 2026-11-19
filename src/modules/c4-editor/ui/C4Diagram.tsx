@@ -1,15 +1,5 @@
 import { Background, Controls, MiniMap } from "@xyflow/react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  ChevronRight,
-  Download,
-  HelpCircle,
-  Layers,
-  Redo2,
-  Undo2,
-  Upload,
-} from "lucide-react";
+import { ChevronRight, HelpCircle, Layers, Redo2, Undo2 } from "lucide-react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
 import type { FlowNode } from "../model/flowTypes";
@@ -26,14 +16,9 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     setSelectedId,
     setEdgeId,
     drawing,
-    fileInput,
     flowInstance,
-    importing,
-    fileStatus,
     importRevision,
     cancelNodeClick,
-    exportModel,
-    importModel,
     scope,
     path,
     inside,
@@ -91,23 +76,6 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             </nav>
           </div>
           <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
-            {fileStatus && (
-              <div
-                role={fileStatus === "importSuccess" ? "status" : "alert"}
-                className={`inline-flex items-center gap-1.5 max-w-sm px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                  fileStatus === "importSuccess"
-                    ? "bg-success-container border-success-outline text-on-success-container"
-                    : "bg-danger-container border-danger-outline text-on-danger-container"
-                }`}
-              >
-                {fileStatus === "importSuccess" ? (
-                  <CheckCircle2 aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-                ) : (
-                  <AlertCircle aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-                )}
-                <span>{t(`c4.${fileStatus}`)}</span>
-              </div>
-            )}
             <button
               type="button"
               disabled={!canUndo}
@@ -126,37 +94,6 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               <Redo2 aria-hidden="true" className="w-3.5 h-3.5" />
               {t("c4.redo")}
             </button>
-            <button
-              type="button"
-              disabled={importing}
-              title={t("c4.fileHelp")}
-              onClick={() => fileInput.current?.click()}
-              className="ui-btn-tonal border border-primary-outline/70 px-3 py-1.5 text-xs"
-            >
-              <Upload aria-hidden="true" className="w-3.5 h-3.5" />
-              <span>{t(importing ? "c4.importing" : "c4.importModel")}</span>
-            </button>
-            <button
-              type="button"
-              disabled={importing}
-              onClick={exportModel}
-              className="ui-btn-tonal border border-primary-outline/70 px-3 py-1.5 text-xs"
-            >
-              <Download aria-hidden="true" className="w-3.5 h-3.5" />
-              <span>{t("c4.exportModel")}</span>
-            </button>
-            <input
-              ref={fileInput}
-              type="file"
-              accept=".json,application/json"
-              aria-label={t("c4.importModel")}
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                if (file) void importModel(file);
-              }}
-            />
             <details className="relative group">
               <summary className="ui-btn-outlined bg-surface text-primary border-primary-outline px-3 py-1.5 text-xs list-none [&::-webkit-details-marker]:hidden">
                 <HelpCircle aria-hidden="true" className="w-3.5 h-3.5" />

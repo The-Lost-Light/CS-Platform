@@ -9,9 +9,13 @@ import { useEffect, useState } from "react";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
 import { useProjectDraft } from "./useProjectDraft";
 
+export type WorkspaceTab = "assignment" | "design" | "github";
+
 export function useProjectWorkspace(
   snapshot: WorkspaceSnapshot,
   loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle,
+  initialActiveTab: WorkspaceTab = "assignment",
+  initialDesignTab: DesignTab = "readme",
 ) {
   const [revision, setRevision] = useState(snapshot.revision);
   const initialRepoUrl = snapshot.draft?.repoUrl ?? "";
@@ -20,8 +24,8 @@ export function useProjectWorkspace(
   useEffect(() => {
     if (initialRepoUrl) void repository.handleLoadRepo(initialRepoUrl);
   }, []);
-  const [activeTab, setActiveTab] = useState<"assignment" | "design" | "github">("assignment");
-  const [designTab, setDesignTab] = useState<DesignTab>("readme");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialActiveTab);
+  const [designTab, setDesignTab] = useState<DesignTab>(initialDesignTab);
   return {
     repository,
     draft,

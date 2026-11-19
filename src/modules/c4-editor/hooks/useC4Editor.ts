@@ -4,8 +4,6 @@ import {
   createC4NodeInScope,
   type C4Node,
   type C4Relationship,
-  C4_FILE_MAX_BYTES,
-  parseC4File,
 } from "@modules/c4-model";
 import { useI18n } from "@modules/i18n";
 import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xyflow/react";
@@ -16,17 +14,7 @@ import { buildFlowElements } from "../model/flowElements";
 import type { CanvasNode } from "../model/flowTypes";
 import { removeC4Elements, type C4Graph } from "../model/modelHistory";
 import type { C4ArchitectProps } from "../model/types";
-import { downloadC4Model } from "../services/c4Download";
 import { useNodeDrawing } from "./useNodeDrawing";
-
-type FileStatus = "importSuccess" | "importError" | "fileTooLarge" | "exportError";
-
-const FILE_STATUS_DURATION_MS: Record<FileStatus, number> = {
-  importSuccess: 3500,
-  importError: 6000,
-  fileTooLarge: 5000,
-  exportError: 5000,
-};
 
 export function useC4Editor({
   designDoc,
@@ -34,6 +22,8 @@ export function useC4Editor({
   onChangeDesignTab,
   history,
   dispatchModel,
+  importing = false,
+  importRevision = 0,
 }: C4ArchitectProps) {
   const { t } = useI18n();
   const { nodes, relationships } = history.present;
@@ -47,25 +37,29 @@ export function useC4Editor({
   const [readmeMode, setReadmeMode] = useState<"reading" | "source">(
     designDoc ? "reading" : "source",
   );
-  const [scopeId, setScopeId] = useState("");
-  const [selectedId, setSelectedId] = useState("");
-  const [edgeId, setEdgeId] = useState("");
-  const fileInput = useRef<HTMLInputElement>(null);
-  const flowInstance = useRef<ReactFlowInstance<CanvasNode> | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [fileNotice, setFileNotice] = useState<{ status: FileStatus; id: number } | null>(null);
-  const fileStatus = fileNotice?.status ?? null;
-  const setFileStatus = (status: FileStatus | null) => {
-    setFileNotice((previous) => (status ? { status, id: (previous?.id ?? 0) + 1 } : null));
+  const [view, setView] = useState({
+    revision: importRevision,
+    scopeId: "",
+    selectedId: "",
+    edgeId: "",
+  });
+  const currentView =
+    view.revision === importRevision
+      ? view
+      : { revision: importRevision, scopeId: "", selectedId: "", edgeId: "" };
+  const { scopeId, selectedId, edgeId } = currentView;
+  const updateView = (patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId">>) => {
+    setView((previous) => ({
+      ...(previous.revision === importRevision
+        ? previous
+        : { revision: importRevision, scopeId: "", selectedId: "", edgeId: "" }),
+      ...patch,
+    }));
   };
-  useEffect(() => {
-    if (!fileNotice) return;
-    const timer = setTimeout(() => {
-      setFileNotice((current) => (current?.id === fileNotice.id ? null : current));
-    }, FILE_STATUS_DURATION_MS[fileNotice.status]);
-    return () => clearTimeout(timer);
-  }, [fileNotice]);
-  const [importRevision, setImportRevision] = useState(0);
+  const setScopeId = (next: string) => updateView({ scopeId: next });
+  const setSelectedId = (next: string) => updateView({ selectedId: next });
+  const setEdgeId = (next: string) => updateView({ edgeId: next });
+  const flowInstance = useRef<ReactFlowInstance<CanvasNode> | null>(null);
   const nodeClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelNodeClick = () => {
     if (nodeClickTimer.current !== null) {
@@ -77,38 +71,6 @@ export function useC4Editor({
     // Discard pending selections when leaving or replacing the canvas.
     return () => cancelNodeClick();
   }, [designTab, scopeId, importRevision]);
-
-  const exportModel = () => {
-    try {
-      downloadC4Model(nodes, relationships);
-      setFileStatus(null);
-    } catch {
-      setFileStatus("exportError");
-    }
-  };
-
-  const importModel = async (file: File) => {
-    setFileStatus(null);
-    if (file.size > C4_FILE_MAX_BYTES) {
-      setFileStatus("fileTooLarge");
-      return;
-    }
-    setImporting(true);
-    try {
-      const model = parseC4File(await file.text());
-      edit(() => model);
-      setScopeId("");
-      setSelectedId("");
-      setEdgeId("");
-      setImportRevision((value) => value + 1);
-      onChangeDesignTab("diagram");
-      setFileStatus("importSuccess");
-    } catch {
-      setFileStatus("importError");
-    } finally {
-      setImporting(false);
-    }
-  };
 
   const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
   const expandableIds = new Set(nodes.map((node) => node.parentId).filter(Boolean));
@@ -258,14 +220,9 @@ export function useC4Editor({
     setSelectedId,
     setEdgeId,
     drawing,
-    fileInput,
     flowInstance,
-    importing,
-    fileStatus,
     importRevision,
     cancelNodeClick,
-    exportModel,
-    importModel,
     scope,
     path,
     inside,

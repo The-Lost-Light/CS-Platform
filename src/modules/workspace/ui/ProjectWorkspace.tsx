@@ -1,10 +1,16 @@
-import { C4Architect, DesignTabs } from "@modules/c4-editor";
+import {
+  C4Architect,
+  C4FileActions,
+  type DesignTab,
+  DesignTabs,
+  useC4ModelFile,
+} from "@modules/c4-editor";
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
 import { Compass, FileText, FolderGit2, GitBranch } from "lucide-react";
 
-import { useProjectWorkspace } from "../hooks/useProjectWorkspace";
+import { useProjectWorkspace, type WorkspaceTab } from "../hooks/useProjectWorkspace";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
 import { AssignmentPanel } from "./AssignmentPanel";
 import { SaveWorkspace } from "./SaveWorkspace";
@@ -12,9 +18,13 @@ import { SaveWorkspace } from "./SaveWorkspace";
 export function ProjectWorkspace({
   project,
   snapshot,
+  initialActiveTab,
+  initialDesignTab,
 }: {
   project: Project;
   snapshot: WorkspaceSnapshot;
+  initialActiveTab?: WorkspaceTab;
+  initialDesignTab?: DesignTab;
 }) {
   const { t } = useI18n();
   const {
@@ -26,8 +36,14 @@ export function ProjectWorkspace({
     setActiveTab,
     designTab,
     setDesignTab,
-  } = useProjectWorkspace(snapshot);
+  } = useProjectWorkspace(snapshot, undefined, initialActiveTab, initialDesignTab);
   const { history, dispatchModel, designDoc, setDesignDoc } = draft;
+  const c4File = useC4ModelFile({
+    nodes: history.present.nodes,
+    relationships: history.present.relationships,
+    dispatchModel,
+    onChangeDesignTab: setDesignTab,
+  });
 
   return (
     <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6">
@@ -98,8 +114,9 @@ export function ProjectWorkspace({
         </div>
 
         {activeTab === "design" && (
-          <div className="mt-4 -mx-5 sm:-mx-6 border-t border-outline-subtle px-5 sm:px-6 pt-4">
+          <div className="mt-4 -mx-5 sm:-mx-6 border-t border-outline-subtle px-5 sm:px-6 pt-4 flex flex-wrap items-center justify-between gap-3">
             <DesignTabs designTab={designTab} onChangeDesignTab={setDesignTab} />
+            {designTab === "diagram" && <C4FileActions file={c4File} />}
           </div>
         )}
       </section>
@@ -128,6 +145,8 @@ export function ProjectWorkspace({
           onChangeDesignDoc={setDesignDoc}
           designTab={designTab}
           onChangeDesignTab={setDesignTab}
+          importing={c4File.importing}
+          importRevision={c4File.importRevision}
         />
       </div>
       <div

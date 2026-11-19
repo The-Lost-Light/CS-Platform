@@ -7,9 +7,9 @@ import {
   type ThemePalette,
 } from "@modules/theme";
 import {
+  ChevronRight,
   Eye,
   EyeOff,
-  ChevronRight,
   KeyRound,
   Languages,
   Monitor,
@@ -186,7 +186,7 @@ export function SettingsDialog({
                 type="button"
                 aria-haspopup="dialog"
                 onClick={() => setEditingAccount(true)}
-                className="w-full flex items-center gap-3 p-4 text-left hover:bg-surface-hover cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+                className="w-full flex items-center gap-3 p-4 text-left hover:bg-surface-hover cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
               >
                 <span className="ui-icon-badge-tonal w-9 h-9 rounded-xl">
                   <UserRound aria-hidden="true" className="w-4 h-4" />

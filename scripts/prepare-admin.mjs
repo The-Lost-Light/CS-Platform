@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { createInterface } from "node:readline";
+import { Writable } from "node:stream";
+import { parseArgs } from "node:util";
 
 import { hashPassword } from "better-auth/crypto";
 
@@ -8,13 +11,70 @@ import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
 } from "../src/shared/passwordPolicy.ts";
-const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-const password = process.env.ADMIN_PASSWORD;
-const name = process.env.ADMIN_NAME?.trim() || "Administrator";
-if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !isValidPasswordLength(password)) {
-  throw new Error(
-    `Set ADMIN_EMAIL, ADMIN_PASSWORD (${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} characters), and optionally ADMIN_NAME. No database changes were made.`,
-  );
+const passwordLength = `${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} 字元`;
+
+function promptForAdmin() {
+  let hidePassword = false;
+  const output = new Writable({
+    write(chunk, encoding, callback) {
+      if (!hidePassword) process.stderr.write(chunk, encoding);
+      callback();
+    },
+  });
+  const rl = createInterface({
+    input: process.stdin,
+    output,
+    terminal: Boolean(process.stdin.isTTY),
+    historySize: 0,
+  });
+
+  return new Promise((resolve, reject) => {
+    rl.once("close", () => reject(new Error("帳號資料輸入未完成。")));
+    rl.question("帳號名稱（預設 Administrator）：", (name) => {
+      rl.question("Email：", (email) => {
+        rl.question(`密碼（${passwordLength}）：`, (password) => {
+          resolve({ name, email, password });
+          rl.close();
+        });
+        hidePassword = true;
+      });
+    });
+  }).finally(() => {
+    if (hidePassword) process.stderr.write("\n");
+  });
+}
+
+function readCredentials() {
+  const { values } = parseArgs({
+    options: {
+      name: { type: "string" },
+      email: { type: "string" },
+      password: { type: "string" },
+      env: { type: "boolean" },
+    },
+  });
+  if (values.env) {
+    if (Object.keys(values).length > 1) {
+      throw new Error("--env 必須單獨使用。");
+    }
+    return {
+      name: process.env.ADMIN_NAME,
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD,
+    };
+  }
+  return Object.keys(values).length ? values : promptForAdmin();
+}
+
+const credentials = await readCredentials();
+const name = credentials.name?.trim() || "Administrator";
+const email = credentials.email?.trim().toLowerCase();
+const password = credentials.password;
+if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+  throw new Error("請提供有效的 Email。");
+}
+if (!isValidPasswordLength(password)) {
+  throw new Error(`密碼長度必須為 ${passwordLength}。`);
 }
 const quote = (value) => "'" + value.replaceAll("'", "''") + "'";
 const id = randomUUID();

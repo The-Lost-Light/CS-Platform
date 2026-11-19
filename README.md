@@ -112,14 +112,31 @@ React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲�
 
 ### 第一個管理者
 
-第一次啟動沒有預設帳號或預設密碼。在自己的終端機設定 ADMIN_EMAIL、ADMIN_PASSWORD（8–16 字元）與選填 ADMIN_NAME，執行：
+第一次啟動沒有預設帳號或預設密碼。在終端機執行下列指令，依序輸入帳號名稱、Email 與密碼（8–16 字元）。帳號名稱直接按 Enter 會使用 `Administrator`，輸入密碼時終端機會隱藏字元。
 
 ```sh
 node scripts/prepare-admin.mjs
+```
+
+也可以直接用參數傳入資料，將範例中的名稱、Email 與密碼換成自己的值：
+
+```sh
+node scripts/prepare-admin.mjs --name "課程管理者" --email "admin@example.com" --password "<請換成自己的密碼>"
+```
+
+若已設定環境變數 `ADMIN_EMAIL`、`ADMIN_PASSWORD` 與選填的 `ADMIN_NAME`，可單獨使用 `--env`。省略名稱時同樣使用 `Administrator`。
+
+```sh
+node scripts/prepare-admin.mjs --env
+```
+
+以上三種方式都會產生含密碼雜湊的 SQL。選一種執行後，再將 SQL 套用到本機資料庫：
+
+```sh
 pnpm exec void db execute --file .void/bootstrap-admin.sql
 ```
 
-工具只產生含雜湊密碼的 SQL，不會自行修改資料庫。套用後刪除 .void/bootstrap-admin.sql，並清除上述環境變數。電子郵件必須尚未存在；不要重複套用同一份 SQL。登入後可在「帳號管理」建立其他帳號。請透過安全管道交付初始密碼。
+套用後刪除 `.void/bootstrap-admin.sql`。若使用 `--env`，也請清除上述環境變數。電子郵件必須尚未存在；不要重複套用同一份 SQL。登入後可在「帳號管理」建立其他帳號。請透過安全管道交付初始密碼。
 
 正式環境先部署 migration，再由具備 Cloudflare 資料庫管理權限的人員以 pnpm exec void db execute --remote --file .void/bootstrap-admin.sql 建立第一個管理者。部署與正式帳號建立不會在本機測試時自動執行。
 

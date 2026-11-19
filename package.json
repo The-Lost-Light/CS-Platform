@@ -15,7 +15,9 @@
     "Typecheck": "vp check --no-fmt --no-lint",
     "Test": "vp test",
     "Test:watch": "vp test watch",
-    "Prepare": "vp config && void prepare"
+    "Prepare": "vp config && void prepare",
+    "Admin:prepare": "node scripts/prepare-admin.mjs",
+    "Admin:apply": "void db execute --file .void/bootstrap-admin.sql"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

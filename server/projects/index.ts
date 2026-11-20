@@ -33,7 +33,10 @@ export async function listProjects(locale: Locale = "en") {
   }
   return mergeProjectCatalog(
     getLocalizedProjects(locale).projects,
-    rows.map(({ data }) => ({ ...data, attachments: attachments.get(data.id) ?? [] })),
+    rows.map(({ data }) => {
+      const { summary: _, ...project } = data as typeof data & { summary?: unknown };
+      return { ...project, attachments: attachments.get(data.id) ?? [] };
+    }),
     removed.map((row) => row.id),
   );
 }

@@ -7,7 +7,6 @@ export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachm
   const limits = {
     codeName: 30,
     title: 120,
-    summary: 2000,
     dueDate: 16,
     tags: 500,
     content: MAX_CONTENT_LENGTH,
@@ -19,7 +18,7 @@ export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachm
     fields[key] = key === "content" ? value[key] : value[key].trim();
   }
   const codeName = fields.codeName.toUpperCase();
-  if (!/^[A-Z0-9][A-Z0-9_-]{0,29}$/.test(codeName) || !fields.title || !fields.summary) return null;
+  if (!/^[A-Z0-9][A-Z0-9_-]{0,29}$/.test(codeName) || !fields.title) return null;
   if (
     typeof value.points !== "number" ||
     !Number.isInteger(value.points) ||
@@ -36,7 +35,6 @@ export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachm
   return {
     codeName,
     title: fields.title,
-    summary: fields.summary,
     dueDate: fields.dueDate.replace("T", " "),
     points: value.points,
     tags: [

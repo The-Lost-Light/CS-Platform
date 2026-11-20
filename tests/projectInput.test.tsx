@@ -4,7 +4,6 @@ import { assert, test } from "vite-plus/test";
 const valid = {
   codeName: "new-01",
   title: " New project ",
-  summary: "A course project",
   dueDate: "2026-12-20T23:59",
   points: 100,
   tags: "React, React, D1",
@@ -15,6 +14,7 @@ test("project creation normalizes identifiers and preserves Markdown without acc
     ...valid,
     id: "project-fullstack-web",
     createdBy: "forged",
+    summary: "ignored",
     initialDesignDoc: "answer",
     repoUrl: "private",
   });
@@ -23,6 +23,7 @@ test("project creation normalizes identifiers and preserves Markdown without acc
   assert.strictEqual(project.title, "New project");
   assert.deepEqual(project.tags, ["React", "D1"]);
   assert.strictEqual(project.content, valid.content);
+  assert.strictEqual("summary" in project, false);
   assert.strictEqual("initialDesignDoc" in project, false);
   assert.strictEqual("repoUrl" in project, false);
   assert.strictEqual("id" in project, false);
@@ -32,7 +33,6 @@ test("invalid project input cannot reach storage", () => {
   for (const patch of [
     { title: " " },
     { codeName: "../escape" },
-    { summary: "x".repeat(2001) },
     { dueDate: "2026-02-30T12:00" },
     { dueDate: "2026-12-20T24:00" },
     { points: -1 },

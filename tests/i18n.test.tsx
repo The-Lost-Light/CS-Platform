@@ -1,5 +1,3 @@
-import { Navbar } from "@app/Navbar";
-import { WorkSpace } from "@app/Workspace";
 import { AuthProvider, DEMO_ACCOUNTS, demoAuthService, AuthGate, LoginView } from "@modules/auth";
 import { HomeDashboard } from "@modules/catalog";
 import {
@@ -154,14 +152,6 @@ test("dashboard lists every project and uses project-only navigation in both lan
     const html = renderToStaticMarkup(
       <ThemeProvider>
         <I18nProvider initialLanguage={locale}>
-          <Navbar
-            activeView="home"
-            selectedProject={null}
-            onNavigateHome={noop}
-            onSelectProjectDefault={noop}
-            currentUser={DEMO_ACCOUNTS[0]}
-            onLogout={noop}
-          />
           <HomeDashboard
             projects={getLocalizedProjects(locale).projects}
             currentUser={DEMO_ACCOUNTS[0]}
@@ -177,7 +167,9 @@ test("dashboard lists every project and uses project-only navigation in both lan
       assert.ok(visibleText.includes(renderToStaticMarkup(<>{project.title}</>)));
     }
     assert.notMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
-    assert.ok(visibleText.includes(locale === "en" ? "Project overview" : "專案總覽首頁"));
+    assert.ok(
+      visibleText.includes(locale === "en" ? "Project dashboard" : "專案總覽儀表板 (Dashboard)"),
+    );
     assert.ok(
       visibleText.includes(
         locale === "en" ? `Projects: ${projects.length}` : `專案數：${projects.length}`,
@@ -228,12 +220,18 @@ test("the project editor renders a saved personal README and repository in the c
     </ThemeProvider>,
   );
   assert.match(html, /id="workspace-tab-assignment"[^>]*aria-selected="true"/);
+  assert.match(html, /id="workspace-tab-assignment"[^>]*>[\s\S]*?<span>作業說明<\/span><\/button>/);
   assert.ok(
     html.indexOf('id="workspace-tab-assignment"') < html.indexOf('id="workspace-tab-design"'),
   );
   const brief = html
     .split('id="workspace-panel-assignment"')[1]
     .split('id="workspace-panel-design"')[0];
+  const briefHeader = brief.split('<div class="px-5 sm:px-8 py-6 space-y-4">')[0];
+  assert.match(briefHeader, /<h2[^>]*>作業說明<\/h2>/);
+  assert.ok(briefHeader.indexOf("作業說明") < briefHeader.indexOf("截止時間"));
+  assert.ok(briefHeader.indexOf("截止時間") < briefHeader.indexOf("配分"));
+  assert.notMatch(brief, /繳交項目/);
   assert.match(brief, /<h2>作業說明<\/h2>/);
   assert.notMatch(brief, /Private architecture notes/);
   assert.match(html, /Private architecture notes/);
@@ -244,7 +242,9 @@ test("the project editor renders a saved personal README and repository in the c
 const screens = {
   authGate: (
     <AuthProvider service={demoAuthService}>
-      <AuthGate>{(session) => <WorkSpace {...session} />}</AuthGate>
+      <AuthGate>
+        <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />
+      </AuthGate>
     </AuthProvider>
   ),
   dashboard: (

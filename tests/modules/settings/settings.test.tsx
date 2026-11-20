@@ -1,5 +1,3 @@
-import { Navbar } from "@app/Navbar";
-import { LoginView, DEMO_ACCOUNTS, demoAuthService } from "@modules/auth";
 import { I18nProvider } from "@modules/i18n";
 import { getLocalizedProjects } from "@modules/projects";
 import { SettingsButton, SettingsDialog, SettingsProvider } from "@modules/settings";
@@ -52,6 +50,7 @@ test("SettingsDialog renders localized language, dark mode, and palette settings
   assert.ok(!enHtml.includes(">Done<"));
   const enHeader = enHtml.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)?.[1] ?? "";
   assert.notMatch(enHeader, /<p\b/);
+  assert.ok(!enHtml.includes("Sign out"));
   const enTriggers = Array.from(enHtml.matchAll(/<button[^>]*class="ui-setting-trigger"[^>]*>/g));
   assert.strictEqual(enTriggers.length, 3);
   for (const [trigger] of enTriggers) {
@@ -126,41 +125,22 @@ test("SettingsDialog shows general preferences to guests", () => {
   assert.ok(!html.includes("Project Repo GitHub Token"));
   assert.ok(!html.includes("Personal Access Token"));
   assert.ok(!html.includes("Edit current account"));
+  assert.ok(!html.includes("Sign out"));
 });
 
-test("Navbar, LoginView, and ProjectWorkspace expose settings and repository sync without a personal token", () => {
-  const navHtml = renderToStaticMarkup(
+test("SettingsButton and ProjectWorkspace render without a personal token", () => {
+  const buttonHtml = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
         <SettingsProvider>
-          <Navbar
-            activeView="home"
-            selectedProject={null}
-            onNavigateHome={() => {}}
-            onSelectProjectDefault={() => {}}
-            currentUser={DEMO_ACCOUNTS[0]}
-            onLogout={() => {}}
-          />
-          <SettingsButton variant="elevated" />
+          <SettingsButton />
         </SettingsProvider>
       </I18nProvider>
     </ThemeProvider>,
   );
-  assert.ok(navHtml.includes('aria-haspopup="dialog"'));
-  assert.ok(navHtml.includes(">Settings<"));
-  assert.ok(!navHtml.includes("Mist Blue"));
-
-  const loginHtml = renderToStaticMarkup(
-    <ThemeProvider>
-      <I18nProvider initialLanguage="en">
-        <SettingsProvider>
-          <LoginView onLogin={(input) => demoAuthService.login(input)} />
-        </SettingsProvider>
-      </I18nProvider>
-    </ThemeProvider>,
-  );
-  assert.ok(loginHtml.includes('aria-haspopup="dialog"'));
-  assert.ok(loginHtml.includes(">Settings<"));
+  assert.ok(buttonHtml.includes('aria-haspopup="dialog"'));
+  assert.ok(buttonHtml.includes(">Settings<"));
+  assert.ok(!buttonHtml.includes("Mist Blue"));
 
   const workspaceHtml = renderToStaticMarkup(
     <ThemeProvider>
@@ -175,5 +155,7 @@ test("Navbar, LoginView, and ProjectWorkspace expose settings and repository syn
     </ThemeProvider>,
   );
   assert.ok(workspaceHtml.includes("Sync GitHub project data"));
+  assert.ok(workspaceHtml.includes('href="/"'));
+  assert.ok(workspaceHtml.includes('aria-label="Back to home"'));
   assert.notMatch(workspaceHtml, /token|Configure in Settings|type="password"/i);
 });

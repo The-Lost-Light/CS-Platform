@@ -4,11 +4,10 @@ import { AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { useAuth } from "../hooks/AuthProvider";
-import type { AuthenticatedSession } from "../model/types";
 import { LoginView } from "./LoginView";
 
-export function AuthGate({ children }: { children: (session: AuthenticatedSession) => ReactNode }) {
-  const { currentUser, login, logout, loading, sessionError } = useAuth();
+export function AuthGate({ children }: { children: ReactNode }) {
+  const { currentUser, login, loading, sessionError } = useAuth();
 
   const { t } = useI18n();
   if (loading)
@@ -37,5 +36,5 @@ export function AuthGate({ children }: { children: (session: AuthenticatedSessio
         </div>
       </div>
     );
-  return currentUser ? children({ currentUser, logout }) : <LoginView onLogin={login} />;
+  return currentUser ? children : <LoginView onLogin={login} />;
 }

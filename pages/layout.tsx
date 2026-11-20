@@ -1,4 +1,3 @@
-import { WorkSpace } from "@app/Workspace";
 import { AuthProvider, AuthGate, useAuth } from "@modules/auth";
 
 import "@app/styles/fonts.css";
@@ -19,11 +18,9 @@ function SettingsShell({ children }: { children: ReactNode }) {
     <SettingsProvider>
       <div className="min-h-screen flex flex-col bg-canvas text-on-surface transition-colors duration-200">
         <AuthGate>
-          {(session) => (
-            <ProjectCatalogProvider>
-              <WorkSpace {...session}>{children}</WorkSpace>
-            </ProjectCatalogProvider>
-          )}
+          <ProjectCatalogProvider>
+            <main className="flex-1">{children}</main>
+          </ProjectCatalogProvider>
         </AuthGate>
       </div>
       <SettingsDialog

@@ -61,17 +61,6 @@ export function CreateProject({
               <span className="ui-field-help">{t("admin.projects.codeHelp")}</span>
             </label>
           </div>
-          <label className="ui-field-label">
-            {t("admin.projects.summary")} *
-            <textarea
-              name="summary"
-              defaultValue={original?.summary}
-              required
-              maxLength={2000}
-              rows={3}
-              className="ui-input mt-1.5"
-            />
-          </label>
           <div className="grid sm:grid-cols-2 gap-4">
             <label className="ui-field-label">
               {t("admin.projects.dueDate")}

@@ -20,8 +20,3 @@ export type LoginResult = { ok: true; user: User } | { ok: false; error: LoginEr
 export interface AuthService {
   login(credentials: LoginCredentials): LoginResult | Promise<LoginResult>;
 }
-
-export interface AuthenticatedSession {
-  currentUser: User;
-  logout: () => void | Promise<void>;
-}

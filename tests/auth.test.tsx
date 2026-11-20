@@ -1,4 +1,3 @@
-import { WorkSpace } from "@app/Workspace";
 import {
   AuthProvider,
   useAuth,
@@ -9,6 +8,7 @@ import {
   type LoginCredentials,
   AuthGate,
 } from "@modules/auth";
+import { HomeDashboard } from "@modules/catalog";
 import { I18nProvider, createTranslator } from "@modules/i18n";
 import { ThemeProvider } from "@modules/theme";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -137,7 +137,15 @@ test("AuthGate initially presents login and hides authenticated navigation and d
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
         <AuthProvider service={demoAuthService}>
-          <AuthGate>{(session) => <WorkSpace {...session} />}</AuthGate>
+          <AuthGate>
+            <main>
+              <HomeDashboard
+                projects={[]}
+                currentUser={DEMO_ACCOUNTS[0]}
+                onOpenProject={() => {}}
+              />
+            </main>
+          </AuthGate>
         </AuthProvider>
       </I18nProvider>
     </ThemeProvider>,

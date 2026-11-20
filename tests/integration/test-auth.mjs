@@ -95,7 +95,6 @@ assert.ok(
 const projectInput = {
   codeName: "TEST-" + Date.now(),
   title: "Integration project",
-  summary: "Project creation integration test",
   points: 100,
   dueDate: "2026-12-20T23:59",
   tags: "React,D1",

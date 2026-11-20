@@ -1,7 +1,8 @@
-import { Navbar } from "@app/Navbar";
 import { EditAccountDialog } from "@modules/accounts";
+import { HomeDashboard } from "@modules/catalog";
 import { I18nProvider } from "@modules/i18n";
 import { PROJECTS } from "@modules/projects";
+import { SettingsProvider } from "@modules/settings";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test, vi } from "vite-plus/test";
@@ -16,24 +17,30 @@ vi.mock("@void/react", () => ({
     <a {...props}>{children}</a>
   ),
 }));
-vi.mock("@modules/catalog", () => ({
+vi.mock("@modules/catalog", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@modules/catalog")>()),
   useProjectCatalog: () => ({ projects: [], addProject: vi.fn() }),
 }));
-test("only administrators have a management navigation entry", () => {
+test("only administrators have a management navigation entry on the home dashboard card", () => {
   for (const role of ["admin", "user"]) {
     const html = renderToStaticMarkup(
       <I18nProvider initialLanguage="en">
-        <Navbar
-          activeView="admin"
-          selectedProject={null}
-          onNavigateHome={() => {}}
-          onSelectProjectDefault={() => {}}
-          currentUser={{ name: "Test", studentId: "test@example.com", role }}
-          onLogout={() => {}}
-        />
+        <SettingsProvider>
+          <HomeDashboard
+            projects={[]}
+            onOpenProject={() => {}}
+            currentUser={{ name: "Test", studentId: "test@example.com", role }}
+          />
+        </SettingsProvider>
       </I18nProvider>,
     );
     assert.strictEqual(html.includes('href="/admin"'), role === "admin");
+    assert.ok(html.includes(">Settings<"));
+    assert.ok(html.includes(">Sign out<"));
+    assert.ok(html.indexOf(">Settings<") < html.indexOf(">Sign out<"));
+    if (role === "admin") {
+      assert.ok(html.indexOf('href="/admin"') < html.indexOf(">Settings<"));
+    }
     assert.ok(!html.includes("Account management"));
   }
 });
@@ -45,6 +52,8 @@ test("each management list has an Add button in its header", () => {
   );
   assert.ok(html.includes("Project management"));
   assert.ok(html.includes("Account management"));
+  assert.ok(html.includes('href="/"'));
+  assert.ok(html.includes('aria-label="Back to home"'));
   for (const title of ["All projects (0)", "All accounts (0)"])
     assert.ok(
       Array.from(html.matchAll(/<header\b[^>]*>([\s\S]*?)<\/header>/g)).some(
@@ -73,7 +82,7 @@ test("project creation opens in a cancellable dialog and constrains inputs", () 
     html,
     /<input(?=[^>]*type="file")(?=[^>]*multiple)(?=[^>]*name="attachments")[^>]*>/,
   );
-  assert.notMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc)"/);
+  assert.notMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc|summary)"/);
   assert.match(html, /<input(?=[^>]*name="points")(?=[^>]*min="0")(?=[^>]*max="10000")[^>]*>/);
 });
 

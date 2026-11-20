@@ -8,7 +8,6 @@ export interface Project {
   id: string;
   title: string;
   codeName: string;
-  summary: string;
   dueDate: string;
   points: number;
   tags: string[];

@@ -11,7 +11,7 @@ export function RepositoryConnection({
   const { t } = useI18n();
   const { repoUrlInput, setRepoUrlInput, isLoadingRepo, repoError, handleLoadRepo } = repository;
   return (
-    <div className="ui-card p-5 sm:p-6 space-y-4">
+    <div className="space-y-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();

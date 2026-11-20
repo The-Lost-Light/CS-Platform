@@ -9,6 +9,20 @@ const enProject = getLocalizedProjects("en").projects[0];
 const zhProject = getLocalizedProjects("zh-TW").projects[0];
 const emptySnapshot = { accountId: "student", draft: null, revision: null };
 
+test("Repo tab renders the URL and sync button in the workspace header card", () => {
+  const html = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="en">
+        <ProjectWorkspace project={enProject} snapshot={emptySnapshot} initialActiveTab="github" />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  const header = html.split("</section>")[0];
+  assert.match(header, /GitHub repository URL/);
+  assert.match(header, /Sync GitHub project data/);
+  assert.equal(header.match(/class="ui-card\b/g)?.length, 1);
+});
+
 test("design tab bar hides file actions outside C4 Model and anchors them on the right when selected", () => {
   const assignmentHtml = renderToStaticMarkup(
     <ThemeProvider>

@@ -4,7 +4,7 @@
 
 ## 核心功能
 
-- **專案總覽首頁**：單欄顯示所有專案與專案數量，點擊專案即可進入工作區。導覽列提供首頁與專案切換。
+- **專案總覽首頁**：單欄顯示所有專案與專案數量，點擊專案即可進入工作區；管理者可由首頁進入管理模式。
 - **C4 架構設計**：使用 React Flow 編輯架構節點與關係，設定預期的 GitHub 檔案路徑，並撰寫專案設計文件。
 - **GitHub 儀表板**：透過 GitHub API 載入倉庫資訊、分支、語言佔比、檔案樹與 Commit Diff，支援 Unified / Split 檢視。
 - **介面設定**：支援繁體中文、English，以及自動、淺色、深色主題。
@@ -71,7 +71,7 @@ React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合�
 
 正式網站：[CodePulse Edu](https://course-assignment-platform.mono-lts.workers.dev)。
 
-採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與共用導覽列，`src/modules/` 保存各功能的畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。未登入時開啟專案網址會導回首頁登入。
+採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與設定視窗，`src/modules/` 保存各功能的畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。未登入時開啟專案網址會導回首頁登入。
 
 ```bash
 pnpm install --frozen-lockfile
@@ -100,7 +100,7 @@ React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲�
 
 - 公開註冊已關閉。登入使用電子郵件與密碼；使用者不能在登入表單指定姓名或角色。
 - 一般使用者（user）可查看所有課程專案；專案 loader 使用 requireAuth，未登入導回首頁登入。
-- 管理者（admin）可透過導覽列的「管理模式」進入 /admin，內含「專案管理」與「帳號管理」兩個區塊，各自提供「新增」與「檢視」分頁。檢視分頁列出所有資料並支援搜尋、編輯與刪除。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
+- 管理者（admin）可透過首頁的「管理模式」進入 /admin，內含「專案管理」與「帳號管理」兩個區塊，各自提供「新增」與「檢視」分頁。檢視分頁列出所有資料並支援搜尋、編輯與刪除。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
 - 在「帳號管理 → 檢視 → 編輯」可修改姓名、電子郵件、角色或密碼。
 - 停止編輯約 0.75 秒後，工作區會自動將 README.md、完整 C4 模型與 Repo 網址一併存入 D1。每位學生在每個專案各有一份作業，首次進入時 README.md、C4 模型與 Repo 網址皆為空白。看到「已儲存至你的帳號」後即可離開，下次登入會載回個人內容。
 
@@ -156,11 +156,11 @@ pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建�
 
 ## 多國語言
 
-登入頁與導覽列提供自動、English 與繁體中文 選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
+設定視窗提供自動、English 與繁體中文 選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
 
 翻譯集中於 `src/modules/i18n/`：`ui.ts` 為介面、`courses.ts` 為專案題庫、`runtime.ts` 為分析與系統提示，各自置於 `en/` 與 `zh-TW/` 語言資料夾。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。英文與繁體中文文案只存放於語系檔，不作為查找鍵。
 
-`MessageKey` 由英文語系檔推導，`t()` 會在編譯時拒絕不存在的 key 或直接傳入的文本；繁體中文語系檔透過 `satisfies` 檢查 key 是否完整對應英文。新增文案時，請在對應分類的兩個語系檔加入相同 key，並維持插值參數一致。內建專案的名稱、摘要與 Markdown 題目使用各語系的翻譯。
+`MessageKey` 由英文語系檔推導，`t()` 會在編譯時拒絕不存在的 key 或直接傳入的文本；繁體中文語系檔透過 `satisfies` 檢查 key 是否完整對應英文。新增文案時，請在對應分類的兩個語系檔加入相同 key，並維持插值參數一致。內建專案的名稱與 Markdown 題目使用各語系的翻譯。
 
 切換語言會更新內建題目與介面文字，學生已撰寫的 README.md、C4 模型與 Repo 網址會保留原樣。
 
@@ -168,7 +168,7 @@ pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建�
 
 ## 管理模式與新增專案
 
-管理員在「管理模式 → 專案管理」可填寫專案名稱、唯一代碼、摘要、截止時間（台北時間，選填）、配分、標籤、Markdown 專案內容與附加文件。附件最多 8 個，合計 5 MiB。學生開啟專案時會先看到「題目」，可閱讀內容並下載附件，再到「設計架構」編輯 README.md、C4 模型，到「Repo」填寫自己的倉庫網址。
+管理員在「管理模式 → 專案管理」可填寫專案名稱、唯一代碼、截止時間（台北時間，選填）、配分、標籤、Markdown 專案內容與附加文件。附件最多 8 個，合計 5 MiB。學生開啟專案時會先看到「作業說明」，可閱讀內容並下載附件，再到「設計架構」編輯 README.md、C4 模型，到「Repo」填寫自己的倉庫網址。
 
 GET /api/projects 只允許登入者讀取完整專案列表（內建題庫、覆寫版本與新增專案，排除已刪除項目）；POST /api/projects 只允許管理員且需同來源 Origin。伺服器驗證欄位、拒絕既有題庫代碼，並以資料庫唯一約束避免重複代碼。新專案沿用 /projects/:id 路由。
 

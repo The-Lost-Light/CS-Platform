@@ -8,12 +8,15 @@ import {
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
-import { Compass, FileText, FolderGit2, GitBranch } from "lucide-react";
+import { Link } from "@void/react";
+import { Compass, FileText, FolderGit2, GitBranch, X } from "lucide-react";
 
 import { useProjectWorkspace, type WorkspaceTab } from "../hooks/useProjectWorkspace";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
 import { AssignmentPanel } from "./AssignmentPanel";
 import { SaveWorkspace } from "./SaveWorkspace";
+
+const toolbarRowClass = "mt-4 -mx-5 sm:-mx-6 border-t border-outline-subtle px-5 sm:px-6 pt-4";
 
 export function ProjectWorkspace({
   project,
@@ -46,79 +49,84 @@ export function ProjectWorkspace({
   });
 
   return (
-    <div className="max-w-5xl xl:max-w-360 mx-auto px-4 sm:px-6 py-6">
-      <section className="ui-card relative z-10 px-5 sm:px-6 py-4">
-        <div className="space-y-2.5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="ui-icon-badge w-9.5 h-9.5 rounded-xl">
-                <FolderGit2 aria-hidden="true" className="w-4.5 h-4.5" />
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="ui-code-badge">{project.codeName}</span>
-                <h1
-                  title={project.title}
-                  className="text-lg sm:text-xl font-bold tracking-tight text-on-surface truncate min-w-0"
-                >
-                  {project.title}
-                </h1>
-              </div>
+    <div className="w-[80%] mx-auto py-4">
+      <section className="ui-card relative z-10 px-5 sm:px-6 py-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="ui-icon-badge w-11 h-11 rounded-xl">
+              <FolderGit2 aria-hidden="true" className="w-5 h-5" />
             </div>
-
-            <div className="flex shrink-0 max-w-full flex-wrap items-center gap-2.5 self-start lg:self-auto">
-              <SaveWorkspace
-                projectId={project.id}
-                accountId={snapshot.accountId}
-                revision={revision}
-                onSaved={setRevision}
-                designDoc={designDoc}
-                nodes={history.present.nodes}
-                relationships={history.present.relationships}
-                repoUrl={repository.repoUrlInput}
-              />
-              <div
-                role="tablist"
-                aria-label={t("workspace.tabs.label")}
-                className="ui-pill-group shrink-0"
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="ui-code-badge">{project.codeName}</span>
+              <h1
+                title={project.title}
+                className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface truncate min-w-0"
               >
-                {(
-                  [
-                    ["assignment", FileText],
-                    ["design", Compass],
-                    ["github", GitBranch],
-                  ] as const
-                ).map(([tab, Icon]) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    role="tab"
-                    id={`workspace-tab-${tab}`}
-                    aria-controls={`workspace-panel-${tab}`}
-                    aria-selected={activeTab === tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`ui-pill-item px-3 sm:px-4 ${
-                      activeTab === tab ? "ui-pill-item-active" : "ui-pill-item-idle"
-                    }`}
-                  >
-                    <Icon aria-hidden="true" className="w-3.5 h-3.5" />
-                    <span>{t(`workspace.tabs.${tab}`)}</span>
-                  </button>
-                ))}
-              </div>
+                {project.title}
+              </h1>
             </div>
           </div>
 
-          {project.summary && (
-            <p className="text-xs sm:text-sm text-on-muted wrap-break-word">{project.summary}</p>
-          )}
+          <div className="flex shrink-0 max-w-full flex-wrap items-center gap-2.5 self-start lg:self-auto">
+            <SaveWorkspace
+              projectId={project.id}
+              accountId={snapshot.accountId}
+              revision={revision}
+              onSaved={setRevision}
+              designDoc={designDoc}
+              nodes={history.present.nodes}
+              relationships={history.present.relationships}
+              repoUrl={repository.repoUrlInput}
+            />
+            <div
+              role="tablist"
+              aria-label={t("workspace.tabs.label")}
+              className="ui-pill-group shrink-0"
+            >
+              {(
+                [
+                  ["assignment", FileText],
+                  ["design", Compass],
+                  ["github", GitBranch],
+                ] as const
+              ).map(([tab, Icon]) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  id={`workspace-tab-${tab}`}
+                  aria-controls={`workspace-panel-${tab}`}
+                  aria-selected={activeTab === tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`ui-pill-item px-3 sm:px-4 ${
+                    activeTab === tab ? "ui-pill-item-active" : "ui-pill-item-idle"
+                  }`}
+                >
+                  <Icon aria-hidden="true" className="w-3.5 h-3.5" />
+                  <span>{t(`workspace.tabs.${tab}`)}</span>
+                </button>
+              ))}
+            </div>
+            <Link
+              href="/"
+              aria-label={t("common.backHome")}
+              title={t("common.backHome")}
+              className="ui-btn-icon w-8 h-8 shrink-0"
+            >
+              <X aria-hidden="true" className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {activeTab === "design" && (
-          <div className="mt-4 -mx-5 sm:-mx-6 border-t border-outline-subtle px-5 sm:px-6 pt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className={`${toolbarRowClass} flex flex-wrap items-center justify-between gap-3`}>
             <DesignTabs designTab={designTab} onChangeDesignTab={setDesignTab} />
             {designTab === "diagram" && <C4FileActions file={c4File} />}
           </div>
         )}
+        <div className={toolbarRowClass} hidden={activeTab !== "github"}>
+          <RepositoryConnection repository={repository} />
+        </div>
       </section>
 
       <div
@@ -153,10 +161,9 @@ export function ProjectWorkspace({
         role="tabpanel"
         id="workspace-panel-github"
         aria-labelledby="workspace-tab-github"
-        className="mt-6 space-y-6"
+        className="mt-6"
         hidden={activeTab !== "github"}
       >
-        <RepositoryConnection repository={repository} />
         <GitHubRepoDashboard
           repoBundle={repository.repoBundle}
           onBranchChange={repository.handleBranchChange}

@@ -3,11 +3,16 @@ import { useAuth } from "@modules/auth";
 import { HomeDashboard } from "@modules/catalog";
 
 export default function HomePage() {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { projects, openProject } = usePageNavigation();
   return (
     currentUser && (
-      <HomeDashboard projects={projects} onOpenProject={openProject} currentUser={currentUser} />
+      <HomeDashboard
+        projects={projects}
+        onOpenProject={openProject}
+        currentUser={currentUser}
+        onLogout={logout}
+      />
     )
   );
 }

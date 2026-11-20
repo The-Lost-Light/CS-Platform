@@ -1,6 +1,6 @@
 export { AuthGate } from "./ui/AuthGate";
 export { LoginView } from "./ui/LoginView";
-export { type AuthenticatedSession, type User, type LoginCredentials } from "./model/types";
+export { type User, type LoginCredentials } from "./model/types";
 export { AuthProvider, useAuth } from "./hooks/AuthProvider";
 export {
   DEMO_ACCOUNTS,

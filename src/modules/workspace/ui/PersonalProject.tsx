@@ -11,7 +11,7 @@ export function PersonalProject({ project, accountId }: { project: Project; acco
   const { snapshot, error, retry } = useWorkspaceSnapshot(project.id, accountId);
   if (error)
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="w-[80%] mx-auto py-4">
         <div className="ui-card p-6">
           <div className="ui-banner-danger" role="alert">
             <div className="flex items-center gap-2.5">

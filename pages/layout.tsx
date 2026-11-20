@@ -16,7 +16,7 @@ function SettingsShell({ children }: { children: ReactNode }) {
   const accountScope = currentUser ? (currentUser.id ?? currentUser.studentId) : null;
 
   return (
-    <SettingsProvider accountScope={accountScope}>
+    <SettingsProvider>
       <div className="min-h-screen flex flex-col bg-canvas text-on-surface transition-colors duration-200">
         <AuthGate>
           {(session) => (
@@ -28,7 +28,6 @@ function SettingsShell({ children }: { children: ReactNode }) {
       </div>
       <SettingsDialog
         key={accountScope}
-        showGithubToken={Boolean(currentUser)}
         account={
           currentUser
             ? {

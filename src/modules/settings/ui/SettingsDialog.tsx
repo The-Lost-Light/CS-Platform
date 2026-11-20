@@ -8,9 +8,6 @@ import {
 } from "@modules/theme";
 import {
   ChevronRight,
-  Eye,
-  EyeOff,
-  KeyRound,
   Languages,
   Monitor,
   Moon,
@@ -18,7 +15,6 @@ import {
   Settings,
   Sun,
   SunMoon,
-  Trash2,
   UserRound,
   X,
 } from "lucide-react";
@@ -28,30 +24,16 @@ import { useSettings } from "../hooks/SettingsProvider";
 import { SettingChoiceGroup, SettingSection, type SettingChoiceOption } from "./SettingSection";
 
 export function SettingsDialog({
-  showGithubToken = true,
   account,
 }: {
-  showGithubToken?: boolean;
   account?: AccountProfile & { id?: string; role: string };
 }) {
   const { locale, preference, setPreference, t } = useI18n();
   const { mode, setMode, palette, setPalette, isDark } = useTheme();
-  const {
-    isOpen,
-    focusSection,
-    expandedSection,
-    closeSettings,
-    toggleSection,
-    githubToken,
-    setGithubToken,
-    clearGithubToken,
-  } = useSettings();
+  const { isOpen, expandedSection, closeSettings, toggleSection } = useSettings();
 
-  const [showToken, setShowToken] = useState(false);
   const [editingAccount, setEditingAccount] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const githubSectionRef = useRef<HTMLElement>(null);
-  const tokenInputRef = useRef<HTMLInputElement>(null);
   const baseId = useId();
 
   useEffect(() => {
@@ -61,14 +43,10 @@ export function SettingsDialog({
       if (!dialog.open && typeof dialog.showModal === "function") {
         dialog.showModal();
       }
-      if (focusSection === "github" && showGithubToken) {
-        githubSectionRef.current?.scrollIntoView({ block: "nearest" });
-        tokenInputRef.current?.focus();
-      }
     } else if (dialog.open && typeof dialog.close === "function") {
       dialog.close();
     }
-  }, [isOpen, focusSection, showGithubToken]);
+  }, [isOpen]);
 
   const currentLanguage = SUPPORTED_LOCALES.find((item) => item.value === locale)!.label;
   const languageOptions: SettingChoiceOption<LanguagePreference>[] = [
@@ -131,7 +109,6 @@ export function SettingsDialog({
     }),
   );
 
-  const hasToken = Boolean(githubToken);
   const titleId = `${baseId}-title`;
   const languageHeadingId = `${baseId}-language`;
   const languagePanelId = `${baseId}-language-panel`;
@@ -139,10 +116,6 @@ export function SettingsDialog({
   const themePanelId = `${baseId}-theme-panel`;
   const paletteHeadingId = `${baseId}-palette`;
   const palettePanelId = `${baseId}-palette-panel`;
-  const githubHeadingId = `${baseId}-github`;
-  const githubPanelId = `${baseId}-github-panel`;
-  const tokenInputId = `${baseId}-token-input`;
-  const tokenHelpId = `${baseId}-token-help`;
 
   return (
     <dialog
@@ -155,7 +128,6 @@ export function SettingsDialog({
       onClose={(event) => {
         if (event.target !== event.currentTarget) return;
         setEditingAccount(false);
-        setShowToken(false);
         if (isOpen) closeSettings();
       }}
     >
@@ -294,80 +266,6 @@ export function SettingsDialog({
               columns={2}
             />
           </SettingSection>
-
-          {showGithubToken && (
-            <SettingSection
-              id={githubHeadingId}
-              panelId={githubPanelId}
-              sectionRef={githubSectionRef}
-              icon={KeyRound}
-              title={t("settings.github.title")}
-              description={t("settings.github.description")}
-              expanded={expandedSection === "github"}
-              onToggle={() => toggleSection("github")}
-              valueTone={hasToken ? "success" : "default"}
-              valueContent={
-                <span className="truncate">
-                  {t(hasToken ? "settings.github.configured" : "settings.github.notConfigured")}
-                </span>
-              }
-            >
-              <div className="space-y-2.5">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <label htmlFor={tokenInputId} className="sr-only">
-                    {t("settings.github.label")}
-                  </label>
-                  <div className="relative flex-1">
-                    <KeyRound
-                      aria-hidden="true"
-                      className="w-4 h-4 text-on-subtle absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-                    />
-                    <input
-                      ref={tokenInputRef}
-                      id={tokenInputId}
-                      type={showToken ? "text" : "password"}
-                      autoComplete="off"
-                      spellCheck={false}
-                      value={githubToken}
-                      onChange={(event) => setGithubToken(event.target.value)}
-                      placeholder={t("workspace.tokenPlaceholder")}
-                      aria-describedby={tokenHelpId}
-                      className="ui-input pl-10 pr-11 py-2 text-xs sm:text-sm font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowToken((visible) => !visible)}
-                      className="ui-btn-icon w-8 h-8 absolute right-1.5 top-1/2 -translate-y-1/2"
-                      title={t(
-                        showToken ? "settings.github.hideToken" : "settings.github.showToken",
-                      )}
-                      aria-label={t(
-                        showToken ? "settings.github.hideToken" : "settings.github.showToken",
-                      )}
-                    >
-                      {showToken ? (
-                        <EyeOff aria-hidden="true" className="w-4 h-4" />
-                      ) : (
-                        <Eye aria-hidden="true" className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={!hasToken}
-                    onClick={clearGithubToken}
-                    className="ui-btn-danger-tonal shrink-0 px-3.5 py-2"
-                  >
-                    <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
-                    <span>{t("settings.github.clear")}</span>
-                  </button>
-                </div>
-                <p id={tokenHelpId} className="ui-field-help mt-0">
-                  {t("settings.github.help")}
-                </p>
-              </div>
-            </SettingSection>
-          )}
         </div>
       </div>
     </dialog>

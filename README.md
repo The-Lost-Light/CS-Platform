@@ -14,7 +14,7 @@
 ```text
 pages/                   # Void 頁面、layout 與 loader
 routes/api/              # Void HTTP handlers
-server/                  # accounts、projects、workspaces 的 D1 讀寫與交易
+server/                  # 帳號、專案、工作區的 D1 讀寫與 GitHub API 存取
 db/                      # D1 schema 與 migrations
 src/
 ├── app/                 # Void 導覽、應用外框與全站樣式
@@ -102,7 +102,15 @@ React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲�
 - 一般使用者（user）可查看所有課程專案；專案 loader 使用 requireAuth，未登入導回首頁登入。
 - 管理者（admin）可透過導覽列的「管理模式」進入 /admin，內含「專案管理」與「帳號管理」兩個區塊，各自提供「新增」與「檢視」分頁。檢視分頁列出所有資料並支援搜尋、編輯與刪除。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
 - 在「帳號管理 → 檢視 → 編輯」可修改姓名、電子郵件、角色或密碼。
-- 停止編輯約 0.75 秒後，工作區會自動將 README.md、完整 C4 模型與 Repo 網址一併存入 D1。每位學生在每個專案各有一份作業，首次進入時 README.md、C4 模型與 Repo 網址皆為空白。看到「已儲存至你的帳號」後即可離開，下次登入會載回個人內容。GitHub Token 僅存於當次畫面的記憶體。
+- 停止編輯約 0.75 秒後，工作區會自動將 README.md、完整 C4 模型與 Repo 網址一併存入 D1。每位學生在每個專案各有一份作業，首次進入時 README.md、C4 模型與 Repo 網址皆為空白。看到「已儲存至你的帳號」後即可離開，下次登入會載回個人內容。
+
+### GitHub 同步設定
+
+學生登入後只需在工作區填寫倉庫網址。前端透過同來源的 `GET /api/github/repository` 同步倉庫或切換分支，後端使用伺服器環境變數 `GITHUB_TOKEN` 讀取 GitHub，再回傳倉庫資料。
+
+本機開發時，在根目錄的 `.env` 設定 `GITHUB_TOKEN` 並重新啟動開發伺服器。正式環境由管理員執行 `pnpm exec void secret put GITHUB_TOKEN`，依提示將實際值存成 Cloudflare Worker secret。缺少 token 時，GitHub 同步會提示聯絡管理員，其他平台功能可照常使用。
+
+請使用專用的 fine-grained token，僅授予 Contents 與 Metadata 的讀取權限。所有已登入的課程帳號都能查詢此 token 可讀取的倉庫，因此私有倉庫請只選擇可供全班閱讀的項目。
 
 ### 本機啟動
 

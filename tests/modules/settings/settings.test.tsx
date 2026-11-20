@@ -2,14 +2,7 @@ import { Navbar } from "@app/Navbar";
 import { LoginView, DEMO_ACCOUNTS, demoAuthService } from "@modules/auth";
 import { I18nProvider } from "@modules/i18n";
 import { getLocalizedProjects } from "@modules/projects";
-import {
-  GITHUB_TOKEN_STORAGE_PREFIX,
-  githubTokenStorageKey,
-  normalizeGithubToken,
-  SettingsButton,
-  SettingsDialog,
-  SettingsProvider,
-} from "@modules/settings";
+import { SettingsButton, SettingsDialog, SettingsProvider } from "@modules/settings";
 import { ThemeProvider } from "@modules/theme";
 import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -17,19 +10,11 @@ import { assert, test } from "vite-plus/test";
 
 const enProjects = getLocalizedProjects("en").projects;
 
-test("githubTokenStorageKey scopes storage by account and normalizes tokens", () => {
-  assert.strictEqual(githubTokenStorageKey(null), null);
-  assert.strictEqual(githubTokenStorageKey(undefined), GITHUB_TOKEN_STORAGE_PREFIX);
-  assert.strictEqual(githubTokenStorageKey("   "), null);
-  assert.strictEqual(githubTokenStorageKey(" user-42 "), `${GITHUB_TOKEN_STORAGE_PREFIX}.user-42`);
-  assert.strictEqual(normalizeGithubToken("  ghp_secret123 \n "), "ghp_secret123");
-});
-
-test("SettingsDialog renders localized language, dark mode, palette, and GitHub token sections", () => {
+test("SettingsDialog renders localized language, dark mode, and palette settings for signed-in users", () => {
   const enHtml = renderToStaticMarkup(
     <ThemeProvider initialMode="dark" initialPalette="sage">
       <I18nProvider initialLanguage="en">
-        <SettingsProvider initialGithubToken="ghp_test_token">
+        <SettingsProvider>
           <SettingsDialog
             account={{
               id: "student-1",
@@ -54,13 +39,10 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
     "Soft Lavender",
     "Mist Sage",
     "Frosted Slate",
-    "Project Repo GitHub Token",
-    "Configured",
-    "Clear token",
   ]) {
     assert.ok(enHtml.includes(label), `missing English label: ${label}`);
   }
-  assert.ok(enHtml.includes('value="ghp_test_token"'));
+  assert.notMatch(enHtml, /GitHub Token|Personal Access Token/i);
   assert.ok(enHtml.includes("ui-setting-section"));
   assert.ok(enHtml.includes("ui-setting-trigger"));
   assert.ok(enHtml.includes("ui-setting-value-cell"));
@@ -71,34 +53,34 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
   const enHeader = enHtml.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)?.[1] ?? "";
   assert.notMatch(enHeader, /<p\b/);
   const enTriggers = Array.from(enHtml.matchAll(/<button[^>]*class="ui-setting-trigger"[^>]*>/g));
-  assert.strictEqual(enTriggers.length, 4);
+  assert.strictEqual(enTriggers.length, 3);
   for (const [trigger] of enTriggers) {
     assert.ok(trigger.includes('aria-expanded="false"'));
   }
   const enPanels = Array.from(enHtml.matchAll(/<div id="[^"]*-panel"[^>]*>/g));
-  assert.strictEqual(enPanels.length, 4);
+  assert.strictEqual(enPanels.length, 3);
   for (const [panel] of enPanels) {
     assert.ok(panel.includes("hidden="));
   }
 
-  const expandedGithubHtml = renderToStaticMarkup(
+  const expandedPaletteHtml = renderToStaticMarkup(
     <ThemeProvider initialMode="dark" initialPalette="sage">
       <I18nProvider initialLanguage="en">
-        <SettingsProvider initialGithubToken="ghp_test_token" initialExpandedSection="github">
+        <SettingsProvider initialExpandedSection="palette">
           <SettingsDialog />
         </SettingsProvider>
       </I18nProvider>
     </ThemeProvider>,
   );
   const expandedTriggers = Array.from(
-    expandedGithubHtml.matchAll(/<button[^>]*class="ui-setting-trigger"[^>]*>/g),
+    expandedPaletteHtml.matchAll(/<button[^>]*class="ui-setting-trigger"[^>]*>/g),
   );
-  assert.strictEqual(expandedTriggers.length, 4);
+  assert.strictEqual(expandedTriggers.length, 3);
   assert.strictEqual(
     expandedTriggers.filter(([trigger]) => trigger.includes('aria-expanded="true"')).length,
     1,
   );
-  assert.ok(expandedTriggers[3][0].includes('aria-expanded="true"'));
+  assert.ok(expandedTriggers[2][0].includes('aria-expanded="true"'));
   assert.ok(expandedTriggers[0][0].includes('aria-expanded="false"'));
 
   const zhHtml = renderToStaticMarkup(
@@ -120,9 +102,6 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
     "霧感淡紫",
     "霧感淡綠",
     "霧感冷灰",
-    "專案 Repo GitHub Token",
-    "未設定",
-    "清除 Token",
   ]) {
     assert.ok(zhHtml.includes(label), `missing Chinese label: ${label}`);
   }
@@ -130,12 +109,12 @@ test("SettingsDialog renders localized language, dark mode, palette, and GitHub 
   assert.ok(!zhHtml.includes(">完成<"));
 });
 
-test("SettingsDialog hides the GitHub token section when unauthenticated", () => {
+test("SettingsDialog shows general preferences to guests", () => {
   const html = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
         <SettingsProvider>
-          <SettingsDialog showGithubToken={false} />
+          <SettingsDialog />
         </SettingsProvider>
       </I18nProvider>
     </ThemeProvider>,
@@ -149,7 +128,7 @@ test("SettingsDialog hides the GitHub token section when unauthenticated", () =>
   assert.ok(!html.includes("Edit current account"));
 });
 
-test("Navbar, LoginView, and ProjectWorkspace integrate SettingsButton and Settings token state", () => {
+test("Navbar, LoginView, and ProjectWorkspace expose settings and repository sync without a personal token", () => {
   const navHtml = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
@@ -183,23 +162,7 @@ test("Navbar, LoginView, and ProjectWorkspace integrate SettingsButton and Setti
   assert.ok(loginHtml.includes('aria-haspopup="dialog"'));
   assert.ok(loginHtml.includes(">Settings<"));
 
-  const workspaceConfiguredHtml = renderToStaticMarkup(
-    <ThemeProvider>
-      <I18nProvider initialLanguage="en">
-        <SettingsProvider initialGithubToken="ghp_test">
-          <ProjectWorkspace
-            project={enProjects[0]}
-            snapshot={{ accountId: "student", draft: null, revision: null }}
-          />
-        </SettingsProvider>
-      </I18nProvider>
-    </ThemeProvider>,
-  );
-  assert.ok(workspaceConfiguredHtml.includes("GitHub token configured"));
-  assert.ok(workspaceConfiguredHtml.includes("Configure in Settings"));
-  assert.ok(!workspaceConfiguredHtml.includes('type="password"'));
-
-  const workspacePublicHtml = renderToStaticMarkup(
+  const workspaceHtml = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
         <SettingsProvider>
@@ -211,5 +174,6 @@ test("Navbar, LoginView, and ProjectWorkspace integrate SettingsButton and Setti
       </I18nProvider>
     </ThemeProvider>,
   );
-  assert.ok(workspacePublicHtml.includes("Public GitHub API (no token)"));
+  assert.ok(workspaceHtml.includes("Sync GitHub project data"));
+  assert.notMatch(workspaceHtml, /token|Configure in Settings|type="password"/i);
 });

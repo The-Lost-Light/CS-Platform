@@ -1,3 +1,5 @@
+import { isRecord } from "@shared/isRecord";
+
 import type { PersonalWorkspace, WorkspaceSnapshot } from "../model/personalWorkspace";
 
 export async function loadSnapshot(projectId: string, accountId: string, signal: AbortSignal) {
@@ -40,7 +42,9 @@ export async function saveDraft(
   if (response.status === 409) error = "draft.conflict";
   else if (response.status === 401 || response.status === 403) error = "draft.session";
   else if (response.status === 413) error = "draft.tooLarge";
-  else if (response.status === 400 && (await response.json()).error === "repo")
-    error = "draft.invalidRepo";
+  else if (response.status === 400) {
+    const body = await response.json();
+    if (isRecord(body) && body.error === "repo") error = "draft.invalidRepo";
+  }
   return { ok: false, error, retry: response.status >= 500 };
 }

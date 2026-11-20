@@ -78,7 +78,7 @@ export interface RepoCommit {
     additions: number;
     deletions: number;
   };
-  diffError?: string;
+  diffError?: boolean;
   files?: Array<{
     filename: string;
     status: string;

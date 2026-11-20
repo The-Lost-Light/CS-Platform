@@ -86,8 +86,6 @@ export default {
   "common.backHome": "Back to home",
   "common.close": "Close",
   "common.loading": "Loading…",
-  "workspace.githubToken": "GitHub token (optional)",
-  "workspace.tokenPlaceholder": "ghp_xxxxxxxxxxxx (leave blank for the public API)",
   "workspace.repoPlaceholder": "GitHub repository URL (e.g. https://github.com/owner/repo)",
   "workspace.sync": "Sync GitHub project data",
   "workspace.tabs.label": "Project workspace",
@@ -163,7 +161,7 @@ export default {
   "github.diff.unified": "Unified",
   "github.diff.split": "Split",
   "github.diff.loadFailed":
-    "Could not load all commit changes. Sync the repository again to retry; check your token or API rate limit if this persists.",
+    "Could not load all commit changes. Sync the repository again to retry.",
   "github.diff.noFiles": "This commit has no changed files.",
   "github.diff.noPatch":
     "No text diff is available for this file (it may be binary, too large, or only renamed).",
@@ -233,18 +231,4 @@ export default {
   "settings.theme.lightHint": "Bright surface",
   "settings.theme.darkHint": "Low-glare dark",
   "settings.palette.description": "Pick the Material You accent palette across the workspace.",
-  "settings.github.title": "Project Repo GitHub Token",
-  "settings.github.description":
-    "Personal access token used when syncing GitHub repositories in projects.",
-  "settings.github.label": "Personal Access Token",
-  "settings.github.help":
-    "Stored locally in this browser for your account only and never sent to the course server. Increases GitHub API rate limits and allows private repository access.",
-  "settings.github.configured": "Configured",
-  "settings.github.notConfigured": "Not set",
-  "settings.github.clear": "Clear token",
-  "settings.github.showToken": "Show GitHub token",
-  "settings.github.hideToken": "Hide GitHub token",
-  "workspace.tokenStatusConfigured": "GitHub token configured",
-  "workspace.tokenStatusPublic": "Public GitHub API (no token)",
-  "workspace.manageToken": "Configure in Settings",
 } satisfies Record<string, string>;

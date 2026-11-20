@@ -1,19 +1,14 @@
 import { isMessageKey, type MessageKey } from "@modules/i18n";
-import { useSettings } from "@modules/settings";
+import { parseGitHubRepoUrl } from "@shared/githubRepoUrl";
 import { useRef, useState } from "react";
 
 import type { RepoBundle } from "../model/repository";
-import {
-  fetchGitHubProjectBundle,
-  parseGitHubRepoUrl,
-  type GitHubProjectLoader,
-} from "../services/github";
+import { fetchGitHubProjectBundle, type GitHubProjectLoader } from "../services/github";
 
 export function useRepository(
   defaultRepoUrl: string,
   loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle,
 ) {
-  const { githubToken } = useSettings();
   const [repoUrlInput, setRepoUrlInput] = useState(defaultRepoUrl);
   const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(null);
   const [isLoadingRepo, setIsLoadingRepo] = useState(false);
@@ -31,7 +26,7 @@ export function useRepository(
     setIsLoadingRepo(true);
     setRepoError(null);
     try {
-      const bundle = await loadRepository(targetUrl, githubToken, targetBranch);
+      const bundle = await loadRepository(targetUrl, targetBranch);
       if (request === latestRequest.current) setRepoBundle(bundle);
     } catch (err) {
       if (request !== latestRequest.current) return;
@@ -50,8 +45,6 @@ export function useRepository(
   return {
     repoUrlInput,
     setRepoUrlInput,
-    githubToken,
-    hasGithubToken: Boolean(githubToken),
     repoBundle,
     isLoadingRepo,
     repoError,

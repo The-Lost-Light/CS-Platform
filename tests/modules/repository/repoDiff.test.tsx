@@ -1,5 +1,6 @@
 import { I18nProvider } from "@modules/i18n";
-import { createGitHubService, GitHubRepoDashboard } from "@modules/repository";
+import { GitHubRepoDashboard } from "@modules/repository";
+import { fetchGitHubRepository } from "@server/github";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
@@ -30,7 +31,9 @@ test("a selected branch supplies the dashboard tree, history and both diff modes
   const { files, stats, prInfo: _prInfo, ...summary } = snapshot.commits[0];
   const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
   const branch = "feature/dashboard";
-  const service = createGitHubService({
+  const bundle = await fetchGitHubRepository("facebook/react", {
+    token: "test-token",
+    branch,
     fetch: async (input) => {
       const url = new Request(input).url;
       if (url.includes("/commits?")) {
@@ -52,7 +55,6 @@ test("a selected branch supplies the dashboard tree, history and both diff modes
       return Response.json(snapshot.repo);
     },
   });
-  const bundle = await service("facebook/react", "", branch);
   for (const mode of ["unified", "split"] as const) {
     const html = renderToStaticMarkup(
       <I18nProvider initialLanguage="en">
@@ -95,7 +97,7 @@ test("expanded commits explain missing patches, empty changes and detail failure
       message: "No text diff is available",
     },
     {
-      commit: { ...commit, files: undefined, diffError: "HTTP 403" },
+      commit: { ...commit, files: undefined, diffError: true },
       message: "Could not load all commit changes",
     },
     {

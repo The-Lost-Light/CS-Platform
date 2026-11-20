@@ -261,13 +261,8 @@ const screens = {
   paletteSwitcher: <PaletteSwitcher />,
   settingsButton: <SettingsButton />,
   settingsDialog: (
-    <SettingsProvider initialGithubToken="ghp_test">
-      <SettingsDialog showGithubToken />
-    </SettingsProvider>
-  ),
-  settingsDialogGuest: (
     <SettingsProvider>
-      <SettingsDialog showGithubToken={false} />
+      <SettingsDialog />
     </SettingsProvider>
   ),
 };

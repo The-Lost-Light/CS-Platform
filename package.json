@@ -23,9 +23,9 @@
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/noto-sans-tc": "^5.3.1",
-    "@void/react": "1.10.0",
+    "@void/react": "1.11.0",
     "@xyflow/react": "^13.0.0-next.3",
-    "better-auth": "1.7.25",
+    "better-auth": "1.7.26",
     "lucide-react": "^1.74.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -43,7 +43,7 @@
     "tailwindcss": "^4.3.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "void": "1.10.0"
+    "void": "1.11.0"
   },
   "devEngines": {
     "packageManager": {

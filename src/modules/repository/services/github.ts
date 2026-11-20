@@ -12,12 +12,13 @@ export function createGitHubService(dependencies: GitHubServiceDependencies = {}
   return async function fetchGitHubProjectBundle(
     rawUrl: string,
     githubToken = "",
+    branch?: string,
   ): Promise<RepoBundle> {
     const parsed = parseGitHubRepoUrl(rawUrl);
     if (!parsed) {
       throw new Error("github.errors.invalidUrl");
     }
-    return fetchLiveRepoBundle(parsed, githubToken, dependencies.fetch);
+    return fetchLiveRepoBundle(parsed, githubToken, dependencies.fetch, branch);
   };
 }
 

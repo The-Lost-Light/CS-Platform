@@ -157,7 +157,11 @@ export function ProjectWorkspace({
         hidden={activeTab !== "github"}
       >
         <RepositoryConnection repository={repository} />
-        <GitHubRepoDashboard repoBundle={repository.repoBundle} />
+        <GitHubRepoDashboard
+          repoBundle={repository.repoBundle}
+          onBranchChange={repository.handleBranchChange}
+          isLoading={repository.isLoadingRepo}
+        />
       </div>
     </div>
   );

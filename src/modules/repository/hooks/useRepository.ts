@@ -1,9 +1,13 @@
 import { isMessageKey, type MessageKey } from "@modules/i18n";
 import { useSettings } from "@modules/settings";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { RepoBundle } from "../model/repository";
-import { fetchGitHubProjectBundle, type GitHubProjectLoader } from "../services/github";
+import {
+  fetchGitHubProjectBundle,
+  parseGitHubRepoUrl,
+  type GitHubProjectLoader,
+} from "../services/github";
 
 export function useRepository(
   defaultRepoUrl: string,
@@ -16,13 +20,21 @@ export function useRepository(
   const [repoError, setRepoError] = useState<{ key: MessageKey } | { message: string } | null>(
     null,
   );
-  const handleLoadRepo = async (targetUrl = repoUrlInput) => {
+  const latestRequest = useRef(0);
+  const handleLoadRepo = async (targetUrl = repoUrlInput, branch?: string) => {
+    const request = ++latestRequest.current;
+    const sameRepo =
+      repoBundle &&
+      parseGitHubRepoUrl(targetUrl)?.fullKey.toLowerCase() ===
+        repoBundle.repo.full_name.toLowerCase();
+    const targetBranch = branch ?? (sameRepo ? repoBundle.selectedBranch : undefined);
     setIsLoadingRepo(true);
     setRepoError(null);
     try {
-      const bundle = await loadRepository(targetUrl, githubToken);
-      setRepoBundle(bundle);
+      const bundle = await loadRepository(targetUrl, githubToken, targetBranch);
+      if (request === latestRequest.current) setRepoBundle(bundle);
     } catch (err) {
+      if (request !== latestRequest.current) return;
       setRepoError(
         err instanceof Error
           ? isMessageKey(err.message)
@@ -31,7 +43,7 @@ export function useRepository(
           : { key: "workspace.errors.syncFailed" },
       );
     } finally {
-      setIsLoadingRepo(false);
+      if (request === latestRequest.current) setIsLoadingRepo(false);
     }
   };
 
@@ -44,5 +56,8 @@ export function useRepository(
     isLoadingRepo,
     repoError,
     handleLoadRepo,
+    handleBranchChange: (branch: string) => {
+      if (repoBundle) void handleLoadRepo(repoBundle.repo.full_name, branch);
+    },
   };
 }

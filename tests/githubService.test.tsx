@@ -86,6 +86,7 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
   assert.ok(requests.some((r) => r.url.includes("/trees/feature%2Fa%20b?recursive=1")));
   assert.deepEqual(result, {
     repo,
+    selectedBranch: repo.default_branch,
     languages: { TypeScript: 100 },
     branches: snapshot.branches,
     commits: snapshot.commits,
@@ -201,6 +202,22 @@ test("secondary endpoint failures yield empty sections without replacing live me
     [result.languages, result.branches, result.commits, result.fileTree],
     [{}, [], [], []],
   );
+});
+
+test("switching branches rejects a failed tree or history request", async () => {
+  const snapshot = createRepoFixture();
+  for (const failedEndpoint of ["/commits?", "/git/trees/"]) {
+    const service = createGitHubService({
+      fetch: async (input) => {
+        const url = new Request(input).url;
+        if (url.includes(failedEndpoint)) return new Response(null, { status: 404 });
+        if (url.includes("/git/trees/")) return Response.json({ tree: [] });
+        if (url.endsWith("/repo")) return Response.json(snapshot.repo);
+        return Response.json([]);
+      },
+    });
+    await expect(service("owner/repo", "", "feature/deleted")).rejects.toThrow("HTTP 404");
+  }
 });
 
 test("HTTP and transport errors propagate without substituting repository data", async () => {

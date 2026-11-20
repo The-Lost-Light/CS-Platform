@@ -257,7 +257,7 @@ const screens = {
       snapshot={{ accountId: "student", draft: null, revision: null }}
     />
   ),
-  github: <GitHubRepoDashboard repoBundle={bundle} />,
+  github: <GitHubRepoDashboard repoBundle={bundle} onBranchChange={() => {}} />,
   paletteSwitcher: <PaletteSwitcher />,
   settingsButton: <SettingsButton />,
   settingsDialog: (

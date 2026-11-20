@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { FolderTree, GitBranch, Search } from "lucide-react";
+import { ChevronDown, FolderTree, GitBranch, LoaderCircle, Search } from "lucide-react";
 
 import type { RepoBundle } from "../model/repository";
 import { RepoFileTree } from "./RepoFileTree";
@@ -9,12 +9,14 @@ export function RepositoryTree({
   branches,
   fileTree,
   selectedBranch,
-  setSelectedBranch,
+  onBranchChange,
+  isLoading,
   fileTreeSearch,
   setFileTreeSearch,
 }: Pick<RepoBundle, "repo" | "branches" | "fileTree"> & {
   selectedBranch: string;
-  setSelectedBranch: (value: string) => void;
+  onBranchChange: (value: string) => void;
+  isLoading?: boolean;
   fileTreeSearch: string;
   setFileTreeSearch: (value: string) => void;
 }) {
@@ -30,21 +32,33 @@ export function RepositoryTree({
             {t("github.fileTree", { count: fileTree.length })}
           </h3>
         </div>
-        <label className="ui-chip-success border border-success-outline/60 min-w-0 max-w-[60%] font-mono text-[11px] font-bold">
+        <label className="ui-chip-success relative border border-success-outline/60 min-w-0 max-w-[60%] font-mono text-[11px] font-bold focus-within:ring-2 focus-within:ring-success">
           <GitBranch aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
           <span className="shrink-0">{t("github.branchLabel")}</span>
+          <span aria-hidden="true" className="truncate">
+            {selectedBranch}
+          </span>
+          {isLoading ? (
+            <LoaderCircle aria-hidden="true" className="w-3.5 h-3.5 shrink-0 animate-spin" />
+          ) : (
+            <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+          )}
           <select
             aria-label={t("github.branchLabel")}
             value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-            className="min-w-0 cursor-pointer bg-transparent rounded-full focus:outline-hidden focus:ring-2 focus:ring-success"
+            disabled={isLoading}
+            onChange={(e) => onBranchChange(e.target.value)}
+            className="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0 disabled:cursor-wait"
           >
-            {!branches.some((b) => b.name === selectedBranch) && (
-              <option value={selectedBranch}>{selectedBranch}</option>
-            )}
-            {branches.map((b) => (
-              <option key={b.name} value={b.name}>
-                {b.name}
+            {Array.from(
+              new Set([
+                repo.default_branch || "main",
+                ...branches.map((b) => b.name),
+                selectedBranch,
+              ]),
+            ).map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </select>

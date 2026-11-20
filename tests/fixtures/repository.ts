@@ -42,6 +42,7 @@ export function createRepoFixture(): RepoBundle {
       topics: [],
       owner: identity,
     },
+    selectedBranch: "main",
     languages: { TypeScript: 100 },
     branches: [{ name: "main", protected: false, commit: { sha: commits[0].sha } }],
     commits,

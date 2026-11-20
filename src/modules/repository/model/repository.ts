@@ -97,6 +97,7 @@ export interface RepoFile {
 
 export interface RepoBundle {
   repo: Repository;
+  selectedBranch: string;
   languages: Record<string, number>;
   branches: RepoBranch[];
   commits: RepoCommit[];

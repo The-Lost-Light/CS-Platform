@@ -7,18 +7,30 @@ import { RepositoryLanguages } from "./RepositoryLanguages";
 import { RepositoryMetrics } from "./RepositoryMetrics";
 import { RepositoryTree } from "./RepositoryTree";
 
-export function GitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle | null }) {
+interface BranchControl {
+  onBranchChange: (branch: string) => void;
+  isLoading?: boolean;
+}
+
+export function GitHubRepoDashboard({
+  repoBundle,
+  ...control
+}: { repoBundle: RepoBundle | null } & BranchControl) {
   if (!repoBundle?.repo) return null;
   return (
     <LoadedGitHubRepoDashboard
       key={`${repoBundle.repo.full_name}:${repoBundle.commits[0]?.sha ?? ""}`}
       repoBundle={repoBundle}
+      {...control}
     />
   );
 }
 
-function LoadedGitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle }) {
-  const [selectedBranch, setSelectedBranch] = useState(repoBundle?.repo?.default_branch || "main");
+function LoadedGitHubRepoDashboard({
+  repoBundle,
+  onBranchChange,
+  isLoading,
+}: { repoBundle: RepoBundle } & BranchControl) {
   const [expandedCommitSha, setExpandedCommitSha] = useState<string | null>(null);
   const [diffMode, setDiffMode] = useState<DiffMode>("unified");
   const [fileTreeSearch, setFileTreeSearch] = useState("");
@@ -34,8 +46,9 @@ function LoadedGitHubRepoDashboard({ repoBundle }: { repoBundle: RepoBundle }) {
           repo={repo}
           branches={branches}
           fileTree={fileTree}
-          selectedBranch={selectedBranch}
-          setSelectedBranch={setSelectedBranch}
+          selectedBranch={repoBundle.selectedBranch}
+          onBranchChange={onBranchChange}
+          isLoading={isLoading}
           fileTreeSearch={fileTreeSearch}
           setFileTreeSearch={setFileTreeSearch}
         />

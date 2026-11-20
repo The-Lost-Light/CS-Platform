@@ -25,14 +25,18 @@ test("split diff pairs replacements and pads unequal changes within each hunk", 
   assert.deepEqual(splitPatch(""), []);
 });
 
-test("real API list summaries are enriched and render code in both history diff modes", async () => {
+test("a selected branch supplies the dashboard tree, history and both diff modes", async () => {
   const snapshot = createRepoFixture();
   const { files, stats, prInfo: _prInfo, ...summary } = snapshot.commits[0];
   const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
+  const branch = "feature/dashboard";
   const service = createGitHubService({
     fetch: async (input) => {
       const url = new Request(input).url;
-      if (url.includes("/commits?")) return Response.json([summary]);
+      if (url.includes("/commits?")) {
+        assert.strictEqual(new URL(url).searchParams.get("sha"), branch);
+        return Response.json([summary]);
+      }
       if (url.includes("/commits/"))
         return Response.json({
           ...summary,
@@ -41,11 +45,14 @@ test("real API list summaries are enriched and render code in both history diff 
         });
       if (url.endsWith("/languages")) return Response.json({});
       if (url.includes("/branches?")) return Response.json([]);
-      if (url.includes("/trees/")) return Response.json({ tree: [] });
+      if (url.includes("/trees/")) {
+        assert.ok(url.endsWith("/trees/feature%2Fdashboard?recursive=1"));
+        return Response.json({ tree: [{ path: "feature-only.ts", type: "blob", size: 1 }] });
+      }
       return Response.json(snapshot.repo);
     },
   });
-  const bundle = await service("facebook/react");
+  const bundle = await service("facebook/react", "", branch);
   for (const mode of ["unified", "split"] as const) {
     const html = renderToStaticMarkup(
       <I18nProvider initialLanguage="en">
@@ -64,9 +71,12 @@ test("real API list summaries are enriched and render code in both history diff 
   }
   const dashboard = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
-      <GitHubRepoDashboard repoBundle={bundle} />
+      <GitHubRepoDashboard repoBundle={bundle} onBranchChange={() => {}} />
     </I18nProvider>,
   );
+  assert.ok(dashboard.includes("feature-only.ts"));
+  assert.ok(dashboard.includes(`value="${branch}" selected=""`));
+  assert.ok(dashboard.includes(summary.commit.message));
   assert.ok(dashboard.includes('aria-expanded="false"'));
   assert.ok(!dashboard.includes('aria-expanded="true"'));
   assert.ok(!dashboard.includes("+new real code"));

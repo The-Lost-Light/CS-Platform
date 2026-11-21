@@ -1,9 +1,16 @@
 import { ChevronRight, FileCode2, Folder } from "lucide-react";
+import { memo, useDeferredValue, useMemo } from "react";
 
 import { buildRepoFileTree, type TreeNode } from "../model/fileTree";
 import type { RepoBundle } from "../model/repository";
 
-function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searching: boolean }) {
+function TreeEntriesList({
+  nodes,
+  searching,
+}: {
+  nodes: Map<string, TreeNode>;
+  searching: boolean;
+}) {
   const sorted = [...nodes.values()].sort(
     (a, b) => Number(b.directory) - Number(a.directory) || a.name.localeCompare(b.name),
   );
@@ -26,7 +33,7 @@ function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searc
                 <span className="truncate">{node.name}</span>
               </summary>
               <div className="ml-3 border-l border-outline-subtle pl-2">
-                <TreeEntries nodes={node.children} searching={searching} />
+                <TreeEntriesList nodes={node.children} searching={searching} />
               </div>
             </details>
           ) : (
@@ -51,8 +58,29 @@ function TreeEntries({ nodes, searching }: { nodes: Map<string, TreeNode>; searc
   );
 }
 
-export function RepoFileTree({ files, search }: { files: RepoBundle["fileTree"]; search: string }) {
-  const { roots, query } = buildRepoFileTree(files, search);
+const TreeEntries = memo(TreeEntriesList);
 
-  return <TreeEntries key={query} nodes={roots} searching={Boolean(query)} />;
-}
+export const RepoFileTree = memo(function RepoFileTree({
+  files,
+  search,
+}: {
+  files: RepoBundle["fileTree"];
+  search: string;
+}) {
+  const normalizedSearch = search.trim().toLowerCase();
+  const deferredSearch = useDeferredValue(normalizedSearch);
+  const isStale = normalizedSearch !== deferredSearch;
+  const { roots, query } = useMemo(
+    () => buildRepoFileTree(files, deferredSearch),
+    [files, deferredSearch],
+  );
+
+  return (
+    <div
+      aria-busy={isStale || undefined}
+      className={isStale ? "opacity-60 transition-opacity" : "transition-opacity"}
+    >
+      <TreeEntries key={query} nodes={roots} searching={Boolean(query)} />
+    </div>
+  );
+});

@@ -1,7 +1,7 @@
 import type { ReactFlowInstance, XYPosition } from "@xyflow/react";
 import { useRef, useState, type PointerEvent, type RefObject } from "react";
 
-import type { CanvasNode } from "../model/flowTypes";
+import { C4_MIN_NODE_HEIGHT, C4_MIN_NODE_WIDTH, type CanvasNode } from "../model/flowTypes";
 
 export function canStartNodeDraw(
   creating: boolean,
@@ -30,8 +30,8 @@ export function completeNodeDraw(
   return {
     position: { x: Math.min(from.x, to.x), y: Math.min(from.y, to.y) },
     size: {
-      width: Math.max(200, Math.abs(to.x - from.x)),
-      height: Math.max(160, Math.abs(to.y - from.y)),
+      width: Math.max(C4_MIN_NODE_WIDTH, Math.abs(to.x - from.x)),
+      height: Math.max(C4_MIN_NODE_HEIGHT, Math.abs(to.y - from.y)),
     },
   };
 }

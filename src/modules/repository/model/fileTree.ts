@@ -13,7 +13,7 @@ export function buildRepoFileTree(files: RepoBundle["fileTree"], search: string)
   const roots = new Map<string, TreeNode>();
 
   for (const file of files) {
-    if (!file.path.toLowerCase().includes(query)) continue;
+    if (query && !file.path.toLowerCase().includes(query)) continue;
     const parts = file.path.split("/").filter(Boolean);
     let siblings = roots;
     parts.forEach((name, index) => {

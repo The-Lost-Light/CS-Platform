@@ -248,7 +248,7 @@ test("single left click uses default size while left drag clamps position and mi
 
   assert.deepEqual(completeNodeDraw({ x: 300, y: 250 }, { x: 250, y: 200 }, identity), {
     position: { x: 250, y: 200 },
-    size: { width: 200, height: 160 },
+    size: { width: 100, height: 60 },
   });
 
   assert.deepEqual(completeNodeDraw({ x: 100, y: 100 }, { x: 420, y: 340 }, identity), {

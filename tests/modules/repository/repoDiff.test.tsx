@@ -9,8 +9,10 @@ import { buildRepoFileTree } from "@/modules/repository/model/fileTree";
 import { BranchSelector } from "@/modules/repository/ui/BranchSelector";
 import { CommitHistory } from "@/modules/repository/ui/CommitHistory";
 import { RepoDiff } from "@/modules/repository/ui/RepoDiff";
+import { RepoFileTree } from "@/modules/repository/ui/RepoFileTree";
 import { RepositoryLanguages } from "@/modules/repository/ui/RepositoryLanguages";
 import { RepositoryMetrics } from "@/modules/repository/ui/RepositoryMetrics";
+import { RepositoryTree } from "@/modules/repository/ui/RepositoryTree";
 
 import { createRepoFixture } from "../../fixtures/repository";
 
@@ -370,4 +372,52 @@ test("repository languages bar wraps chips inside card bounds and displays exact
   assert.ok(!html.includes("flex flex-wrap items-center gap-2 shrink-0"));
   assert.ok(html.includes('title="YAML: 0.5%"'));
   assert.ok(!html.includes('title="YAML: 2.0%"'));
+});
+
+test("RepoFileTree normalizes search queries and RepositoryTree renders filtered results with input value", () => {
+  const base = createRepoFixture();
+  const files = Array.from({ length: 260 }, (_, idx) => ({
+    path: idx === 0 ? "feature-only.ts" : `src/file-${idx}.ts`,
+    type: "blob" as const,
+    size: 1024,
+  }));
+
+  for (const search of ["", "   "]) {
+    const html = renderToStaticMarkup(<RepoFileTree files={files} search={search} />);
+    assert.ok(html.includes("feature-only.ts"));
+    assert.ok(html.includes("file-259.ts"));
+    assert.match(html, /<details\b(?![^>]*\bopen\b)[^>]*>/);
+    assert.ok(!html.includes("aria-busy"));
+    assert.ok(!html.includes("opacity-60"));
+  }
+
+  const filteredHtml = renderToStaticMarkup(
+    <RepoFileTree files={files} search="  FILE-259.TS  " />,
+  );
+  assert.match(filteredHtml, /<details\b[^>]*\bopen(?:=""|(?=\s|>))/);
+  assert.ok(filteredHtml.includes("file-259.ts"));
+  assert.ok(!filteredHtml.includes("feature-only.ts"));
+  assert.ok(!filteredHtml.includes("file-1.ts"));
+  assert.ok(!filteredHtml.includes("aria-busy"));
+  assert.ok(!filteredHtml.includes("opacity-60"));
+
+  const treeHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <RepositoryTree
+        repo={base.repo}
+        branches={base.branches}
+        totalBranches={base.totalBranches}
+        tags={base.tags}
+        totalTags={base.totalTags}
+        fileTree={files}
+        selectedBranch={base.selectedBranch}
+        onBranchChange={() => {}}
+        fileTreeSearch="file-259.ts"
+        setFileTreeSearch={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.match(treeHtml, /<input\b[^>]*\bvalue="file-259\.ts"/);
+  assert.ok(treeHtml.includes("file-259.ts"));
+  assert.ok(!treeHtml.includes("feature-only.ts"));
 });

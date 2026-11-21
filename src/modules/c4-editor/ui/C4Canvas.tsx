@@ -9,7 +9,13 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { prepareC4CanvasChanges } from "../model/canvasChanges";
-import type { BoundaryNode, CanvasNode, FlowNode } from "../model/flowTypes";
+import {
+  C4_MIN_NODE_HEIGHT,
+  C4_MIN_NODE_WIDTH,
+  type BoundaryNode,
+  type CanvasNode,
+  type FlowNode,
+} from "../model/flowTypes";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
@@ -18,7 +24,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
       style={{
         width: "100%",
         height: "100%",
-        minHeight: 160,
+        minHeight: C4_MIN_NODE_HEIGHT,
         backgroundColor: "var(--c4-node-bg)",
         borderColor: selected
           ? "var(--primary)"
@@ -30,7 +36,12 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         selected ? "ring-4 ring-primary/25 shadow-m3-2" : "hover:shadow-m3-2"
       }`}
     >
-      <NodeResizer isVisible={selected} minWidth={200} minHeight={160} color="var(--primary)" />
+      <NodeResizer
+        isVisible={selected}
+        minWidth={C4_MIN_NODE_WIDTH}
+        minHeight={C4_MIN_NODE_HEIGHT}
+        color="var(--primary)"
+      />
       <Handle
         type="target"
         position={Position.Left}

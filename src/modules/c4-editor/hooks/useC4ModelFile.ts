@@ -10,7 +10,7 @@ import type { C4HistoryAction } from "../model/modelHistory";
 import type { DesignTab } from "../model/types";
 import { downloadC4Model } from "../services/c4Download";
 
-export type C4FileStatus = "importSuccess" | "importError" | "fileTooLarge" | "exportError";
+type C4FileStatus = "importSuccess" | "importError" | "fileTooLarge" | "exportError";
 
 const FILE_STATUS_DURATION_MS: Record<C4FileStatus, number> = {
   importSuccess: 3500,

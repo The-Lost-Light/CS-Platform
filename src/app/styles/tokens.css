@@ -15,7 +15,6 @@
   --surface-container-highest: rgba(207, 221, 237, 0.84);
   --surface-tonal: rgba(226, 237, 250, 0.62);
   --surface-hover: rgba(79, 114, 153, 0.08);
-  --surface-active: rgba(79, 114, 153, 0.13);
 
   /* Typography & Iconography */
   --on-surface: #1e242c;
@@ -38,12 +37,9 @@
 
   /* Secondary Accent: Desaturated Steel-Teal */
   --secondary: #4e7687;
-  --secondary-hover: #3e6272;
   --on-secondary: #ffffff;
   --secondary-container: rgba(218, 234, 242, 0.72);
-  --secondary-container-hover: rgba(201, 223, 235, 0.84);
   --on-secondary-container: #223f4d;
-  --secondary-outline: rgba(151, 184, 201, 0.6);
 
   /* Brand Banner */
   --brand-banner: #47678a;
@@ -53,16 +49,12 @@
 
   /* Low-Saturation Semantic Status Tokens */
   --success: #3c7c57;
-  --on-success: #ffffff;
   --success-container: rgba(215, 238, 224, 0.76);
   --on-success-container: #1f4f34;
   --success-outline: rgba(138, 189, 159, 0.65);
 
-  --warning: #94682b;
-  --on-warning: #ffffff;
   --warning-container: rgba(248, 238, 214, 0.8);
   --on-warning-container: #634416;
-  --warning-outline: rgba(217, 184, 118, 0.68);
 
   --danger: #a84848;
   --danger-hover: #8c3737;
@@ -78,14 +70,8 @@
   --elevation-3: 0 10px 24px rgba(24, 34, 48, 0.1), 0 2px 6px rgba(24, 34, 48, 0.06);
 
   /* C4 Architecture & Visualization */
-  --c4-person-bg: rgba(255, 255, 255, 0.86);
-  --c4-system-bg: rgba(255, 255, 255, 0.86);
-  --c4-container-bg: rgba(240, 245, 252, 0.82);
-  --c4-component-bg: rgba(240, 245, 252, 0.82);
   --c4-node-bg: rgba(224, 236, 250, 0.88);
-  --c4-expandable-bg: rgba(255, 255, 255, 0.86);
   --c4-expandable-border: #4e7687;
-  --c4-leaf-bg: rgba(240, 245, 252, 0.82);
   --c4-leaf-border: rgba(79, 114, 153, 0.62);
   --c4-edge: #4f7299;
   --c4-edge-selected: #385c82;
@@ -116,7 +102,6 @@
   --surface-container-highest: rgba(215, 209, 235, 0.85);
   --surface-tonal: rgba(238, 232, 248, 0.64);
   --surface-hover: rgba(110, 92, 153, 0.08);
-  --surface-active: rgba(110, 92, 153, 0.13);
 
   --on-surface: #211f29;
   --on-surface-muted: #555064;
@@ -135,11 +120,8 @@
   --primary-outline: rgba(176, 159, 214, 0.65);
 
   --secondary: #5171a3;
-  --secondary-hover: #425f8c;
   --secondary-container: rgba(220, 231, 248, 0.74);
-  --secondary-container-hover: rgba(203, 219, 244, 0.86);
   --on-secondary-container: #24395c;
-  --secondary-outline: rgba(154, 179, 217, 0.6);
 
   --brand-banner: #594882;
   --brand-banner-accent: #7f6ca8;
@@ -171,7 +153,6 @@
   --surface-container-highest: rgba(204, 224, 215, 0.84);
   --surface-tonal: rgba(226, 240, 233, 0.64);
   --surface-hover: rgba(70, 115, 94, 0.08);
-  --surface-active: rgba(70, 115, 94, 0.13);
 
   --on-surface: #1d2622;
   --on-surface-muted: #4f5e57;
@@ -190,11 +171,8 @@
   --primary-outline: rgba(140, 186, 164, 0.65);
 
   --secondary: #4e7382;
-  --secondary-hover: #3e5f6d;
   --secondary-container: rgba(217, 233, 240, 0.72);
-  --secondary-container-hover: rgba(199, 221, 231, 0.84);
   --on-secondary-container: #223d47;
-  --secondary-outline: rgba(149, 181, 194, 0.6);
 
   --brand-banner: #3e6654;
   --brand-banner-accent: #638f7b;
@@ -226,7 +204,6 @@
   --surface-container-highest: rgba(212, 218, 230, 0.85);
   --surface-tonal: rgba(233, 236, 242, 0.66);
   --surface-hover: rgba(82, 96, 115, 0.08);
-  --surface-active: rgba(82, 96, 115, 0.13);
 
   --on-surface: #1f2329;
   --on-surface-muted: #535a66;
@@ -245,11 +222,8 @@
   --primary-outline: rgba(154, 168, 186, 0.65);
 
   --secondary: #5a6f82;
-  --secondary-hover: #475b6d;
   --secondary-container: rgba(222, 232, 240, 0.74);
-  --secondary-container-hover: rgba(206, 220, 232, 0.86);
   --on-secondary-container: #263645;
-  --secondary-outline: rgba(158, 177, 194, 0.6);
 
   --brand-banner: #465366;
   --brand-banner-accent: #6a7a91;
@@ -285,7 +259,6 @@
   --surface-container-highest: rgba(43, 66, 100, 0.88);
   --surface-tonal: rgba(33, 56, 90, 0.68);
   --surface-hover: rgba(133, 191, 255, 0.11);
-  --surface-active: rgba(133, 191, 255, 0.18);
 
   --on-surface: #e6effa;
   --on-surface-muted: #b0c4de;
@@ -304,12 +277,9 @@
   --primary-outline: rgba(116, 174, 240, 0.58);
 
   --secondary: #7fd0e8;
-  --secondary-hover: #a3e0f2;
   --on-secondary: #0b2c38;
   --secondary-container: rgba(28, 76, 98, 0.7);
-  --secondary-container-hover: rgba(38, 94, 120, 0.82);
   --on-secondary-container: #d8f3fc;
-  --secondary-outline: rgba(108, 184, 210, 0.52);
 
   --brand-banner: #1e3e68;
   --brand-banner-accent: #3b70b0;
@@ -317,16 +287,12 @@
   --on-brand-banner-muted: #c6e0fc;
 
   --success: #8ec4a4;
-  --on-success: #0d331d;
   --success-container: rgba(34, 74, 52, 0.65);
   --on-success-container: #d2eee0;
   --success-outline: rgba(86, 148, 112, 0.5);
 
-  --warning: #e3c27d;
-  --on-warning: #3d2c08;
   --warning-container: rgba(84, 65, 29, 0.65);
   --on-warning-container: #f7e6c0;
-  --warning-outline: rgba(168, 134, 68, 0.5);
 
   --danger: #e09c9c;
   --danger-hover: #ecc0c0;
@@ -340,14 +306,8 @@
   --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.36), 0 1px 3px rgba(0, 0, 0, 0.26);
   --elevation-3: 0 10px 24px rgba(0, 0, 0, 0.46), 0 2px 6px rgba(0, 0, 0, 0.32);
 
-  --c4-person-bg: rgba(22, 34, 54, 0.88);
-  --c4-system-bg: rgba(22, 34, 54, 0.88);
-  --c4-container-bg: rgba(16, 25, 41, 0.84);
-  --c4-component-bg: rgba(16, 25, 41, 0.84);
   --c4-node-bg: rgba(31, 56, 92, 0.88);
-  --c4-expandable-bg: rgba(22, 34, 54, 0.88);
   --c4-expandable-border: #7fd0e8;
-  --c4-leaf-bg: rgba(16, 25, 41, 0.84);
   --c4-leaf-border: rgba(133, 191, 255, 0.62);
   --c4-edge: #85bfff;
   --c4-edge-selected: #7fd0e8;
@@ -379,7 +339,6 @@
   --surface-container-highest: rgba(58, 55, 77, 0.86);
   --surface-tonal: rgba(48, 42, 66, 0.66);
   --surface-hover: rgba(191, 176, 230, 0.09);
-  --surface-active: rgba(191, 176, 230, 0.15);
 
   --on-surface: #e7e4ef;
   --on-surface-muted: #b9b4c9;
@@ -398,26 +357,17 @@
   --primary-outline: rgba(154, 136, 201, 0.52);
 
   --secondary: #a4bde6;
-  --secondary-hover: #bfd2f2;
   --on-secondary: #182b4a;
   --secondary-container: rgba(50, 72, 107, 0.65);
-  --secondary-container-hover: rgba(62, 88, 128, 0.78);
   --on-secondary-container: #dce8fc;
-  --secondary-outline: rgba(128, 155, 199, 0.48);
 
   --brand-banner: #362957;
   --brand-banner-accent: #554285;
   --on-brand-banner: #f5f1ff;
   --on-brand-banner-muted: #d9cff5;
 
-  --c4-person-bg: rgba(31, 30, 42, 0.88);
-  --c4-system-bg: rgba(31, 30, 42, 0.88);
-  --c4-container-bg: rgba(23, 22, 32, 0.84);
-  --c4-component-bg: rgba(23, 22, 32, 0.84);
   --c4-node-bg: rgba(45, 44, 72, 0.88);
-  --c4-expandable-bg: rgba(31, 30, 42, 0.88);
   --c4-expandable-border: #a4bde6;
-  --c4-leaf-bg: rgba(23, 22, 32, 0.84);
   --c4-leaf-border: rgba(191, 176, 230, 0.55);
   --c4-edge: #bfb0e6;
   --c4-edge-selected: #a4bde6;
@@ -443,7 +393,6 @@
   --surface-container-highest: rgba(48, 66, 59, 0.86);
   --surface-tonal: rgba(35, 54, 46, 0.66);
   --surface-hover: rgba(152, 204, 178, 0.09);
-  --surface-active: rgba(152, 204, 178, 0.15);
 
   --on-surface: #e3ede8;
   --on-surface-muted: #b0c2b9;
@@ -462,26 +411,17 @@
   --primary-outline: rgba(118, 173, 146, 0.52);
 
   --secondary: #9ac4d1;
-  --secondary-hover: #b6d8e3;
   --on-secondary: #15323b;
   --secondary-container: rgba(42, 74, 84, 0.65);
-  --secondary-container-hover: rgba(53, 91, 102, 0.78);
   --on-secondary-container: #d8edf4;
-  --secondary-outline: rgba(114, 158, 172, 0.48);
 
   --brand-banner: #234033;
   --brand-banner-accent: #3d6b56;
   --on-brand-banner: #effaf4;
   --on-brand-banner-muted: #c8e8d8;
 
-  --c4-person-bg: rgba(25, 35, 32, 0.88);
-  --c4-system-bg: rgba(25, 35, 32, 0.88);
-  --c4-container-bg: rgba(19, 27, 24, 0.84);
-  --c4-component-bg: rgba(19, 27, 24, 0.84);
   --c4-node-bg: rgba(36, 58, 49, 0.88);
-  --c4-expandable-bg: rgba(25, 35, 32, 0.88);
   --c4-expandable-border: #9ac4d1;
-  --c4-leaf-bg: rgba(19, 27, 24, 0.84);
   --c4-leaf-border: rgba(152, 204, 178, 0.55);
   --c4-edge: #98ccb2;
   --c4-edge-selected: #9ac4d1;
@@ -507,7 +447,6 @@
   --surface-container-highest: rgba(53, 59, 72, 0.86);
   --surface-tonal: rgba(42, 46, 56, 0.66);
   --surface-hover: rgba(178, 191, 209, 0.09);
-  --surface-active: rgba(178, 191, 209, 0.15);
 
   --on-surface: #e5e8ee;
   --on-surface-muted: #b4bcc9;
@@ -526,26 +465,17 @@
   --primary-outline: rgba(138, 150, 168, 0.52);
 
   --secondary: #a8becf;
-  --secondary-hover: #c1d4e3;
   --on-secondary: #1b2a36;
   --secondary-container: rgba(49, 68, 84, 0.65);
-  --secondary-container-hover: rgba(61, 83, 102, 0.78);
   --on-secondary-container: #dde9f2;
-  --secondary-outline: rgba(128, 152, 171, 0.48);
 
   --brand-banner: #29313d;
   --brand-banner-accent: #445063;
   --on-brand-banner: #f2f5fa;
   --on-brand-banner-muted: #ced6e3;
 
-  --c4-person-bg: rgba(28, 32, 40, 0.88);
-  --c4-system-bg: rgba(28, 32, 40, 0.88);
-  --c4-container-bg: rgba(21, 24, 31, 0.84);
-  --c4-component-bg: rgba(21, 24, 31, 0.84);
   --c4-node-bg: rgba(44, 51, 64, 0.88);
-  --c4-expandable-bg: rgba(28, 32, 40, 0.88);
   --c4-expandable-border: #a8becf;
-  --c4-leaf-bg: rgba(21, 24, 31, 0.84);
   --c4-leaf-border: rgba(178, 191, 209, 0.55);
   --c4-edge: #b2bfd1;
   --c4-edge-selected: #a8becf;
@@ -568,13 +498,11 @@
   --color-canvas: var(--bg-canvas);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
-  --color-surface-solid: var(--surface-solid);
   --color-surface-sunken: var(--surface-sunken);
   --color-surface-container: var(--surface-container);
   --color-surface-high: var(--surface-container-high);
   --color-surface-highest: var(--surface-container-highest);
   --color-surface-hover: var(--surface-hover);
-  --color-surface-active: var(--surface-active);
   --color-surface-tonal: var(--surface-tonal);
 
   --color-on-surface: var(--on-surface);
@@ -594,12 +522,9 @@
   --color-primary-outline: var(--primary-outline);
 
   --color-secondary: var(--secondary);
-  --color-secondary-hover: var(--secondary-hover);
   --color-on-secondary: var(--on-secondary);
   --color-secondary-container: var(--secondary-container);
-  --color-secondary-container-hover: var(--secondary-container-hover);
   --color-on-secondary-container: var(--on-secondary-container);
-  --color-secondary-outline: var(--secondary-outline);
 
   --color-brand-banner: var(--brand-banner);
   --color-brand-banner-accent: var(--brand-banner-accent);
@@ -607,16 +532,12 @@
   --color-on-brand-banner-muted: var(--on-brand-banner-muted);
 
   --color-success: var(--success);
-  --color-on-success: var(--on-success);
   --color-success-container: var(--success-container);
   --color-on-success-container: var(--on-success-container);
   --color-success-outline: var(--success-outline);
 
-  --color-warning: var(--warning);
-  --color-on-warning: var(--on-warning);
   --color-warning-container: var(--warning-container);
   --color-on-warning-container: var(--on-warning-container);
-  --color-warning-outline: var(--warning-outline);
 
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);

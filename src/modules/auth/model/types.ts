@@ -5,15 +5,12 @@ export interface User {
   role: string;
 }
 
-export interface LoginCredentials extends User {
+export interface LoginCredentials {
+  studentId: string;
   password: string;
 }
 
-export type LoginErrorCode =
-  | "accountRequired"
-  | "passwordRequired"
-  | "invalidCredentials"
-  | "unavailable";
+type LoginErrorCode = "accountRequired" | "passwordRequired" | "invalidCredentials" | "unavailable";
 
 export type LoginResult = { ok: true; user: User } | { ok: false; error: LoginErrorCode };
 

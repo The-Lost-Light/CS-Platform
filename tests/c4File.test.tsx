@@ -1,9 +1,7 @@
-import { migrateC4Nodes, parseC4File, serializeC4File } from "@modules/c4-model";
+import { parseC4File, serializeC4File } from "@modules/c4-model";
 import { assert, test } from "vite-plus/test";
 
-import { legacyNodes } from "./fixtures/mindMap";
-
-const nodes = migrateC4Nodes(legacyNodes);
+import { sampleC4Nodes as nodes } from "./fixtures/c4Model";
 const relationships = [
   {
     id: "edge",

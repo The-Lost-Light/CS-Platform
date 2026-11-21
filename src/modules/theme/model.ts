@@ -2,7 +2,7 @@ export type ThemeMode = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 export type ThemePalette = "blue" | "lavender" | "sage" | "slate";
 
-export interface ThemePaletteSwatch {
+interface ThemePaletteSwatch {
   value: ThemePalette;
   primary: string;
   tint: string;
@@ -11,7 +11,6 @@ export interface ThemePaletteSwatch {
   isDefault?: boolean;
 }
 
-export const SUPPORTED_THEME_MODES: readonly ThemeMode[] = ["system", "light", "dark"];
 export const DEFAULT_THEME_PALETTE: ThemePalette = "blue";
 export const SUPPORTED_THEME_PALETTES: readonly ThemePalette[] = [
   "blue",

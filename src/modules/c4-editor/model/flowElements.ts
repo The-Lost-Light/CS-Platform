@@ -13,8 +13,6 @@ interface FlowView {
   edgeId: string;
   expandableIds: Set<string | null>;
   showTechnology: boolean;
-  select: (id: string) => void;
-  explore: (id: string) => void;
 }
 export function buildFlowElements({
   visible,
@@ -25,8 +23,6 @@ export function buildFlowElements({
   edgeId,
   expandableIds,
   showTechnology,
-  select,
-  explore,
 }: FlowView) {
   const visibleIds = new Set(visible.map((node) => node.id));
   const flowNodes: CanvasNode[] = visible.map((node) => {
@@ -43,8 +39,6 @@ export function buildFlowElements({
         description: node.description,
         technology: showTechnology ? node.technology : "",
         expandable: expandableIds.has(node.id),
-        onSelect: () => select(node.id),
-        onExplore: () => explore(node.id),
       },
     };
   });

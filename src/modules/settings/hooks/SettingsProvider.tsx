@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 import type { SettingsSection } from "../model/settings";
 
-export interface SettingsContextValue {
+interface SettingsContextValue {
   isOpen: boolean;
   expandedSection: SettingsSection | null;
   openSettings: () => void;

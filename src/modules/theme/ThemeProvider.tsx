@@ -9,15 +9,6 @@ import {
   type ThemeMode,
   type ThemePalette,
 } from "./model";
-export {
-  DEFAULT_THEME_PALETTE,
-  isThemeMode,
-  isThemePalette,
-  resolveTheme,
-  SUPPORTED_THEME_MODES,
-  SUPPORTED_THEME_PALETTES,
-} from "./model";
-export type { ResolvedTheme, ThemeMode, ThemePalette } from "./model";
 
 const THEME_STORAGE_KEY = "codepulse.themeMode";
 const PALETTE_STORAGE_KEY = "codepulse.themePalette";
@@ -53,7 +44,7 @@ function getSystemPrefersDark(): boolean {
   return false;
 }
 
-export interface ThemeContextValue {
+interface ThemeContextValue {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
   palette: ThemePalette;

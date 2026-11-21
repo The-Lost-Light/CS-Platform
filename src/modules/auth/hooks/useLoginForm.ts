@@ -17,8 +17,6 @@ export function useLoginForm(onLogin: LoginHandler) {
   const [credentials, setCredentials] = useState<LoginCredentials>(() => ({
     studentId: "",
     password: "",
-    name: "",
-    role: "",
   }));
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<LoginError | null>(null);

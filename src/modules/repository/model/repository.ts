@@ -1,6 +1,4 @@
-import type { MessageKey } from "@modules/i18n";
-
-export interface Repository {
+interface Repository {
   full_name: string;
   html_url: string;
   description: string;
@@ -32,14 +30,14 @@ export interface RepoBranch {
   };
 }
 
-export interface RepoTag {
+interface RepoTag {
   name: string;
   commit: {
     sha: string;
   };
 }
 
-export interface RepoPullRequest {
+interface RepoPullRequest {
   number: number;
   title?: string;
   state?: string;
@@ -71,21 +69,6 @@ export interface RepoCommit {
   parents: Array<{
     sha: string;
   }>;
-  prInfo?: {
-    number: number;
-    title: string;
-    html_url: string;
-    state: string;
-    merge_method: string;
-    merge_method_key: Extract<MessageKey, `github.merge.${string}`>;
-    merged_by: {
-      login: string;
-      name: string;
-    };
-    merged_at: string;
-    base_ref: string;
-    head_ref: string;
-  };
   stats?: {
     total: number;
     additions: number;
@@ -109,7 +92,7 @@ export interface RepoCommitsPage {
   hasMore: boolean;
 }
 
-export interface RepoFile {
+interface RepoFile {
   path: string;
   type: string;
   size: number;

@@ -202,8 +202,6 @@ export function useC4Editor({
     edgeId,
     expandableIds,
     showTechnology,
-    select,
-    explore: navigate,
   });
   return {
     selectedSourceLabel:

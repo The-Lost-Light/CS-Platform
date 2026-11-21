@@ -1,5 +1,4 @@
 export { I18nProvider, useI18n, type LanguagePreference } from "./I18nProvider";
-export { LanguageSwitcher } from "./LanguageSwitcher";
 export {
   createTranslator,
   DEFAULT_LOCALE,

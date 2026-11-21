@@ -385,8 +385,6 @@ test("clicking outside the currently edited node closes the edit inspector while
       description: "",
       technology: "",
       expandable: false,
-      onSelect: () => {},
-      onExplore: () => {},
     },
   });
 

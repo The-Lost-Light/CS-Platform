@@ -22,8 +22,7 @@
   }
 
   code,
-  pre,
-  .font-mono-code {
+  pre {
     font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }

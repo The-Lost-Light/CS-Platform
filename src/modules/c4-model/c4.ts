@@ -1,22 +1,18 @@
-interface MindMapNode {
+export type C4Kind = "person" | "system" | "container" | "component" | "code";
+export interface C4Node {
   id: string;
   label: string;
+  kind: C4Kind;
   category: string;
-  expectedPath: string;
   description: string;
+  technology: string;
   parentId: string | null;
   x: number;
   y: number;
-}
-
-export type C4Kind = "person" | "system" | "container" | "component" | "code";
-export type C4Node = Omit<MindMapNode, "expectedPath"> & {
-  kind: C4Kind;
-  technology: string;
   width?: number;
   height?: number;
   boundary?: { x: number; y: number; width: number; height: number };
-};
+}
 export interface C4Relationship {
   id: string;
   source: string;
@@ -24,11 +20,6 @@ export interface C4Relationship {
   label: string;
   technology: string;
 }
-export const parentKind: Partial<Record<C4Kind, C4Kind>> = {
-  container: "system",
-  component: "container",
-  code: "component",
-};
 export const C4_MAX_LEVELS = 4;
 
 export const SCOPE_OFFSET = { x: 40, y: 70 };
@@ -117,41 +108,6 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   return { path, scope, boundary, visible };
 }
 
-/** Infer C4 containment from legacy mind-map categories and paths. */
-export function migrateC4Nodes(nodes: MindMapNode[]): C4Node[] {
-  const root = nodes.find((node) => !node.parentId);
-  const migrated = nodes.map((node, index) => {
-    const kind: C4Kind =
-      node === root
-        ? "system"
-        : node.parentId === root?.id || node.category === "database"
-          ? "container"
-          : "component";
-    return {
-      ...node,
-      kind,
-      technology: "",
-      parentId: kind === "container" ? (root?.id ?? null) : node.parentId,
-      x: (index % 3) * 310,
-      y: Math.floor(index / 3) * 240,
-    };
-  });
-  // Tests and documentation describe implementation; they are not deployable containers.
-  const container = migrated.find(
-    (node) => node.kind === "container" && !["testing", "database"].includes(node.category),
-  );
-  if (container)
-    migrated.forEach((node) => {
-      if (node.category === "testing" || node.expectedPath.startsWith("docs/")) {
-        node.kind = "component";
-        node.parentId =
-          migrated.find((parent) => parent.id === node.parentId && parent.kind === "container")
-            ?.id || container.id;
-      }
-    });
-  return migrated.map(({ expectedPath: _path, ...node }) => node);
-}
-
 export function removeC4Nodes(nodes: C4Node[], ids: string[]) {
   const removed = new Set(ids);
   let size = -1;
@@ -162,12 +118,6 @@ export function removeC4Nodes(nodes: C4Node[], ids: string[]) {
     });
   }
   return nodes.filter((node) => !removed.has(node.id));
-}
-
-export function visibleC4Nodes(nodes: C4Node[], level: C4Kind, scope: string): C4Node[] {
-  if (level === "system")
-    return nodes.filter((node) => node.kind === "person" || node.kind === "system");
-  return c4Drilldown(nodes, scope).visible.filter((node) => node.kind === level);
 }
 
 /** Partial overlaps count; touching edges alone do not. Used to move nodes together with the boundary. */

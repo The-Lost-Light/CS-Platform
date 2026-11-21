@@ -1,4 +1,4 @@
-import { AuthProvider, DEMO_ACCOUNTS, demoAuthService, AuthGate, LoginView } from "@modules/auth";
+import { AuthProvider, AuthGate, LoginView, type User } from "@modules/auth";
 import { HomeDashboard } from "@modules/catalog";
 import {
   I18nProvider,
@@ -14,7 +14,6 @@ import { GitHubRepoDashboard, fetchGitHubProjectBundle } from "@modules/reposito
 import { SettingsButton, SettingsDialog, SettingsProvider } from "@modules/settings";
 import {
   DEFAULT_THEME_PALETTE,
-  PaletteSwitcher,
   SUPPORTED_THEME_PALETTES,
   ThemeProvider,
   isThemeMode,
@@ -26,6 +25,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { assert, expect, test } from "vite-plus/test";
 
 import { createRepoFixture } from "./fixtures/repository";
+
+const testUser: User = {
+  id: "student-1",
+  studentId: "student@example.com",
+  name: "Alex Chen",
+  role: "user",
+};
+const stubAuthService = {
+  login: () => ({ ok: false as const, error: "invalidCredentials" as const }),
+};
 
 const en = getLocalizedProjects("en");
 const zh = getLocalizedProjects("zh-TW");
@@ -59,34 +68,17 @@ test("theme palette validation defaults to Mist Blue and preserves Soft Lavender
   assert.ok(SUPPORTED_THEME_PALETTES.includes("lavender"));
   for (const palette of SUPPORTED_THEME_PALETTES) assert.strictEqual(isThemePalette(palette), true);
   assert.strictEqual(isThemePalette("invalid"), false);
-
-  const enHtml = renderToStaticMarkup(
-    <ThemeProvider>
-      <I18nProvider initialLanguage="en">
-        <PaletteSwitcher />
-      </I18nProvider>
-    </ThemeProvider>,
-  );
-  const zhHtml = renderToStaticMarkup(
-    <ThemeProvider initialPalette="lavender">
-      <I18nProvider initialLanguage="zh-TW">
-        <PaletteSwitcher />
-      </I18nProvider>
-    </ThemeProvider>,
-  );
-  assert.ok(enHtml.includes("Mist Blue"));
-  assert.ok(zhHtml.includes("霧感淡紫"));
 });
 
 test("semantic keys resolve in both languages and interpolation preserves literal code", () => {
   const input = "${value} {count} <script> $&";
-  assert.strictEqual(t("common.count", { count: input }), `Count: ${input}`);
-  assert.strictEqual(createTranslator("zh-TW")("common.count", { count: 3 }), "筆數：3");
+  assert.strictEqual(t("home.projectCount", { count: input }), `Projects: ${input}`);
+  assert.strictEqual(createTranslator("zh-TW")("home.projectCount", { count: 3 }), "專案數：3");
   assert.strictEqual(t("auth.title"), "Sign in to CodePulse Edu");
   assert.strictEqual(createTranslator("zh-TW")("auth.title"), "登入課程作業系統");
   assert.strictEqual(t("language.autoDetected", { language: "English" }), "Auto (English)");
-  assert.strictEqual(t("common.count"), "Count: {count}");
-  assert.strictEqual(t("common.count", { count: undefined }), "Count: ");
+  assert.strictEqual(t("home.projectCount"), "Projects: {count}");
+  assert.strictEqual(t("home.projectCount", { count: undefined }), "Projects: ");
 });
 
 test("unknown keys fall back safely and literal text is rejected by the typed translator", () => {
@@ -154,7 +146,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
         <I18nProvider initialLanguage={locale}>
           <HomeDashboard
             projects={getLocalizedProjects(locale).projects}
-            currentUser={DEMO_ACCOUNTS[0]}
+            currentUser={testUser}
             onOpenProject={noop}
           />
         </I18nProvider>
@@ -168,8 +160,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
     }
     assert.notMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
     const expectedTitle = locale === "en" ? "Project Submission Platform" : "專案繳交平台";
-    const expectedWelcome =
-      (locale === "en" ? "Welcome back, " : "歡迎回來，") + DEMO_ACCOUNTS[0].name;
+    const expectedWelcome = (locale === "en" ? "Welcome back, " : "歡迎回來，") + testUser.name;
     assert.match(html, /<div class="ui-icon-badge[^"]*">\s*<svg\b[\s\S]*?<h1\b/);
     const headerMatch = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>\s*<p\b[^>]*>([\s\S]*?)<\/p>/);
     assert.ok(headerMatch);
@@ -254,16 +245,14 @@ test("the project editor renders a saved personal README and repository in the c
 
 const screens = {
   authGate: (
-    <AuthProvider service={demoAuthService}>
+    <AuthProvider service={stubAuthService}>
       <AuthGate>
-        <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />
+        <HomeDashboard projects={en.projects} currentUser={testUser} onOpenProject={noop} />
       </AuthGate>
     </AuthProvider>
   ),
-  dashboard: (
-    <HomeDashboard projects={en.projects} currentUser={DEMO_ACCOUNTS[0]} onOpenProject={noop} />
-  ),
-  login: <LoginView onLogin={(input) => demoAuthService.login(input)} />,
+  dashboard: <HomeDashboard projects={en.projects} currentUser={testUser} onOpenProject={noop} />,
+  login: <LoginView onLogin={() => stubAuthService.login()} />,
   project: (
     <ProjectWorkspace
       project={en.projects[0]}
@@ -271,7 +260,6 @@ const screens = {
     />
   ),
   github: <GitHubRepoDashboard repoBundle={bundle} onBranchChange={() => {}} />,
-  paletteSwitcher: <PaletteSwitcher />,
   settingsButton: <SettingsButton />,
   settingsDialog: (
     <SettingsProvider>
@@ -287,14 +275,8 @@ for (const [name, screen] of Object.entries(screens)) {
         <I18nProvider initialLanguage="en">{screen}</I18nProvider>
       </ThemeProvider>,
     );
-    // Names and the native-language option are intentionally preserved; input values are user data.
-    const visibleText = html
-      .replace(/<[^>]*>/g, "")
-      .replaceAll("繁體中文", "")
-      .replaceAll("陳宥軒 (資工三甲)", "")
-      .replaceAll("林博宇 (資工三乙)", "")
-      .replaceAll("張簡助教 (Course TA)", "")
-      .replace(/[陳林張]/g, "");
+    // The native-language option is intentionally preserved; input values are user data.
+    const visibleText = html.replace(/<[^>]*>/g, "").replaceAll("繁體中文", "");
     assert.strictEqual(
       han.test(visibleText),
       false,

@@ -18,8 +18,6 @@ function card(id: string, x: number, y: number): FlowNode {
       description: "",
       technology: "",
       expandable: false,
-      onSelect: () => {},
-      onExplore: () => {},
     },
   };
 }

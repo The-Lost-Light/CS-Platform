@@ -1,4 +1,3 @@
-export type { C4FileStatus, C4ModelFile } from "./hooks/useC4ModelFile";
 export { useC4ModelFile } from "./hooks/useC4ModelFile";
 export type { DesignTab } from "./model/types";
 export { createC4History, reduceC4History } from "./model/modelHistory";

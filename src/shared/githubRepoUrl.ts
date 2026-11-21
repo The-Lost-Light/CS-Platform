@@ -1,4 +1,4 @@
-export const REPO_URL_MAX_LENGTH = 300;
+const REPO_URL_MAX_LENGTH = 300;
 
 export function parseGitHubRepoUrl(rawInput: string) {
   const trimmed = rawInput.trim();

@@ -34,7 +34,7 @@ test("split diff pairs replacements and pads unequal changes within each hunk", 
 
 test("a selected branch supplies the dashboard tree, history and on-demand diff modes", async () => {
   const snapshot = createRepoFixture();
-  const { files, stats, prInfo: _prInfo, ...summary } = snapshot.commits[0];
+  const { files, stats, ...summary } = snapshot.commits[0];
   const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
   const branch = "feature/dashboard";
   const transport: typeof globalThis.fetch = async (input) => {

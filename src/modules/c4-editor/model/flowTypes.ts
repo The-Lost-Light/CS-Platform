@@ -9,8 +9,6 @@ export type FlowNode = Node<
     description: string;
     technology: string;
     expandable: boolean;
-    onSelect: () => void;
-    onExplore: () => void;
   },
   "c4"
 >;

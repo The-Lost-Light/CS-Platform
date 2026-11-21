@@ -2,17 +2,13 @@ import {
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
-  migrateC4Nodes,
   overlapsC4Boundary,
   removeC4Nodes,
-  visibleC4Nodes,
   type C4Node,
 } from "@modules/c4-model";
 import { assert, test } from "vite-plus/test";
 
-import { legacyNodes } from "./fixtures/mindMap";
-
-const nodes = migrateC4Nodes(legacyNodes);
+import { sampleC4Nodes as nodes } from "./fixtures/c4Model";
 
 test("new nodes are placed below the full height of resized siblings", () => {
   const siblings = [
@@ -128,23 +124,6 @@ test("missing or deleted scope returns to context without stale boundary or brea
   assert.strictEqual(view.scope, undefined);
   assert.deepEqual(view.path, []);
   assert.ok(view.visible.every((node) => !node.parentId));
-});
-test("legacy migration keeps the hierarchy and drops obsolete GitHub paths", () => {
-  assert.ok(nodes.every((node) => !("expectedPath" in node)));
-  assert.strictEqual(nodes.find((node) => node.id === "node-db")?.parentId, "node-root");
-  assert.strictEqual(nodes.find((node) => node.id === "node-tests")?.kind, "component");
-});
-test("C4 scopes show their own elements without peer containers", () => {
-  assert.deepEqual(
-    visibleC4Nodes(nodes, "system", "").map((node) => node.id),
-    ["node-root"],
-  );
-  const visible = visibleC4Nodes(nodes, "component", "node-api").map((node) => node.id);
-  assert.ok(visible.includes("node-ai-service"));
-  assert.ok(!visible.includes("node-db"));
-  assert.ok(!visible.includes("node-root"));
-  assert.ok(!visible.includes("node-api"));
-  assert.ok(!visible.includes("node-editor"));
 });
 test("removing a system recursively removes descendants including code elements", () => {
   const code: C4Node = {

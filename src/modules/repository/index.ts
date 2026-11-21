@@ -16,10 +16,6 @@ export {
   fetchGitHubCommitsPage,
   fetchGitHubProjectBundle,
   getCachedCommitDetails,
-  type GitHubBranchesPageLoader,
-  type GitHubBranchLoader,
-  type GitHubCommitDetailsLoader,
-  type GitHubCommitsPageLoader,
   type GitHubProjectLoader,
 } from "./services/github";
 export { RepositoryConnection } from "./ui/RepositoryConnection";

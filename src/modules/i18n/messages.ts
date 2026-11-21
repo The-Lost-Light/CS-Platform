@@ -7,7 +7,7 @@ import uiZh from "./zh-TW/ui";
 
 export const englishMessages = { ...uiEn, ...coursesEn, ...runtimeEn };
 export type MessageKey = keyof typeof englishMessages;
-export type Messages = Record<MessageKey, string>;
+type Messages = Record<MessageKey, string>;
 export const traditionalChineseMessages = {
   ...uiZh,
   ...coursesZh,
@@ -16,11 +16,10 @@ export const traditionalChineseMessages = {
 
 export type Locale = "en" | "zh-TW";
 export const DEFAULT_LOCALE: Locale = "en";
-export const messages: Record<Locale, Messages> = {
+const messages: Record<Locale, Messages> = {
   en: englishMessages,
   "zh-TW": traditionalChineseMessages,
 };
-export const LOCALE_STORAGE_KEY = "codepulse.locale";
 export const SUPPORTED_LOCALES: { value: Locale; label: string }[] = [
   { value: "en", label: "English" },
   { value: "zh-TW", label: "繁體中文" },
@@ -39,7 +38,7 @@ export function resolveLocale(stored: unknown, languages: readonly string[] = []
   return DEFAULT_LOCALE;
 }
 
-export type TranslationParams = Record<string, string | number | undefined>;
+type TranslationParams = Record<string, string | number | undefined>;
 export type Translator = (key: MessageKey, params?: TranslationParams) => string;
 
 export function isMessageKey(value: string): value is MessageKey {

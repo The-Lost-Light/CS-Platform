@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import type { RepoBranch } from "../model/repository";
 
-export interface BranchSelectorProps {
+interface BranchSelectorProps {
   defaultBranch: string;
   branches: RepoBranch[];
   totalBranches: number;

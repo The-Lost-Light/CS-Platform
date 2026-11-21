@@ -1,40 +1,31 @@
 import { Check, ChevronDown, type LucideIcon } from "lucide-react";
-import { useRef, type ReactNode, type Ref } from "react";
+import { useRef, type ReactNode } from "react";
 
 export function SettingSection({
   id,
   panelId,
-  sectionRef,
   icon: Icon,
   title,
   description,
   valueContent,
-  valueTone = "default",
   expanded,
   onToggle,
   children,
 }: {
   id: string;
   panelId: string;
-  sectionRef?: Ref<HTMLElement>;
   icon: LucideIcon;
   title: string;
   description: string;
   valueContent: ReactNode;
-  valueTone?: "default" | "success";
   expanded: boolean;
   onToggle: () => void;
   children: ReactNode;
 }) {
-  const pillClass = expanded
-    ? "ui-setting-value-pill-active"
-    : valueTone === "success"
-      ? "ui-setting-value-pill-success"
-      : "";
+  const pillClass = expanded ? "ui-setting-value-pill-active" : "";
 
   return (
     <section
-      ref={sectionRef}
       aria-labelledby={id}
       className={`ui-setting-section ${expanded ? "border-primary-outline/70" : ""}`}
     >

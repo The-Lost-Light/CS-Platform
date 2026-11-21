@@ -17,8 +17,9 @@ routes/api/              # Void HTTP handlers
 server/                  # 帳號、專案、工作區的 D1 讀寫與 GitHub API 存取
 db/                      # D1 schema 與 migrations
 src/
-├── app/                 # Void 導覽、應用外框與全站樣式
+├── app/                 # Void 導覽與全站樣式
 ├── modules/
+│   ├── accounts/        # 帳號資料與密碼編輯對話框
 │   ├── auth/            # 登入、工作階段與登入表單
 │   ├── projects/        # 專案資料契約、題庫、輸入驗證與清單合併
 │   ├── catalog/         # 瀏覽器端專案清單與首頁
@@ -27,8 +28,9 @@ src/
 │   ├── c4-editor/       # React Flow 畫布、屬性面板與 README 編輯器
 │   ├── repository/      # GitHub API、檔案樹、提交與 Diff
 │   ├── admin/           # 專案與帳號管理
-│   ├── i18n/            # 翻譯、語言偏好與語言選單
-│   └── theme/           # 主題規則、偏好與切換元件
+│   ├── settings/        # 全站設定視窗與偏好狀態
+│   ├── i18n/            # 翻譯與語言偏好
+│   └── theme/           # 主題規則、配色與偏好
 └── shared/              # 通用 UI 與 HTTP 工具
 ```
 
@@ -100,9 +102,9 @@ React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲�
 
 - 公開註冊已關閉。登入使用電子郵件與密碼；使用者不能在登入表單指定姓名或角色。
 - 一般使用者（user）可查看所有課程專案；專案 loader 使用 requireAuth，未登入導回首頁登入。
-- 管理者（admin）可透過首頁的「管理模式」進入 /admin，內含「專案管理」與「帳號管理」兩個區塊，各自提供「新增」與「檢視」分頁。檢視分頁列出所有資料並支援搜尋、編輯與刪除。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
-- 在「帳號管理 → 檢視 → 編輯」可修改姓名、電子郵件、角色或密碼。
-- 停止編輯約 0.75 秒後，工作區會自動將 README.md、完整 C4 模型與 Repo 網址一併存入 D1。每位學生在每個專案各有一份作業，首次進入時 README.md、C4 模型與 Repo 網址皆為空白。看到「已儲存至你的帳號」後即可離開，下次登入會載回個人內容。
+- 管理者（admin）可透過首頁的「管理模式」進入 /admin，內含「專案管理」與「帳號管理」兩個區塊，直接列出所有資料並支援搜尋、編輯與刪除，標題列「新增」按鈕可開啟新增對話框。管理頁與 Better Auth 管理 API 分別檢查權限；隱藏連結不是安全邊界。
+- 在「帳號管理 → 編輯」可修改姓名、電子郵件、角色或密碼。
+- 停止編輯約 1 秒後，工作區會自動將 README.md、完整 C4 模型與 Repo 網址一併存入 D1。每位學生在每個專案各有一份作業，首次進入時 README.md、C4 模型與 Repo 網址皆為空白。看到「已儲存至你的帳號」後即可離開，下次登入會載回個人內容。
 
 ### GitHub 同步設定
 
@@ -156,7 +158,7 @@ pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建�
 
 ## 多國語言
 
-設定視窗提供自動、English 與繁體中文 選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
+設定視窗提供自動、English 與繁體中文選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
 
 翻譯集中於 `src/modules/i18n/`：`ui.ts` 為介面、`courses.ts` 為專案題庫、`runtime.ts` 為分析與系統提示，各自置於 `en/` 與 `zh-TW/` 語言資料夾。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。英文與繁體中文文案只存放於語系檔，不作為查找鍵。
 

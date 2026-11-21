@@ -8,8 +8,6 @@ import {
   type Translator,
 } from "./messages";
 
-export { SUPPORTED_LOCALES } from "./messages";
-export type { Locale, MessageKey, Translator } from "./messages";
 export type LanguagePreference = "auto" | Locale;
 const PREFERENCE_KEY = "codepulse.languagePreference";
 interface I18nContextValue {

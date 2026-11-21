@@ -89,11 +89,6 @@ export function CommitHistory({
                     <span className="ui-chip-secondary font-mono text-[11px] px-2.5 py-0.5 shrink-0">
                       {c.sha.slice(0, 7)}
                     </span>
-                    {c.prInfo?.merge_method_key && (
-                      <span className="ui-chip-primary text-[10px] px-2 py-0.5 shrink-0">
-                        {t(c.prInfo.merge_method_key)}
-                      </span>
-                    )}
                     <span className="text-xs font-bold text-on-surface truncate">{title}</span>
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">

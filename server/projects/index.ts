@@ -92,7 +92,7 @@ export async function saveProject(input: ProjectInput, userId: string, existingI
 }
 
 export async function deleteProject(id: string) {
-  if (!(await listProjects()).some((project) => project.id === id)) return false;
+  if (!(await db.get(sql`SELECT 1 WHERE ${availableProject(id)}`))) return false;
   await db.batch([
     db.insert(removedProjects).values({ id }).onConflictDoNothing(),
     db.delete(workspaces).where(eq(workspaces.projectId, id)),

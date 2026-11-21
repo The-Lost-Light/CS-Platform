@@ -1,9 +1,7 @@
 import type { Locale } from "@modules/i18n";
 import type { Project } from "@modules/projects";
-import { useRouter } from "@void/react";
 import { useEffect, useState } from "react";
 export function useCatalogState(locale: Locale) {
-  const pathname = useRouter().url.pathname;
   const [projects, setProjects] = useState<Project[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [attempt, setAttempt] = useState(0);
@@ -27,7 +25,7 @@ export function useCatalogState(locale: Locale) {
     }
     void load();
     return () => controller.abort();
-  }, [attempt, pathname, locale]);
+  }, [attempt, locale]);
   return {
     status,
     retry: () => {

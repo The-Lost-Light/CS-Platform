@@ -100,6 +100,7 @@ export default {
   "github.totalFiles": "檔案總數",
   "github.totalFilesCount": "檔案總數： {count}",
   "github.commitCount": "{count} Commits",
+  "github.loadMoreBranches": "顯示更多分支",
   "github.loadMoreCommits": "載入更多 Commits",
   "github.primaryLanguage": "主要語言",
   "github.languageDistribution": "GitHub 專案語言佔比 (Language Distribution)",
@@ -178,11 +179,9 @@ export default {
   "c4.help": "操作說明",
   "c4.title": "C4 model 架構設計",
   "c4.expandable": "已有下層元素",
-  "c4.internal": "內部元素",
-  "c4.external": "外部元素",
   "c4.leaf": "尚無下層元素",
   "c4.levelsDescription":
-    "C1 呈現使用者與系統，C2 呈現應用程式與資料庫，C3 呈現元件，C4 呈現類別與函式。節點只要有一部分在虛線框內，就屬於內部元素。完全移出後就屬於外部元素。",
+    "C1 呈現使用者與系統，C2 呈現應用程式與資料庫，C3 呈現元件，C4 呈現類別與函式。虛線框代表目前所在的上層元素，拖曳虛線框時會一併移動與其重疊的節點。",
   "c4.scope": "檢視範圍／邊界",
   "c4.createParentFirst": "請先建立上一層元素",
   "c4.canvasInstructions":
@@ -202,7 +201,6 @@ export default {
   "c4.deleteElement": "刪除元素與其下層元素",
   "c4.editRelationship": "編輯關係",
   "c4.relationshipDescription": "關係描述",
-  "c4.protocol": "通訊技術／協定",
   "c4.deleteRelationship": "刪除關係",
   "c4.readmeMode": "README 顯示模式",
   "c4.readmeReading": "閱讀",

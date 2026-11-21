@@ -1,4 +1,6 @@
 import type {
+  RepoBranchesPage,
+  RepoBranchSnapshot,
   RepoBundle,
   RepoCommit,
   RepoCommitDetails,
@@ -6,6 +8,10 @@ import type {
 } from "@modules/repository";
 import { parseGitHubRepoUrl } from "@shared/githubRepoUrl";
 import { isRecord } from "@shared/isRecord";
+
+type RepoBranchItem = RepoBundle["branches"][number];
+type RepoTagItem = NonNullable<RepoBundle["tags"]>[number];
+type RepoPullItem = NonNullable<RepoBundle["pulls"]>[number];
 
 export class GitHubRequestError extends Error {
   constructor(
@@ -27,6 +33,12 @@ function checkResponse(response: Response) {
   if (response.status === 429 || response.headers.get("x-ratelimit-remaining") === "0")
     throw new GitHubRequestError(429, "github.errors.limited");
   throw new GitHubRequestError(502, "workspace.errors.syncFailed");
+}
+
+function parseRateLimit(response: Response): string | undefined {
+  const rateRemaining = response.headers.get("x-ratelimit-remaining");
+  const rateLimit = response.headers.get("x-ratelimit-limit");
+  return rateRemaining && rateLimit ? `${rateRemaining}/${rateLimit}` : undefined;
 }
 
 function hasNextPage(response: Response): boolean {
@@ -168,6 +180,168 @@ export async function fetchGitHubCommitsPage(
   };
 }
 
+async function fetchBranchCommits(
+  repoApiUrl: string,
+  request: (url: string) => Promise<Response>,
+  encodedBranch: string,
+  { strict }: { strict: boolean },
+): Promise<{ commits: RepoCommit[]; totalCommits: number; rateLimit?: string }> {
+  try {
+    const response = await request(`${repoApiUrl}/commits?sha=${encodedBranch}&per_page=10`);
+    checkResponse(response);
+    const rateLimit = parseRateLimit(response);
+    const list: unknown = await response.json();
+    const commits: RepoCommit[] = Array.isArray(list) ? list : [];
+    let totalCommits = commits.length;
+
+    if (hasNextPage(response)) {
+      const lastPageFromList = parseLastPage(response);
+      try {
+        const countResponse = await request(
+          `${repoApiUrl}/commits?sha=${encodedBranch}&per_page=1`,
+        );
+        if (countResponse.ok) {
+          const exactTotal = parseLastPage(countResponse);
+          if (exactTotal !== null) {
+            totalCommits = exactTotal;
+          } else if (lastPageFromList !== null) {
+            totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
+          }
+        } else if (lastPageFromList !== null) {
+          totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
+        }
+      } catch {
+        if (lastPageFromList !== null) {
+          totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
+        }
+      }
+    }
+
+    return { commits, totalCommits, rateLimit };
+  } catch (error) {
+    // Initial sync can show partial repository data. A switch must succeed as a unit.
+    if (strict) throw error;
+    return { commits: [], totalCommits: 0 };
+  }
+}
+
+async function fetchBranchTree(
+  repoApiUrl: string,
+  request: (url: string) => Promise<Response>,
+  encodedBranch: string,
+  { strict }: { strict: boolean },
+): Promise<{ fileTree: RepoBundle["fileTree"]; rateLimit?: string }> {
+  try {
+    const response = await request(`${repoApiUrl}/git/trees/${encodedBranch}?recursive=1`);
+    checkResponse(response);
+    const rateLimit = parseRateLimit(response);
+    const treeData: unknown = await response.json();
+    return {
+      fileTree: isRecord(treeData) && Array.isArray(treeData.tree) ? treeData.tree : [],
+      rateLimit,
+    };
+  } catch (error) {
+    // Initial sync can show partial repository data. A switch must succeed as a unit.
+    if (strict) throw error;
+    return { fileTree: [] };
+  }
+}
+
+async function fetchPaginatedCollection<T>(
+  baseUrl: string,
+  request: (url: string) => Promise<Response>,
+  { perPage, extraQuery }: { perPage: number; extraQuery?: string },
+): Promise<{ items: T[]; total: number; hasMore: boolean; ok: boolean; exact: boolean }> {
+  const prefix = extraQuery ? `${baseUrl}?${extraQuery}&` : `${baseUrl}?`;
+  try {
+    const response = await request(`${prefix}per_page=${perPage}`);
+    if (!response.ok) return { items: [], total: 0, hasMore: false, ok: false, exact: false };
+    const data: unknown = await response.json();
+    if (!Array.isArray(data))
+      return { items: [], total: 0, hasMore: false, ok: false, exact: false };
+    const items = data as T[];
+    if (!hasNextPage(response)) {
+      return { items, total: items.length, hasMore: false, ok: true, exact: true };
+    }
+    const lastPageFromList = parseLastPage(response);
+    try {
+      const countResponse = await request(`${prefix}per_page=1`);
+      if (countResponse.ok) {
+        const exactTotal = parseLastPage(countResponse);
+        if (exactTotal !== null) {
+          return { items, total: exactTotal, hasMore: true, ok: true, exact: true };
+        }
+      }
+    } catch {
+      // Fall back to the lower-bound estimate from the list response if count lookup fails.
+    }
+    const fallbackTotal =
+      lastPageFromList !== null
+        ? Math.max(items.length, (lastPageFromList - 1) * perPage + 1)
+        : items.length;
+    return { items, total: fallbackTotal, hasMore: true, ok: true, exact: false };
+  } catch {
+    return { items: [], total: 0, hasMore: false, ok: false, exact: false };
+  }
+}
+
+export async function fetchGitHubBranchesPage(
+  rawUrl: string,
+  {
+    token,
+    page,
+    fetch = globalThis.fetch,
+  }: {
+    token: string | undefined;
+    page: number;
+    fetch?: typeof globalThis.fetch;
+  },
+): Promise<RepoBranchesPage> {
+  if (!Number.isInteger(page) || page < 1) {
+    throw new GitHubRequestError(400, "github.errors.invalidUrl");
+  }
+  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
+  const response = await request(`${repoApiUrl}/branches?per_page=30&page=${page}`);
+  checkResponse(response);
+  const data: unknown = await response.json();
+  const branches: RepoBranchItem[] = Array.isArray(data) ? data : [];
+  return {
+    branches,
+    hasMore: hasNextPage(response),
+  };
+}
+
+export async function fetchGitHubBranchSnapshot(
+  rawUrl: string,
+  branch: string,
+  {
+    token,
+    fetch = globalThis.fetch,
+  }: {
+    token: string | undefined;
+    fetch?: typeof globalThis.fetch;
+  },
+): Promise<RepoBranchSnapshot> {
+  const trimmedBranch = branch.trim();
+  if (!trimmedBranch) throw new GitHubRequestError(400, "github.errors.invalidUrl");
+  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
+  const encodedBranch = encodeURIComponent(trimmedBranch);
+
+  const [branchCommits, branchTree] = await Promise.all([
+    fetchBranchCommits(repoApiUrl, request, encodedBranch, { strict: true }),
+    fetchBranchTree(repoApiUrl, request, encodedBranch, { strict: true }),
+  ]);
+  const rateLimit = branchCommits.rateLimit ?? branchTree.rateLimit;
+
+  return {
+    selectedBranch: trimmedBranch,
+    commits: branchCommits.commits,
+    totalCommits: branchCommits.totalCommits,
+    fileTree: branchTree.fileTree,
+    ...(rateLimit ? { rateLimit } : {}),
+  };
+}
+
 export async function fetchGitHubRepository(
   rawUrl: string,
   {
@@ -184,79 +358,31 @@ export async function fetchGitHubRepository(
   const repoRes = await request(repoApiUrl);
   checkResponse(repoRes);
 
-  const rateRemaining = repoRes.headers.get("x-ratelimit-remaining");
-  const rateLimit = repoRes.headers.get("x-ratelimit-limit");
+  const rateLimit = parseRateLimit(repoRes);
   const repoData: RepoBundle["repo"] = await repoRes.json();
   const selectedBranch = branch ?? (repoData.default_branch || "main");
   const encodedBranch = encodeURIComponent(selectedBranch);
+  const strictBranch = branch !== undefined;
 
-  async function fetchBranchSection(path: string) {
-    try {
-      const response = await request(repoApiUrl + path);
-      checkResponse(response);
-      return await response.json();
-    } catch (error) {
-      // Initial sync can show partial repository data. A switch must succeed as a unit.
-      if (branch !== undefined) throw error;
-      return null;
-    }
-  }
+  const [languages, branchesResult, tagsResult, pullsResult, branchCommits, branchTree] =
+    await Promise.all([
+      request(`${repoApiUrl}/languages`)
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({})),
+      fetchPaginatedCollection<RepoBranchItem>(`${repoApiUrl}/branches`, request, { perPage: 30 }),
+      fetchPaginatedCollection<RepoTagItem>(`${repoApiUrl}/tags`, request, { perPage: 30 }),
+      fetchPaginatedCollection<RepoPullItem>(`${repoApiUrl}/pulls`, request, {
+        perPage: 30,
+        extraQuery: "state=open",
+      }),
+      fetchBranchCommits(repoApiUrl, request, encodedBranch, { strict: strictBranch }),
+      fetchBranchTree(repoApiUrl, request, encodedBranch, { strict: strictBranch }),
+    ]);
 
-  async function fetchBranchCommits(): Promise<{ commits: RepoCommit[]; totalCommits: number }> {
-    try {
-      const response = await request(`${repoApiUrl}/commits?sha=${encodedBranch}&per_page=10`);
-      checkResponse(response);
-      const list: unknown = await response.json();
-      const commits: RepoCommit[] = Array.isArray(list) ? list : [];
-      let totalCommits = commits.length;
-
-      if (hasNextPage(response)) {
-        const lastPageFromList = parseLastPage(response);
-        try {
-          const countResponse = await request(
-            `${repoApiUrl}/commits?sha=${encodedBranch}&per_page=1`,
-          );
-          if (countResponse.ok) {
-            const exactTotal = parseLastPage(countResponse);
-            if (exactTotal !== null) {
-              totalCommits = exactTotal;
-            } else if (lastPageFromList !== null) {
-              totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
-            }
-          } else if (lastPageFromList !== null) {
-            totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
-          }
-        } catch {
-          if (lastPageFromList !== null) {
-            totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
-          }
-        }
-      }
-
-      return { commits, totalCommits };
-    } catch (error) {
-      // Initial sync can show partial repository data. A switch must succeed as a unit.
-      if (branch !== undefined) throw error;
-      return { commits: [], totalCommits: 0 };
-    }
-  }
-
-  const [languages, branches, tags, pulls, branchCommits, treeData] = await Promise.all([
-    request(`${repoApiUrl}/languages`)
-      .then((r) => (r.ok ? r.json() : {}))
-      .catch(() => ({})),
-    request(`${repoApiUrl}/branches?per_page=30`)
-      .then((r) => (r.ok ? r.json() : []))
-      .catch(() => []),
-    request(`${repoApiUrl}/tags?per_page=30`)
-      .then((r) => (r.ok ? r.json() : []))
-      .catch(() => []),
-    request(`${repoApiUrl}/pulls?state=open&per_page=30`)
-      .then((r) => (r.ok ? r.json() : []))
-      .catch(() => []),
-    fetchBranchCommits(),
-    fetchBranchSection(`/git/trees/${encodedBranch}?recursive=1`),
-  ]);
+  const openIssuesCount =
+    pullsResult.ok && pullsResult.exact
+      ? Math.max(0, (repoData.open_issues_count ?? 0) - pullsResult.total)
+      : (repoData.open_issues_count ?? 0);
 
   return {
     // Authenticated metadata may contain a temporary clone token. Return the dashboard contract.
@@ -279,13 +405,18 @@ export async function fetchGitHubRepository(
     },
     selectedBranch,
     languages: languages || {},
-    branches: Array.isArray(branches) ? branches : [],
-    tags: Array.isArray(tags) ? tags : [],
-    pulls: Array.isArray(pulls) ? pulls : [],
+    branches: branchesResult.items,
+    totalBranches: branchesResult.total,
+    hasMoreBranches: branchesResult.hasMore,
+    tags: tagsResult.items,
+    totalTags: tagsResult.total,
+    pulls: pullsResult.items,
+    ...(pullsResult.ok ? { totalPulls: pullsResult.total } : {}),
+    openIssuesCount,
     commits: branchCommits.commits,
     totalCommits: branchCommits.totalCommits,
-    fileTree: isRecord(treeData) && Array.isArray(treeData.tree) ? treeData.tree : [],
+    fileTree: branchTree.fileTree,
     sourceType: "live-api",
-    rateLimit: rateRemaining && rateLimit ? `${rateRemaining}/${rateLimit}` : "Live API",
+    rateLimit: rateLimit ?? "Live API",
   };
 }

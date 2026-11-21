@@ -1,5 +1,6 @@
 import { validateC4File, C4_FILE_MAX_BYTES } from "@modules/c4-model";
 import type { PersonalWorkspace } from "@modules/workspace";
+import { isValidWorkspaceRepoUrl } from "@shared/githubRepoUrl";
 import { readLimitedText } from "@shared/http/readLimitedText";
 import { isRecord } from "@shared/isRecord";
 type WorkspaceInput =
@@ -18,12 +19,7 @@ export async function readWorkspaceInput(request: Request): Promise<WorkspaceInp
     if (typeof designDoc !== "string" || typeof repoUrl !== "string")
       return { ok: false, error: "invalid" };
     // Accept the URL and owner/repository formats used by the GitHub panel.
-    if (
-      repoUrl &&
-      (repoUrl.length > 300 ||
-        !/^(?:(?:https?:\/\/)?(?:www\.)?github\.com\/)?[\w.-]+\/[\w.-]+\/?$/i.test(repoUrl.trim()))
-    )
-      return { ok: false, error: "repo" };
+    if (!isValidWorkspaceRepoUrl(repoUrl)) return { ok: false, error: "repo" };
     const draft = { designDoc, repoUrl: repoUrl.trim(), model: validateC4File(model) };
     return { ok: true, draft, previous };
   } catch {

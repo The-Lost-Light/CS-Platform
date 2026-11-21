@@ -31,6 +31,7 @@ test("Repo header fuses repo overview and language bar once configured, and retu
   const bundle = createRepoFixture();
   let editing = false;
   const makeRepoState = () => ({
+    repoUrl: bundle.repo.html_url,
     repoUrlInput: bundle.repo.html_url,
     setRepoUrlInput: () => {},
     repoBundle: bundle,

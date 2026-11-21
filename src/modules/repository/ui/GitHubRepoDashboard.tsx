@@ -3,9 +3,11 @@ import { useRef, useState, type RefObject } from "react";
 import type { DiffMode } from "../model/diff";
 import type { RepoBundle, RepoCommit, RepoCommitDetails } from "../model/repository";
 import {
+  fetchGitHubBranchesPage,
   fetchGitHubCommitDetails,
   fetchGitHubCommitsPage,
   getCachedCommitDetails,
+  type GitHubBranchesPageLoader,
   type GitHubCommitDetailsLoader,
   type GitHubCommitsPageLoader,
 } from "../services/github";
@@ -15,6 +17,7 @@ import { RepositoryTree } from "./RepositoryTree";
 interface BranchControl {
   onBranchChange: (branch: string) => void;
   isLoading?: boolean;
+  loadBranchesPage?: GitHubBranchesPageLoader;
   loadCommitDetails?: GitHubCommitDetailsLoader;
   loadCommitsPage?: GitHubCommitsPageLoader;
 }
@@ -35,16 +38,96 @@ function mergeCommitDetails(commit: RepoCommit, details?: RepoCommitDetails): Re
 
 export function GitHubRepoDashboard({
   repoBundle,
+  loadBranchesPage = fetchGitHubBranchesPage,
   loadCommitDetails = fetchGitHubCommitDetails,
   loadCommitsPage = fetchGitHubCommitsPage,
   ...control
 }: { repoBundle: RepoBundle | null } & BranchControl) {
   const detailsCacheRef = useRef(new Map<string, RepoCommitDetails>());
+  const [branchPagination, setBranchPagination] = useState<{
+    source: RepoBundle["branches"];
+    branches: RepoBundle["branches"];
+    nextPage: number;
+    hasMore: boolean;
+  } | null>(null);
+  const [loadingBranchesSource, setLoadingBranchesSource] = useState<RepoBundle["branches"] | null>(
+    null,
+  );
+  const branchLoadRequest = useRef(0);
+
   if (!repoBundle?.repo) return null;
+
+  const activeBranchState =
+    branchPagination && branchPagination.source === repoBundle.branches
+      ? branchPagination
+      : {
+          source: repoBundle.branches,
+          branches: repoBundle.branches,
+          nextPage: 2,
+          hasMore: Boolean(repoBundle.hasMoreBranches),
+        };
+  const resolvedTotalBranches = Math.max(
+    repoBundle.totalBranches ?? activeBranchState.branches.length,
+    activeBranchState.branches.length,
+  );
+  const hasMoreBranches =
+    activeBranchState.hasMore &&
+    (repoBundle.totalBranches === undefined ||
+      activeBranchState.branches.length < resolvedTotalBranches);
+  const isLoadingMoreBranches = loadingBranchesSource === repoBundle.branches;
+
+  const handleLoadMoreBranches = async () => {
+    if (isLoadingMoreBranches || !hasMoreBranches) return;
+    const source = repoBundle.branches;
+    const targetRepo = repoBundle.repo.full_name;
+    const pageToFetch = activeBranchState.nextPage;
+    const requestId = ++branchLoadRequest.current;
+    setLoadingBranchesSource(source);
+    try {
+      const pageResult = await loadBranchesPage(targetRepo, pageToFetch);
+      if (branchLoadRequest.current !== requestId) return;
+      setBranchPagination((prev) => {
+        const current =
+          prev && prev.source === source
+            ? prev
+            : {
+                source,
+                branches: source,
+                nextPage: 2,
+                hasMore: Boolean(repoBundle.hasMoreBranches),
+              };
+        const seen = new Set(current.branches.map((b) => b.name));
+        const appended = pageResult.branches.filter((b) => !seen.has(b.name));
+        const merged = appended.length > 0 ? [...current.branches, ...appended] : current.branches;
+        const nextHasMore =
+          pageResult.hasMore &&
+          pageResult.branches.length > 0 &&
+          (repoBundle.totalBranches === undefined || merged.length < repoBundle.totalBranches);
+        return {
+          source,
+          branches: merged,
+          nextPage: current.nextPage + 1,
+          hasMore: nextHasMore,
+        };
+      });
+    } catch {
+      // Keep current branch list and allow retrying when loading more fails.
+    } finally {
+      if (branchLoadRequest.current === requestId) setLoadingBranchesSource(null);
+    }
+  };
+
   return (
     <LoadedGitHubRepoDashboard
       key={`${repoBundle.repo.full_name}:${repoBundle.selectedBranch}:${repoBundle.commits[0]?.sha ?? ""}`}
       repoBundle={repoBundle}
+      branches={activeBranchState.branches}
+      totalBranches={resolvedTotalBranches}
+      hasMoreBranches={hasMoreBranches}
+      isLoadingMoreBranches={isLoadingMoreBranches}
+      onLoadMoreBranches={() => {
+        void handleLoadMoreBranches();
+      }}
       detailsCacheRef={detailsCacheRef}
       loadCommitDetails={loadCommitDetails}
       loadCommitsPage={loadCommitsPage}
@@ -55,6 +138,11 @@ export function GitHubRepoDashboard({
 
 function LoadedGitHubRepoDashboard({
   repoBundle,
+  branches,
+  totalBranches,
+  hasMoreBranches,
+  isLoadingMoreBranches,
+  onLoadMoreBranches,
   detailsCacheRef,
   onBranchChange,
   isLoading,
@@ -62,11 +150,16 @@ function LoadedGitHubRepoDashboard({
   loadCommitsPage,
 }: {
   repoBundle: RepoBundle;
+  branches: RepoBundle["branches"];
+  totalBranches: number;
+  hasMoreBranches: boolean;
+  isLoadingMoreBranches: boolean;
+  onLoadMoreBranches: () => void;
   detailsCacheRef: RefObject<Map<string, RepoCommitDetails>>;
   loadCommitDetails: GitHubCommitDetailsLoader;
   loadCommitsPage: GitHubCommitsPageLoader;
-} & Omit<BranchControl, "loadCommitDetails" | "loadCommitsPage">) {
-  const { repo, branches, tags, fileTree, selectedBranch } = repoBundle;
+} & Omit<BranchControl, "loadBranchesPage" | "loadCommitDetails" | "loadCommitsPage">) {
+  const { repo, tags, totalTags, fileTree, selectedBranch } = repoBundle;
   const initialTotal = repoBundle.totalCommits ?? repoBundle.commits.length;
 
   const [expandedCommitSha, setExpandedCommitSha] = useState<string | null>(null);
@@ -167,7 +260,12 @@ function LoadedGitHubRepoDashboard({
       <RepositoryTree
         repo={repo}
         branches={branches}
+        totalBranches={totalBranches}
+        hasMoreBranches={hasMoreBranches}
+        isLoadingMoreBranches={isLoadingMoreBranches}
+        onLoadMoreBranches={onLoadMoreBranches}
         tags={tags}
+        totalTags={totalTags}
         fileTree={fileTree}
         selectedBranch={selectedBranch}
         onBranchChange={onBranchChange}

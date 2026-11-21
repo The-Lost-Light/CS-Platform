@@ -56,14 +56,8 @@ export function canExploreC4Node(nodes: C4Node[], id: string): boolean {
   let current = byId.get(id);
   for (let depth = 1; current && depth < C4_MAX_LEVELS; depth++) {
     if (current.kind === "code") return false;
-    const parentId = current.parentId;
-    if (parentId === null) return true;
-    const parent = byId.get(parentId);
-    if (!parent) return false;
-    const frame =
-      parent.boundary ?? defaultBoundary(nodes.filter((node) => node.parentId === parentId));
-    if (!overlapsC4Boundary(c4NodeBounds(current), frame)) return false;
-    current = parent;
+    if (current.parentId === null) return true;
+    current = byId.get(current.parentId);
   }
   return false;
 }
@@ -120,13 +114,7 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   const scope = path.at(-1);
   const visible = nodes.filter((node) => (scope ? node.parentId === scope.id : !node.parentId));
   const boundary = scope?.boundary ?? defaultBoundary(visible);
-  const inside: C4Node[] = [];
-  const outside: C4Node[] = [];
-  for (const node of visible) {
-    if (scope && !overlapsC4Boundary(c4NodeBounds(node), boundary)) outside.push(node);
-    else inside.push(node);
-  }
-  return { path, scope, boundary, inside, outside, visible };
+  return { path, scope, boundary, visible };
 }
 
 /** Infer C4 containment from legacy mind-map categories and paths. */
@@ -179,11 +167,10 @@ export function removeC4Nodes(nodes: C4Node[], ids: string[]) {
 export function visibleC4Nodes(nodes: C4Node[], level: C4Kind, scope: string): C4Node[] {
   if (level === "system")
     return nodes.filter((node) => node.kind === "person" || node.kind === "system");
-  const view = c4Drilldown(nodes, scope);
-  return [...view.inside.filter((node) => node.kind === level), ...view.outside];
+  return c4Drilldown(nodes, scope).visible.filter((node) => node.kind === level);
 }
 
-/** A partial overlap counts as inside. Touching edges alone do not. */
+/** Partial overlaps count; touching edges alone do not. Used to move nodes together with the boundary. */
 export function overlapsC4Boundary(
   node: { x: number; y: number; width: number; height: number },
   boundary: { x: number; y: number; width: number; height: number },

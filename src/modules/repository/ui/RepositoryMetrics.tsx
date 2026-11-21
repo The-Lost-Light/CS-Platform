@@ -7,13 +7,18 @@ import { IconTooltip } from "./IconTooltip";
 export function RepositoryMetrics({
   repo,
   pulls = [],
+  totalPulls,
+  openIssuesCount,
   onEditRepo,
-}: Pick<RepoBundle, "repo" | "pulls"> & {
+}: Pick<RepoBundle, "repo" | "pulls" | "totalPulls" | "openIssuesCount"> & {
   onEditRepo: () => void;
 }) {
   const { t, locale } = useI18n();
-  const issuesCount = (repo.open_issues_count ?? 0).toLocaleString(locale);
-  const pullsCount = pulls.length.toLocaleString(locale);
+  const resolvedPullsCount = totalPulls ?? pulls.length;
+  const pullsCount = resolvedPullsCount.toLocaleString(locale);
+  const resolvedOpenIssues =
+    openIssuesCount ?? Math.max(0, (repo.open_issues_count ?? 0) - resolvedPullsCount);
+  const issuesCount = resolvedOpenIssues.toLocaleString(locale);
   const forksCount = (repo.forks_count ?? 0).toLocaleString(locale);
   const starsCount = (repo.stargazers_count ?? 0).toLocaleString(locale);
 

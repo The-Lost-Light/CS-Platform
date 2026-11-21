@@ -40,7 +40,6 @@ export function buildFlowElements({
       style: { width, height },
       data: {
         title: node.label,
-        kind: node.kind,
         description: node.description,
         technology: showTechnology ? node.technology : "",
         expandable: expandableIds.has(node.id),

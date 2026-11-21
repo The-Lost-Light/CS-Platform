@@ -13,22 +13,22 @@ export function RepositoryLanguages({ languages }: Pick<RepoBundle, "languages">
   const distribution = languageDistribution(languages);
   if (distribution.length === 0) return null;
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-      <div className="w-full lg:flex-1 h-3 rounded-full bg-surface-highest overflow-hidden flex gap-0.5">
-        {distribution.map(({ name: lang, barWidth: pct }, idx) => (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 min-w-0">
+      <div className="h-3 basis-56 min-w-[min(100%,14rem)] flex-1 rounded-full bg-surface-highest overflow-hidden flex gap-0.5">
+        {distribution.map(({ name: lang, percent, barWidth: pct }, idx) => (
           <div
             key={lang}
             style={{
               width: `${pct}%`,
               backgroundColor: LANG_CHART_COLORS[idx % LANG_CHART_COLORS.length],
             }}
-            title={`${lang}: ${pct}%`}
+            title={`${lang}: ${percent}%`}
           />
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
         {distribution.map(({ name: lang, percent }, idx) => (
-          <span key={lang} className="ui-chip-neutral font-mono">
+          <span key={lang} className="ui-chip-neutral font-mono min-w-0 max-w-full">
             <span
               aria-hidden="true"
               className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
@@ -36,8 +36,8 @@ export function RepositoryLanguages({ languages }: Pick<RepoBundle, "languages">
                 backgroundColor: LANG_CHART_COLORS[idx % LANG_CHART_COLORS.length],
               }}
             />
-            <strong className="text-on-surface">{lang}</strong>
-            <span>{percent}%</span>
+            <strong className="text-on-surface truncate">{lang}</strong>
+            <span className="shrink-0">{percent}%</span>
           </span>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import { C4FileActions, createC4History } from "@modules/c4-editor";
-import { createC4NodeInScope, type C4Node } from "@modules/c4-model";
+import { createC4NodeInScope, type C4Node, type C4Relationship } from "@modules/c4-model";
 import { I18nProvider } from "@modules/i18n";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -26,9 +26,22 @@ vi.mock("@xyflow/react", () => ({
   ),
 }));
 
-function TestC4Diagram({ path = [], selected }: { path?: C4Node[]; selected?: C4Node }) {
+function TestC4Diagram({
+  path = [],
+  selected,
+  nodes = selected ? [...path, selected] : path,
+  selectedEdge,
+}: {
+  path?: C4Node[];
+  selected?: C4Node;
+  nodes?: C4Node[];
+  selectedEdge?: C4Relationship;
+}) {
   const editor = useC4Editor({
-    history: createC4History({ nodes: selected ? [...path, selected] : path, relationships: [] }),
+    history: createC4History({
+      nodes,
+      relationships: selectedEdge ? [selectedEdge] : [],
+    }),
     dispatchModel: () => {},
     designDoc: "",
     onChangeDesignDoc: () => {},
@@ -37,7 +50,21 @@ function TestC4Diagram({ path = [], selected }: { path?: C4Node[]; selected?: C4
   });
   const scope = path.at(-1);
   if (scope && editor.scope?.id !== scope.id) editor.navigate(scope.id);
-  return <C4Diagram editor={{ ...editor, selected }} />;
+  const selectedSourceLabel =
+    selectedEdge && nodes.find((node) => node.id === selectedEdge.source)?.label;
+  const selectedTargetLabel =
+    selectedEdge && nodes.find((node) => node.id === selectedEdge.target)?.label;
+  return (
+    <C4Diagram
+      editor={{
+        ...editor,
+        selected,
+        selectedEdge,
+        selectedSourceLabel,
+        selectedTargetLabel,
+      }}
+    />
+  );
 }
 
 test("C4FileActions renders import/export controls, hidden file input, and status banners", () => {
@@ -175,4 +202,26 @@ test("only C2 and C3 show node technology in both the inspector and the canvas",
     assert.equal(html.includes("<span>Example stack</span>"), showTechnology);
     path.push(node);
   }
+
+  const source = createC4NodeInScope([], "", "src", "Core System")!;
+  const target = createC4NodeInScope([], "", "dst", "Web App")!;
+  const edgeHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram
+        nodes={[source, target]}
+        selectedEdge={{
+          id: "edge-1",
+          source: source.id,
+          target: target.id,
+          label: "Uses",
+          technology: "HTTPS",
+        }}
+      />
+    </I18nProvider>,
+  );
+  const edgeInspector = edgeHtml.split("<aside")[1].split("</aside>")[0];
+  assert.ok(edgeInspector.includes("Core System → Web App"));
+  assert.ok(edgeInspector.includes(">Relationship description<"));
+  assert.ok(!edgeInspector.includes("Technology / protocol"));
+  assert.ok(!edgeInspector.includes("ui-panel"));
 });

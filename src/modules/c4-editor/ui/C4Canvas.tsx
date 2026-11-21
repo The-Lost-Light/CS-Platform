@@ -1,4 +1,3 @@
-import { useI18n } from "@modules/i18n";
 import {
   Handle,
   NodeResizer,
@@ -9,11 +8,10 @@ import {
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
 
-import { classifyCanvasNodes, prepareC4CanvasChanges } from "../model/canvasChanges";
+import { prepareC4CanvasChanges } from "../model/canvasChanges";
 import type { BoundaryNode, CanvasNode, FlowNode } from "../model/flowTypes";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
-  const { t } = useI18n();
   return (
     <div
       role="button"
@@ -31,7 +29,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         width: "100%",
         height: "100%",
         minHeight: 160,
-        backgroundColor: data.external ? "var(--c4-external-bg)" : "var(--c4-internal-bg)",
+        backgroundColor: "var(--c4-node-bg)",
         borderColor: selected
           ? "var(--primary)"
           : data.expandable
@@ -49,22 +47,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
         className="w-3! h-3! bg-secondary! border-2! border-surface!"
       />
       <div className="min-h-0 overflow-y-auto nowheel">
-        <div className="flex items-center justify-between gap-2">
-          <span
-            className={`${
-              data.expandable ? "ui-chip-secondary" : "ui-chip-primary"
-            } px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider font-mono`}
-          >
-            {data.kind === "system" ? "context" : data.kind} ·{" "}
-            {t(data.external ? "c4.external" : "c4.internal")}
-          </span>
-          <span
-            className={`w-2 h-2 rounded-full shrink-0 ${
-              data.expandable ? "bg-secondary" : "bg-primary"
-            }`}
-          />
-        </div>
-        <div className="mt-2.5 text-sm font-bold text-on-surface wrap-break-word">{data.title}</div>
+        <div className="text-sm font-bold text-on-surface wrap-break-word">{data.title}</div>
         {data.technology && (
           <div className="mt-1.5 inline-block px-2.5 py-0.5 rounded-lg bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
             [{data.technology}]
@@ -112,7 +95,7 @@ export function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps
   return (
     <ReactFlow<CanvasNode>
       {...props}
-      nodes={classifyCanvasNodes(canvasNodes)}
+      nodes={canvasNodes}
       onNodesChange={(changes) => {
         const update = prepareC4CanvasChanges(changes, canvasNodes, movingIds.current);
         movingIds.current = update.movingIds;

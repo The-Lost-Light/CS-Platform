@@ -3,13 +3,8 @@ import { ChevronRight, HelpCircle, Layers, Redo2, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
-import type { FlowNode } from "../model/flowTypes";
 import { C4Canvas, nodeTypes } from "./C4Canvas";
 import { C4Inspector } from "./C4Inspector";
-const colors = {
-  internal: "var(--c4-internal-bg)",
-  external: "var(--c4-external-bg)",
-};
 const levelNames = ["Container", "Component", "Code"] as const;
 
 export function C4Diagram({ editor }: { editor: C4Editor }) {
@@ -119,20 +114,18 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                 <div className="pt-2 border-t border-outline-subtle space-y-1.5">
                   <p className="flex items-center gap-2">
                     <span
-                      className="h-3 w-3 rounded border border-outline"
-                      style={{ backgroundColor: colors.internal }}
+                      className="h-3 w-3 rounded border-2"
+                      style={{ borderColor: "var(--c4-expandable-border)" }}
                     />
-                    {t("c4.internal")}
+                    {t("c4.expandable")}
                   </p>
                   <p className="flex items-center gap-2">
                     <span
-                      className="h-3 w-3 rounded border border-outline"
-                      style={{ backgroundColor: colors.external }}
+                      className="h-3 w-3 rounded border-2"
+                      style={{ borderColor: "var(--c4-leaf-border)" }}
                     />
-                    {t("c4.external")}
+                    {t("c4.leaf")}
                   </p>
-                  <p className="font-semibold text-secondary">● {t("c4.expandable")}</p>
-                  <p className="font-semibold text-primary">● {t("c4.leaf")}</p>
                 </div>
                 <p className="text-[11px] text-on-subtle pt-2 border-t border-outline-subtle">
                   {t("c4.fileHelp")}
@@ -205,13 +198,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             >
               <Background gap={24} color="var(--c4-grid)" />
               <Controls />
-              <MiniMap
-                nodeColor={(node) =>
-                  (node.data as FlowNode["data"]).external ? colors.external : colors.internal
-                }
-                pannable
-                zoomable
-              />
+              <MiniMap nodeColor="var(--c4-node-bg)" pannable zoomable />
             </C4Canvas>
             {drawing.preview && (
               <div

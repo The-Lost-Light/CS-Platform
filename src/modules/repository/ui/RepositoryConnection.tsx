@@ -30,6 +30,8 @@ export function RepositoryConnection({
           <RepositoryMetrics
             repo={repoBundle.repo}
             pulls={repoBundle.pulls}
+            totalPulls={repoBundle.totalPulls}
+            openIssuesCount={repoBundle.openIssuesCount}
             onEditRepo={startEditingRepo}
           />
           <RepositoryLanguages languages={repoBundle.languages} />

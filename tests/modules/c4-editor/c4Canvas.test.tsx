@@ -2,10 +2,7 @@ import { createC4NodeInScope } from "@modules/c4-model";
 import { NodeChangeset } from "@xyflow/react";
 import { assert, test } from "vite-plus/test";
 
-import {
-  classifyCanvasNodes,
-  prepareC4CanvasChanges,
-} from "@/modules/c4-editor/model/canvasChanges";
+import { prepareC4CanvasChanges } from "@/modules/c4-editor/model/canvasChanges";
 import { applyCanvasLayout, BOUNDARY_ID } from "@/modules/c4-editor/model/canvasLayout";
 import type { CanvasNode, FlowNode } from "@/modules/c4-editor/model/flowTypes";
 
@@ -17,8 +14,6 @@ function card(id: string, x: number, y: number): FlowNode {
     style: { width: 100, height: 100 },
     data: {
       title: id,
-      external: false,
-      kind: "system",
       description: "",
       technology: "",
       expandable: false,
@@ -186,7 +181,7 @@ test("persisted geometry uses scope coordinates and leaves other levels alone", 
   assert.strictEqual(scope.boundary, undefined);
 });
 
-test("canvas membership follows live node moves and resizing the boundary from the left", () => {
+test("resizing the boundary from the left leaves nodes in place", () => {
   const nodes: CanvasNode[] = [
     {
       id: BOUNDARY_ID,
@@ -212,13 +207,4 @@ test("canvas membership follows live node moves and resizing the boundary from t
   );
   const resized = resize.changes.applyTo(nodes);
   assert.deepEqual(resized[1].position, nodes[1].position);
-  const outside = classifyCanvasNodes(resized)[1];
-  assert.ok(outside.type === "c4");
-  assert.isTrue(outside.data.external);
-  const move = new NodeChangeset<CanvasNode>([
-    { type: "position", id: "child", position: { x: 101, y: 50 }, dragging: true },
-  ]);
-  const overlapping = classifyCanvasNodes(move.applyTo(resized))[1];
-  assert.ok(overlapping.type === "c4");
-  assert.isNotTrue(overlapping.data.external);
 });

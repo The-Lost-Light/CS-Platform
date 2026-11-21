@@ -6,8 +6,11 @@ import { assert, test } from "vite-plus/test";
 
 import { splitPatch } from "@/modules/repository/model/diff";
 import { buildRepoFileTree } from "@/modules/repository/model/fileTree";
+import { BranchSelector } from "@/modules/repository/ui/BranchSelector";
 import { CommitHistory } from "@/modules/repository/ui/CommitHistory";
 import { RepoDiff } from "@/modules/repository/ui/RepoDiff";
+import { RepositoryLanguages } from "@/modules/repository/ui/RepositoryLanguages";
+import { RepositoryMetrics } from "@/modules/repository/ui/RepositoryMetrics";
 
 import { createRepoFixture } from "../../fixtures/repository";
 
@@ -104,7 +107,10 @@ test("a selected branch supplies the dashboard tree, history and on-demand diff 
   );
   assert.strictEqual((dashboard.match(/\bh-170\b/g) ?? []).length, 2);
   assert.ok(dashboard.includes("feature-only.ts"));
-  assert.ok(dashboard.includes(`value="${branch}" selected=""`));
+  assert.ok(dashboard.includes('aria-haspopup="menu"'));
+  assert.ok(dashboard.includes('aria-expanded="false"'));
+  assert.ok(dashboard.includes(`aria-label="Branch: ${branch}"`));
+  assert.ok(!dashboard.includes("<select"));
   assert.ok(dashboard.includes(summary.commit.message));
   assert.ok(dashboard.includes("Total files: 260"));
   assert.ok(dashboard.includes("1 Commits"));
@@ -202,4 +208,166 @@ test("diff mode changes rendered layout while preserving and escaping code", () 
     assert.ok(html.includes("-&lt;old&gt;"));
     assert.ok(html.includes("+&lt;new&gt;"));
   }
+});
+
+test("repository metrics and tree display exact counts without 30+ and M3 branch selector supports loading more", () => {
+  const base = createRepoFixture();
+
+  const zeroIssueMetrics = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <RepositoryMetrics
+        repo={{ ...base.repo, open_issues_count: 3 }}
+        pulls={[
+          { number: 1, state: "open" },
+          { number: 2, state: "open" },
+          { number: 3, state: "open" },
+        ]}
+        totalPulls={3}
+        openIssuesCount={0}
+        onEditRepo={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(zeroIssueMetrics.includes('aria-label="Open issues: 0"'));
+  assert.ok(zeroIssueMetrics.includes('aria-label="Pull requests: 3"'));
+
+  const exactMetrics = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <RepositoryMetrics
+        repo={{ ...base.repo, open_issues_count: 120 }}
+        pulls={Array.from({ length: 30 }, (_, idx) => ({ number: idx + 1, state: "open" }))}
+        totalPulls={45}
+        openIssuesCount={75}
+        onEditRepo={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(exactMetrics.includes('aria-label="Open issues: 75"'));
+  assert.ok(exactMetrics.includes('aria-label="Pull requests: 45"'));
+  assert.ok(!exactMetrics.includes("30+"));
+
+  const makeItems = (count: number) =>
+    Array.from({ length: count }, (_, idx) => ({
+      name: `item-${idx}`,
+      protected: false,
+      commit: { sha: "a".repeat(40) },
+    }));
+
+  const exactDashboard = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <GitHubRepoDashboard
+        repoBundle={{
+          ...base,
+          branches: makeItems(30),
+          totalBranches: 100,
+          hasMoreBranches: true,
+          tags: makeItems(30),
+          totalTags: 64,
+        }}
+        onBranchChange={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(exactDashboard.includes('aria-label="Branches: 100"'));
+  assert.ok(exactDashboard.includes('aria-label="Tags: 64"'));
+  assert.ok(!exactDashboard.includes("30+"));
+
+  const branchItems = makeItems(30);
+  const openMenuEn = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <BranchSelector
+        defaultBranch="main"
+        branches={branchItems}
+        totalBranches={100}
+        selectedBranch="item-0"
+        onBranchChange={() => {}}
+        hasMoreBranches
+        onLoadMoreBranches={() => {}}
+        initialOpen
+      />
+    </I18nProvider>,
+  );
+  assert.ok(openMenuEn.includes('class="ui-menu '));
+  assert.ok(openMenuEn.includes('role="menu"'));
+  assert.ok(openMenuEn.includes('role="menuitemradio"'));
+  assert.ok(openMenuEn.includes('aria-checked="true"'));
+  assert.ok(openMenuEn.includes('aria-checked="false"'));
+  assert.ok(openMenuEn.includes("30 / 100"));
+  assert.ok(openMenuEn.includes("Show more branches"));
+
+  const openMenuZh = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <BranchSelector
+        defaultBranch="main"
+        branches={branchItems}
+        totalBranches={100}
+        selectedBranch="item-0"
+        onBranchChange={() => {}}
+        hasMoreBranches
+        onLoadMoreBranches={() => {}}
+        initialOpen
+      />
+    </I18nProvider>,
+  );
+  assert.ok(openMenuZh.includes("顯示更多分支"));
+
+  const completedMenu = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <BranchSelector
+        defaultBranch="main"
+        branches={branchItems}
+        totalBranches={30}
+        selectedBranch="item-0"
+        onBranchChange={() => {}}
+        hasMoreBranches={false}
+        onLoadMoreBranches={() => {}}
+        initialOpen
+      />
+    </I18nProvider>,
+  );
+  assert.ok(!completedMenu.includes("Show more branches"));
+
+  const loadingMenu = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <BranchSelector
+        defaultBranch="main"
+        branches={branchItems}
+        totalBranches={100}
+        selectedBranch="item-0"
+        onBranchChange={() => {}}
+        hasMoreBranches
+        isLoadingMoreBranches
+        onLoadMoreBranches={() => {}}
+        initialOpen
+      />
+    </I18nProvider>,
+  );
+  assert.match(loadingMenu, /disabled=""[^>]*>[\s\S]*Loading…/);
+});
+
+test("repository languages bar wraps chips inside card bounds and displays exact percentage tooltips", () => {
+  const html = renderToStaticMarkup(
+    <RepositoryLanguages
+      languages={{
+        TypeScript: 5000,
+        JavaScript: 2000,
+        CSS: 1000,
+        HTML: 500,
+        Shell: 400,
+        Python: 350,
+        Go: 250,
+        Rust: 200,
+        Dockerfile: 150,
+        Makefile: 100,
+        YAML: 50,
+      }}
+    />,
+  );
+
+  assert.match(html, /^<div class="[^"]*\bflex-wrap\b[^"]*\bmin-w-0\b/);
+  assert.ok(html.includes("min-w-[min(100%,14rem)]"));
+  assert.ok(html.includes('class="flex flex-wrap items-center gap-2 min-w-0 max-w-full"'));
+  assert.ok(!html.includes("flex flex-wrap items-center gap-2 shrink-0"));
+  assert.ok(html.includes('title="YAML: 0.5%"'));
+  assert.ok(!html.includes('title="YAML: 2.0%"'));
 });

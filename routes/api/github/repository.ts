@@ -1,4 +1,6 @@
 import {
+  fetchGitHubBranchesPage,
+  fetchGitHubBranchSnapshot,
   fetchGitHubCommitDetails,
   fetchGitHubCommitsPage,
   fetchGitHubRepository,
@@ -13,12 +15,29 @@ export const GET = defineHandler(async (c) => {
   requireAuth(c);
   const repo = c.req.query("repo") ?? "";
   const branch = c.req.query("branch");
+  const scope = c.req.query("scope");
   const commit = c.req.query("commit");
   const page = c.req.query("page");
   try {
     if (commit !== undefined) {
       const details = await fetchGitHubCommitDetails(repo, commit, { token: env.GITHUB_TOKEN });
       return c.json(details);
+    }
+    if (scope !== undefined) {
+      if (scope === "branch") {
+        const snapshot = await fetchGitHubBranchSnapshot(repo, branch ?? "", {
+          token: env.GITHUB_TOKEN,
+        });
+        return c.json(snapshot);
+      }
+      if (scope === "branches") {
+        const branchesPage = await fetchGitHubBranchesPage(repo, {
+          token: env.GITHUB_TOKEN,
+          page: Number(page),
+        });
+        return c.json(branchesPage);
+      }
+      return c.json({ error: "github.errors.invalidUrl" }, 400);
     }
     if (page !== undefined) {
       const commitsPage = await fetchGitHubCommitsPage(repo, {

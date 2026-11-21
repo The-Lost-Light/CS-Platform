@@ -76,7 +76,7 @@ export function ProjectWorkspace({
               designDoc={designDoc}
               nodes={history.present.nodes}
               relationships={history.present.relationships}
-              repoUrl={repository.repoUrlInput}
+              repoUrl={repository.repoUrl}
             />
             <div
               role="tablist"

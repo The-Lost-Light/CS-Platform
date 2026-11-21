@@ -82,8 +82,7 @@
   --c4-system-bg: rgba(255, 255, 255, 0.86);
   --c4-container-bg: rgba(240, 245, 252, 0.82);
   --c4-component-bg: rgba(240, 245, 252, 0.82);
-  --c4-internal-bg: rgba(224, 236, 250, 0.88);
-  --c4-external-bg: rgba(235, 239, 245, 0.88);
+  --c4-node-bg: rgba(224, 236, 250, 0.88);
   --c4-expandable-bg: rgba(255, 255, 255, 0.86);
   --c4-expandable-border: #4e7687;
   --c4-leaf-bg: rgba(240, 245, 252, 0.82);
@@ -147,8 +146,7 @@
   --on-brand-banner: #faf8ff;
   --on-brand-banner-muted: #e6def7;
 
-  --c4-internal-bg: rgba(232, 229, 248, 0.88);
-  --c4-external-bg: rgba(236, 238, 243, 0.88);
+  --c4-node-bg: rgba(232, 229, 248, 0.88);
   --c4-expandable-border: #5171a3;
   --c4-leaf-border: rgba(110, 92, 153, 0.6);
   --c4-edge: #6e5c99;
@@ -203,8 +201,7 @@
   --on-brand-banner: #f6fcf9;
   --on-brand-banner-muted: #d7ede2;
 
-  --c4-internal-bg: rgba(223, 240, 232, 0.88);
-  --c4-external-bg: rgba(235, 240, 238, 0.88);
+  --c4-node-bg: rgba(223, 240, 232, 0.88);
   --c4-expandable-border: #4e7382;
   --c4-leaf-border: rgba(70, 115, 94, 0.6);
   --c4-edge: #46735e;
@@ -259,8 +256,7 @@
   --on-brand-banner: #f7f9fc;
   --on-brand-banner-muted: #dce3ed;
 
-  --c4-internal-bg: rgba(228, 234, 242, 0.88);
-  --c4-external-bg: rgba(237, 239, 243, 0.88);
+  --c4-node-bg: rgba(228, 234, 242, 0.88);
   --c4-expandable-border: #5a6f82;
   --c4-leaf-border: rgba(82, 96, 115, 0.6);
   --c4-edge: #526073;
@@ -348,8 +344,7 @@
   --c4-system-bg: rgba(22, 34, 54, 0.88);
   --c4-container-bg: rgba(16, 25, 41, 0.84);
   --c4-component-bg: rgba(16, 25, 41, 0.84);
-  --c4-internal-bg: rgba(31, 56, 92, 0.88);
-  --c4-external-bg: rgba(38, 49, 66, 0.88);
+  --c4-node-bg: rgba(31, 56, 92, 0.88);
   --c4-expandable-bg: rgba(22, 34, 54, 0.88);
   --c4-expandable-border: #7fd0e8;
   --c4-leaf-bg: rgba(16, 25, 41, 0.84);
@@ -419,8 +414,7 @@
   --c4-system-bg: rgba(31, 30, 42, 0.88);
   --c4-container-bg: rgba(23, 22, 32, 0.84);
   --c4-component-bg: rgba(23, 22, 32, 0.84);
-  --c4-internal-bg: rgba(45, 44, 72, 0.88);
-  --c4-external-bg: rgba(48, 48, 58, 0.88);
+  --c4-node-bg: rgba(45, 44, 72, 0.88);
   --c4-expandable-bg: rgba(31, 30, 42, 0.88);
   --c4-expandable-border: #a4bde6;
   --c4-leaf-bg: rgba(23, 22, 32, 0.84);
@@ -484,8 +478,7 @@
   --c4-system-bg: rgba(25, 35, 32, 0.88);
   --c4-container-bg: rgba(19, 27, 24, 0.84);
   --c4-component-bg: rgba(19, 27, 24, 0.84);
-  --c4-internal-bg: rgba(36, 58, 49, 0.88);
-  --c4-external-bg: rgba(43, 50, 48, 0.88);
+  --c4-node-bg: rgba(36, 58, 49, 0.88);
   --c4-expandable-bg: rgba(25, 35, 32, 0.88);
   --c4-expandable-border: #9ac4d1;
   --c4-leaf-bg: rgba(19, 27, 24, 0.84);
@@ -549,8 +542,7 @@
   --c4-system-bg: rgba(28, 32, 40, 0.88);
   --c4-container-bg: rgba(21, 24, 31, 0.84);
   --c4-component-bg: rgba(21, 24, 31, 0.84);
-  --c4-internal-bg: rgba(44, 51, 64, 0.88);
-  --c4-external-bg: rgba(48, 50, 56, 0.88);
+  --c4-node-bg: rgba(44, 51, 64, 0.88);
   --c4-expandable-bg: rgba(28, 32, 40, 0.88);
   --c4-expandable-border: #a8becf;
   --c4-leaf-bg: rgba(21, 24, 31, 0.84);

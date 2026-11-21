@@ -104,6 +104,7 @@ export default {
   "github.totalFiles": "Total files",
   "github.totalFilesCount": "Total files: {count}",
   "github.commitCount": "{count} Commits",
+  "github.loadMoreBranches": "Show more branches",
   "github.loadMoreCommits": "Load more commits",
   "github.primaryLanguage": "Primary language",
   "github.languageDistribution": "Repository language distribution",
@@ -185,11 +186,9 @@ export default {
   "c4.help": "Help",
   "c4.title": "C4 model architecture",
   "c4.expandable": "Has child elements",
-  "c4.internal": "Internal element",
-  "c4.external": "External element",
   "c4.leaf": "No child elements",
   "c4.levelsDescription":
-    "C1 shows people and systems. C2 shows applications and data stores, C3 shows components, and C4 shows classes and functions. An element that overlaps the dashed boundary is internal. Moving it completely outside makes it external.",
+    "C1 shows people and systems. C2 shows applications and data stores, C3 shows components, and C4 shows classes and functions. The dashed boundary represents the current parent element; dragging it also moves the nodes that overlap it.",
   "c4.scope": "Scope / boundary",
   "c4.createParentFirst": "Create a parent element first",
   "c4.canvasInstructions":
@@ -209,7 +208,6 @@ export default {
   "c4.deleteElement": "Delete element and descendants",
   "c4.editRelationship": "Edit relationship",
   "c4.relationshipDescription": "Relationship description",
-  "c4.protocol": "Technology / protocol",
   "c4.deleteRelationship": "Delete relationship",
   "c4.readmeMode": "README display mode",
   "c4.readmeReading": "Reading",

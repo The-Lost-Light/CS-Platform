@@ -101,7 +101,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
 
           {selectedEdge && (
             <div className="space-y-3.5">
-              <p className="ui-panel px-3 py-2 text-xs font-mono font-semibold text-secondary">
+              <p className="text-sm font-bold text-on-surface wrap-break-word">
                 {selectedSourceLabel} → {selectedTargetLabel}
               </p>
               {field(
@@ -110,14 +110,6 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                   className={fieldClass}
                   value={selectedEdge.label}
                   onChange={(event) => updateEdge({ label: event.target.value })}
-                />,
-              )}
-              {field(
-                t("c4.protocol"),
-                <input
-                  className={`${fieldClass} font-mono`}
-                  value={selectedEdge.technology}
-                  onChange={(event) => updateEdge({ technology: event.target.value })}
                 />,
               )}
               <button

@@ -12,17 +12,6 @@ function canvasBounds(node: CanvasNode) {
   };
 }
 
-export function classifyCanvasNodes(nodes: CanvasNode[]): CanvasNode[] {
-  const frame = nodes.find((node) => node.type === "boundary");
-  if (!frame) return nodes;
-  const boundary = canvasBounds(frame);
-  return nodes.map((node) => {
-    if (node.type !== "c4") return node;
-    const external = !overlapsC4Boundary(canvasBounds(node), boundary);
-    return external === !!node.data.external ? node : { ...node, data: { ...node.data, external } };
-  });
-}
-
 /** Move overlapping nodes with the boundary and only persist user edits. */
 export function prepareC4CanvasChanges(
   incoming: NodeChangeset<CanvasNode>,

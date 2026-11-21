@@ -115,13 +115,31 @@ export interface RepoFile {
   size: number;
 }
 
+export interface RepoBranchesPage {
+  branches: RepoBranch[];
+  hasMore: boolean;
+}
+
+export interface RepoBranchSnapshot {
+  selectedBranch: string;
+  commits: RepoCommit[];
+  totalCommits: number;
+  fileTree: RepoFile[];
+  rateLimit?: string;
+}
+
 export interface RepoBundle {
   repo: Repository;
   selectedBranch: string;
   languages: Record<string, number>;
   branches: RepoBranch[];
+  totalBranches?: number;
+  hasMoreBranches?: boolean;
   tags?: RepoTag[];
+  totalTags?: number;
   pulls?: RepoPullRequest[];
+  totalPulls?: number;
+  openIssuesCount?: number;
   commits: RepoCommit[];
   totalCommits?: number;
   fileTree: RepoFile[];

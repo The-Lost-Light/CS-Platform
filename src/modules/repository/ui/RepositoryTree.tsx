@@ -1,67 +1,60 @@
 import { useI18n } from "@modules/i18n";
-import { ChevronDown, FolderTree, GitBranch, LoaderCircle, Search, Tag } from "lucide-react";
+import { FolderTree, GitBranch, Search, Tag } from "lucide-react";
 
 import type { RepoBundle } from "../model/repository";
+import { BranchSelector } from "./BranchSelector";
 import { IconTooltip } from "./IconTooltip";
 import { RepoFileTree } from "./RepoFileTree";
 
 export function RepositoryTree({
   repo,
   branches,
+  totalBranches,
+  hasMoreBranches = false,
+  isLoadingMoreBranches = false,
+  onLoadMoreBranches,
   tags = [],
+  totalTags,
   fileTree,
   selectedBranch,
   onBranchChange,
   isLoading,
   fileTreeSearch,
   setFileTreeSearch,
-}: Pick<RepoBundle, "repo" | "branches" | "tags" | "fileTree"> & {
+}: Pick<
+  RepoBundle,
+  "repo" | "branches" | "totalBranches" | "hasMoreBranches" | "tags" | "totalTags" | "fileTree"
+> & {
   selectedBranch: string;
   onBranchChange: (value: string) => void;
   isLoading?: boolean;
+  isLoadingMoreBranches?: boolean;
+  onLoadMoreBranches?: () => void;
   fileTreeSearch: string;
   setFileTreeSearch: (value: string) => void;
 }) {
   const { t, locale } = useI18n();
-  const branchCount = branches.length.toLocaleString(locale);
-  const tagCount = tags.length.toLocaleString(locale);
+  const resolvedBranchTotal = Math.max(totalBranches ?? branches.length, branches.length);
+  const resolvedTagTotal = Math.max(totalTags ?? tags.length, tags.length);
+  const branchCount = resolvedBranchTotal.toLocaleString(locale);
+  const tagCount = resolvedTagTotal.toLocaleString(locale);
   const totalFilesCount = fileTree.length.toLocaleString(locale);
 
   return (
-    <div className="lg:col-span-5 min-w-0 ui-card overflow-hidden flex flex-col h-170">
+    <div className="lg:col-span-5 min-w-0 ui-card flex flex-col h-170">
       <div className="ui-card-header shrink-0 min-h-16 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2 min-w-0">
-          <label className="ui-chip-success relative border border-success-outline/60 min-w-0 max-w-full font-mono text-[11px] font-bold focus-within:ring-2 focus-within:ring-success">
-            <GitBranch aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-            <span className="shrink-0">{t("github.branchLabel")}</span>
-            <span aria-hidden="true" className="truncate">
-              {selectedBranch}
-            </span>
-            {isLoading ? (
-              <LoaderCircle aria-hidden="true" className="w-3.5 h-3.5 shrink-0 animate-spin" />
-            ) : (
-              <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-            )}
-            <select
-              aria-label={t("github.branchLabel")}
-              value={selectedBranch}
-              disabled={isLoading}
-              onChange={(e) => onBranchChange(e.target.value)}
-              className="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0 disabled:cursor-wait"
-            >
-              {Array.from(
-                new Set([
-                  repo.default_branch || "main",
-                  ...branches.map((b) => b.name),
-                  selectedBranch,
-                ]),
-              ).map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <BranchSelector
+            defaultBranch={repo.default_branch || "main"}
+            branches={branches}
+            totalBranches={resolvedBranchTotal}
+            selectedBranch={selectedBranch}
+            onBranchChange={onBranchChange}
+            isLoading={isLoading}
+            hasMoreBranches={hasMoreBranches}
+            isLoadingMoreBranches={isLoadingMoreBranches}
+            onLoadMoreBranches={onLoadMoreBranches}
+          />
 
           <IconTooltip label={t("github.branches")}>
             <span

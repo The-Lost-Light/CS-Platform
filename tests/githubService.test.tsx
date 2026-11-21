@@ -1,5 +1,7 @@
 import {
   clearCommitDetailsCache,
+  fetchGitHubBranchesPage,
+  fetchGitHubBranchSnapshot,
   fetchGitHubCommitDetails,
   fetchGitHubCommitsPage,
   fetchGitHubProjectBundle,
@@ -7,6 +9,8 @@ import {
   parseGitHubRepoUrl,
 } from "@modules/repository";
 import {
+  fetchGitHubBranchesPage as fetchServerBranchesPage,
+  fetchGitHubBranchSnapshot as fetchServerBranchSnapshot,
   fetchGitHubCommitDetails as fetchServerCommitDetails,
   fetchGitHubCommitsPage as fetchServerCommitsPage,
   fetchGitHubRepository,
@@ -83,8 +87,10 @@ test("repository URL parsing retains supported URL and shorthand forms", () => {
   for (const input of [
     " owner/repo ",
     "https://www.github.com/owner/repo.git",
+    "https://github.com/owner/repo.git",
     "github.com/owner/repo/",
     "owner/repo/tree/main",
+    "https://github.com/owner/repo/tree/main",
   ]) {
     assert.deepEqual(parseGitHubRepoUrl(input), {
       owner: "owner",
@@ -94,7 +100,21 @@ test("repository URL parsing retains supported URL and shorthand forms", () => {
   }
   assert.strictEqual(parseGitHubRepoUrl("owner"), null);
   assert.strictEqual(parseGitHubRepoUrl(""), null);
-  for (const input of ["https://example.com/owner/repo", "owner/..", "owner/%2f", "owner/repo?q=x"])
+  for (const input of [
+    "https://example.com/owner/repo",
+    "https://github.com/owner",
+    "owner/..",
+    "owner/.",
+    "owner/.git",
+    "owner/%2f",
+    "owner/repo?q=x",
+    "owner/repo/tree/main?q=x",
+    "https://github.com/owner/repo/?q=x",
+    "owner/repo#readme",
+    "owner/repo/tree/main#readme",
+    "owner/repo/foo bar",
+    `https://github.com/owner/${"a".repeat(300)}`,
+  ])
     assert.isNull(parseGitHubRepoUrl(input));
 });
 
@@ -183,8 +203,13 @@ test("live loading preserves headers, branch encoding, rate limits, full file tr
     selectedBranch: repo.default_branch,
     languages: { TypeScript: 100 },
     branches: snapshot.branches,
+    totalBranches: snapshot.branches.length,
+    hasMoreBranches: false,
     tags: snapshot.tags,
+    totalTags: snapshot.tags!.length,
     pulls: snapshot.pulls,
+    totalPulls: snapshot.pulls!.length,
+    openIssuesCount: 0,
     commits: summaries,
     totalCommits: summaries.length,
     fileTree: files,
@@ -397,10 +422,327 @@ test("secondary endpoint failures yield empty sections without replacing live me
   const result = await service("facebook/react");
   assert.strictEqual(result.sourceType, "live-api");
   assert.strictEqual(result.rateLimit, "Live API");
+  assert.strictEqual(result.totalBranches, 0);
+  assert.strictEqual(result.hasMoreBranches, false);
+  assert.strictEqual(result.totalTags, 0);
+  assert.strictEqual(result.totalPulls, undefined);
+  assert.strictEqual(result.openIssuesCount, snapshot.repo.open_issues_count);
   assert.deepEqual(
     [result.languages, result.branches, result.tags, result.pulls, result.commits, result.fileTree],
     [{}, [], [], [], [], []],
   );
+});
+
+test("branch-only snapshots fetch only commits and file tree through the API route", async () => {
+  const fixture = createRepoFixture();
+  const summaries = fixture.commits.map(({ files: _files, stats: _stats, ...summary }) => summary);
+  const branch = "feature/a b";
+  const upstreamPaths: string[] = [];
+  let paginatedCommits = false;
+
+  serverEnv.GITHUB_TOKEN = "fixture-secret";
+  using _transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+    const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
+    if (url.origin === "https://course.example") {
+      assert.equal(url.pathname, "/api/github/repository");
+      const headers = new Headers();
+      const response = await GET({
+        get: (key: string) => (key === "user" ? { id: "student" } : null),
+        header: (key: string, value: string) => headers.set(key, value),
+        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
+        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
+      } as unknown as CloudContext);
+      assert.instanceOf(response, Response);
+      return response;
+    }
+    assert.equal(url.origin, "https://api.github.com");
+    assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer fixture-secret");
+    upstreamPaths.push(url.pathname + url.search);
+    if (url.pathname.endsWith("/commits")) {
+      if (paginatedCommits && url.searchParams.get("per_page") === "10") {
+        return Response.json(summaries, {
+          headers: {
+            link: '<https://api.github.com/repos/owner/repo/commits?page=2>; rel="next", <https://api.github.com/repos/owner/repo/commits?page=3>; rel="last"',
+            "x-ratelimit-remaining": "40",
+            "x-ratelimit-limit": "60",
+          },
+        });
+      }
+      if (paginatedCommits && url.searchParams.get("per_page") === "1") {
+        return Response.json(summaries.slice(0, 1), {
+          headers: {
+            link: '<https://api.github.com/repos/owner/repo/commits?page=23>; rel="next", <https://api.github.com/repos/owner/repo/commits?page=23>; rel="last"',
+            "x-ratelimit-remaining": "39",
+            "x-ratelimit-limit": "60",
+          },
+        });
+      }
+      return Response.json(summaries, {
+        headers: { "x-ratelimit-remaining": "41", "x-ratelimit-limit": "60" },
+      });
+    }
+    if (url.pathname.includes("/git/trees/")) {
+      return Response.json(
+        { tree: fixture.fileTree },
+        { headers: { "x-ratelimit-remaining": "41", "x-ratelimit-limit": "60" } },
+      );
+    }
+    assert.fail(`unexpected repo-level request: ${url.pathname}`);
+  });
+
+  try {
+    const snapshot = await fetchGitHubBranchSnapshot("https://github.com/owner/repo", branch);
+    assert.deepEqual(snapshot, {
+      selectedBranch: branch,
+      commits: summaries,
+      totalCommits: summaries.length,
+      fileTree: fixture.fileTree,
+      rateLimit: "41/60",
+    });
+    assert.deepEqual(upstreamPaths.toSorted(), [
+      "/repos/owner/repo/commits?sha=feature%2Fa%20b&per_page=10",
+      "/repos/owner/repo/git/trees/feature%2Fa%20b?recursive=1",
+    ]);
+
+    upstreamPaths.length = 0;
+    paginatedCommits = true;
+    const paginatedSnapshot = await fetchGitHubBranchSnapshot("owner/repo", branch);
+    assert.strictEqual(paginatedSnapshot.totalCommits, 23);
+    assert.lengthOf(upstreamPaths, 3);
+
+    await expect(fetchGitHubBranchSnapshot("owner/repo", "   ")).rejects.toThrow(
+      "github.errors.invalidUrl",
+    );
+
+    const invalidScopeRes = await fetch(
+      "https://course.example/api/github/repository?repo=owner/repo&branch=main&scope=other",
+    );
+    assert.strictEqual(invalidScopeRes.status, 400);
+    assert.deepEqual(await invalidScopeRes.json(), { error: "github.errors.invalidUrl" });
+
+    const missingBranchRes = await fetch(
+      "https://course.example/api/github/repository?repo=owner/repo&scope=branch",
+    );
+    assert.strictEqual(missingBranchRes.status, 400);
+    assert.deepEqual(await missingBranchRes.json(), { error: "github.errors.invalidUrl" });
+  } finally {
+    serverEnv.GITHUB_TOKEN = undefined;
+  }
+
+  for (const [status, key] of [
+    [404, "github.errors.notFound"],
+    [429, "github.errors.limited"],
+  ] as const) {
+    for (const failedEndpoint of ["/commits?", "/git/trees/"]) {
+      await expect(
+        fetchServerBranchSnapshot("owner/repo", "feature/deleted", {
+          token: "test-token",
+          fetch: async (input) => {
+            const url = new Request(input).url;
+            if (url.includes(failedEndpoint)) return new Response(null, { status });
+            if (url.includes("/git/trees/")) return Response.json({ tree: [] });
+            return Response.json([]);
+          },
+        }),
+      ).rejects.toThrow(key);
+    }
+  }
+});
+
+test("repository metrics subtract open PRs from open issues and resolve exact paginated counts", async () => {
+  const fixture = createRepoFixture();
+  const makePulls = (count: number) =>
+    Array.from({ length: count }, (_, idx) => ({ number: idx + 1, state: "open" }));
+
+  // Case 1: 0 issues + 3 open PRs (GitHub reports open_issues_count = 3)
+  let requestsCount = 0;
+  const zeroIssuesBundle = await withGitHubTransport({
+    fetch: async (input) => {
+      requestsCount++;
+      const url = new Request(input).url;
+      if (url.endsWith("/repos/owner/repo"))
+        return Response.json({ ...fixture.repo, open_issues_count: 3 });
+      if (url.includes("/pulls?")) return Response.json(makePulls(3));
+      if (url.includes("/git/trees/")) return Response.json({ tree: [] });
+      if (url.endsWith("/languages")) return Response.json({});
+      return Response.json([]);
+    },
+  })("owner/repo");
+  assert.strictEqual(requestsCount, 7);
+  assert.strictEqual(zeroIssuesBundle.totalPulls, 3);
+  assert.strictEqual(zeroIssuesBundle.openIssuesCount, 0);
+
+  // Case 2: 10 open_issues_count - 2 open PRs = 8 open issues
+  const mixedIssuesBundle = await withGitHubTransport({
+    fetch: async (input) => {
+      const url = new Request(input).url;
+      if (url.endsWith("/repos/owner/repo"))
+        return Response.json({ ...fixture.repo, open_issues_count: 10 });
+      if (url.includes("/pulls?")) return Response.json(makePulls(2));
+      if (url.includes("/git/trees/")) return Response.json({ tree: [] });
+      if (url.endsWith("/languages")) return Response.json({});
+      return Response.json([]);
+    },
+  })("owner/repo");
+  assert.strictEqual(mixedIssuesBundle.totalPulls, 2);
+  assert.strictEqual(mixedIssuesBundle.openIssuesCount, 8);
+
+  // Case 3: Paginated branches, tags, and pulls (>30) with exact per_page=1 count lookups
+  const paginatedBranches = Array.from({ length: 30 }, (_, idx) => ({
+    name: `branch-${idx}`,
+    protected: false,
+    commit: { sha: "a".repeat(40) },
+  }));
+  const paginatedTags = Array.from({ length: 30 }, (_, idx) => ({
+    name: `v1.0.${idx}`,
+    commit: { sha: "a".repeat(40) },
+  }));
+  const paginatedBundle = await withGitHubTransport({
+    fetch: async (input) => {
+      const url = new Request(input).url;
+      if (url.endsWith("/repos/owner/repo"))
+        return Response.json({ ...fixture.repo, open_issues_count: 120 });
+      if (url.includes("/branches?per_page=30")) {
+        return Response.json(paginatedBranches, {
+          headers: { link: '<https://api.github.com/branches?per_page=30&page=2>; rel="next"' },
+        });
+      }
+      if (url.includes("/branches?per_page=1")) {
+        return Response.json(paginatedBranches.slice(0, 1), {
+          headers: {
+            link: '<https://api.github.com/branches?per_page=1&page=100>; rel="last"',
+          },
+        });
+      }
+      if (url.includes("/tags?per_page=30")) {
+        return Response.json(paginatedTags, {
+          headers: { link: '<https://api.github.com/tags?per_page=30&page=2>; rel="next"' },
+        });
+      }
+      if (url.includes("/tags?per_page=1")) {
+        return Response.json(paginatedTags.slice(0, 1), {
+          headers: { link: '<https://api.github.com/tags?per_page=1&page=64>; rel="last"' },
+        });
+      }
+      if (url.includes("/pulls?state=open&per_page=30")) {
+        return Response.json(makePulls(30), {
+          headers: {
+            link: '<https://api.github.com/pulls?state=open&per_page=30&page=2>; rel="next"',
+          },
+        });
+      }
+      if (url.includes("/pulls?state=open&per_page=1")) {
+        return Response.json(makePulls(1), {
+          headers: {
+            link: '<https://api.github.com/pulls?state=open&per_page=1&page=45>; rel="last"',
+          },
+        });
+      }
+      if (url.includes("/git/trees/")) return Response.json({ tree: [] });
+      if (url.endsWith("/languages")) return Response.json({});
+      return Response.json([]);
+    },
+  })("owner/repo");
+  assert.strictEqual(paginatedBundle.totalBranches, 100);
+  assert.strictEqual(paginatedBundle.hasMoreBranches, true);
+  assert.strictEqual(paginatedBundle.totalTags, 64);
+  assert.strictEqual(paginatedBundle.totalPulls, 45);
+  assert.strictEqual(paginatedBundle.openIssuesCount, 75);
+
+  // Case 4: Paginated pulls when per_page=1 count request fails -> falls back without subtracting
+  const fallbackBundle = await withGitHubTransport({
+    fetch: async (input) => {
+      const url = new Request(input).url;
+      if (url.endsWith("/repos/owner/repo"))
+        return Response.json({ ...fixture.repo, open_issues_count: 120 });
+      if (url.includes("/pulls?state=open&per_page=30")) {
+        return Response.json(makePulls(30), {
+          headers: { link: '<https://api.github.com/pulls?page=2>; rel="next"' },
+        });
+      }
+      if (url.includes("/pulls?state=open&per_page=1")) {
+        return new Response(null, { status: 500 });
+      }
+      if (url.includes("/git/trees/")) return Response.json({ tree: [] });
+      if (url.endsWith("/languages")) return Response.json({});
+      return Response.json([]);
+    },
+  })("owner/repo");
+  assert.strictEqual(fallbackBundle.totalPulls, 30);
+  assert.strictEqual(fallbackBundle.openIssuesCount, 120);
+  assert.ok(!("hasMorePulls" in fallbackBundle));
+});
+
+test("branch list pagination works through the API route", async () => {
+  const pageTwo = Array.from({ length: 30 }, (_, idx) => ({
+    name: `release-${idx}`,
+    protected: false,
+    commit: { sha: "b".repeat(40) },
+  }));
+
+  const serverHasMore = await fetchServerBranchesPage("owner/repo", {
+    token: "test-token",
+    page: 2,
+    fetch: async (input) => {
+      assert.strictEqual(
+        new Request(input).url,
+        "https://api.github.com/repos/owner/repo/branches?per_page=30&page=2",
+      );
+      return Response.json(pageTwo, {
+        headers: { link: '<https://api.github.com/repos/owner/repo/branches?page=3>; rel="next"' },
+      });
+    },
+  });
+  assert.strictEqual(serverHasMore.hasMore, true);
+  assert.strictEqual(serverHasMore.branches.length, 30);
+
+  const serverExactEnd = await fetchServerBranchesPage("owner/repo", {
+    token: "test-token",
+    page: 3,
+    fetch: async () => Response.json(pageTwo),
+  });
+  assert.strictEqual(serverExactEnd.hasMore, false);
+  assert.strictEqual(serverExactEnd.branches.length, 30);
+
+  serverEnv.GITHUB_TOKEN = "fixture-secret";
+  using _transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
+    if (url.origin === "https://course.example") {
+      assert.equal(url.pathname, "/api/github/repository");
+      const headers = new Headers();
+      const response = await GET({
+        get: (key: string) => (key === "user" ? { id: "student" } : null),
+        header: (key: string, value: string) => headers.set(key, value),
+        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
+        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
+      } as unknown as CloudContext);
+      assert.instanceOf(response, Response);
+      return response;
+    }
+    assert.strictEqual(
+      url.href,
+      "https://api.github.com/repos/owner/repo/branches?per_page=30&page=2",
+    );
+    return Response.json(pageTwo.slice(0, 5));
+  });
+
+  try {
+    const clientPage = await fetchGitHubBranchesPage("https://github.com/owner/repo", 2);
+    assert.strictEqual(clientPage.hasMore, false);
+    assert.strictEqual(clientPage.branches.length, 5);
+
+    await expect(fetchGitHubBranchesPage("owner/repo", 0)).rejects.toThrow(
+      "github.errors.invalidUrl",
+    );
+
+    const missingPageRes = await fetch(
+      "https://course.example/api/github/repository?repo=owner/repo&scope=branches",
+    );
+    assert.strictEqual(missingPageRes.status, 400);
+    assert.deepEqual(await missingPageRes.json(), { error: "github.errors.invalidUrl" });
+  } finally {
+    serverEnv.GITHUB_TOKEN = undefined;
+  }
 });
 
 test("switching branches rejects a failed tree or history request", async () => {

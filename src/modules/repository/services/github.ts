@@ -2,7 +2,13 @@ import { isMessageKey } from "@modules/i18n";
 import { parseGitHubRepoUrl } from "@shared/githubRepoUrl";
 import { isRecord } from "@shared/isRecord";
 
-import type { RepoBundle, RepoCommitDetails, RepoCommitsPage } from "../model/repository";
+import type {
+  RepoBranchesPage,
+  RepoBranchSnapshot,
+  RepoBundle,
+  RepoCommitDetails,
+  RepoCommitsPage,
+} from "../model/repository";
 
 const commitDetailsCache = new Map<string, RepoCommitDetails>();
 
@@ -42,6 +48,37 @@ export async function fetchGitHubProjectBundle(
   const params = new URLSearchParams({ repo: parsed.fullKey });
   if (branch !== undefined) params.set("branch", branch);
   return requestRepositoryJson<RepoBundle>(params);
+}
+
+export async function fetchGitHubBranchSnapshot(
+  rawUrl: string,
+  branch: string,
+): Promise<RepoBranchSnapshot> {
+  const parsed = parseGitHubRepoUrl(rawUrl);
+  const trimmedBranch = branch.trim();
+  if (!parsed || !trimmedBranch) throw new Error("github.errors.invalidUrl");
+  const params = new URLSearchParams({
+    repo: parsed.fullKey,
+    branch: trimmedBranch,
+    scope: "branch",
+  });
+  return requestRepositoryJson<RepoBranchSnapshot>(params);
+}
+
+export async function fetchGitHubBranchesPage(
+  rawUrl: string,
+  page: number,
+): Promise<RepoBranchesPage> {
+  const parsed = parseGitHubRepoUrl(rawUrl);
+  if (!parsed || !Number.isInteger(page) || page < 1) {
+    throw new Error("github.errors.invalidUrl");
+  }
+  const params = new URLSearchParams({
+    repo: parsed.fullKey,
+    scope: "branches",
+    page: String(page),
+  });
+  return requestRepositoryJson<RepoBranchesPage>(params);
 }
 
 export async function fetchGitHubCommitsPage(
@@ -85,5 +122,7 @@ export async function fetchGitHubCommitDetails(
 }
 
 export type GitHubProjectLoader = typeof fetchGitHubProjectBundle;
+export type GitHubBranchLoader = typeof fetchGitHubBranchSnapshot;
+export type GitHubBranchesPageLoader = typeof fetchGitHubBranchesPage;
 export type GitHubCommitsPageLoader = typeof fetchGitHubCommitsPage;
 export type GitHubCommitDetailsLoader = typeof fetchGitHubCommitDetails;

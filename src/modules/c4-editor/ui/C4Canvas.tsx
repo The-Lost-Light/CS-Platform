@@ -1,3 +1,4 @@
+import { useI18n } from "@modules/i18n";
 import {
   Handle,
   NodeResizer,
@@ -8,10 +9,11 @@ import {
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
 
-import { prepareC4CanvasChanges } from "../model/canvasChanges";
+import { classifyCanvasNodes, prepareC4CanvasChanges } from "../model/canvasChanges";
 import type { BoundaryNode, CanvasNode, FlowNode } from "../model/flowTypes";
 
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
+  const { t } = useI18n();
   return (
     <div
       role="button"
@@ -53,7 +55,8 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
               data.expandable ? "ui-chip-secondary" : "ui-chip-primary"
             } px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider font-mono`}
           >
-            {data.kind} · {data.boundaryLabel}
+            {data.kind === "system" ? "context" : data.kind} ·{" "}
+            {t(data.external ? "c4.external" : "c4.internal")}
           </span>
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
@@ -71,11 +74,6 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
           {data.description}
         </p>
       </div>
-      {data.status && (
-        <p className="mt-3 shrink-0 max-h-12 overflow-y-auto nowheel border-t border-outline-subtle pt-2 text-[11px] font-mono text-secondary wrap-break-word">
-          {data.status}
-        </p>
-      )}
       <Handle
         type="source"
         position={Position.Right}
@@ -114,7 +112,7 @@ export function C4Canvas({ nodes = [], onNodesChange, ...props }: ReactFlowProps
   return (
     <ReactFlow<CanvasNode>
       {...props}
-      nodes={canvasNodes}
+      nodes={classifyCanvasNodes(canvasNodes)}
       onNodesChange={(changes) => {
         const update = prepareC4CanvasChanges(changes, canvasNodes, movingIds.current);
         movingIds.current = update.movingIds;

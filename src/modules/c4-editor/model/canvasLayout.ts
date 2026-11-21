@@ -1,10 +1,9 @@
-import type { C4Node } from "@modules/c4-model";
+import { SCOPE_OFFSET, type C4Node } from "@modules/c4-model";
 import type { NodeChangeset } from "@xyflow/react";
 
 import type { CanvasNode } from "./flowTypes";
 
 export const BOUNDARY_ID = "__c4_boundary__";
-export const SCOPE_OFFSET = { x: 40, y: 70 };
 
 export function applyCanvasLayout(
   nodes: C4Node[],

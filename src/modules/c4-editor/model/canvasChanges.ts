@@ -4,6 +4,25 @@ import { NodeChangeset } from "@xyflow/react";
 import { BOUNDARY_ID } from "./canvasLayout";
 import type { CanvasNode } from "./flowTypes";
 
+function canvasBounds(node: CanvasNode) {
+  return {
+    ...node.position,
+    width: Number(node.width ?? node.style?.width),
+    height: Number(node.height ?? node.style?.height),
+  };
+}
+
+export function classifyCanvasNodes(nodes: CanvasNode[]): CanvasNode[] {
+  const frame = nodes.find((node) => node.type === "boundary");
+  if (!frame) return nodes;
+  const boundary = canvasBounds(frame);
+  return nodes.map((node) => {
+    if (node.type !== "c4") return node;
+    const external = !overlapsC4Boundary(canvasBounds(node), boundary);
+    return external === !!node.data.external ? node : { ...node, data: { ...node.data, external } };
+  });
+}
+
 /** Move overlapping nodes with the boundary and only persist user edits. */
 export function prepareC4CanvasChanges(
   incoming: NodeChangeset<CanvasNode>,
@@ -14,23 +33,16 @@ export function prepareC4CanvasChanges(
   const boundaryMove = changes
     .getByType("position")
     .find((change) => change.id === BOUNDARY_ID && change.position);
-  if (boundaryMove?.position) {
+  const frameResized = changes
+    .getByType("dimensions")
+    .some((change) => change.id === BOUNDARY_ID && change.setAttributes);
+  if (boundaryMove?.position && !frameResized) {
     const frame = nodes.find((node) => node.id === boundaryMove.id);
     if (frame) {
-      const width = Number(frame.style?.width ?? 600);
-      const height = Number(frame.style?.height ?? 360);
+      const boundary = canvasBounds(frame);
       movingIds ??= nodes
         .filter(
-          (node) =>
-            node.type !== "boundary" &&
-            overlapsC4Boundary(
-              {
-                ...node.position,
-                width: Number(node.style?.width ?? 280),
-                height: Number(node.style?.height ?? 230),
-              },
-              { ...frame.position, width, height },
-            ),
+          (node) => node.type !== "boundary" && overlapsC4Boundary(canvasBounds(node), boundary),
         )
         .map((node) => node.id);
       const dx = boundaryMove.position.x - frame.position.x;

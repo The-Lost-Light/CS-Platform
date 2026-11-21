@@ -1,10 +1,12 @@
 import { C4FileActions, createC4History } from "@modules/c4-editor";
+import { createC4NodeInScope, type C4Node } from "@modules/c4-model";
 import { I18nProvider } from "@modules/i18n";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test, vi } from "vite-plus/test";
 
 import { useC4Editor } from "@/modules/c4-editor/hooks/useC4Editor";
+import type { CanvasNode } from "@/modules/c4-editor/model/flowTypes";
 import { C4Diagram } from "@/modules/c4-editor/ui/C4Diagram";
 
 vi.mock("@xyflow/react", () => ({
@@ -16,19 +18,26 @@ vi.mock("@xyflow/react", () => ({
   NodeChangeset: class {},
   NodeResizer: () => null,
   Position: { Left: "left", Right: "right" },
-  ReactFlow: ({ children }: { children?: ReactNode }) => <div data-testid="flow">{children}</div>,
+  ReactFlow: ({ children, nodes }: { children?: ReactNode; nodes: CanvasNode[] }) => (
+    <div data-testid="flow">
+      {nodes.map((node) => node.type === "c4" && <span key={node.id}>{node.data.technology}</span>)}
+      {children}
+    </div>
+  ),
 }));
 
-function TestC4Diagram() {
+function TestC4Diagram({ path = [], selected }: { path?: C4Node[]; selected?: C4Node }) {
   const editor = useC4Editor({
-    history: createC4History(),
+    history: createC4History({ nodes: selected ? [...path, selected] : path, relationships: [] }),
     dispatchModel: () => {},
     designDoc: "",
     onChangeDesignDoc: () => {},
     designTab: "diagram",
     onChangeDesignTab: () => {},
   });
-  return <C4Diagram editor={editor} />;
+  const scope = path.at(-1);
+  if (scope && editor.scope?.id !== scope.id) editor.navigate(scope.id);
+  return <C4Diagram editor={{ ...editor, selected }} />;
 }
 
 test("C4FileActions renders import/export controls, hidden file input, and status banners", () => {
@@ -121,4 +130,49 @@ test("C4Diagram keeps canvas controls without import/export buttons or file inpu
   assert.ok(!html.includes("Import C4 JSON"));
   assert.ok(!html.includes("Export C4 JSON"));
   assert.notMatch(html, /type="file"/);
+
+  const systemNode = createC4NodeInScope([], "", "sys", "Core System")!;
+  const containerNode = createC4NodeInScope([systemNode], "sys", "ctr", "Web App")!;
+  const componentNode = createC4NodeInScope(
+    [systemNode, containerNode],
+    "ctr",
+    "cmp",
+    "Auth Service",
+  )!;
+  const drilledHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram path={[systemNode, containerNode, componentNode]} />
+    </I18nProvider>,
+  );
+  assert.ok(drilledHtml.includes("C1 · Context"));
+  assert.ok(drilledHtml.includes("C2 · Container"));
+  assert.ok(drilledHtml.includes("C3 · Component"));
+  assert.ok(drilledHtml.includes("C4 · Code"));
+  assert.ok(!drilledHtml.includes("Core System"));
+  assert.ok(!drilledHtml.includes("Web App"));
+  assert.ok(!drilledHtml.includes("Auth Service"));
+});
+
+test("only C2 and C3 show node technology in both the inspector and the canvas", () => {
+  const path: C4Node[] = [];
+  for (let level = 1; level <= 4; level++) {
+    const node = {
+      ...createC4NodeInScope(path, path.at(-1)?.id ?? "", String(level), "Element")!,
+      technology: "Example stack",
+    };
+    const html = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <TestC4Diagram path={path} selected={node} />
+      </I18nProvider>,
+    );
+    const inspector = html.split("<aside")[1].split("</aside>")[0];
+    assert.ok(inspector.includes(`Edit element · ${level === 1 ? "context" : node.kind}`));
+    assert.match(inspector, />Name</);
+    assert.match(inspector, />Responsibilities</);
+    assert.notMatch(inspector, /role="switch"|GitHub path/);
+    const showTechnology = level === 2 || level === 3;
+    assert.equal(inspector.includes(">Technology<"), showTechnology);
+    assert.equal(html.includes("<span>Example stack</span>"), showTechnology);
+    path.push(node);
+  }
 });

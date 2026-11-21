@@ -10,6 +10,7 @@ const colors = {
   internal: "var(--c4-internal-bg)",
   external: "var(--c4-external-bg)",
 };
+const levelNames = ["Container", "Component", "Code"] as const;
 
 export function C4Diagram({ editor }: { editor: C4Editor }) {
   const {
@@ -22,7 +23,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     cancelNodeClick,
     scope,
     path,
-    inside,
+    visible,
     flowNodes,
     flowEdges,
     navigate,
@@ -82,7 +83,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                     aria-current={node.id === scope?.id ? "page" : undefined}
                     className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface/75 text-on-muted hover:bg-surface hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold aria-[current=page]:shadow-m3-1"
                   >
-                    C{index + 2} · {node.label}
+                    C{index + 2} · {levelNames[index]}
                   </button>
                 </span>
               ))}
@@ -230,7 +231,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
           </div>
           <C4Inspector editor={editor} />
         </div>
-        {!inside.length && (
+        {!visible.length && (
           <p className="px-5 py-3.5 text-xs sm:text-sm font-medium text-on-muted bg-surface-sunken border-t border-outline-subtle">
             {t("c4.emptyLevel")}
           </p>

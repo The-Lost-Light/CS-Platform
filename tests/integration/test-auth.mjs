@@ -156,7 +156,6 @@ const draft = {
         category: "system",
         label: "Student system",
         description: "",
-        expectedPath: "",
         technology: "",
         parentId: null,
         x: 0,

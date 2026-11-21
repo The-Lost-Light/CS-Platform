@@ -10,14 +10,12 @@ interface MindMapNode {
 }
 
 export type C4Kind = "person" | "system" | "container" | "component" | "code";
-export type C4Node = MindMapNode & {
+export type C4Node = Omit<MindMapNode, "expectedPath"> & {
   kind: C4Kind;
-  external?: boolean;
   technology: string;
   width?: number;
   height?: number;
   boundary?: { x: number; y: number; width: number; height: number };
-  contextPositions?: Record<string, { x: number; y: number }>;
 };
 export interface C4Relationship {
   id: string;
@@ -33,21 +31,41 @@ export const parentKind: Partial<Record<C4Kind, C4Kind>> = {
 };
 export const C4_MAX_LEVELS = 4;
 
-export function c4NodeDepth(nodes: C4Node[], id: string): number {
-  const byId = new Map(nodes.map((node) => [node.id, node]));
-  const seen = new Set<string>();
-  let current = byId.get(id);
-  while (current) {
-    if (seen.has(current.id)) return Infinity;
-    seen.add(current.id);
-    current = current.parentId ? byId.get(current.parentId) : undefined;
-  }
-  return seen.size;
+export const SCOPE_OFFSET = { x: 40, y: 70 };
+
+export function c4NodeBounds(node: C4Node) {
+  return {
+    x: node.x + (node.parentId ? SCOPE_OFFSET.x : 0),
+    y: node.y + (node.parentId ? SCOPE_OFFSET.y : 0),
+    width: node.width ?? 280,
+    height: node.height ?? 230,
+  };
+}
+
+function defaultBoundary(children: C4Node[]) {
+  return {
+    x: -40,
+    y: -70,
+    width: Math.max(600, ...children.map((node) => node.x + (node.width ?? 280) + 80)),
+    height: Math.max(360, ...children.map((node) => node.y + (node.height ?? 230) + 110)),
+  };
 }
 
 export function canExploreC4Node(nodes: C4Node[], id: string): boolean {
-  const node = nodes.find((node) => node.id === id);
-  return !!node && !node.external && node.kind !== "code" && c4NodeDepth(nodes, id) < C4_MAX_LEVELS;
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  let current = byId.get(id);
+  for (let depth = 1; current && depth < C4_MAX_LEVELS; depth++) {
+    if (current.kind === "code") return false;
+    const parentId = current.parentId;
+    if (parentId === null) return true;
+    const parent = byId.get(parentId);
+    if (!parent) return false;
+    const frame =
+      parent.boundary ?? defaultBoundary(nodes.filter((node) => node.parentId === parentId));
+    if (!overlapsC4Boundary(c4NodeBounds(current), frame)) return false;
+    current = parent;
+  }
+  return false;
 }
 
 export function createC4NodeInScope(
@@ -79,7 +97,6 @@ export function createC4NodeInScope(
     parentId,
     description: "",
     technology: "",
-    expectedPath: "",
     x: position?.x ?? 0,
     y:
       position?.y ??
@@ -101,13 +118,18 @@ export function c4Drilldown(nodes: C4Node[], scopeId: string) {
   }
   path.splice(C4_MAX_LEVELS - 1);
   const scope = path.at(-1);
-  const inside = nodes.filter((node) => (scope ? node.parentId === scope.id : !node.parentId));
+  const visible = nodes.filter((node) => (scope ? node.parentId === scope.id : !node.parentId));
+  const boundary = scope?.boundary ?? defaultBoundary(visible);
+  const inside: C4Node[] = [];
   const outside: C4Node[] = [];
-  const visible = inside;
-  return { path, scope, inside, outside, visible };
+  for (const node of visible) {
+    if (scope && !overlapsC4Boundary(c4NodeBounds(node), boundary)) outside.push(node);
+    else inside.push(node);
+  }
+  return { path, scope, boundary, inside, outside, visible };
 }
 
-/** Preserve the existing path mappings while introducing explicit C4 containment. */
+/** Infer C4 containment from legacy mind-map categories and paths. */
 export function migrateC4Nodes(nodes: MindMapNode[]): C4Node[] {
   const root = nodes.find((node) => !node.parentId);
   const migrated = nodes.map((node, index) => {
@@ -139,7 +161,7 @@ export function migrateC4Nodes(nodes: MindMapNode[]): C4Node[] {
             ?.id || container.id;
       }
     });
-  return migrated;
+  return migrated.map(({ expectedPath: _path, ...node }) => node);
 }
 
 export function removeC4Nodes(nodes: C4Node[], ids: string[]) {
@@ -161,7 +183,7 @@ export function visibleC4Nodes(nodes: C4Node[], level: C4Kind, scope: string): C
   return [...view.inside.filter((node) => node.kind === level), ...view.outside];
 }
 
-/** Membership is determined geometrically at the start of a boundary drag. */
+/** A partial overlap counts as inside. Touching edges alone do not. */
 export function overlapsC4Boundary(
   node: { x: number; y: number; width: number; height: number },
   boundary: { x: number; y: number; width: number; height: number },

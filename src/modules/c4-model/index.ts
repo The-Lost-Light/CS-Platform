@@ -3,11 +3,13 @@ export {
   type C4Kind,
   type C4Relationship,
   c4Drilldown,
+  c4NodeBounds,
   canExploreC4Node,
   createC4NodeInScope,
   migrateC4Nodes,
   overlapsC4Boundary,
   removeC4Nodes,
+  SCOPE_OFFSET,
   visibleC4Nodes,
 } from "./c4";
 export {

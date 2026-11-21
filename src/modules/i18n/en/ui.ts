@@ -184,15 +184,12 @@ export default {
   "c4.closeEditor": "Close editor",
   "c4.help": "Help",
   "c4.title": "C4 model architecture",
-  "c4.expandable": "Has details · double-click to explore",
+  "c4.expandable": "Has child elements",
   "c4.internal": "Internal element",
   "c4.external": "External element",
-  "c4.externalHelp":
-    "External elements cannot contain children or be explored. Turn off to make this element internal.",
-  "c4.externalBlocked": "This element contains children. Remove them before switching to external.",
-  "c4.leaf": "No deeper content · Double-click to explore below C4",
+  "c4.leaf": "No child elements",
   "c4.levelsDescription":
-    "C1: people and systems. C2: applications and data stores within a system. C3: components within a container. C4: classes and functions within a component.",
+    "C1 shows people and systems. C2 shows applications and data stores, C3 shows components, and C4 shows classes and functions. An element that overlaps the dashed boundary is internal. Moving it completely outside makes it external.",
   "c4.scope": "Scope / boundary",
   "c4.createParentFirst": "Create a parent element first",
   "c4.canvasInstructions":
@@ -209,7 +206,6 @@ export default {
   "c4.parentBoundary": "Parent boundary",
   "c4.technology": "Technology",
   "c4.responsibilities": "Responsibilities",
-  "c4.githubPath": "GitHub path (optional)",
   "c4.deleteElement": "Delete element and descendants",
   "c4.editRelationship": "Edit relationship",
   "c4.relationshipDescription": "Relationship description",

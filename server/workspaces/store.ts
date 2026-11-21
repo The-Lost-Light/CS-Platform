@@ -1,4 +1,5 @@
 import { workspaces, workspaceParts } from "@db/schema";
+import { validateC4File } from "@modules/c4-model";
 import type { PersonalWorkspace, WorkspaceSnapshot } from "@modules/workspace";
 import { isUniqueViolation } from "@server/errors";
 import { availableProject } from "@server/projects";
@@ -21,6 +22,7 @@ export async function loadWorkspace(
   const draft: PersonalWorkspace | null = rows.length
     ? JSON.parse(rows.map((row) => row.content).join(""))
     : null;
+  if (draft) draft.model = validateC4File(draft.model);
   return { accountId: userId, revision: rows[0]?.revision ?? null, draft };
 }
 

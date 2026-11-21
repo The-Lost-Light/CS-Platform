@@ -2,7 +2,10 @@ import { createC4NodeInScope } from "@modules/c4-model";
 import { NodeChangeset } from "@xyflow/react";
 import { assert, test } from "vite-plus/test";
 
-import { prepareC4CanvasChanges } from "@/modules/c4-editor/model/canvasChanges";
+import {
+  classifyCanvasNodes,
+  prepareC4CanvasChanges,
+} from "@/modules/c4-editor/model/canvasChanges";
 import { applyCanvasLayout, BOUNDARY_ID } from "@/modules/c4-editor/model/canvasLayout";
 import type { CanvasNode, FlowNode } from "@/modules/c4-editor/model/flowTypes";
 
@@ -15,11 +18,9 @@ function card(id: string, x: number, y: number): FlowNode {
     data: {
       title: id,
       external: false,
-      boundaryLabel: "Internal",
       kind: "system",
       description: "",
       technology: "",
-      status: "",
       expandable: false,
       onSelect: () => {},
       onExplore: () => {},
@@ -183,4 +184,41 @@ test("persisted geometry uses scope coordinates and leaves other levels alone", 
   assert.deepEqual(result[1], { ...child, x: 10, y: 20, width: 250, height: 161 });
   assert.strictEqual(result[2], outside);
   assert.strictEqual(scope.boundary, undefined);
+});
+
+test("canvas membership follows live node moves and resizing the boundary from the left", () => {
+  const nodes: CanvasNode[] = [
+    {
+      id: BOUNDARY_ID,
+      type: "boundary",
+      position: { x: 0, y: 0 },
+      style: { width: 800, height: 400 },
+      data: { title: "System" },
+    },
+    card("child", 100, 50),
+  ];
+  const resize = prepareC4CanvasChanges(
+    new NodeChangeset<CanvasNode>([
+      { type: "position", id: BOUNDARY_ID, position: { x: 200, y: 0 } },
+      {
+        type: "dimensions",
+        id: BOUNDARY_ID,
+        dimensions: { width: 600, height: 400 },
+        setAttributes: true,
+      },
+    ]),
+    nodes,
+    null,
+  );
+  const resized = resize.changes.applyTo(nodes);
+  assert.deepEqual(resized[1].position, nodes[1].position);
+  const outside = classifyCanvasNodes(resized)[1];
+  assert.ok(outside.type === "c4");
+  assert.isTrue(outside.data.external);
+  const move = new NodeChangeset<CanvasNode>([
+    { type: "position", id: "child", position: { x: 101, y: 50 }, dragging: true },
+  ]);
+  const overlapping = classifyCanvasNodes(move.applyTo(resized))[1];
+  assert.ok(overlapping.type === "c4");
+  assert.isNotTrue(overlapping.data.external);
 });

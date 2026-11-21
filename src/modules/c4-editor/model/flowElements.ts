@@ -1,8 +1,7 @@
-import type { C4Node, C4Relationship } from "@modules/c4-model";
-import type { Translator } from "@modules/i18n";
+import { c4NodeBounds, type C4Node, type C4Relationship } from "@modules/c4-model";
 import { MarkerType } from "@xyflow/react";
 
-import { BOUNDARY_ID, SCOPE_OFFSET } from "./canvasLayout";
+import { BOUNDARY_ID } from "./canvasLayout";
 import type { CanvasNode } from "./flowTypes";
 
 interface FlowView {
@@ -13,7 +12,7 @@ interface FlowView {
   selectedId: string;
   edgeId: string;
   expandableIds: Set<string | null>;
-  t: Translator;
+  showTechnology: boolean;
   select: (id: string) => void;
   explore: (id: string) => void;
 }
@@ -25,34 +24,31 @@ export function buildFlowElements({
   selectedId,
   edgeId,
   expandableIds,
-  t,
+  showTechnology,
   select,
   explore,
 }: FlowView) {
   const visibleIds = new Set(visible.map((node) => node.id));
-  const flowNodes: CanvasNode[] = visible.map((node) => ({
-    id: node.id,
-    type: "c4",
-    position: {
-      x: node.x + (scope ? SCOPE_OFFSET.x : 0),
-      y: node.y + (scope ? SCOPE_OFFSET.y : 0),
-    },
-    zIndex: 1,
-    selected: node.id === selectedId,
-    style: { width: node.width ?? 280, height: node.height ?? 230 },
-    data: {
-      title: node.label,
-      external: !!node.external,
-      boundaryLabel: t(node.external ? "c4.external" : "c4.internal"),
-      kind: node.kind,
-      description: node.description,
-      technology: node.technology,
-      status: node.expectedPath,
-      expandable: expandableIds.has(node.id),
-      onSelect: () => select(node.id),
-      onExplore: () => explore(node.id),
-    },
-  }));
+  const flowNodes: CanvasNode[] = visible.map((node) => {
+    const { x, y, width, height } = c4NodeBounds(node);
+    return {
+      id: node.id,
+      type: "c4",
+      position: { x, y },
+      zIndex: 1,
+      selected: node.id === selectedId,
+      style: { width, height },
+      data: {
+        title: node.label,
+        kind: node.kind,
+        description: node.description,
+        technology: showTechnology ? node.technology : "",
+        expandable: expandableIds.has(node.id),
+        onSelect: () => select(node.id),
+        onExplore: () => explore(node.id),
+      },
+    };
+  });
 
   if (scope)
     flowNodes.unshift({

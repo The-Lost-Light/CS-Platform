@@ -17,12 +17,12 @@ const invalid = (): never => {
 
 export function serializeC4File(nodes: C4Node[], relationships: C4Relationship[]): string {
   return JSON.stringify(
-    {
+    validateC4File({
       format: "codepulse-c4",
       version: 1,
       nodes,
       relationships,
-    } satisfies C4File,
+    } satisfies C4File),
     null,
     2,
   );
@@ -45,8 +45,7 @@ export function validateC4File(data: unknown): C4File {
   const ids = new Set<string>();
   const nodes = data.nodes.map((value: unknown): C4Node => {
     if (!isRecord(value)) return invalid();
-    const { id, kind, label, category, parentId, description, technology, expectedPath, x, y } =
-      value;
+    const { id, kind, label, category, parentId, description, technology = "", x, y } = value;
     if (
       typeof id !== "string" ||
       !id.trim() ||
@@ -58,14 +57,12 @@ export function validateC4File(data: unknown): C4File {
       !(parentId === null || (typeof parentId === "string" && !!parentId.trim())) ||
       typeof description !== "string" ||
       typeof technology !== "string" ||
-      typeof expectedPath !== "string" ||
       typeof x !== "number" ||
       !Number.isFinite(x) ||
       typeof y !== "number" ||
       !Number.isFinite(y)
     )
       return invalid();
-    if (value.external !== undefined && typeof value.external !== "boolean") return invalid();
     const dimensions: Pick<C4Node, "width" | "height"> = {};
     for (const key of ["width", "height"] as const) {
       const size = value[key];
@@ -73,7 +70,7 @@ export function validateC4File(data: unknown): C4File {
       if (typeof size !== "number" || !Number.isFinite(size) || size <= 0) return invalid();
       dimensions[key] = size;
     }
-    const layout: Pick<C4Node, "boundary" | "contextPositions"> = {};
+    const layout: Pick<C4Node, "boundary"> = {};
     if (value.boundary !== undefined) {
       if (!isRecord(value.boundary)) return invalid();
       const { x, y, width, height } = value.boundary;
@@ -90,21 +87,6 @@ export function validateC4File(data: unknown): C4File {
         height: height as number,
       };
     }
-    if (value.contextPositions !== undefined) {
-      if (!isRecord(value.contextPositions)) return invalid();
-      layout.contextPositions = Object.create(null);
-      for (const [key, position] of Object.entries(value.contextPositions)) {
-        if (
-          !isRecord(position) ||
-          typeof position.x !== "number" ||
-          !Number.isFinite(position.x) ||
-          typeof position.y !== "number" ||
-          !Number.isFinite(position.y)
-        )
-          return invalid();
-        layout.contextPositions![key] = { x: position.x, y: position.y };
-      }
-    }
     ids.add(id);
     return {
       id,
@@ -114,16 +96,13 @@ export function validateC4File(data: unknown): C4File {
       parentId,
       description,
       technology,
-      expectedPath,
       x,
       y,
       ...dimensions,
       ...layout,
-      ...(value.external === undefined ? {} : { external: value.external as boolean }),
     };
   });
   const byId = new Map(nodes.map((node) => [node.id, node]));
-  if (nodes.some((node) => node.parentId && byId.get(node.parentId)?.external)) return invalid();
   const depths = new Map<string, number>();
   for (const node of nodes) {
     const path = new Set<string>();

@@ -4,12 +4,10 @@ import type { Node } from "@xyflow/react";
 export type FlowNode = Node<
   {
     title: string;
-    external: boolean;
-    boundaryLabel: string;
+    external?: boolean;
     kind: C4Kind;
     description: string;
     technology: string;
-    status: string;
     expandable: boolean;
     onSelect: () => void;
     onExplore: () => void;

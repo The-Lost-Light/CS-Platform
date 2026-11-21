@@ -26,20 +26,12 @@ test("import accepts four levels and rejects a fifth regardless of node kinds or
   assert.throws(() => parseC4File(serializeC4File([...chain].reverse(), [])));
 });
 
-test("scope boundaries and independent context positions survive export and import", () => {
+test("scope boundaries survive export and import", () => {
   const file = fixture();
   file.nodes[0].boundary = { x: -120, y: 80, width: 950, height: 720 };
-  file.nodes[0].contextPositions = { peer: { x: 1100, y: -60 } };
   const restored = parseC4File(JSON.stringify(file));
   assert.deepEqual(restored.nodes[0].boundary, file.nodes[0].boundary);
-  assert.deepEqual(restored.nodes[0].contextPositions?.peer, {
-    x: 1100,
-    y: -60,
-  });
   file.nodes[0].boundary.width = -1;
-  assert.throws(() => parseC4File(JSON.stringify(file)));
-  file.nodes[0].boundary.width = 950;
-  file.nodes[0].contextPositions.peer.x = "invalid";
   assert.throws(() => parseC4File(JSON.stringify(file)));
 });
 
@@ -125,17 +117,14 @@ test("C4 dimensions survive export and import while legacy nodes remain unchange
   }
 });
 
-test("external flags round trip and external boundaries reject children", () => {
-  const external = [{ ...nodes[0], external: true }];
-  assert.deepEqual(parseC4File(serializeC4File(external, [])).nodes, external);
-  assert.throws(() =>
-    parseC4File(
-      serializeC4File([{ ...nodes[0], external: true }, ...nodes.slice(1)], relationships),
-    ),
-  );
-  for (const value of ["true", 1, null]) {
-    const file = fixture();
-    file.nodes[0].external = value;
-    assert.throws(() => parseC4File(JSON.stringify(file)));
-  }
+test("legacy external settings and GitHub paths are discarded on import and export", () => {
+  const file = fixture();
+  Object.assign(file.nodes[0], {
+    external: true,
+    contextPositions: { peer: { x: 1100, y: -60 } },
+    expectedPath: "src/legacy.ts",
+  });
+  delete file.nodes[0].technology;
+  assert.deepEqual(parseC4File(JSON.stringify(file)), fixture());
+  assert.deepEqual(JSON.parse(serializeC4File(file.nodes, file.relationships)), fixture());
 });

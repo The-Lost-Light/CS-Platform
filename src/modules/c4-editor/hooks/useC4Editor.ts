@@ -2,6 +2,7 @@ import {
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
+  SCOPE_OFFSET,
   type C4Node,
   type C4Relationship,
 } from "@modules/c4-model";
@@ -9,7 +10,7 @@ import { useI18n } from "@modules/i18n";
 import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
 
-import { applyCanvasLayout, SCOPE_OFFSET } from "../model/canvasLayout";
+import { applyCanvasLayout } from "../model/canvasLayout";
 import { buildFlowElements } from "../model/flowElements";
 import type { CanvasNode } from "../model/flowTypes";
 import { removeC4Elements, type C4Graph } from "../model/modelHistory";
@@ -72,17 +73,12 @@ export function useC4Editor({
     return () => cancelNodeClick();
   }, [designTab, scopeId, importRevision]);
 
-  const { scope, path, inside, visible } = c4Drilldown(nodes, scopeId);
+  const { scope, path, visible, boundary } = c4Drilldown(nodes, scopeId);
+  const showTechnology = path.length === 1 || path.length === 2;
   const expandableIds = new Set(nodes.map((node) => node.parentId).filter(Boolean));
   const selected = nodes.find((node) => node.id === selectedId);
   const selectedEdge = relationships.find((edge) => edge.id === edgeId);
 
-  const boundary = scope?.boundary ?? {
-    x: -40,
-    y: -70,
-    width: Math.max(600, ...inside.map((node) => node.x + (node.width ?? 280) + 80)),
-    height: Math.max(360, ...inside.map((node) => node.y + (node.height ?? 230) + 110)),
-  };
   const navigate = (id: string) => {
     cancelNodeClick();
     if (id && !canExploreC4Node(nodes, id)) return;
@@ -101,14 +97,13 @@ export function useC4Editor({
     if (!target.relationships.some((edge) => edge.id === edgeId)) setEdgeId("");
     dispatchModel({ type });
   }
-  const update = (patch: Partial<C4Node>) => {
-    if (patch.external && expandableIds.has(selectedId)) return;
+  const update = (patch: Partial<Pick<C4Node, "label" | "technology" | "description">>) => {
     edit(
       (graph) => ({
         ...graph,
         nodes: graph.nodes.map((node) => (node.id === selectedId ? { ...node, ...patch } : node)),
       }),
-      patch.external === undefined ? editGroup.current : undefined,
+      editGroup.current,
     );
   };
   const remove = (nodeIds: string[], edgeIds: string[] = []) => {
@@ -133,7 +128,14 @@ export function useC4Editor({
       },
     );
     if (!node) return;
-    edit((graph) => ({ ...graph, nodes: [...graph.nodes, { ...node, ...size }] }));
+    edit((graph) => {
+      // Keep the visible frame in place when drawing a new node outside it.
+      const existing =
+        scope && !scope.boundary
+          ? graph.nodes.map((item) => (item.id === scope.id ? { ...item, boundary } : item))
+          : graph.nodes;
+      return { ...graph, nodes: [...existing, { ...node, ...size }] };
+    });
     onChangeDesignTab("diagram");
     setSelectedId(node.id);
     setEdgeId("");
@@ -195,7 +197,7 @@ export function useC4Editor({
     selectedId,
     edgeId,
     expandableIds,
-    t,
+    showTechnology,
     select,
     explore: navigate,
   });
@@ -225,8 +227,8 @@ export function useC4Editor({
     cancelNodeClick,
     scope,
     path,
-    inside,
-    expandableIds,
+    visible,
+    showTechnology,
     selected,
     selectedEdge,
     flowNodes,

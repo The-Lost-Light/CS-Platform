@@ -1,5 +1,6 @@
 import {
   c4Drilldown,
+  canExploreC4Node,
   createC4NodeInScope,
   migrateC4Nodes,
   overlapsC4Boundary,
@@ -134,11 +135,8 @@ test("missing or deleted scope returns to context without stale boundary or brea
   assert.deepEqual(view.outside, []);
   assert.ok(view.visible.every((node) => !node.parentId));
 });
-test("legacy path mappings survive C4 migration and databases belong to the system", () => {
-  assert.deepEqual(
-    nodes.map((node) => [node.id, node.expectedPath]),
-    legacyNodes.map((node) => [node.id, node.expectedPath]),
-  );
+test("legacy migration keeps the hierarchy and drops obsolete GitHub paths", () => {
+  assert.ok(nodes.every((node) => !("expectedPath" in node)));
   assert.strictEqual(nodes.find((node) => node.id === "node-db")?.parentId, "node-root");
   assert.strictEqual(nodes.find((node) => node.id === "node-tests")?.kind, "component");
 });
@@ -166,14 +164,22 @@ test("removing a system recursively removes descendants including code elements"
   assert.ok(!remaining.some((node) => ["node-fe-core", "node-editor", "class"].includes(node.id)));
   assert.ok(remaining.some((node) => node.id === "node-api"));
 });
-test("external elements cannot receive children, but can become internal again", () => {
-  const external = { ...nodes[0], external: true };
-  assert.strictEqual(createC4NodeInScope([external], external.id, "child", "Child"), undefined);
-  assert.strictEqual(
-    createC4NodeInScope([{ ...external, external: false }], external.id, "child", "Child")
-      ?.parentId,
-    external.id,
-  );
+test("moving across a scope boundary controls exploration and preserves existing descendants", () => {
+  const scope = { ...nodes[0], boundary: { x: 100, y: 100, width: 400, height: 300 } };
+  const child = { ...nodes[1], x: 460, y: 30 };
+  const descendant = nodes[2];
+  const outside = [scope, child, descendant];
+  assert.deepEqual(c4Drilldown(outside, scope.id).outside, [child]);
+  assert.deepEqual(c4Drilldown(outside, scope.id).visible, [child]);
+  assert.isFalse(canExploreC4Node(outside, descendant.id));
+  assert.isUndefined(createC4NodeInScope(outside, child.id, "new", "New"));
+
+  const overlapping = { ...child, x: 459 };
+  const inside = [scope, overlapping, descendant];
+  assert.deepEqual(c4Drilldown(inside, scope.id).inside, [overlapping]);
+  assert.isTrue(canExploreC4Node(inside, child.id));
+  assert.deepEqual(c4Drilldown(inside, child.id).visible, [descendant]);
+  assert.strictEqual(createC4NodeInScope(inside, child.id, "new", "New")?.parentId, child.id);
 });
 
 test("boundary movement includes partial overlaps but excludes separated nodes", () => {

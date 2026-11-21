@@ -75,7 +75,6 @@ try {
     parentId: null,
     description: "架構📚".repeat(220000),
     technology: "",
-    expectedPath: "",
     x: 100,
     y: 50,
   };

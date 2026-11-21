@@ -11,7 +11,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
     selectedEdge,
     setSelectedId,
     setEdgeId,
-    expandableIds,
+    showTechnology,
     update,
     remove,
     selectedSourceLabel,
@@ -42,7 +42,9 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
         >
           <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-outline-subtle">
             <span className="ui-chip-primary font-mono">
-              {selected ? `${t("c4.editElement")} · ${selected.kind}` : t("c4.editRelationship")}
+              {selected
+                ? `${t("c4.editElement")} · ${selected.kind === "system" ? "context" : selected.kind}`
+                : t("c4.editRelationship")}
             </span>
             <button
               type="button"
@@ -67,32 +69,16 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                   onChange={(event) => update({ label: event.target.value })}
                 />,
               )}
-              <div className="ui-panel p-3 space-y-1.5">
-                <label className="flex items-center justify-between gap-3 text-xs font-semibold text-on-surface cursor-pointer">
-                  <span>{t("c4.external")}</span>
+              {showTechnology &&
+                field(
+                  t("c4.technology"),
                   <input
-                    type="checkbox"
-                    role="switch"
-                    className="ui-switch"
-                    checked={!!selected.external}
-                    disabled={expandableIds.has(selected.id)}
-                    aria-describedby="c4-external-help"
-                    onChange={(event) => update({ external: event.target.checked })}
-                  />
-                </label>
-                <p id="c4-external-help" className="text-xs text-on-subtle leading-relaxed">
-                  {t(expandableIds.has(selected.id) ? "c4.externalBlocked" : "c4.externalHelp")}
-                </p>
-              </div>
-              {field(
-                t("c4.technology"),
-                <input
-                  className={`${fieldClass} font-mono`}
-                  value={selected.technology}
-                  onChange={(event) => update({ technology: event.target.value })}
-                  placeholder="React / REST / MySQL"
-                />,
-              )}
+                    className={`${fieldClass} font-mono`}
+                    value={selected.technology}
+                    onChange={(event) => update({ technology: event.target.value })}
+                    placeholder="React / REST / MySQL"
+                  />,
+                )}
               {field(
                 t("c4.responsibilities"),
                 <textarea
@@ -100,15 +86,6 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                   className={fieldClass}
                   value={selected.description}
                   onChange={(event) => update({ description: event.target.value })}
-                />,
-              )}
-              {field(
-                t("c4.githubPath"),
-                <input
-                  className={`${fieldClass} font-mono`}
-                  value={selected.expectedPath}
-                  onChange={(event) => update({ expectedPath: event.target.value })}
-                  placeholder="src/"
                 />,
               )}
               <button

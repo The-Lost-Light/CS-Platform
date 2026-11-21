@@ -1,5 +1,5 @@
 import { Background, Controls, MiniMap } from "@xyflow/react";
-import { ChevronRight, HelpCircle, Layers, Redo2, Undo2 } from "lucide-react";
+import { ChevronRight, HelpCircle, Layers, Pencil, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
@@ -10,12 +10,17 @@ const levelNames = ["Container", "Component", "Code"] as const;
 export function C4Diagram({ editor }: { editor: C4Editor }) {
   const {
     t,
+    selected,
+    selectedEdge,
     setSelectedId,
     setEdgeId,
+    contextMenu,
+    setContextMenu,
+    select,
+    selectEdge,
     drawing,
     flowInstance,
     importRevision,
-    cancelNodeClick,
     scope,
     path,
     visible,
@@ -23,7 +28,6 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     flowEdges,
     navigate,
     remove,
-    selectAfterClick,
     updateLayout,
     canConnect,
     connect,
@@ -32,17 +36,61 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     stepHistory,
     beginEditGroup,
   } = editor;
+  function dismissInspector(keep?: { nodeId?: string; edgeId?: string }) {
+    if (!keep?.nodeId || keep.nodeId !== selected?.id) {
+      setSelectedId("");
+    }
+    if (!keep?.edgeId || keep.edgeId !== selectedEdge?.id) {
+      setEdgeId("");
+    }
+  }
+  function openContextMenu(
+    event: {
+      preventDefault: () => void;
+      stopPropagation: () => void;
+      clientX: number;
+      clientY: number;
+    },
+    target: { nodeId?: string; edgeId?: string },
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    dismissInspector(target);
+    drawing.cancelDrawing();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    setContextMenu({
+      ...target,
+      x: rect ? event.clientX - rect.left : event.clientX,
+      y: rect ? event.clientY - rect.top : event.clientY,
+    });
+  }
   const helpRef = useRef<HTMLDetailsElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    function dismissHelp(event: PointerEvent) {
+    function dismissOverlay(event: PointerEvent) {
       const help = helpRef.current;
       if (help?.open && event.target instanceof Node && !help.contains(event.target)) {
         help.open = false;
       }
+      const menu = menuRef.current;
+      if (menu && event.target instanceof Node && !menu.contains(event.target)) {
+        setContextMenu(null);
+      }
     }
-    document.addEventListener("pointerdown", dismissHelp, true);
-    return () => document.removeEventListener("pointerdown", dismissHelp, true);
-  }, []);
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setContextMenu(null);
+        drawing.cancelDrawing();
+      }
+    }
+    document.addEventListener("pointerdown", dismissOverlay, true);
+    document.addEventListener("keydown", dismissOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOverlay, true);
+      document.removeEventListener("keydown", dismissOnEscape);
+    };
+  }, [drawing, setContextMenu]);
 
   return (
     <div
@@ -85,6 +133,22 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             </nav>
           </div>
           <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              aria-pressed={drawing.creating}
+              onClick={() => {
+                setContextMenu(null);
+                drawing.toggleCreating();
+              }}
+              className={
+                drawing.creating
+                  ? "ui-btn-primary px-3 py-1.5 text-xs"
+                  : "ui-btn-outlined px-3 py-1.5 text-xs"
+              }
+            >
+              <Plus aria-hidden="true" className="w-3.5 h-3.5" />
+              {t("c4.createNode")}
+            </button>
             <button
               type="button"
               disabled={!canUndo}
@@ -136,11 +200,13 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
         </div>
         <div className="relative">
           <div
+            ref={canvasRef}
             style={{
               height: "max(600px, 72vh)",
               overscrollBehavior: "contain",
               position: "relative",
             }}
+            className={drawing.creating ? "cursor-crosshair" : undefined}
             onContextMenu={(event) => event.preventDefault()}
             onPointerDownCapture={(event) => {
               beginEditGroup();
@@ -148,8 +214,8 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             }}
             onPointerMove={drawing.previewDrawing}
             onPointerUp={drawing.finishDrawing}
-            onLostPointerCapture={drawing.cancelDrawing}
-            onPointerCancel={drawing.cancelDrawing}
+            onLostPointerCapture={drawing.abortDrawing}
+            onPointerCancel={drawing.abortDrawing}
             onMouseDownCapture={(event) => {
               // Cancel browser middle-button autoscroll without stopping React Flow's pan handler.
               if (event.button === 1) event.preventDefault();
@@ -165,27 +231,53 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               nodeTypes={nodeTypes}
               // Keep the selected boundary behind its contents so nodes remain clickable.
               elevateNodesOnSelect={false}
+              elementsSelectable={false}
+              selectNodesOnDrag={false}
+              nodesFocusable={false}
+              edgesFocusable={false}
               fitView
               onInit={(instance) => {
                 flowInstance.current = instance;
               }}
-              panOnDrag={[0, 1]}
+              panOnDrag={drawing.creating ? [1] : [0, 1]}
               panActivationKeyCode={null}
               minZoom={0.15}
               maxZoom={2}
-              onNodeClick={(event, node) => selectAfterClick(event.detail, node.id)}
+              onNodeClick={(_, node) => {
+                setContextMenu(null);
+                dismissInspector(node.type === "boundary" ? undefined : { nodeId: node.id });
+              }}
               onNodeDoubleClick={(_, node) => {
-                cancelNodeClick();
+                setContextMenu(null);
                 if (node.type !== "boundary") navigate(node.id);
               }}
-              zoomOnDoubleClick={false}
-              onPaneClick={cancelNodeClick}
-              onNodeDragStart={cancelNodeClick}
-              onEdgeClick={(_, edge) => {
-                cancelNodeClick();
-                setEdgeId(edge.id);
-                setSelectedId("");
+              onNodeContextMenu={(event, node) => {
+                if (node.type === "boundary") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setContextMenu(null);
+                  dismissInspector();
+                  return;
+                }
+                openContextMenu(event, { nodeId: node.id });
               }}
+              zoomOnDoubleClick={false}
+              onPaneClick={() => {
+                setContextMenu(null);
+                dismissInspector();
+              }}
+              onPaneContextMenu={(event) => {
+                event.preventDefault();
+                setContextMenu(null);
+                dismissInspector();
+              }}
+              onNodeDragStart={() => setContextMenu(null)}
+              onMoveStart={() => setContextMenu(null)}
+              onEdgeClick={(_, edge) => {
+                setContextMenu(null);
+                dismissInspector({ edgeId: edge.id });
+              }}
+              onEdgeContextMenu={(event, edge) => openContextMenu(event, { edgeId: edge.id })}
               onNodesChange={updateLayout}
               onDelete={({ nodes, edges }) =>
                 remove(
@@ -216,6 +308,45 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               />
             )}
           </div>
+          {contextMenu && (
+            <div
+              ref={menuRef}
+              role="menu"
+              onContextMenu={(event) => event.preventDefault()}
+              style={{
+                position: "absolute",
+                left: contextMenu.x,
+                top: contextMenu.y,
+                zIndex: 30,
+              }}
+              className="ui-menu min-w-36 p-1.5 space-y-0.5"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  if (contextMenu.nodeId) select(contextMenu.nodeId);
+                  else if (contextMenu.edgeId) selectEdge(contextMenu.edgeId);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-on-surface hover:bg-surface-hover transition-colors cursor-pointer"
+              >
+                <Pencil aria-hidden="true" className="w-3.5 h-3.5 shrink-0 text-primary" />
+                <span>{t("c4.edit")}</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  if (contextMenu.nodeId) remove([contextMenu.nodeId]);
+                  else if (contextMenu.edgeId) remove([], [contextMenu.edgeId]);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-danger hover:bg-danger-container hover:text-on-danger-container transition-colors cursor-pointer"
+              >
+                <Trash2 aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                <span>{t("c4.delete")}</span>
+              </button>
+            </div>
+          )}
           <C4Inspector editor={editor} />
         </div>
         {!visible.length && (

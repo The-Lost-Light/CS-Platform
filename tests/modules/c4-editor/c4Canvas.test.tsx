@@ -2,6 +2,7 @@ import { createC4NodeInScope } from "@modules/c4-model";
 import { NodeChangeset } from "@xyflow/react";
 import { assert, test } from "vite-plus/test";
 
+import { canStartNodeDraw, completeNodeDraw } from "@/modules/c4-editor/hooks/useNodeDrawing";
 import { prepareC4CanvasChanges } from "@/modules/c4-editor/model/canvasChanges";
 import { applyCanvasLayout, BOUNDARY_ID } from "@/modules/c4-editor/model/canvasLayout";
 import type { CanvasNode, FlowNode } from "@/modules/c4-editor/model/flowTypes";
@@ -207,4 +208,51 @@ test("resizing the boundary from the left leaves nodes in place", () => {
   );
   const resized = resize.changes.applyTo(nodes);
   assert.deepEqual(resized[1].position, nodes[1].position);
+});
+
+test("node drawing only starts with left click in creation mode on empty canvas or boundary", () => {
+  const targetWith = (matches: string[]) => ({
+    closest: (selector: string) =>
+      selector
+        .split(",")
+        .map((part) => part.trim())
+        .some((part) => matches.includes(part))
+        ? ({} as Element)
+        : null,
+  });
+
+  assert.isFalse(canStartNodeDraw(false, 0, targetWith([".react-flow__pane"])));
+  assert.isFalse(canStartNodeDraw(true, 2, targetWith([".react-flow__pane"])));
+  assert.isFalse(canStartNodeDraw(true, 1, targetWith([".react-flow__pane"])));
+  assert.isTrue(canStartNodeDraw(true, 0, targetWith([".react-flow__pane"])));
+  assert.isTrue(canStartNodeDraw(true, 0, targetWith([".react-flow__node-boundary"])));
+  assert.isFalse(
+    canStartNodeDraw(true, 0, targetWith([".react-flow__pane", ".react-flow__node-c4"])),
+  );
+  assert.isFalse(
+    canStartNodeDraw(true, 0, targetWith([".react-flow__pane", ".react-flow__controls"])),
+  );
+  assert.isFalse(
+    canStartNodeDraw(true, 0, targetWith([".react-flow__pane", ".react-flow__minimap"])),
+  );
+  assert.isFalse(canStartNodeDraw(true, 0, targetWith([".react-flow__pane", '[role="menu"]'])));
+});
+
+test("single left click uses default size while left drag clamps position and minimum size", () => {
+  const identity = (point: { x: number; y: number }) => point;
+
+  assert.deepEqual(completeNodeDraw({ x: 100, y: 200 }, { x: 102, y: 201 }, identity), {
+    position: { x: 100, y: 200 },
+    size: undefined,
+  });
+
+  assert.deepEqual(completeNodeDraw({ x: 300, y: 250 }, { x: 250, y: 200 }, identity), {
+    position: { x: 250, y: 200 },
+    size: { width: 200, height: 160 },
+  });
+
+  assert.deepEqual(completeNodeDraw({ x: 100, y: 100 }, { x: 420, y: 340 }, identity), {
+    position: { x: 100, y: 100 },
+    size: { width: 320, height: 240 },
+  });
 });

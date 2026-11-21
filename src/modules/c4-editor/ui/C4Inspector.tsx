@@ -1,4 +1,4 @@
-import { Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
@@ -13,7 +13,6 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
     setEdgeId,
     showTechnology,
     update,
-    remove,
     selectedSourceLabel,
     selectedTargetLabel,
     updateEdge,
@@ -88,14 +87,6 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                   onChange={(event) => update({ description: event.target.value })}
                 />,
               )}
-              <button
-                type="button"
-                className="ui-btn-danger-tonal w-full mt-2 py-2"
-                onClick={() => remove([selected.id])}
-              >
-                <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
-                <span>{t("c4.deleteElement")}</span>
-              </button>
             </div>
           )}
 
@@ -112,14 +103,6 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                   onChange={(event) => updateEdge({ label: event.target.value })}
                 />,
               )}
-              <button
-                type="button"
-                className="ui-btn-danger-tonal w-full mt-2 py-2"
-                onClick={() => remove([], [selectedEdge.id])}
-              >
-                <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
-                <span>{t("c4.deleteRelationship")}</span>
-              </button>
             </div>
           )}
         </aside>

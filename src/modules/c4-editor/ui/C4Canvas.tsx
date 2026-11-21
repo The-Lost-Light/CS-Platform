@@ -14,17 +14,7 @@ import type { BoundaryNode, CanvasNode, FlowNode } from "../model/flowTypes";
 function C4Card({ data, selected }: NodeProps<FlowNode>) {
   return (
     <div
-      role="button"
-      tabIndex={0}
       aria-label={data.title}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          event.stopPropagation();
-          if (event.key === "Enter" && event.shiftKey) data.onExplore();
-          else data.onSelect();
-        }
-      }}
       style={{
         width: "100%",
         height: "100%",

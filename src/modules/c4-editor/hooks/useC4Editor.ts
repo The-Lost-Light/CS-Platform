@@ -8,7 +8,7 @@ import {
 } from "@modules/c4-model";
 import { useI18n } from "@modules/i18n";
 import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xyflow/react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { applyCanvasLayout } from "../model/canvasLayout";
 import { buildFlowElements } from "../model/flowElements";
@@ -16,6 +16,13 @@ import type { CanvasNode } from "../model/flowTypes";
 import { removeC4Elements, type C4Graph } from "../model/modelHistory";
 import type { C4ArchitectProps } from "../model/types";
 import { useNodeDrawing } from "./useNodeDrawing";
+
+export interface C4ContextMenu {
+  nodeId?: string;
+  edgeId?: string;
+  x: number;
+  y: number;
+}
 
 export function useC4Editor({
   designDoc,
@@ -43,35 +50,39 @@ export function useC4Editor({
     scopeId: "",
     selectedId: "",
     edgeId: "",
+    contextMenu: null as C4ContextMenu | null,
   });
   const currentView =
     view.revision === importRevision
       ? view
-      : { revision: importRevision, scopeId: "", selectedId: "", edgeId: "" };
-  const { scopeId, selectedId, edgeId } = currentView;
-  const updateView = (patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId">>) => {
+      : {
+          revision: importRevision,
+          scopeId: "",
+          selectedId: "",
+          edgeId: "",
+          contextMenu: null as C4ContextMenu | null,
+        };
+  const { scopeId, selectedId, edgeId, contextMenu } = currentView;
+  const updateView = (
+    patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId" | "contextMenu">>,
+  ) => {
     setView((previous) => ({
       ...(previous.revision === importRevision
         ? previous
-        : { revision: importRevision, scopeId: "", selectedId: "", edgeId: "" }),
+        : {
+            revision: importRevision,
+            scopeId: "",
+            selectedId: "",
+            edgeId: "",
+            contextMenu: null as C4ContextMenu | null,
+          }),
       ...patch,
     }));
   };
-  const setScopeId = (next: string) => updateView({ scopeId: next });
   const setSelectedId = (next: string) => updateView({ selectedId: next });
   const setEdgeId = (next: string) => updateView({ edgeId: next });
+  const setContextMenu = (next: C4ContextMenu | null) => updateView({ contextMenu: next });
   const flowInstance = useRef<ReactFlowInstance<CanvasNode> | null>(null);
-  const nodeClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelNodeClick = () => {
-    if (nodeClickTimer.current !== null) {
-      clearTimeout(nodeClickTimer.current);
-      nodeClickTimer.current = null;
-    }
-  };
-  useEffect(() => {
-    // Discard pending selections when leaving or replacing the canvas.
-    return () => cancelNodeClick();
-  }, [designTab, scopeId, importRevision]);
 
   const { scope, path, visible, boundary } = c4Drilldown(nodes, scopeId);
   const showTechnology = path.length === 1 || path.length === 2;
@@ -79,44 +90,10 @@ export function useC4Editor({
   const selected = nodes.find((node) => node.id === selectedId);
   const selectedEdge = relationships.find((edge) => edge.id === edgeId);
 
-  const navigate = (id: string) => {
-    cancelNodeClick();
-    if (id && !canExploreC4Node(nodes, id)) return;
-    setScopeId(id);
-    setSelectedId("");
-    setEdgeId("");
-  };
-  function stepHistory(type: "undo" | "redo") {
-    const target = (type === "undo" ? history.past : history.future).at(-1);
-    if (!target || importing) return;
-    cancelNodeClick();
-    if (scopeId && !canExploreC4Node(target.nodes, scopeId)) {
-      setScopeId(path.findLast((node) => canExploreC4Node(target.nodes, node.id))?.id ?? "");
-    }
-    if (!target.nodes.some((node) => node.id === selectedId)) setSelectedId("");
-    if (!target.relationships.some((edge) => edge.id === edgeId)) setEdgeId("");
-    dispatchModel({ type });
-  }
-  const update = (patch: Partial<Pick<C4Node, "label" | "technology" | "description">>) => {
-    edit(
-      (graph) => ({
-        ...graph,
-        nodes: graph.nodes.map((node) => (node.id === selectedId ? { ...node, ...patch } : node)),
-      }),
-      editGroup.current,
-    );
-  };
-  const remove = (nodeIds: string[], edgeIds: string[] = []) => {
-    cancelNodeClick();
-    setSelectedId("");
-    setEdgeId("");
-    edit((graph) => removeC4Elements(graph, nodeIds, edgeIds));
-  };
   const addNode = (
     position: { x: number; y: number },
     size?: { width: number; height: number },
   ) => {
-    cancelNodeClick();
     const node = createC4NodeInScope(
       nodes,
       scope?.id || "",
@@ -137,23 +114,52 @@ export function useC4Editor({
       return { ...graph, nodes: [...existing, { ...node, ...size }] };
     });
     onChangeDesignTab("diagram");
-    setSelectedId(node.id);
-    setEdgeId("");
+    updateView({ selectedId: "", edgeId: "", contextMenu: null });
+  };
+
+  const drawing = useNodeDrawing(flowInstance, addNode);
+
+  const navigate = (id: string) => {
+    drawing.cancelDrawing();
+    if (id && !canExploreC4Node(nodes, id)) return;
+    updateView({ scopeId: id, selectedId: "", edgeId: "", contextMenu: null });
+  };
+  function stepHistory(type: "undo" | "redo") {
+    const target = (type === "undo" ? history.past : history.future).at(-1);
+    if (!target || importing) return;
+    drawing.cancelDrawing();
+    const patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId" | "contextMenu">> = {
+      contextMenu: null,
+    };
+    if (scopeId && !canExploreC4Node(target.nodes, scopeId)) {
+      patch.scopeId = path.findLast((node) => canExploreC4Node(target.nodes, node.id))?.id ?? "";
+    }
+    if (!target.nodes.some((node) => node.id === selectedId)) patch.selectedId = "";
+    if (!target.relationships.some((edge) => edge.id === edgeId)) patch.edgeId = "";
+    updateView(patch);
+    dispatchModel({ type });
+  }
+  const update = (patch: Partial<Pick<C4Node, "label" | "technology" | "description">>) => {
+    edit(
+      (graph) => ({
+        ...graph,
+        nodes: graph.nodes.map((node) => (node.id === selectedId ? { ...node, ...patch } : node)),
+      }),
+      editGroup.current,
+    );
+  };
+  const remove = (nodeIds: string[], edgeIds: string[] = []) => {
+    updateView({ selectedId: "", edgeId: "", contextMenu: null });
+    edit((graph) => removeC4Elements(graph, nodeIds, edgeIds));
   };
 
   function select(id: string) {
-    cancelNodeClick();
-    setSelectedId(id);
-    setEdgeId("");
+    drawing.cancelDrawing();
+    updateView({ selectedId: id, edgeId: "", contextMenu: null });
   }
-  function selectAfterClick(detail: number, id: string) {
-    cancelNodeClick();
-    if (detail > 1) return;
-    nodeClickTimer.current = setTimeout(() => {
-      nodeClickTimer.current = null;
-      setSelectedId(id);
-      setEdgeId("");
-    }, 350);
+  function selectEdge(id: string) {
+    drawing.cancelDrawing();
+    updateView({ edgeId: id, selectedId: "", contextMenu: null });
   }
   function updateLayout(changes: NodeChangeset<CanvasNode>) {
     const resizing = changes.getByType("dimensions").some((change) => change.resizing);
@@ -185,10 +191,8 @@ export function useC4Editor({
   function connect({ source, target }: Connection) {
     const edge = { id: crypto.randomUUID(), source, target, label: t("c4.uses"), technology: "" };
     edit((graph) => ({ ...graph, relationships: [...graph.relationships, edge] }));
-    setEdgeId(edge.id);
-    setSelectedId("");
+    updateView({ selectedId: "", edgeId: "", contextMenu: null });
   }
-  const drawing = useNodeDrawing(flowInstance, addNode);
   const { flowNodes, flowEdges } = buildFlowElements({
     visible,
     scope,
@@ -214,17 +218,19 @@ export function useC4Editor({
     canConnect,
     connect,
     updateLayout,
-    selectAfterClick,
+    select,
+    selectEdge,
     t,
     designTab,
     readmeMode,
     setReadmeMode,
     setSelectedId,
     setEdgeId,
+    contextMenu,
+    setContextMenu,
     drawing,
     flowInstance,
     importRevision,
-    cancelNodeClick,
     scope,
     path,
     visible,

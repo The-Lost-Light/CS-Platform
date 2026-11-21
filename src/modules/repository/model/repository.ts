@@ -102,6 +102,13 @@ export interface RepoCommit {
   }>;
 }
 
+export type RepoCommitDetails = Pick<RepoCommit, "sha" | "stats" | "files" | "diffError">;
+
+export interface RepoCommitsPage {
+  commits: RepoCommit[];
+  hasMore: boolean;
+}
+
 export interface RepoFile {
   path: string;
   type: string;
@@ -116,6 +123,7 @@ export interface RepoBundle {
   tags?: RepoTag[];
   pulls?: RepoPullRequest[];
   commits: RepoCommit[];
+  totalCommits?: number;
   fileTree: RepoFile[];
 
   sourceType: "live-api";

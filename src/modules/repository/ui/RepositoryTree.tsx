@@ -28,8 +28,8 @@ export function RepositoryTree({
   const totalFilesCount = fileTree.length.toLocaleString(locale);
 
   return (
-    <div className="lg:col-span-5 ui-card">
-      <div className="ui-card-header flex flex-wrap items-center justify-between gap-2">
+    <div className="lg:col-span-5 min-w-0 ui-card overflow-hidden flex flex-col h-170">
+      <div className="ui-card-header shrink-0 min-h-16 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <label className="ui-chip-success relative border border-success-outline/60 min-w-0 max-w-full font-mono text-[11px] font-bold focus-within:ring-2 focus-within:ring-success">
             <GitBranch aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
@@ -91,8 +91,8 @@ export function RepositoryTree({
           <span>{t("github.totalFilesCount", { count: totalFilesCount })}</span>
         </div>
       </div>
-      <div className="p-5 space-y-3.5">
-        <div className="relative">
+      <div className="p-5 flex-1 min-h-0 flex flex-col gap-3.5">
+        <div className="relative shrink-0">
           <Search
             aria-hidden="true"
             className="w-4 h-4 text-on-subtle absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -105,7 +105,7 @@ export function RepositoryTree({
             className="ui-input pl-9 font-mono text-xs"
           />
         </div>
-        <div className="max-h-115 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
           <RepoFileTree key={repo.full_name} files={fileTree} search={fileTreeSearch} />
         </div>
       </div>

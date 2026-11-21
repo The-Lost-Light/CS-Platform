@@ -100,6 +100,7 @@ export default {
   "github.totalFiles": "檔案總數",
   "github.totalFilesCount": "檔案總數： {count}",
   "github.commitCount": "{count} Commits",
+  "github.loadMoreCommits": "載入更多 Commits",
   "github.primaryLanguage": "主要語言",
   "github.languageDistribution": "GitHub 專案語言佔比 (Language Distribution)",
   "github.filterPaths": "過濾 GitHub 倉庫內的檔案路徑...",

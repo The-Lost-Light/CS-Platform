@@ -1,5 +1,16 @@
-import { fetchGitHubProjectBundle, parseGitHubRepoUrl } from "@modules/repository";
-import { fetchGitHubRepository } from "@server/github";
+import {
+  clearCommitDetailsCache,
+  fetchGitHubCommitDetails,
+  fetchGitHubCommitsPage,
+  fetchGitHubProjectBundle,
+  getCachedCommitDetails,
+  parseGitHubRepoUrl,
+} from "@modules/repository";
+import {
+  fetchGitHubCommitDetails as fetchServerCommitDetails,
+  fetchGitHubCommitsPage as fetchServerCommitsPage,
+  fetchGitHubRepository,
+} from "@server/github";
 import { assert, expect, test, vi } from "vite-plus/test";
 import type { CloudContext } from "void";
 
@@ -123,8 +134,9 @@ test("former teaching repository uses the GitHub API", async () => {
   assert.strictEqual(requested, "https://api.github.com/repos/student-team/course-oj-platform");
 });
 
-test("live loading preserves headers, branch encoding, rate limits and the 250-file cap", async () => {
+test("live loading preserves headers, branch encoding, rate limits, full file tree and total commits without eager diff requests", async () => {
   const snapshot = createRepoFixture();
+  const summaries = snapshot.commits.map(({ files: _files, stats: _stats, ...summary }) => summary);
   const requests: Array<{ url: string; headers: HeadersInit | undefined }> = [];
   const repo = { ...snapshot.repo, default_branch: "feature/a b" };
   const files = Array.from({ length: 300 }, (_, i) => ({
@@ -136,6 +148,7 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     fetch: async (input, init) => {
       const url = new Request(input).url;
       requests.push({ url: url, headers: init?.headers });
+      assert.ok(!url.includes("/commits/"), "initial load must not request commit details");
       const data =
         requests.length === 1
           ? { ...repo, temp_clone_token: "upstream-only", permissions: { admin: true } }
@@ -148,19 +161,15 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
                 : url.includes("/pulls?")
                   ? snapshot.pulls
                   : url.includes("/commits?")
-                    ? snapshot.commits.map(
-                        ({ files: _files, stats: _stats, ...summary }) => summary,
-                      )
-                    : url.includes("/commits/")
-                      ? snapshot.commits.find((commit) => url.includes(commit.sha))
-                      : { tree: files };
+                    ? summaries
+                    : { tree: files };
       return Response.json(data, {
         headers: { "x-ratelimit-remaining": "42", "x-ratelimit-limit": "60" },
       });
     },
   });
   const result = await service("facebook/react");
-  assert.strictEqual(requests.length, 7 + snapshot.commits.length);
+  assert.strictEqual(requests.length, 7);
   for (const request of requests)
     assert.deepEqual(request.headers, {
       Accept: "application/vnd.github+json",
@@ -176,87 +185,107 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     branches: snapshot.branches,
     tags: snapshot.tags,
     pulls: snapshot.pulls,
-    commits: snapshot.commits,
-    fileTree: files.slice(0, 250),
+    commits: summaries,
+    totalCommits: summaries.length,
+    fileTree: files,
     sourceType: "live-api",
     rateLimit: "42/60",
   });
+
+  const paginatedRequests: string[] = [];
+  const paginatedService = withGitHubTransport({
+    fetch: async (input) => {
+      const url = new Request(input).url;
+      paginatedRequests.push(url);
+      if (url.includes("/commits?") && url.includes("per_page=10")) {
+        return Response.json(summaries, {
+          headers: {
+            link: '<https://api.github.com/repos/facebook/react/commits?sha=feature%2Fa%20b&per_page=10&page=2>; rel="next", <https://api.github.com/repos/facebook/react/commits?sha=feature%2Fa%20b&per_page=10&page=3>; rel="last"',
+          },
+        });
+      }
+      if (url.includes("/commits?") && url.includes("per_page=1")) {
+        return Response.json(summaries.slice(0, 1), {
+          headers: {
+            link: '<https://api.github.com/repos/facebook/react/commits?sha=feature%2Fa%20b&per_page=1&page=27>; rel="next", <https://api.github.com/repos/facebook/react/commits?sha=feature%2Fa%20b&per_page=1&page=27>; rel="last"',
+          },
+        });
+      }
+      if (url.includes("/trees/")) return Response.json({ tree: files });
+      if (url.endsWith("/languages")) return Response.json({});
+      if (url.includes("/branches?") || url.includes("/tags?") || url.includes("/pulls?"))
+        return Response.json([]);
+      return Response.json(repo);
+    },
+  });
+  const paginatedResult = await paginatedService("facebook/react");
+  assert.strictEqual(paginatedRequests.length, 8);
+  assert.strictEqual(paginatedResult.totalCommits, 27);
+  assert.strictEqual(paginatedResult.commits.length, summaries.length);
+  assert.strictEqual(paginatedResult.fileTree.length, 300);
 });
 
-test("commit detail failures preserve live history, successful diffs and partial pages", async () => {
+test("commit detail failures preserve partial pages and report diffError", async () => {
   const snapshot = createRepoFixture();
+  const [first, second] = snapshot.commits;
   for (const failure of ["http", "network", "invalid", "later-page"] as const) {
-    const [first, second] = snapshot.commits;
-    const summaries = [first, second].map(
-      ({ files: _files, stats: _stats, ...summary }) => summary,
-    );
-    const service = withGitHubTransport({
+    const details = await fetchServerCommitDetails("facebook/react", first.sha, {
+      token: "test-token",
       fetch: async (input) => {
         const url = new Request(input).url;
-        if (url.includes(`/commits/${first.sha}`)) {
-          if (failure === "later-page" && url.endsWith("page=1")) {
-            return Response.json(first, {
-              headers: { link: '<https://api.github.com/next>; rel="next"' },
-            });
-          }
-          if (failure === "network") throw new Error("offline");
-          if (failure === "invalid") return Response.json({ sha: first.sha });
-          return new Response(null, { status: 403 });
+        if (failure === "later-page" && url.endsWith("page=1")) {
+          return Response.json(first, {
+            headers: { link: '<https://api.github.com/next>; rel="next"' },
+          });
         }
-        if (url.includes(`/commits/${second.sha}`)) return Response.json(second);
-        if (url.includes("/commits?")) return Response.json(summaries);
-        if (url.includes("/branches?")) return Response.json([]);
-        if (url.includes("/trees/")) return Response.json({ tree: [] });
-        if (url.endsWith("/languages")) return Response.json({});
-        return Response.json(snapshot.repo);
+        if (failure === "network") throw new Error("offline");
+        if (failure === "invalid") return Response.json({ sha: first.sha });
+        return new Response(null, { status: 403 });
       },
     });
-    const result = await service("facebook/react");
-    assert.strictEqual(result.sourceType, "live-api");
-    assert.deepEqual(
-      result.commits.map((c) => c.sha),
-      [first.sha, second.sha],
-    );
-    assert.ok(result.commits[0].diffError);
-    assert.deepEqual(result.commits[1], second);
-    assert.deepEqual(result.commits[0].files, failure === "later-page" ? first.files : undefined);
+    assert.strictEqual(details.sha, first.sha);
+    assert.ok(details.diffError);
+    assert.deepEqual(details.files, failure === "later-page" ? first.files : undefined);
   }
+
+  const okDetails = await fetchServerCommitDetails("facebook/react", second.sha, {
+    token: "test-token",
+    fetch: async () => Response.json(second),
+  });
+  assert.deepEqual(okDetails, {
+    sha: second.sha,
+    stats: second.stats,
+    files: second.files,
+  });
 });
 
 test("commit detail pagination collects files using the same authenticated endpoint", async () => {
   const snapshot = createRepoFixture();
   const { files, stats, ...summary } = snapshot.commits[0];
   const pages: string[] = [];
-  const service = withGitHubTransport({
+  const result = await fetchServerCommitDetails("facebook/react", summary.sha, {
+    token: "test-token",
     fetch: async (input, init) => {
       const url = new Request(input).url;
-      if (url.includes("/commits/")) {
-        pages.push(url);
-        assert.strictEqual(new Headers(init?.headers).get("Authorization"), "Bearer test-token");
-        return Response.json(
-          {
-            ...summary,
-            ...(pages.length === 1 ? { stats } : {}),
-            files: pages.length === 1 ? files!.slice(0, 1) : files!.slice(1),
-          },
-          {
-            headers:
-              pages.length === 1
-                ? {
-                    link: '<https://api.github.com/unused?page=2>; rel="next", <https://api.github.com/unused?page=2>; rel="last"',
-                  }
-                : {},
-          },
-        );
-      }
-      if (url.includes("/commits?")) return Response.json([summary]);
-      if (url.includes("/branches?")) return Response.json([]);
-      if (url.includes("/trees/")) return Response.json({ tree: [] });
-      if (url.endsWith("/languages")) return Response.json({});
-      return Response.json(snapshot.repo);
+      pages.push(url);
+      assert.strictEqual(new Headers(init?.headers).get("Authorization"), "Bearer test-token");
+      return Response.json(
+        {
+          ...summary,
+          ...(pages.length === 1 ? { stats } : {}),
+          files: pages.length === 1 ? files!.slice(0, 1) : files!.slice(1),
+        },
+        {
+          headers:
+            pages.length === 1
+              ? {
+                  link: '<https://api.github.com/unused?page=2>; rel="next", <https://api.github.com/unused?page=2>; rel="last"',
+                }
+              : {},
+        },
+      );
     },
   });
-  const result = await service("facebook/react");
   assert.deepEqual(
     pages,
     [1, 2].map(
@@ -264,9 +293,92 @@ test("commit detail pagination collects files using the same authenticated endpo
         `https://api.github.com/repos/facebook/react/commits/${summary.sha}?per_page=100&page=${page}`,
     ),
   );
-  assert.deepEqual(result.commits[0].files, files);
-  assert.deepEqual(result.commits[0].stats, stats);
-  assert.strictEqual(result.commits[0].diffError, undefined);
+  assert.deepEqual(result.files, files);
+  assert.deepEqual(result.stats, stats);
+  assert.strictEqual(result.diffError, undefined);
+});
+
+test("server commit pagination and client commit detail caching work through the API route", async () => {
+  const snapshot = createRepoFixture();
+  const [first, second] = snapshot.commits;
+  const pageTwo = Array.from({ length: 10 }, (_, idx) => ({
+    ...second,
+    sha: `${idx}`.repeat(40).slice(0, 40),
+  }));
+
+  const serverPage = await fetchServerCommitsPage("owner/repo", {
+    token: "test-token",
+    branch: "feature/a b",
+    page: 2,
+    fetch: async (input) => {
+      const url = new Request(input).url;
+      assert.strictEqual(
+        url,
+        "https://api.github.com/repos/owner/repo/commits?sha=feature%2Fa%20b&per_page=10&page=2",
+      );
+      return Response.json(pageTwo, {
+        headers: {
+          link: '<https://api.github.com/repos/owner/repo/commits?page=3>; rel="next"',
+        },
+      });
+    },
+  });
+  assert.strictEqual(serverPage.hasMore, true);
+  assert.strictEqual(serverPage.commits.length, 10);
+
+  clearCommitDetailsCache();
+  serverEnv.GITHUB_TOKEN = "fixture-secret";
+  const githubRequests: string[] = [];
+  using transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
+    if (url.origin === "https://course.example") {
+      assert.equal(url.pathname, "/api/github/repository");
+      const headers = new Headers();
+      const response = await GET({
+        get: (key: string) => (key === "user" ? { id: "student" } : null),
+        header: (key: string, value: string) => headers.set(key, value),
+        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
+        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
+      } as unknown as CloudContext);
+      assert.instanceOf(response, Response);
+      return response;
+    }
+    githubRequests.push(url.pathname + url.search);
+    if (url.pathname.endsWith(`/commits/${first.sha}`)) {
+      return Response.json(first);
+    }
+    if (url.pathname.endsWith("/commits")) {
+      return Response.json([second]);
+    }
+    return new Response(null, { status: 404 });
+  });
+
+  try {
+    const clientPage = await fetchGitHubCommitsPage("https://github.com/owner/repo", "main", 2);
+    assert.strictEqual(clientPage.hasMore, false);
+    assert.strictEqual(clientPage.commits.length, 1);
+
+    const firstFetch = await fetchGitHubCommitDetails("https://github.com/owner/repo", first.sha);
+    assert.deepEqual(firstFetch, {
+      sha: first.sha,
+      stats: first.stats,
+      files: first.files,
+    });
+    assert.deepEqual(getCachedCommitDetails("owner/repo", first.sha), firstFetch);
+
+    const callsBeforeCachedHit = transport.mock.calls.length;
+    const secondFetch = await fetchGitHubCommitDetails("owner/repo", first.sha);
+    assert.deepEqual(secondFetch, firstFetch);
+    assert.strictEqual(transport.mock.calls.length, callsBeforeCachedHit);
+
+    const failedFetch = await fetchGitHubCommitDetails("owner/repo", "f".repeat(40));
+    assert.ok(failedFetch.diffError);
+    assert.strictEqual(getCachedCommitDetails("owner/repo", "f".repeat(40)), undefined);
+    assert.strictEqual(githubRequests.length, 3);
+  } finally {
+    clearCommitDetailsCache();
+    serverEnv.GITHUB_TOKEN = undefined;
+  }
 });
 
 test("secondary endpoint failures yield empty sections without replacing live metadata", async () => {

@@ -1,10 +1,11 @@
 import { I18nProvider } from "@modules/i18n";
 import { GitHubRepoDashboard } from "@modules/repository";
-import { fetchGitHubRepository } from "@server/github";
+import { fetchGitHubCommitDetails, fetchGitHubRepository } from "@server/github";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
 import { splitPatch } from "@/modules/repository/model/diff";
+import { buildRepoFileTree } from "@/modules/repository/model/fileTree";
 import { CommitHistory } from "@/modules/repository/ui/CommitHistory";
 import { RepoDiff } from "@/modules/repository/ui/RepoDiff";
 
@@ -26,40 +27,61 @@ test("split diff pairs replacements and pads unequal changes within each hunk", 
   assert.deepEqual(splitPatch(""), []);
 });
 
-test("a selected branch supplies the dashboard tree, history and both diff modes", async () => {
+test("a selected branch supplies the dashboard tree, history and on-demand diff modes", async () => {
   const snapshot = createRepoFixture();
   const { files, stats, prInfo: _prInfo, ...summary } = snapshot.commits[0];
   const patch = "@@ -1 +1 @@\n-old real code\n+new real code";
   const branch = "feature/dashboard";
+  const transport: typeof globalThis.fetch = async (input) => {
+    const url = new Request(input).url;
+    if (url.includes("/commits?")) {
+      assert.strictEqual(new URL(url).searchParams.get("sha"), branch);
+      return Response.json([summary]);
+    }
+    if (url.includes("/commits/")) {
+      return Response.json({
+        ...summary,
+        stats,
+        files: [{ ...files![0], patch }],
+      });
+    }
+    if (url.endsWith("/languages")) return Response.json({});
+    if (url.includes("/branches?")) return Response.json([]);
+    if (url.includes("/trees/")) {
+      assert.ok(url.endsWith("/trees/feature%2Fdashboard?recursive=1"));
+      return Response.json({
+        tree: Array.from({ length: 260 }, (_, idx) => ({
+          path: idx === 0 ? "feature-only.ts" : `src/file-${idx}.ts`,
+          type: "blob",
+          size: 1,
+        })),
+      });
+    }
+    return Response.json(snapshot.repo);
+  };
+
   const bundle = await fetchGitHubRepository("facebook/react", {
     token: "test-token",
     branch,
-    fetch: async (input) => {
-      const url = new Request(input).url;
-      if (url.includes("/commits?")) {
-        assert.strictEqual(new URL(url).searchParams.get("sha"), branch);
-        return Response.json([summary]);
-      }
-      if (url.includes("/commits/"))
-        return Response.json({
-          ...summary,
-          stats,
-          files: [{ ...files![0], patch }],
-        });
-      if (url.endsWith("/languages")) return Response.json({});
-      if (url.includes("/branches?")) return Response.json([]);
-      if (url.includes("/trees/")) {
-        assert.ok(url.endsWith("/trees/feature%2Fdashboard?recursive=1"));
-        return Response.json({ tree: [{ path: "feature-only.ts", type: "blob", size: 1 }] });
-      }
-      return Response.json(snapshot.repo);
-    },
+    fetch: transport,
   });
+  assert.strictEqual(bundle.commits[0].files, undefined);
+  assert.strictEqual(bundle.fileTree.length, 260);
+  const searchTree = buildRepoFileTree(bundle.fileTree, "file-259.ts");
+  assert.ok(searchTree.roots.get("src")?.children.has("file-259.ts"));
+
+  const details = await fetchGitHubCommitDetails("facebook/react", summary.sha, {
+    token: "test-token",
+    fetch: transport,
+  });
+  const detailedCommits = [{ ...bundle.commits[0], ...details }];
+
   for (const mode of ["unified", "split"] as const) {
     const html = renderToStaticMarkup(
       <I18nProvider initialLanguage="en">
         <CommitHistory
-          commits={bundle.commits}
+          commits={detailedCommits}
+          totalCommits={bundle.totalCommits}
           expandedCommitSha={summary.sha}
           setExpandedCommitSha={() => {}}
           diffMode={mode}
@@ -68,6 +90,10 @@ test("a selected branch supplies the dashboard tree, history and both diff modes
       </I18nProvider>,
     );
     assert.ok(html.includes(`data-diff-mode="${mode}"`));
+    assert.match(html, /<details\b(?![^>]*\bopen\b)[^>]*>[\s\S]*?<summary\b[^>]*>/);
+    assert.ok(html.includes(files![0].filename));
+    assert.ok(html.includes(`+${files![0].additions}`));
+    assert.ok(html.includes(`-${files![0].deletions}`));
     assert.ok(html.includes("-old real code"));
     assert.ok(html.includes("+new real code"));
   }
@@ -76,16 +102,49 @@ test("a selected branch supplies the dashboard tree, history and both diff modes
       <GitHubRepoDashboard repoBundle={bundle} onBranchChange={() => {}} />
     </I18nProvider>,
   );
+  assert.strictEqual((dashboard.match(/\bh-170\b/g) ?? []).length, 2);
   assert.ok(dashboard.includes("feature-only.ts"));
   assert.ok(dashboard.includes(`value="${branch}" selected=""`));
   assert.ok(dashboard.includes(summary.commit.message));
-  assert.ok(dashboard.includes("Total files: 1"));
+  assert.ok(dashboard.includes("Total files: 260"));
   assert.ok(dashboard.includes("1 Commits"));
+  assert.ok(!dashboard.includes("Load more commits"));
   assert.match(dashboard, /role="tooltip"[^>]*>Branches<\/span>/);
   assert.match(dashboard, /role="tooltip"[^>]*>Tags<\/span>/);
   assert.ok(dashboard.includes('aria-expanded="false"'));
   assert.ok(!dashboard.includes('aria-expanded="true"'));
   assert.ok(!dashboard.includes("+new real code"));
+
+  const paginatedHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <CommitHistory
+        commits={bundle.commits}
+        totalCommits={25}
+        expandedCommitSha={null}
+        setExpandedCommitSha={() => {}}
+        diffMode="unified"
+        setDiffMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(paginatedHtml.includes("25 Commits"));
+  assert.ok(paginatedHtml.includes("Load more commits"));
+
+  const loadingDetailHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <CommitHistory
+        commits={bundle.commits}
+        totalCommits={25}
+        expandedCommitSha={summary.sha}
+        setExpandedCommitSha={() => {}}
+        loadingCommitSha={summary.sha}
+        diffMode="unified"
+        setDiffMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(loadingDetailHtml.includes("Loading…"));
+  assert.ok(!loadingDetailHtml.includes("Could not load all commit changes"));
 });
 
 test("expanded commits explain missing patches, empty changes and detail failures", async () => {

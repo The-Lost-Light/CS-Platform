@@ -48,6 +48,7 @@ export function createRepoFixture(): RepoBundle {
     tags: [{ name: "v1.0.0", commit: { sha: commits[0].sha } }],
     pulls: [{ number: 1, title: "Initial PR", state: "open" }],
     commits,
+    totalCommits: commits.length,
     fileTree: [{ path: "index.ts", type: "blob", size: 1 }],
     sourceType: "live-api",
     rateLimit: "42/60",

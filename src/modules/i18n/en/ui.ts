@@ -104,6 +104,7 @@ export default {
   "github.totalFiles": "Total files",
   "github.totalFilesCount": "Total files: {count}",
   "github.commitCount": "{count} Commits",
+  "github.loadMoreCommits": "Load more commits",
   "github.primaryLanguage": "Primary language",
   "github.languageDistribution": "Repository language distribution",
   "github.filterPaths": "Filter repository file paths...",

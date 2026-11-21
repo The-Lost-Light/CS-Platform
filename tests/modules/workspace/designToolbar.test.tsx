@@ -1,15 +1,18 @@
 import { I18nProvider } from "@modules/i18n";
 import { getLocalizedProjects } from "@modules/projects";
+import { RepositoryConnection } from "@modules/repository";
 import { ThemeProvider } from "@modules/theme";
 import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
+import { createRepoFixture } from "../../fixtures/repository";
+
 const enProject = getLocalizedProjects("en").projects[0];
 const zhProject = getLocalizedProjects("zh-TW").projects[0];
 const emptySnapshot = { accountId: "student", draft: null, revision: null };
 
-test("Repo tab renders the URL and sync button in the workspace header card", () => {
+test("Repo tab renders the URL and sync button in the workspace header card when unconfigured", () => {
   const html = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
@@ -20,7 +23,52 @@ test("Repo tab renders the URL and sync button in the workspace header card", ()
   const header = html.split("</section>")[0];
   assert.match(header, /GitHub repository URL/);
   assert.match(header, /Sync GitHub project data/);
+  assert.notMatch(header, /role="tooltip"/);
   assert.equal(header.match(/class="ui-card\b/g)?.length, 1);
+});
+
+test("Repo header fuses repo overview and language bar once configured, and returns to URL input when edit is triggered", () => {
+  const bundle = createRepoFixture();
+  let editing = false;
+  const makeRepoState = () => ({
+    repoUrlInput: bundle.repo.html_url,
+    setRepoUrlInput: () => {},
+    repoBundle: bundle,
+    isEditingRepo: editing,
+    startEditingRepo: () => {
+      editing = true;
+    },
+    isLoadingRepo: false,
+    repoError: null,
+    handleLoadRepo: async () => {},
+    handleBranchChange: () => {},
+  });
+
+  const configuredHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <RepositoryConnection repository={makeRepoState()} />
+    </I18nProvider>,
+  );
+  assert.notMatch(configuredHtml, /輸入學生專題 GitHub Repo 網址/);
+  assert.match(configuredHtml, /<img[^>]*alt="tester"/);
+  assert.match(configuredHtml, /owner\/repo/);
+  assert.match(configuredHtml, /role="tooltip"[^>]*>修改 Repo 網址<\/span>/);
+  assert.match(configuredHtml, /role="tooltip"[^>]*>未結案問題<\/span>/);
+  assert.match(configuredHtml, /role="tooltip"[^>]*>Pull Requests 合併請求<\/span>/);
+  assert.match(configuredHtml, /role="tooltip"[^>]*>Forks 分支數<\/span>/);
+  assert.match(configuredHtml, /role="tooltip"[^>]*>Stars 星數<\/span>/);
+  assert.match(configuredHtml, /TypeScript/);
+  assert.match(configuredHtml, /100\.0%/);
+
+  makeRepoState().startEditingRepo();
+  const editingHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <RepositoryConnection repository={makeRepoState()} />
+    </I18nProvider>,
+  );
+  assert.match(editingHtml, /輸入學生專題 GitHub Repo 網址/);
+  assert.match(editingHtml, /同步 GitHub 專案數據/);
+  assert.notMatch(editingHtml, /role="tooltip"[^>]*>修改 Repo 網址<\/span>/);
 });
 
 test("design tab bar hides file actions outside C4 Model and anchors them on the right when selected", () => {

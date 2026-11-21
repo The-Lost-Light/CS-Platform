@@ -32,6 +32,19 @@ export interface RepoBranch {
   };
 }
 
+export interface RepoTag {
+  name: string;
+  commit: {
+    sha: string;
+  };
+}
+
+export interface RepoPullRequest {
+  number: number;
+  title?: string;
+  state?: string;
+}
+
 export interface RepoCommit {
   sha: string;
   commit: {
@@ -100,6 +113,8 @@ export interface RepoBundle {
   selectedBranch: string;
   languages: Record<string, number>;
   branches: RepoBranch[];
+  tags?: RepoTag[];
+  pulls?: RepoPullRequest[];
   commits: RepoCommit[];
   fileTree: RepoFile[];
 

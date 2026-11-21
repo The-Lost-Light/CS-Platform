@@ -8,9 +8,11 @@ import { fetchGitHubProjectBundle, type GitHubProjectLoader } from "../services/
 export function useRepository(
   defaultRepoUrl: string,
   loadRepository: GitHubProjectLoader = fetchGitHubProjectBundle,
+  initialRepoBundle: RepoBundle | null = null,
 ) {
   const [repoUrlInput, setRepoUrlInput] = useState(defaultRepoUrl);
-  const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(null);
+  const [repoBundle, setRepoBundle] = useState<RepoBundle | null>(initialRepoBundle);
+  const [isEditingRepo, setIsEditingRepo] = useState(false);
   const [isLoadingRepo, setIsLoadingRepo] = useState(false);
   const [repoError, setRepoError] = useState<{ key: MessageKey } | { message: string } | null>(
     null,
@@ -27,7 +29,10 @@ export function useRepository(
     setRepoError(null);
     try {
       const bundle = await loadRepository(targetUrl, targetBranch);
-      if (request === latestRequest.current) setRepoBundle(bundle);
+      if (request === latestRequest.current) {
+        setRepoBundle(bundle);
+        setIsEditingRepo(false);
+      }
     } catch (err) {
       if (request !== latestRequest.current) return;
       setRepoError(
@@ -46,6 +51,13 @@ export function useRepository(
     repoUrlInput,
     setRepoUrlInput,
     repoBundle,
+    isEditingRepo,
+    startEditingRepo: () => {
+      if (!repoUrlInput.trim() && repoBundle?.repo) {
+        setRepoUrlInput(repoBundle.repo.html_url || repoBundle.repo.full_name);
+      }
+      setIsEditingRepo(true);
+    },
     isLoadingRepo,
     repoError,
     handleLoadRepo,

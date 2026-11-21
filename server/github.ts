@@ -129,11 +129,17 @@ export async function fetchGitHubRepository(
     }
   }
 
-  const [languages, branches, commitsList, treeData] = await Promise.all([
+  const [languages, branches, tags, pulls, commitsList, treeData] = await Promise.all([
     request(`${repoApiUrl}/languages`)
       .then((r) => (r.ok ? r.json() : {}))
       .catch(() => ({})),
     request(`${repoApiUrl}/branches?per_page=30`)
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => []),
+    request(`${repoApiUrl}/tags?per_page=30`)
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => []),
+    request(`${repoApiUrl}/pulls?state=open&per_page=30`)
       .then((r) => (r.ok ? r.json() : []))
       .catch(() => []),
     fetchBranchSection(`/commits?sha=${encodedBranch}&per_page=10`),
@@ -168,6 +174,8 @@ export async function fetchGitHubRepository(
     selectedBranch,
     languages: languages || {},
     branches: Array.isArray(branches) ? branches : [],
+    tags: Array.isArray(tags) ? tags : [],
+    pulls: Array.isArray(pulls) ? pulls : [],
     commits,
     fileTree: isRecord(treeData) && Array.isArray(treeData.tree) ? treeData.tree.slice(0, 250) : [],
     sourceType: "live-api",

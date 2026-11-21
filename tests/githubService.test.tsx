@@ -56,7 +56,7 @@ test("the dashboard uses the authenticated course API and only the server suppli
     const bundle = await load();
     assert.equal(bundle.selectedBranch, branch);
     assert.deepEqual(bundle.fileTree, fixture.fileTree);
-    assert.lengthOf(requests, 5);
+    assert.lengthOf(requests, 7);
   } finally {
     serverEnv.GITHUB_TOKEN = undefined;
   }
@@ -143,18 +143,24 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
             ? { TypeScript: 100 }
             : url.includes("/branches?")
               ? snapshot.branches
-              : url.includes("/commits?")
-                ? snapshot.commits.map(({ files: _files, stats: _stats, ...summary }) => summary)
-                : url.includes("/commits/")
-                  ? snapshot.commits.find((commit) => url.includes(commit.sha))
-                  : { tree: files };
+              : url.includes("/tags?")
+                ? snapshot.tags
+                : url.includes("/pulls?")
+                  ? snapshot.pulls
+                  : url.includes("/commits?")
+                    ? snapshot.commits.map(
+                        ({ files: _files, stats: _stats, ...summary }) => summary,
+                      )
+                    : url.includes("/commits/")
+                      ? snapshot.commits.find((commit) => url.includes(commit.sha))
+                      : { tree: files };
       return Response.json(data, {
         headers: { "x-ratelimit-remaining": "42", "x-ratelimit-limit": "60" },
       });
     },
   });
   const result = await service("facebook/react");
-  assert.strictEqual(requests.length, 5 + snapshot.commits.length);
+  assert.strictEqual(requests.length, 7 + snapshot.commits.length);
   for (const request of requests)
     assert.deepEqual(request.headers, {
       Accept: "application/vnd.github+json",
@@ -168,6 +174,8 @@ test("live loading preserves headers, branch encoding, rate limits and the 250-f
     selectedBranch: repo.default_branch,
     languages: { TypeScript: 100 },
     branches: snapshot.branches,
+    tags: snapshot.tags,
+    pulls: snapshot.pulls,
     commits: snapshot.commits,
     fileTree: files.slice(0, 250),
     sourceType: "live-api",
@@ -278,8 +286,8 @@ test("secondary endpoint failures yield empty sections without replacing live me
   assert.strictEqual(result.sourceType, "live-api");
   assert.strictEqual(result.rateLimit, "Live API");
   assert.deepEqual(
-    [result.languages, result.branches, result.commits, result.fileTree],
-    [{}, [], [], []],
+    [result.languages, result.branches, result.tags, result.pulls, result.commits, result.fileTree],
+    [{}, [], [], [], [], []],
   );
 });
 

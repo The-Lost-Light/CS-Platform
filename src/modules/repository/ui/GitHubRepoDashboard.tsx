@@ -3,8 +3,6 @@ import { useState } from "react";
 import type { DiffMode } from "../model/diff";
 import type { RepoBundle } from "../model/repository";
 import { CommitHistory } from "./CommitHistory";
-import { RepositoryLanguages } from "./RepositoryLanguages";
-import { RepositoryMetrics } from "./RepositoryMetrics";
 import { RepositoryTree } from "./RepositoryTree";
 
 interface BranchControl {
@@ -35,31 +33,28 @@ function LoadedGitHubRepoDashboard({
   const [diffMode, setDiffMode] = useState<DiffMode>("unified");
   const [fileTreeSearch, setFileTreeSearch] = useState("");
 
-  const { repo, languages, branches, commits, fileTree } = repoBundle;
+  const { repo, branches, tags, commits, fileTree } = repoBundle;
 
   return (
-    <div className="space-y-6">
-      <RepositoryMetrics repo={repo} branches={branches} fileTree={fileTree} />
-      <RepositoryLanguages languages={languages} />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <RepositoryTree
-          repo={repo}
-          branches={branches}
-          fileTree={fileTree}
-          selectedBranch={repoBundle.selectedBranch}
-          onBranchChange={onBranchChange}
-          isLoading={isLoading}
-          fileTreeSearch={fileTreeSearch}
-          setFileTreeSearch={setFileTreeSearch}
-        />
-        <CommitHistory
-          commits={commits}
-          expandedCommitSha={expandedCommitSha}
-          setExpandedCommitSha={setExpandedCommitSha}
-          diffMode={diffMode}
-          setDiffMode={setDiffMode}
-        />
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <RepositoryTree
+        repo={repo}
+        branches={branches}
+        tags={tags}
+        fileTree={fileTree}
+        selectedBranch={repoBundle.selectedBranch}
+        onBranchChange={onBranchChange}
+        isLoading={isLoading}
+        fileTreeSearch={fileTreeSearch}
+        setFileTreeSearch={setFileTreeSearch}
+      />
+      <CommitHistory
+        commits={commits}
+        expandedCommitSha={expandedCommitSha}
+        setExpandedCommitSha={setExpandedCommitSha}
+        diffMode={diffMode}
+        setDiffMode={setDiffMode}
+      />
     </div>
   );
 }

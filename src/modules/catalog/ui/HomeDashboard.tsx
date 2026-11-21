@@ -3,7 +3,7 @@ import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { SettingsButton } from "@modules/settings";
 import { Link } from "@void/react";
-import { ChevronRight, FolderGit2, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronRight, Code2, FolderGit2, LogOut, ShieldCheck } from "lucide-react";
 
 export function HomeDashboard({
   projects,
@@ -20,14 +20,20 @@ export function HomeDashboard({
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-6">
-      <section className="ui-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-        <div>
-          <span className="ui-chip-secondary mb-2">{t("home.dashboard")}</span>
-          <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-on-surface">
-            {t("home.welcome")}
-            {currentUser?.name || t("home.student")}
-          </h1>
-          <p className="text-sm text-on-muted mt-1">{t("home.description")}</p>
+      <section className="ui-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="ui-icon-badge w-11 h-11 rounded-xl">
+            <Code2 aria-hidden="true" className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface">
+              {t("home.title")}
+            </h1>
+            <p className="text-sm text-on-muted mt-0.5">
+              {t("home.welcome")}
+              {currentUser?.name || t("home.student")}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto shrink-0">
           {currentUser.role === "admin" && (

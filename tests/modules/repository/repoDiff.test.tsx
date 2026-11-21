@@ -79,6 +79,10 @@ test("a selected branch supplies the dashboard tree, history and both diff modes
   assert.ok(dashboard.includes("feature-only.ts"));
   assert.ok(dashboard.includes(`value="${branch}" selected=""`));
   assert.ok(dashboard.includes(summary.commit.message));
+  assert.ok(dashboard.includes("Total files: 1"));
+  assert.ok(dashboard.includes("1 Commits"));
+  assert.match(dashboard, /role="tooltip"[^>]*>Branches<\/span>/);
+  assert.match(dashboard, /role="tooltip"[^>]*>Tags<\/span>/);
   assert.ok(dashboard.includes('aria-expanded="false"'));
   assert.ok(!dashboard.includes('aria-expanded="true"'));
   assert.ok(!dashboard.includes("+new real code"));

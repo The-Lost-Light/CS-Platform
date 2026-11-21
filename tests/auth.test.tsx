@@ -155,6 +155,6 @@ test("AuthGate initially presents login and hides authenticated navigation and d
   assert.ok(visibleText.includes(t("auth.title")));
   assert.match(html, /<form\b/);
   assert.ok(!visibleText.includes(t("auth.signOut")));
-  assert.ok(!visibleText.includes(t("home.dashboard")));
+  assert.ok(!visibleText.includes(t("home.title")));
   assert.notMatch(html, /<(?:header|main)\b/);
 });

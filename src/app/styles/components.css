@@ -49,7 +49,7 @@
   }
 
   .ui-card-header {
-    @apply px-5 sm:px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
+    @apply rounded-t-2xl px-5 sm:px-6 py-4 bg-surface-tonal border-b border-outline-tonal;
   }
 
   .ui-dialog {

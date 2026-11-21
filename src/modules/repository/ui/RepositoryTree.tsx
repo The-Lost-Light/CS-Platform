@@ -1,68 +1,95 @@
 import { useI18n } from "@modules/i18n";
-import { ChevronDown, FolderTree, GitBranch, LoaderCircle, Search } from "lucide-react";
+import { ChevronDown, FolderTree, GitBranch, LoaderCircle, Search, Tag } from "lucide-react";
 
 import type { RepoBundle } from "../model/repository";
+import { IconTooltip } from "./IconTooltip";
 import { RepoFileTree } from "./RepoFileTree";
 
 export function RepositoryTree({
   repo,
   branches,
+  tags = [],
   fileTree,
   selectedBranch,
   onBranchChange,
   isLoading,
   fileTreeSearch,
   setFileTreeSearch,
-}: Pick<RepoBundle, "repo" | "branches" | "fileTree"> & {
+}: Pick<RepoBundle, "repo" | "branches" | "tags" | "fileTree"> & {
   selectedBranch: string;
   onBranchChange: (value: string) => void;
   isLoading?: boolean;
   fileTreeSearch: string;
   setFileTreeSearch: (value: string) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const branchCount = branches.length.toLocaleString(locale);
+  const tagCount = tags.length.toLocaleString(locale);
+  const totalFilesCount = fileTree.length.toLocaleString(locale);
+
   return (
-    <div className="lg:col-span-5 ui-card overflow-hidden">
+    <div className="lg:col-span-5 ui-card">
       <div className="ui-card-header flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="ui-icon-badge w-8 h-8">
-            <FolderTree aria-hidden="true" className="w-4 h-4" />
-          </div>
-          <h3 className="text-sm font-bold text-on-primary-container truncate">
-            {t("github.fileTree", { count: fileTree.length })}
-          </h3>
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <label className="ui-chip-success relative border border-success-outline/60 min-w-0 max-w-full font-mono text-[11px] font-bold focus-within:ring-2 focus-within:ring-success">
+            <GitBranch aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+            <span className="shrink-0">{t("github.branchLabel")}</span>
+            <span aria-hidden="true" className="truncate">
+              {selectedBranch}
+            </span>
+            {isLoading ? (
+              <LoaderCircle aria-hidden="true" className="w-3.5 h-3.5 shrink-0 animate-spin" />
+            ) : (
+              <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+            )}
+            <select
+              aria-label={t("github.branchLabel")}
+              value={selectedBranch}
+              disabled={isLoading}
+              onChange={(e) => onBranchChange(e.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0 disabled:cursor-wait"
+            >
+              {Array.from(
+                new Set([
+                  repo.default_branch || "main",
+                  ...branches.map((b) => b.name),
+                  selectedBranch,
+                ]),
+              ).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <IconTooltip label={t("github.branches")}>
+            <span
+              tabIndex={0}
+              aria-label={`${t("github.branches")}: ${branchCount}`}
+              className="ui-chip-neutral font-mono text-[11px] font-bold cursor-default focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <GitBranch aria-hidden="true" className="w-3.5 h-3.5 text-success shrink-0" />
+              <span className="text-on-surface">{branchCount}</span>
+            </span>
+          </IconTooltip>
+
+          <IconTooltip label={t("github.tags")}>
+            <span
+              tabIndex={0}
+              aria-label={`${t("github.tags")}: ${tagCount}`}
+              className="ui-chip-neutral font-mono text-[11px] font-bold cursor-default focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <Tag aria-hidden="true" className="w-3.5 h-3.5 text-secondary shrink-0" />
+              <span className="text-on-surface">{tagCount}</span>
+            </span>
+          </IconTooltip>
         </div>
-        <label className="ui-chip-success relative border border-success-outline/60 min-w-0 max-w-[60%] font-mono text-[11px] font-bold focus-within:ring-2 focus-within:ring-success">
-          <GitBranch aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-          <span className="shrink-0">{t("github.branchLabel")}</span>
-          <span aria-hidden="true" className="truncate">
-            {selectedBranch}
-          </span>
-          {isLoading ? (
-            <LoaderCircle aria-hidden="true" className="w-3.5 h-3.5 shrink-0 animate-spin" />
-          ) : (
-            <ChevronDown aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-          )}
-          <select
-            aria-label={t("github.branchLabel")}
-            value={selectedBranch}
-            disabled={isLoading}
-            onChange={(e) => onBranchChange(e.target.value)}
-            className="absolute inset-0 h-full w-full cursor-pointer rounded-full opacity-0 disabled:cursor-wait"
-          >
-            {Array.from(
-              new Set([
-                repo.default_branch || "main",
-                ...branches.map((b) => b.name),
-                selectedBranch,
-              ]),
-            ).map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
+
+        <div className="flex items-center gap-1.5 text-xs font-bold text-on-primary-container shrink-0">
+          <FolderTree aria-hidden="true" className="w-4 h-4 text-primary shrink-0" />
+          <span>{t("github.totalFilesCount", { count: totalFilesCount })}</span>
+        </div>
       </div>
       <div className="p-5 space-y-3.5">
         <div className="relative">

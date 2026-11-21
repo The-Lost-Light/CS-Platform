@@ -26,7 +26,7 @@ export function CommitHistory({
             <GitCommit aria-hidden="true" className="w-4 h-4" />
           </div>
           <h3 className="text-sm font-bold text-on-primary-container truncate">
-            {t("github.commitHistory")}
+            {t("github.commitCount", { count: commits.length.toLocaleString(locale) })}
           </h3>
         </div>
         <div className="ui-pill-group text-[11px]">

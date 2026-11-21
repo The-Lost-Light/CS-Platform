@@ -167,9 +167,22 @@ test("dashboard lists every project and uses project-only navigation in both lan
       assert.ok(visibleText.includes(renderToStaticMarkup(<>{project.title}</>)));
     }
     assert.notMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
-    assert.ok(
-      visibleText.includes(locale === "en" ? "Project dashboard" : "專案總覽儀表板 (Dashboard)"),
-    );
+    const expectedTitle = locale === "en" ? "Project Submission Platform" : "專案繳交平台";
+    const expectedWelcome =
+      (locale === "en" ? "Welcome back, " : "歡迎回來，") + DEMO_ACCOUNTS[0].name;
+    assert.match(html, /<div class="ui-icon-badge[^"]*">\s*<svg\b[\s\S]*?<h1\b/);
+    const headerMatch = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>\s*<p\b[^>]*>([\s\S]*?)<\/p>/);
+    assert.ok(headerMatch);
+    assert.strictEqual(headerMatch[1], expectedTitle);
+    assert.strictEqual(headerMatch[2], renderToStaticMarkup(<>{expectedWelcome}</>));
+    for (const removedText of [
+      "Project dashboard",
+      "專案總覽儀表板 (Dashboard)",
+      "Choose a project below to open its workspace.",
+      "請選擇下方專案，進入專案工作區",
+    ]) {
+      assert.ok(!visibleText.includes(removedText));
+    }
     assert.ok(
       visibleText.includes(
         locale === "en" ? `Projects: ${projects.length}` : `專案數：${projects.length}`,

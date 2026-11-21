@@ -45,6 +45,8 @@ export function createRepoFixture(): RepoBundle {
     selectedBranch: "main",
     languages: { TypeScript: 100 },
     branches: [{ name: "main", protected: false, commit: { sha: commits[0].sha } }],
+    tags: [{ name: "v1.0.0", commit: { sha: commits[0].sha } }],
+    pulls: [{ number: 1, title: "Initial PR", state: "open" }],
     commits,
     fileTree: [{ path: "index.ts", type: "blob", size: 1 }],
     sourceType: "live-api",

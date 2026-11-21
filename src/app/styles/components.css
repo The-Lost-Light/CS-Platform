@@ -13,7 +13,7 @@
   }
 
   .ui-setting-trigger {
-    @apply w-full grid grid-cols-[minmax(0,1fr)_10.5rem] sm:grid-cols-[minmax(0,1fr)_13rem] items-stretch gap-3 sm:gap-4 p-4 text-left transition-colors cursor-pointer hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary;
+    @apply w-full grid grid-cols-[minmax(0,1fr)_10.5rem] sm:grid-cols-[minmax(0,1fr)_13rem] items-stretch gap-3 sm:gap-4 p-4 text-left transition-colors cursor-pointer hover:bg-surface-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary;
   }
 
   .ui-setting-value-cell {

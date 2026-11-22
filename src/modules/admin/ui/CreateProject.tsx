@@ -6,8 +6,16 @@ import {
   PROJECT_FIELD_LIMITS,
   type Project,
 } from "@modules/projects";
-import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
-import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
+import {
+  Button,
+  FeedbackBanner,
+  FormDialog,
+  FormDialogActions,
+  FormField,
+  Panel,
+  TextArea,
+  TextInput,
+} from "@shared/ui";
 import { FolderPlus, Pencil } from "lucide-react";
 
 import { useProjectForm } from "../hooks/useProjectForm";
@@ -43,44 +51,36 @@ export function CreateProject({
       <form onSubmit={submit} className="space-y-4">
         <fieldset disabled={pending} className="space-y-4 disabled:opacity-60">
           <div className="grid sm:grid-cols-2 gap-4">
-            <label className="ui-field-label">
-              {t("admin.projects.name")} *
-              <input
+            <FormField label={`${t("admin.projects.name")} *`}>
+              <TextInput
                 name="title"
                 defaultValue={original?.title}
                 required
                 maxLength={PROJECT_FIELD_LIMITS.title}
-                className="ui-input mt-1.5"
               />
-            </label>
-            <label className="ui-field-label">
-              {t("admin.projects.code")} *
-              <input
+            </FormField>
+            <FormField label={`${t("admin.projects.code")} *`} help={t("admin.projects.codeHelp")}>
+              <TextInput
                 name="codeName"
                 defaultValue={original?.codeName}
                 required
                 maxLength={PROJECT_FIELD_LIMITS.codeName}
                 pattern={"[A-Za-z0-9][A-Za-z0-9_\\-]{0,29}"}
                 placeholder="PROJ-03"
-                className="ui-input mt-1.5 font-mono"
+                mono
               />
-              <span className="ui-field-help">{t("admin.projects.codeHelp")}</span>
-            </label>
+            </FormField>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
-            <label className="ui-field-label">
-              {t("admin.projects.dueDate")}
-              <input
+            <FormField label={t("admin.projects.dueDate")} help={t("admin.projects.timezone")}>
+              <TextInput
                 type="datetime-local"
                 name="dueDate"
                 defaultValue={original?.dueDate.replace(" ", "T")}
-                className="ui-input mt-1.5"
               />
-              <span className="ui-field-help">{t("admin.projects.timezone")}</span>
-            </label>
-            <label className="ui-field-label">
-              {t("admin.projects.points")}
-              <input
+            </FormField>
+            <FormField label={t("admin.projects.points")}>
+              <TextInput
                 type="number"
                 name="points"
                 required
@@ -88,66 +88,63 @@ export function CreateProject({
                 min={0}
                 max={MAX_PROJECT_POINTS}
                 step={1}
-                className="ui-input mt-1.5 font-mono"
+                mono
               />
-            </label>
+            </FormField>
           </div>
-          <label className="ui-field-label">
-            {t("admin.projects.tags")}
-            <input
+          <FormField label={t("admin.projects.tags")}>
+            <TextInput
               name="tags"
               defaultValue={original?.tags.join(", ")}
               maxLength={PROJECT_FIELD_LIMITS.tags}
-              className="ui-input mt-1.5"
             />
-          </label>
-          <label className="ui-field-label">
-            {t("admin.projects.content")}
-            <textarea
+          </FormField>
+          <FormField label={t("admin.projects.content")}>
+            <TextArea
               name="content"
               defaultValue={original?.content}
               rows={10}
               maxLength={PROJECT_FIELD_LIMITS.content}
-              className="ui-input mt-1.5 font-mono"
+              mono
             />
-          </label>
+          </FormField>
           <div className="space-y-2.5">
-            <label className="ui-field-label">
-              {t("project.attachments")}
-              <input
+            <FormField
+              label={t("project.attachments")}
+              help={attachmentHelp}
+              helpId="project-attachment-help"
+              externalHelp
+            >
+              <TextInput
                 type="file"
                 multiple
                 name="attachments"
-                className="ui-input mt-1.5"
                 aria-describedby="project-attachment-help"
                 onChange={(event) => {
                   addFiles(Array.from(event.currentTarget.files ?? []));
                   event.currentTarget.value = "";
                 }}
               />
-            </label>
-            <p id="project-attachment-help" className="ui-field-help">
-              {attachmentHelp}
-            </p>
+            </FormField>
             {attachments.length > 0 && (
-              <ul className="ui-panel divide-y divide-outline-subtle px-4">
+              <Panel as="ul" className="divide-y divide-outline-subtle px-4">
                 {attachments.map((file, index) => (
                   <li
                     key={index}
                     className="flex items-center justify-between gap-3 py-2.5 text-sm"
                   >
                     <span className="break-all text-on-surface">{file.name}</span>
-                    <button
-                      type="button"
-                      className="ui-btn-danger-tonal shrink-0"
+                    <Button
+                      variant="danger-tonal"
+                      className="shrink-0"
                       aria-label={t("admin.projects.removeAttachment", { name: file.name })}
                       onClick={() => removeFile(index)}
                     >
                       {t("admin.remove")}
-                    </button>
+                    </Button>
                   </li>
                 ))}
-              </ul>
+              </Panel>
             )}
           </div>
           {error && (

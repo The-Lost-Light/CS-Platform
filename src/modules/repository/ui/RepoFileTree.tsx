@@ -1,3 +1,4 @@
+import { cn } from "@shared/ui";
 import { ChevronRight, FileCode2, Folder } from "lucide-react";
 import { memo, useDeferredValue, useMemo } from "react";
 
@@ -21,10 +22,7 @@ function TreeEntriesList({
         <li key={node.path}>
           {node.directory ? (
             <details open={searching || undefined} className="group/folder">
-              <summary
-                title={node.path}
-                className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 py-2 text-on-surface hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary transition-colors [&::-webkit-details-marker]:hidden"
-              >
+              <summary title={node.path} className="ui-tree-folder">
                 <ChevronRight
                   aria-hidden="true"
                   className="h-3.5 w-3.5 shrink-0 transition-transform group-open/folder:rotate-90"
@@ -37,10 +35,7 @@ function TreeEntriesList({
               </div>
             </details>
           ) : (
-            <div
-              title={node.path}
-              className="flex items-center justify-between gap-2 rounded-lg py-2 pl-7 pr-2.5 text-on-surface hover:bg-surface-hover transition-colors"
-            >
+            <div title={node.path} className="ui-tree-file">
               <div className="flex min-w-0 items-center gap-2">
                 <FileCode2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-secondary" />
                 <span className="truncate">{node.name}</span>
@@ -78,7 +73,7 @@ export const RepoFileTree = memo(function RepoFileTree({
   return (
     <div
       aria-busy={isStale || undefined}
-      className={isStale ? "opacity-60 transition-opacity" : "transition-opacity"}
+      className={cn("transition-opacity", isStale && "opacity-60")}
     >
       <TreeEntries key={query} nodes={roots} searching={Boolean(query)} />
     </div>

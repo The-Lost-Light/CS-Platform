@@ -1,7 +1,14 @@
 import { EditAccountDialog } from "@modules/accounts";
 import { useI18n, type MessageKey } from "@modules/i18n";
-import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
-import { LoadingPanel } from "@shared/ui/LoadingPanel";
+import {
+  AvatarBadge,
+  Button,
+  Card,
+  Chip,
+  DataTable,
+  FeedbackBanner,
+  LoadingPanel,
+} from "@shared/ui";
 import { Users } from "lucide-react";
 import { useImperativeHandle, useState, type Ref } from "react";
 
@@ -52,7 +59,7 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
     },
   }));
   return (
-    <section className="ui-card overflow-hidden">
+    <Card overflowHidden>
       <ManagementListHeader
         className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2"
         title={t("admin.allAccounts", { count })}
@@ -71,14 +78,9 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
           <FeedbackBanner
             kind="error"
             action={
-              <button
-                type="button"
-                disabled={pending}
-                onClick={reload}
-                className="ui-btn-outlined shrink-0"
-              >
+              <Button variant="outlined" disabled={pending} onClick={reload} className="shrink-0">
                 {t("auth.retry")}
-              </button>
+              </Button>
             }
           >
             <span>{t(accountErrors.get(error) ?? "admin.operationFailed")}</span>
@@ -97,61 +99,52 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
         )}
         {loading ? (
           <LoadingPanel label={t("common.loading")} />
-        ) : visible.length > 0 ? (
-          <div className="ui-table-wrap">
-            <table className="ui-table">
-              <thead>
-                <tr>
-                  <th>{t("auth.nameLabel")}</th>
-                  <th>{t("auth.accountLabel")}</th>
-                  <th>{t("auth.roleLabel")}</th>
-                  <th>{t("admin.actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="w-7 h-7 rounded-full bg-primary-container text-on-primary-container text-xs font-bold inline-flex items-center justify-center shrink-0">
-                          {user.name?.slice(0, 1) || "?"}
-                        </span>
-                        <span className="font-semibold text-on-surface">{user.name}</span>
-                        {user.id === selfId && (
-                          <span className="ui-chip-secondary px-2 py-0.5 text-[11px]">
-                            {t("admin.you")}
-                          </span>
-                        )}
-                        {user.banned && (
-                          <span className="ui-chip-danger px-2 py-0.5 text-[11px]">
-                            {t("admin.banned")}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="font-mono text-xs text-on-muted">{user.email}</td>
-                    <td>
-                      <span
-                        className={user.role === "admin" ? "ui-chip-primary" : "ui-chip-neutral"}
-                      >
-                        {t(user.role === "admin" ? "admin.role" : "auth.roles.student")}
-                      </span>
-                    </td>
-                    <ManagementRowActions
-                      disabled={!!deleting}
-                      deleteDisabledReason={
-                        user.id === selfId ? t("admin.protectedAccount") : undefined
-                      }
-                      onEdit={() => edit(user)}
-                      onDelete={() => requestDelete(user)}
-                    />
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         ) : (
-          <p className="ui-empty">{t("admin.empty")}</p>
+          <DataTable
+            headers={[
+              t("auth.nameLabel"),
+              t("auth.accountLabel"),
+              t("auth.roleLabel"),
+              t("admin.actions"),
+            ]}
+            isEmpty={visible.length === 0}
+            emptyMessage={t("admin.empty")}
+          >
+            {visible.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <AvatarBadge name={user.name} size="sm" />
+                    <span className="font-semibold text-on-surface">{user.name}</span>
+                    {user.id === selfId && (
+                      <Chip variant="secondary" size="sm">
+                        {t("admin.you")}
+                      </Chip>
+                    )}
+                    {user.banned && (
+                      <Chip variant="danger" size="sm">
+                        {t("admin.banned")}
+                      </Chip>
+                    )}
+                  </div>
+                </td>
+                <td className="font-mono text-xs text-on-muted">{user.email}</td>
+                <td>
+                  <Chip variant={user.role === "admin" ? "primary" : "neutral"}>
+                    {t(user.role === "admin" ? "admin.role" : "auth.roles.student")}
+                  </Chip>
+                </td>
+                <ManagementRowActions
+                  disabled={!!deleting}
+                  deleteDisabledReason={
+                    user.id === selfId ? t("admin.protectedAccount") : undefined
+                  }
+                  onEdit={() => edit(user)}
+                  onDelete={() => requestDelete(user)}
+                />
+              </tr>
+            ))}
+          </DataTable>
         )}
       </div>
       {creating && (
@@ -172,6 +165,6 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
           onSaved={finishEdit}
         />
       )}
-    </section>
+    </Card>
   );
 }

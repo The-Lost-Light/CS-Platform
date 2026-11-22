@@ -1,4 +1,17 @@
 @layer components {
+  /* Layout Shells & Dialog Alerts */
+  .ui-page-shell {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-6;
+  }
+
+  .ui-workspace-shell {
+    @apply w-[80%] mx-auto py-4;
+  }
+
+  .ui-alert-dialog {
+    @apply rounded-xl border border-danger-outline bg-danger-container p-5 text-on-danger-container shadow-m3-1 space-y-3.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-danger;
+  }
+
   /* Cards & Frosted Containers */
   .ui-card {
     @apply rounded-2xl bg-surface backdrop-blur-md text-on-surface border border-outline-subtle shadow-m3-1 transition-colors;
@@ -58,6 +71,74 @@
 
   .ui-icon-badge-tonal {
     @apply inline-flex items-center justify-center rounded-lg bg-primary-container text-on-primary-container shrink-0;
+  }
+
+  .ui-icon-badge-secondary {
+    @apply inline-flex items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container shrink-0;
+  }
+
+  .ui-icon-badge-success {
+    @apply inline-flex items-center justify-center rounded-lg bg-success-container text-on-success-container shrink-0;
+  }
+
+  .ui-icon-badge-warning {
+    @apply inline-flex items-center justify-center rounded-lg bg-warning-container text-on-warning-container shrink-0;
+  }
+
+  .ui-icon-badge-danger {
+    @apply inline-flex items-center justify-center rounded-lg bg-danger-container text-on-danger-container shrink-0;
+  }
+
+  .ui-avatar {
+    @apply rounded-full bg-primary-container text-on-primary-container text-xs font-bold inline-flex items-center justify-center shrink-0;
+  }
+
+  .ui-tooltip {
+    @apply pointer-events-none invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-opacity duration-150 absolute top-full mt-2 z-30 w-max max-w-64 rounded-xl px-3 py-1.5 text-xs font-semibold leading-snug shadow-m3-3 border backdrop-blur-xl;
+  }
+
+  .ui-menu-item {
+    @apply flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-on-surface hover:bg-surface-hover focus:bg-surface-hover transition-colors cursor-pointer focus:outline-hidden;
+  }
+
+  .ui-menu-item-active {
+    @apply bg-primary-container text-on-primary-container font-bold hover:bg-primary-container focus:bg-primary-container;
+  }
+
+  .ui-menu-item-danger {
+    @apply text-danger hover:bg-danger-container hover:text-on-danger-container;
+  }
+
+  .ui-list-row {
+    @apply px-5 sm:px-6 py-4 hover:bg-surface-hover flex items-center justify-between gap-3 transition-colors;
+  }
+
+  .ui-chevron-indicator {
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-on-subtle group-hover:bg-primary-container group-hover:text-on-primary-container transition-all shrink-0;
+  }
+
+  .ui-meta-pill {
+    @apply inline-flex items-center gap-2 rounded-full border border-outline-subtle bg-surface px-3.5 py-1.5;
+  }
+
+  .ui-attachment-link {
+    @apply inline-flex items-center gap-2 rounded-full border border-outline-subtle bg-surface hover:bg-primary-container hover:border-primary-outline hover:text-on-primary-container px-4 py-2 text-sm font-medium text-on-surface transition-colors;
+  }
+
+  .ui-breadcrumb-pill {
+    @apply px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface/75 text-on-muted hover:bg-surface hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold aria-[current=page]:shadow-m3-1;
+  }
+
+  .ui-tree-folder {
+    @apply flex cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 py-2 text-on-surface hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-primary transition-colors [&::-webkit-details-marker]:hidden;
+  }
+
+  .ui-tree-file {
+    @apply flex items-center justify-between gap-2 rounded-lg py-2 pl-7 pr-2.5 text-on-surface hover:bg-surface-hover transition-colors;
+  }
+
+  .ui-diff-file-summary {
+    @apply px-3.5 py-2 bg-surface-sunken hover:bg-surface-hover cursor-pointer list-none flex items-center justify-between gap-2 text-xs font-mono transition-colors [&::-webkit-details-marker]:hidden;
   }
 
   /* Buttons (Material You 3 Full Pill) */

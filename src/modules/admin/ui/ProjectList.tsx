@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
+import { Card, Chip, DataTable, FeedbackBanner } from "@shared/ui";
 import { Link } from "@void/react";
 import { FolderGit2 } from "lucide-react";
 import { useImperativeHandle, useState, type Ref } from "react";
@@ -43,7 +43,7 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
     },
   }));
   return (
-    <section className="ui-card overflow-hidden">
+    <Card overflowHidden>
       <ManagementListHeader
         className="flex flex-wrap items-center justify-between gap-3"
         title={t("admin.allProjects", { count })}
@@ -86,47 +86,40 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
           />
         )}
 
-        {visible.length > 0 ? (
-          <div className="ui-table-wrap">
-            <table className="ui-table">
-              <thead>
-                <tr>
-                  <th>{t("admin.projects.code")}</th>
-                  <th>{t("admin.projects.name")}</th>
-                  <th>{t("admin.projects.dueDate")}</th>
-                  <th>{t("admin.actions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((project) => (
-                  <tr key={project.id}>
-                    <td>
-                      <span className="ui-code-badge">{project.codeName}</span>
-                    </td>
-                    <td>
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="font-semibold text-on-surface hover:text-primary underline decoration-outline underline-offset-4 transition-colors"
-                      >
-                        {project.title}
-                      </Link>
-                    </td>
-                    <td className="whitespace-nowrap font-mono text-xs text-on-muted">
-                      {project.dueDate || "—"}
-                    </td>
-                    <ManagementRowActions
-                      disabled={!!deleting}
-                      onEdit={() => edit(project)}
-                      onDelete={() => requestDelete(project)}
-                    />
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="ui-empty">{t("admin.empty")}</p>
-        )}
+        <DataTable
+          headers={[
+            t("admin.projects.code"),
+            t("admin.projects.name"),
+            t("admin.projects.dueDate"),
+            t("admin.actions"),
+          ]}
+          isEmpty={visible.length === 0}
+          emptyMessage={t("admin.empty")}
+        >
+          {visible.map((project) => (
+            <tr key={project.id}>
+              <td>
+                <Chip variant="code">{project.codeName}</Chip>
+              </td>
+              <td>
+                <Link
+                  href={`/projects/${project.id}`}
+                  className="font-semibold text-on-surface hover:text-primary underline decoration-outline underline-offset-4 transition-colors"
+                >
+                  {project.title}
+                </Link>
+              </td>
+              <td className="whitespace-nowrap font-mono text-xs text-on-muted">
+                {project.dueDate || "—"}
+              </td>
+              <ManagementRowActions
+                disabled={!!deleting}
+                onEdit={() => edit(project)}
+                onDelete={() => requestDelete(project)}
+              />
+            </tr>
+          ))}
+        </DataTable>
       </div>
       {creating && (
         <CreateProject
@@ -145,6 +138,6 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
           onSaved={finishEdit}
         />
       )}
-    </section>
+    </Card>
   );
 }

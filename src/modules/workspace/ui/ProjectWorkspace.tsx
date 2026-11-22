@@ -8,6 +8,7 @@ import {
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
+import { Chip, PageContainer, PageHeaderCard, SegmentedControl, cn } from "@shared/ui";
 import { Link } from "@void/react";
 import { Compass, Eye, FileText, FolderGit2, GitBranch, X } from "lucide-react";
 
@@ -68,32 +69,27 @@ export function ProjectWorkspace({
     onChangeDesignTab: handleDesignTabChange,
   });
 
-  return (
-    <div className="w-[80%] mx-auto py-4">
-      <section className="ui-card relative z-10 px-5 sm:px-6 py-5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="ui-icon-badge w-11 h-11 rounded-xl">
-              <FolderGit2 aria-hidden="true" className="w-5 h-5" />
-            </div>
-            <h1
-              title={project.title}
-              className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface truncate min-w-0"
-            >
-              {project.title}
-            </h1>
-          </div>
+  const backLabel = t(onClose || closeHref ? "workspace.backToStudentList" : "common.backHome");
 
-          <div className="flex shrink-0 max-w-full flex-wrap items-center gap-2.5 self-start lg:self-auto">
+  return (
+    <PageContainer variant="workspace">
+      <PageHeaderCard
+        compact
+        icon={FolderGit2}
+        title={project.title}
+        titleAttr={project.title}
+        className="relative z-10"
+        actionsClassName="max-w-full self-start lg:self-auto"
+        actions={
+          <>
             {readOnly ? (
-              <span className="ui-chip-secondary shrink-0">
-                <Eye aria-hidden="true" className="w-3.5 h-3.5" />
+              <Chip variant="secondary" icon={Eye} className="shrink-0">
                 <span>
                   {studentName
                     ? t("workspace.viewingStudent", { name: studentName })
                     : t("workspace.readOnlyBadge")}
                 </span>
-              </span>
+              </Chip>
             ) : (
               <SaveWorkspace
                 projectId={project.id}
@@ -106,35 +102,36 @@ export function ProjectWorkspace({
                 repoUrl={repository.repoUrl}
               />
             )}
-            <div
+            <SegmentedControl
               role="tablist"
-              aria-label={t("workspace.tabs.label")}
-              className="ui-pill-group shrink-0"
-            >
-              {(
-                [
-                  ["assignment", FileText],
-                  ["design", Compass],
-                  ["github", GitBranch],
-                ] as const
-              ).map(([tab, Icon]) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  id={`workspace-tab-${tab}`}
-                  aria-controls={`workspace-panel-${tab}`}
-                  aria-selected={activeTab === tab}
-                  onClick={() => handleActiveTabChange(tab)}
-                  className={`ui-pill-item px-3 sm:px-4 ${
-                    activeTab === tab ? "ui-pill-item-active" : "ui-pill-item-idle"
-                  }`}
-                >
-                  <Icon aria-hidden="true" className="w-3.5 h-3.5" />
-                  <span>{t(`workspace.tabs.${tab}`)}</span>
-                </button>
-              ))}
-            </div>
+              ariaLabel={t("workspace.tabs.label")}
+              value={activeTab}
+              onChange={handleActiveTabChange}
+              className="shrink-0"
+              options={[
+                {
+                  value: "assignment",
+                  label: t("workspace.tabs.assignment"),
+                  icon: FileText,
+                  id: "workspace-tab-assignment",
+                  ariaControls: "workspace-panel-assignment",
+                },
+                {
+                  value: "design",
+                  label: t("workspace.tabs.design"),
+                  icon: Compass,
+                  id: "workspace-tab-design",
+                  ariaControls: "workspace-panel-design",
+                },
+                {
+                  value: "github",
+                  label: t("workspace.tabs.github"),
+                  icon: GitBranch,
+                  id: "workspace-tab-github",
+                  ariaControls: "workspace-panel-github",
+                },
+              ]}
+            />
             <Link
               href={closeHref ?? "/"}
               onClick={
@@ -145,19 +142,17 @@ export function ProjectWorkspace({
                     }
                   : undefined
               }
-              aria-label={t(
-                onClose || closeHref ? "workspace.backToStudentList" : "common.backHome",
-              )}
-              title={t(onClose || closeHref ? "workspace.backToStudentList" : "common.backHome")}
+              aria-label={backLabel}
+              title={backLabel}
               className="ui-btn-icon w-8 h-8 shrink-0"
             >
               <X aria-hidden="true" className="w-4 h-4" />
             </Link>
-          </div>
-        </div>
-
+          </>
+        }
+      >
         {activeTab === "design" && (
-          <div className={`${toolbarRowClass} flex flex-wrap items-center justify-between gap-3`}>
+          <div className={cn(toolbarRowClass, "flex flex-wrap items-center justify-between gap-3")}>
             <DesignTabs designTab={designTab} onChangeDesignTab={handleDesignTabChange} />
             {designTab === "diagram" && <C4FileActions file={c4File} readOnly={readOnly} />}
           </div>
@@ -165,7 +160,7 @@ export function ProjectWorkspace({
         <div className={toolbarRowClass} hidden={activeTab !== "github"}>
           <RepositoryConnection repository={repository} readOnly={readOnly} />
         </div>
-      </section>
+      </PageHeaderCard>
 
       <div
         role="tabpanel"
@@ -209,6 +204,6 @@ export function ProjectWorkspace({
           isLoading={repository.isLoadingRepo}
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }

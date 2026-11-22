@@ -1,7 +1,13 @@
 import { useI18n } from "@modules/i18n";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@shared/passwordPolicy";
-import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
-import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
+import {
+  Button,
+  FeedbackBanner,
+  FormDialog,
+  FormDialogActions,
+  FormField,
+  TextInput,
+} from "@shared/ui";
 import { KeyRound } from "lucide-react";
 import { useState } from "react";
 
@@ -46,9 +52,10 @@ export function ChangeAccountPassword({
 
   return (
     <>
-      <button
-        type="button"
-        className="ui-btn-tonal"
+      <Button
+        variant="tonal"
+        icon={KeyRound}
+        iconClassName="w-3.5 h-3.5"
         aria-haspopup="dialog"
         disabled={disabled}
         onClick={() => {
@@ -57,9 +64,8 @@ export function ChangeAccountPassword({
           setOpen(true);
         }}
       >
-        <KeyRound aria-hidden="true" className="w-3.5 h-3.5" />
         <span>{t("admin.changePassword")}</span>
-      </button>
+      </Button>
       {saved && (
         <FeedbackBanner kind="success" className="col-span-full mt-2">
           <span>{t("admin.passwordChanged")}</span>
@@ -75,16 +81,14 @@ export function ChangeAccountPassword({
         >
           <form onSubmit={submit}>
             <fieldset disabled={pending} className="space-y-4">
-              <label className="ui-field-label">
-                {t("admin.currentPassword")}
-                <input
-                  className="ui-input mt-1.5"
+              <FormField label={t("admin.currentPassword")}>
+                <TextInput
                   name="currentPassword"
                   type="password"
                   autoComplete="current-password"
                   required
                 />
-              </label>
+              </FormField>
               <NewPasswordField name="newPassword" label={t("admin.newPassword")} />
               <p className="ui-field-help">
                 {t(isSelf ? "admin.selfPasswordHelp" : "admin.accountEditHelp")}

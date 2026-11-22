@@ -1,3 +1,4 @@
+import { Button, Card, CardHeader, IconBadge, Menu, MenuItem } from "@shared/ui";
 import { Background, Controls, MiniMap } from "@xyflow/react";
 import { ChevronRight, HelpCircle, Layers, Pencil, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -5,6 +6,7 @@ import { useEffect, useRef } from "react";
 import type { C4Editor } from "../hooks/useC4Editor";
 import { C4Canvas, nodeTypes } from "./C4Canvas";
 import { C4Inspector } from "./C4Inspector";
+
 const levelNames = ["Container", "Component", "Code"] as const;
 
 export function C4Diagram({ editor }: { editor: C4Editor }) {
@@ -100,12 +102,10 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
       aria-labelledby="design-tab-diagram"
       className="space-y-5"
     >
-      <div className="ui-card overflow-hidden bg-surface-sunken">
-        <div className="ui-card-header flex flex-wrap items-center justify-between gap-3 py-3 text-xs">
+      <Card as="div" overflowHidden className="bg-surface-sunken">
+        <CardHeader layoutClassName="flex flex-wrap items-center justify-between gap-3 py-3 text-xs">
           <div className="flex min-w-48 flex-1 items-center gap-2.5">
-            <div className="ui-icon-badge w-7 h-7 rounded-lg">
-              <Layers aria-hidden="true" className="w-3.5 h-3.5" />
-            </div>
+            <IconBadge icon={Layers} size="xs" />
             <nav
               aria-label="Breadcrumb"
               className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap py-0.5 text-xs"
@@ -114,7 +114,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                 type="button"
                 onClick={() => navigate("")}
                 aria-current={!scope ? "page" : undefined}
-                className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface/75 text-on-muted hover:bg-surface hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold aria-[current=page]:shadow-m3-1"
+                className="ui-breadcrumb-pill"
               >
                 C1 · Context
               </button>
@@ -125,7 +125,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                     type="button"
                     onClick={() => navigate(node.id)}
                     aria-current={node.id === scope?.id ? "page" : undefined}
-                    className="px-3 py-1.5 rounded-full font-mono text-xs transition-colors cursor-pointer border border-outline-subtle bg-surface/75 text-on-muted hover:bg-surface hover:text-on-surface aria-[current=page]:bg-primary-container aria-[current=page]:text-on-primary-container aria-[current=page]:border-primary-outline aria-[current=page]:font-bold aria-[current=page]:shadow-m3-1"
+                    className="ui-breadcrumb-pill"
                   >
                     C{index + 2} · {levelNames[index]}
                   </button>
@@ -136,40 +136,36 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
           <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
             {!readOnly && (
               <>
-                <button
-                  type="button"
+                <Button
+                  size="sm"
+                  variant={drawing.creating ? "primary" : "outlined"}
+                  icon={Plus}
                   aria-pressed={drawing.creating}
                   onClick={() => {
                     setContextMenu(null);
                     drawing.toggleCreating();
                   }}
-                  className={
-                    drawing.creating
-                      ? "ui-btn-primary px-3 py-1.5 text-xs"
-                      : "ui-btn-outlined px-3 py-1.5 text-xs"
-                  }
                 >
-                  <Plus aria-hidden="true" className="w-3.5 h-3.5" />
                   {t("c4.createNode")}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  icon={Undo2}
                   disabled={!canUndo}
                   onClick={() => stepHistory("undo")}
-                  className="ui-btn-outlined px-3 py-1.5 text-xs"
                 >
-                  <Undo2 aria-hidden="true" className="w-3.5 h-3.5" />
                   {t("c4.undo")}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  icon={Redo2}
                   disabled={!canRedo}
                   onClick={() => stepHistory("redo")}
-                  className="ui-btn-outlined px-3 py-1.5 text-xs"
                 >
-                  <Redo2 aria-hidden="true" className="w-3.5 h-3.5" />
                   {t("c4.redo")}
-                </button>
+                </Button>
               </>
             )}
             <details ref={helpRef} className="relative group">
@@ -202,7 +198,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               </div>
             </details>
           </div>
-        </div>
+        </CardHeader>
         <div className="relative">
           <div
             ref={canvasRef}
@@ -327,9 +323,8 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             )}
           </div>
           {!readOnly && contextMenu && (
-            <div
+            <Menu
               ref={menuRef}
-              role="menu"
               onContextMenu={(event) => event.preventDefault()}
               style={{
                 position: "absolute",
@@ -337,33 +332,29 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                 top: contextMenu.y,
                 zIndex: 30,
               }}
-              className="ui-menu min-w-36 p-1.5 space-y-0.5"
+              className="min-w-36 p-1.5 space-y-0.5"
             >
-              <button
-                type="button"
-                role="menuitem"
+              <MenuItem
+                icon={Pencil}
+                iconClassName="text-primary"
                 onClick={() => {
                   if (contextMenu.nodeId) select(contextMenu.nodeId);
                   else if (contextMenu.edgeId) selectEdge(contextMenu.edgeId);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-on-surface hover:bg-surface-hover transition-colors cursor-pointer"
               >
-                <Pencil aria-hidden="true" className="w-3.5 h-3.5 shrink-0 text-primary" />
                 <span>{t("c4.edit")}</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
+              </MenuItem>
+              <MenuItem
+                icon={Trash2}
+                tone="danger"
                 onClick={() => {
                   if (contextMenu.nodeId) remove([contextMenu.nodeId]);
                   else if (contextMenu.edgeId) remove([], [contextMenu.edgeId]);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-danger hover:bg-danger-container hover:text-on-danger-container transition-colors cursor-pointer"
               >
-                <Trash2 aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
                 <span>{t("c4.delete")}</span>
-              </button>
-            </div>
+              </MenuItem>
+            </Menu>
           )}
           {!readOnly && <C4Inspector editor={editor} />}
         </div>
@@ -372,7 +363,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             {t(readOnly ? "c4.emptyLevelReadOnly" : "c4.emptyLevel")}
           </p>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

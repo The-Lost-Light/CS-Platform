@@ -1,4 +1,13 @@
 import { useI18n } from "@modules/i18n";
+import {
+  Button,
+  Card,
+  CardHeader,
+  Chip,
+  FeedbackBanner,
+  Panel,
+  SegmentedControl,
+} from "@shared/ui";
 import { ChevronDown, ChevronRight, GitCommit, LoaderCircle } from "lucide-react";
 
 import type { DiffMode } from "../model/diff";
@@ -31,39 +40,26 @@ export function CommitHistory({
   const showLoadMore = hasMoreCommits ?? commits.length < resolvedTotalCommits;
 
   return (
-    <div className="lg:col-span-7 min-w-0 ui-card overflow-hidden flex flex-col h-170">
-      <div className="ui-card-header shrink-0 min-h-16 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="ui-icon-badge w-8 h-8">
-            <GitCommit aria-hidden="true" className="w-4 h-4" />
-          </div>
-          <h3 className="text-sm font-bold text-on-primary-container truncate">
-            {t("github.commitCount", { count: resolvedTotalCommits.toLocaleString(locale) })}
-          </h3>
-        </div>
-        <div className="ui-pill-group text-[11px]">
-          <button
-            type="button"
-            onClick={() => setDiffMode("unified")}
-            aria-pressed={diffMode === "unified"}
-            className={`ui-pill-item px-3 py-1 ${
-              diffMode === "unified" ? "ui-pill-item-active" : "ui-pill-item-idle"
-            }`}
-          >
-            {t("github.diff.unified")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setDiffMode("split")}
-            aria-pressed={diffMode === "split"}
-            className={`ui-pill-item px-3 py-1 ${
-              diffMode === "split" ? "ui-pill-item-active" : "ui-pill-item-idle"
-            }`}
-          >
-            {t("github.diff.split")}
-          </button>
-        </div>
-      </div>
+    <Card as="div" overflowHidden className="lg:col-span-7 min-w-0 flex flex-col h-170">
+      <CardHeader
+        icon={GitCommit}
+        iconSize="sm"
+        headingAs="h3"
+        title={t("github.commitCount", { count: resolvedTotalCommits.toLocaleString(locale) })}
+        titleClassName="text-sm"
+        layoutClassName="min-h-16 flex flex-wrap items-center justify-between gap-2 shrink-0"
+        actions={
+          <SegmentedControl
+            size="sm"
+            value={diffMode}
+            onChange={setDiffMode}
+            options={[
+              { value: "unified", label: t("github.diff.unified") },
+              { value: "split", label: t("github.diff.split") },
+            ]}
+          />
+        }
+      />
 
       <div className="p-5 flex-1 min-h-0 flex flex-col">
         <div className="flex-1 min-h-0 space-y-2.5 overflow-y-auto pr-1">
@@ -78,7 +74,7 @@ export function CommitHistory({
               : commitDate.toLocaleDateString(locale);
 
             return (
-              <div key={c.sha} className="ui-panel overflow-hidden">
+              <Panel key={c.sha} className="overflow-hidden">
                 <button
                   type="button"
                   aria-expanded={isExpanded}
@@ -86,9 +82,9 @@ export function CommitHistory({
                   className="w-full px-3.5 py-2.5 text-left flex items-center justify-between gap-3 hover:bg-surface-hover transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="ui-chip-secondary font-mono text-[11px] px-2.5 py-0.5 shrink-0">
+                    <Chip variant="secondary" size="sm" mono className="px-2.5 shrink-0">
                       {c.sha.slice(0, 7)}
-                    </span>
+                    </Chip>
                     <span className="text-xs font-bold text-on-surface truncate">{title}</span>
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
@@ -125,9 +121,9 @@ export function CommitHistory({
                     ) : (
                       <>
                         {(c.diffError || !c.files) && (
-                          <p role="alert" className="ui-banner-danger text-xs">
-                            {t("github.diff.loadFailed")}
-                          </p>
+                          <FeedbackBanner kind="error" className="text-xs">
+                            <span>{t("github.diff.loadFailed")}</span>
+                          </FeedbackBanner>
                         )}
                         {!c.diffError && c.files?.length === 0 && (
                           <p className="text-xs text-on-muted">{t("github.diff.noFiles")}</p>
@@ -137,7 +133,7 @@ export function CommitHistory({
                             key={f.filename}
                             className="group/file rounded-xl border border-outline-subtle overflow-hidden bg-surface"
                           >
-                            <summary className="px-3.5 py-2 bg-surface-sunken hover:bg-surface-hover cursor-pointer list-none flex items-center justify-between gap-2 text-xs font-mono transition-colors [&::-webkit-details-marker]:hidden">
+                            <summary className="ui-diff-file-summary">
                               <div className="flex items-center gap-2 min-w-0">
                                 <ChevronRight
                                   aria-hidden="true"
@@ -165,27 +161,26 @@ export function CommitHistory({
                     )}
                   </div>
                 )}
-              </div>
+              </Panel>
             );
           })}
 
           {showLoadMore && (
             <div className="pt-1 flex justify-center">
-              <button
-                type="button"
-                onClick={onLoadMore}
+              <Button
+                variant="outlined"
+                loading={isLoadingMore}
                 disabled={isLoadingMore}
-                className="ui-btn-outlined w-full"
+                onClick={onLoadMore}
+                iconClassName="w-3.5 h-3.5"
+                className="w-full"
               >
-                {isLoadingMore && (
-                  <LoaderCircle aria-hidden="true" className="w-3.5 h-3.5 animate-spin" />
-                )}
                 <span>{isLoadingMore ? t("common.loading") : t("github.loadMoreCommits")}</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

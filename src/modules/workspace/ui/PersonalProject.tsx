@@ -1,8 +1,7 @@
 import type { DesignTab } from "@modules/c4-editor";
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
-import { LoadingPanel } from "@shared/ui/LoadingPanel";
-import { AlertCircle } from "lucide-react";
+import { Button, Card, FeedbackBanner, LoadingPanel, PageContainer } from "@shared/ui";
 import { useState } from "react";
 
 import type { WorkspaceTab } from "../hooks/useProjectWorkspace";
@@ -86,30 +85,27 @@ export function PersonalProject({
 
   if (error)
     return (
-      <div className="w-[80%] mx-auto py-4">
-        <div className="ui-card p-6 space-y-4">
-          <div className="ui-banner-danger" role="alert">
-            <div className="flex items-center gap-2.5">
-              <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-              <span>{t("draft.loadError")}</span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button type="button" className="ui-btn-outlined" onClick={retry}>
-                {t("auth.retry")}
-              </button>
-              {viewingStudent && (
-                <button
-                  type="button"
-                  className="ui-btn-outlined"
-                  onClick={() => handleSelectStudent("")}
-                >
-                  {t("workspace.backToStudentList")}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageContainer variant="workspace">
+        <Card as="div" className="p-6 space-y-4">
+          <FeedbackBanner
+            kind="error"
+            action={
+              <div className="flex items-center gap-2 shrink-0">
+                <Button variant="outlined" onClick={retry}>
+                  {t("auth.retry")}
+                </Button>
+                {viewingStudent && (
+                  <Button variant="outlined" onClick={() => handleSelectStudent("")}>
+                    {t("workspace.backToStudentList")}
+                  </Button>
+                )}
+              </div>
+            }
+          >
+            <span>{t("draft.loadError")}</span>
+          </FeedbackBanner>
+        </Card>
+      </PageContainer>
     );
   if (!snapshot) return <LoadingPanel label={t("common.loading")} />;
   return (

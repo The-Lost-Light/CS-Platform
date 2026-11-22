@@ -1,3 +1,5 @@
+import { Chip } from "@shared/ui";
+
 import { languageDistribution } from "../model/languages";
 import type { RepoBundle } from "../model/repository";
 
@@ -28,7 +30,7 @@ export function RepositoryLanguages({ languages }: Pick<RepoBundle, "languages">
       </div>
       <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
         {distribution.map(({ name: lang, percent }, idx) => (
-          <span key={lang} className="ui-chip-neutral font-mono min-w-0 max-w-full">
+          <Chip key={lang} variant="neutral" mono className="min-w-0 max-w-full">
             <span
               aria-hidden="true"
               className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
@@ -38,7 +40,7 @@ export function RepositoryLanguages({ languages }: Pick<RepoBundle, "languages">
             />
             <strong className="text-on-surface truncate">{lang}</strong>
             <span className="shrink-0">{percent}%</span>
-          </span>
+          </Chip>
         ))}
       </div>
     </div>

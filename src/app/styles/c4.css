@@ -28,3 +28,17 @@
 .react-flow__controls-button:last-child {
   border-bottom: none !important;
 }
+
+@layer components {
+  .c4-node-card {
+    @apply rounded-xl border-2 p-4 shadow-m3-1 transition-all flex flex-col justify-between text-on-surface;
+  }
+
+  .c4-node-tech {
+    @apply mt-1.5 inline-block px-2.5 py-0.5 rounded-lg bg-surface-high text-[11px] font-mono text-primary wrap-break-word;
+  }
+
+  .c4-boundary-card {
+    @apply h-full w-full rounded-2xl border-2 border-dashed border-primary/70 bg-primary/5 cursor-move;
+  }
+}

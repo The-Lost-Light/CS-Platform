@@ -1,7 +1,17 @@
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
-import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
-import { LoadingPanel } from "@shared/ui/LoadingPanel";
+import {
+  AvatarBadge,
+  Button,
+  Card,
+  CardHeader,
+  Chip,
+  EmptyState,
+  FeedbackBanner,
+  LoadingPanel,
+  PageContainer,
+  PageHeaderCard,
+} from "@shared/ui";
 import { Link } from "@void/react";
 import { CheckCircle2, ChevronRight, FolderGit2, Users, X } from "lucide-react";
 
@@ -29,55 +39,41 @@ export function StudentWorkspaceList({
   const submittedCount = students.filter((student) => student.hasWorkspace).length;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-6">
-      <section className="ui-card px-5 sm:px-6 py-5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="ui-icon-badge w-11 h-11 rounded-xl">
-            <FolderGit2 aria-hidden="true" className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h1
-              title={project.title}
-              className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface truncate"
+    <PageContainer>
+      <PageHeaderCard
+        compact
+        icon={FolderGit2}
+        title={project.title}
+        titleAttr={project.title}
+        description={t("home.viewStudentProjects")}
+        actions={
+          <>
+            {!loading && !error && (
+              <Chip variant="primary" mono>
+                {t("workspace.studentSubmittedCount", {
+                  submitted: submittedCount,
+                  total: students.length,
+                })}
+              </Chip>
+            )}
+            <Link
+              href="/"
+              aria-label={t("common.backHome")}
+              title={t("common.backHome")}
+              className="ui-btn-icon w-8 h-8 shrink-0"
             >
-              {project.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-on-muted mt-0.5">
-              {t("home.viewStudentProjects")}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5 shrink-0">
-          {!loading && !error && (
-            <span className="ui-chip-primary font-mono">
-              {t("workspace.studentSubmittedCount", {
-                submitted: submittedCount,
-                total: students.length,
-              })}
-            </span>
-          )}
-          <Link
-            href="/"
-            aria-label={t("common.backHome")}
-            title={t("common.backHome")}
-            className="ui-btn-icon w-8 h-8 shrink-0"
-          >
-            <X aria-hidden="true" className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+              <X aria-hidden="true" className="w-4 h-4" />
+            </Link>
+          </>
+        }
+      />
 
-      <section className="ui-card overflow-hidden">
-        <header className="ui-card-header flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="ui-icon-badge w-9 h-9">
-              <Users aria-hidden="true" className="w-4 h-4" />
-            </div>
-            <h2 className="text-base font-bold text-on-primary-container truncate">
-              {t("workspace.studentListTitle", { count: students.length })}
-            </h2>
-          </div>
-        </header>
+      <Card overflowHidden>
+        <CardHeader
+          as="header"
+          icon={Users}
+          title={t("workspace.studentListTitle", { count: students.length })}
+        />
 
         {error ? (
           <div className="p-5 sm:p-6">
@@ -85,9 +81,9 @@ export function StudentWorkspaceList({
               kind="error"
               action={
                 onRetry && (
-                  <button type="button" onClick={onRetry} className="ui-btn-outlined shrink-0">
+                  <Button variant="outlined" onClick={onRetry} className="shrink-0">
                     {t("auth.retry")}
-                  </button>
+                  </Button>
                 )
               }
             >
@@ -105,12 +101,10 @@ export function StudentWorkspaceList({
                 key={student.id}
                 type="button"
                 onClick={() => onSelectStudent(student.id)}
-                className="w-full px-5 sm:px-6 py-4 text-left bg-transparent hover:bg-surface-hover flex items-center justify-between gap-4 group transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
+                className="ui-list-row group w-full text-left bg-transparent gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container text-xs font-bold inline-flex items-center justify-center shrink-0">
-                    {student.name?.slice(0, 1) || "?"}
-                  </span>
+                  <AvatarBadge name={student.name} size="md" />
                   <div className="min-w-0">
                     <div className="font-semibold text-on-surface group-hover:text-primary truncate transition-colors">
                       {student.name}
@@ -119,17 +113,17 @@ export function StudentWorkspaceList({
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className={student.hasWorkspace ? "ui-chip-success" : "ui-chip-neutral"}>
-                    {student.hasWorkspace && (
-                      <CheckCircle2 aria-hidden="true" className="w-3.5 h-3.5" />
-                    )}
+                  <Chip
+                    variant={student.hasWorkspace ? "success" : "neutral"}
+                    icon={student.hasWorkspace ? CheckCircle2 : undefined}
+                  >
                     <span>
                       {t(
                         student.hasWorkspace ? "workspace.studentSaved" : "workspace.studentEmpty",
                       )}
                     </span>
-                  </span>
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-on-subtle group-hover:bg-primary-container group-hover:text-on-primary-container transition-all shrink-0">
+                  </Chip>
+                  <span className="ui-chevron-indicator">
                     <ChevronRight aria-hidden="true" className="w-4 h-4" />
                   </span>
                 </div>
@@ -138,10 +132,10 @@ export function StudentWorkspaceList({
           </div>
         ) : (
           <div className="p-5 sm:p-6">
-            <p className="ui-empty">{t("admin.empty")}</p>
+            <EmptyState>{t("admin.empty")}</EmptyState>
           </div>
         )}
-      </section>
-    </div>
+      </Card>
+    </PageContainer>
   );
 }

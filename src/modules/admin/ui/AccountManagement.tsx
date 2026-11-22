@@ -1,6 +1,6 @@
 import { AccountProfileFields, AccountRoleField, NewPasswordField } from "@modules/accounts";
 import { useI18n } from "@modules/i18n";
-import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
+import { FeedbackBanner, FormDialog, FormDialogActions } from "@shared/ui";
 import { UserPlus } from "lucide-react";
 
 import { useCreateAccount } from "../hooks/useCreateAccount";
@@ -30,9 +30,9 @@ export function AccountManagement({
           </div>
           <AccountRoleField />
           {error && (
-            <div role="alert" className="ui-banner-danger">
-              {t("admin.error")}
-            </div>
+            <FeedbackBanner kind="error">
+              <span>{t("admin.error")}</span>
+            </FeedbackBanner>
           )}
           <FormDialogActions
             cancelLabel={t("admin.cancel")}

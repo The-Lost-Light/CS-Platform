@@ -1,9 +1,10 @@
 import { useI18n } from "@modules/i18n";
+import { Button, CardHeader, FormField, TextInput } from "@shared/ui";
 import { Plus, Search, type LucideIcon } from "lucide-react";
 
 export function ManagementListHeader({
   title,
-  icon: Icon,
+  icon,
   className,
   disabled,
   onAdd,
@@ -16,24 +17,23 @@ export function ManagementListHeader({
 }) {
   const { t } = useI18n();
   return (
-    <header className={`ui-card-header ${className}`}>
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="ui-icon-badge w-9 h-9">
-          <Icon aria-hidden="true" className="w-4 h-4" />
-        </div>
-        <h2 className="text-base font-bold text-on-primary-container truncate">{title}</h2>
-      </div>
-      <button
-        type="button"
-        disabled={disabled}
-        aria-haspopup="dialog"
-        onClick={onAdd}
-        className="ui-btn-primary px-4 py-2 text-xs sm:text-sm shrink-0"
-      >
-        <Plus aria-hidden="true" className="w-4 h-4" />
-        {t("admin.add")}
-      </button>
-    </header>
+    <CardHeader
+      as="header"
+      icon={icon}
+      title={title}
+      layoutClassName={className}
+      actions={
+        <Button
+          icon={Plus}
+          disabled={disabled}
+          aria-haspopup="dialog"
+          onClick={onAdd}
+          className="px-4 py-2 shrink-0"
+        >
+          {t("admin.add")}
+        </Button>
+      }
+    />
   );
 }
 
@@ -46,21 +46,14 @@ export function ManagementSearch({
 }) {
   const { t } = useI18n();
   return (
-    <label className="ui-field-label">
-      {t("admin.search")}
-      <div className="relative mt-1.5">
-        <Search
-          aria-hidden="true"
-          className="w-4 h-4 text-on-subtle absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-        />
-        <input
-          type="search"
-          className="ui-input pl-10"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </div>
-    </label>
+    <FormField label={t("admin.search")}>
+      <TextInput
+        icon={Search}
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </FormField>
   );
 }
 
@@ -79,24 +72,24 @@ export function ManagementRowActions({
   return (
     <td className="whitespace-nowrap">
       <div className="inline-flex items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant="tonal"
+          size="sm"
           disabled={disabled}
-          className="ui-btn-tonal px-3 py-1.5"
           aria-haspopup="dialog"
           onClick={onEdit}
         >
           {t("admin.edit")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="danger-tonal"
+          size="sm"
           disabled={disabled || deleteDisabledReason !== undefined}
           title={deleteDisabledReason}
-          className="ui-btn-danger-tonal px-3 py-1.5"
           onClick={onDelete}
         >
           {t("admin.delete")}
-        </button>
+        </Button>
       </div>
     </td>
   );

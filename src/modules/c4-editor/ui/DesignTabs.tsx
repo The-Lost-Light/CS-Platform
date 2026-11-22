@@ -1,4 +1,5 @@
 import { useI18n } from "@modules/i18n";
+import { SegmentedControl } from "@shared/ui";
 import { FileText, Network } from "lucide-react";
 
 import type { DesignTab } from "../model/types";
@@ -12,35 +13,29 @@ export function DesignTabs({
 }) {
   const { t } = useI18n();
   return (
-    <div className="ui-pill-group shrink-0" role="tablist" aria-label={t("workspace.tabs.design")}>
-      <button
-        type="button"
-        role="tab"
-        id="design-tab-readme"
-        aria-controls="design-panel-readme"
-        aria-selected={designTab === "readme"}
-        onClick={() => onChangeDesignTab("readme")}
-        className={`ui-pill-item px-4 ${
-          designTab === "readme" ? "ui-pill-item-active" : "ui-pill-item-idle"
-        }`}
-      >
-        <FileText aria-hidden="true" className="w-3.5 h-3.5" />
-        <span>README.md</span>
-      </button>
-      <button
-        type="button"
-        role="tab"
-        id="design-tab-diagram"
-        aria-controls="design-panel-diagram"
-        aria-selected={designTab === "diagram"}
-        onClick={() => onChangeDesignTab("diagram")}
-        className={`ui-pill-item px-4 ${
-          designTab === "diagram" ? "ui-pill-item-active" : "ui-pill-item-idle"
-        }`}
-      >
-        <Network aria-hidden="true" className="w-3.5 h-3.5" />
-        <span>C4 Model</span>
-      </button>
-    </div>
+    <SegmentedControl
+      role="tablist"
+      ariaLabel={t("workspace.tabs.design")}
+      value={designTab}
+      onChange={onChangeDesignTab}
+      className="shrink-0"
+      itemClassName="px-4"
+      options={[
+        {
+          value: "readme",
+          label: "README.md",
+          icon: FileText,
+          id: "design-tab-readme",
+          ariaControls: "design-panel-readme",
+        },
+        {
+          value: "diagram",
+          label: "C4 Model",
+          icon: Network,
+          id: "design-tab-diagram",
+          ariaControls: "design-panel-diagram",
+        },
+      ]}
+    />
   );
 }

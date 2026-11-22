@@ -1,4 +1,5 @@
 import { useI18n } from "@modules/i18n";
+import { Button } from "@shared/ui";
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 
@@ -28,7 +29,7 @@ export function ConfirmDelete({
       tabIndex={-1}
       aria-labelledby={`${id}-heading`}
       aria-describedby={`${id}-description`}
-      className="rounded-xl border border-danger-outline bg-danger-container p-5 text-on-danger-container shadow-m3-1 space-y-3.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-danger"
+      className="ui-alert-dialog"
     >
       <div className="flex items-center gap-2.5">
         <AlertTriangle aria-hidden="true" className="w-5 h-5 shrink-0 text-danger" />
@@ -40,17 +41,17 @@ export function ConfirmDelete({
         {t(account ? "admin.deleteAccountHelp" : "admin.deleteProjectHelp")}
       </p>
       <div className="flex flex-wrap items-center gap-2.5 pt-1">
-        <button
-          type="button"
+        <Button
+          variant="outlined"
           disabled={pending}
           onClick={onCancel}
-          className="ui-btn-outlined bg-surface text-on-surface border-outline"
+          className="bg-surface text-on-surface border-outline"
         >
           {t("admin.cancel")}
-        </button>
-        <button type="button" disabled={pending} onClick={onConfirm} className="ui-btn-danger">
+        </Button>
+        <Button variant="danger" disabled={pending} onClick={onConfirm}>
           {t(pending ? "common.loading" : "admin.delete")}
-        </button>
+        </Button>
       </div>
     </div>
   );

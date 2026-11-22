@@ -1,9 +1,13 @@
 import { X, type LucideIcon } from "lucide-react";
 import { useId, useLayoutEffect, useRef, type ReactNode } from "react";
 
+import { Button, IconButton } from "./Button";
+import { CardHeader } from "./Card";
+import { cn } from "./cn";
+
 export function FormDialog({
   title,
-  icon: Icon,
+  icon,
   headerAction,
   closeLabel,
   onDismiss,
@@ -32,35 +36,41 @@ export function FormDialog({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      className={`ui-dialog fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[calc(100dvh-2rem)] p-0 overflow-hidden open:flex flex-col ${wide ? "max-w-2xl" : "max-w-md"}`}
+      className={cn(
+        "ui-dialog fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[calc(100dvh-2rem)] p-0 overflow-hidden open:flex flex-col",
+        wide ? "max-w-2xl" : "max-w-md",
+      )}
       onCancel={(event) => {
         if (event.target !== event.currentTarget) return;
         event.preventDefault();
         if (!pending) onDismiss();
       }}
     >
-      <header
-        className={`ui-card-header grid items-center gap-2 shrink-0 ${headerAction ? "grid-cols-[minmax(0,1fr)_auto_auto]" : "grid-cols-[minmax(0,1fr)_auto]"}`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="ui-icon-badge w-8 h-8">
-            <Icon aria-hidden="true" className="w-4 h-4" />
-          </span>
-          <h2 id={titleId} className="text-base font-bold text-on-primary-container wrap-anywhere">
-            {title}
-          </h2>
-        </div>
-        {headerAction}
-        <button
-          type="button"
-          aria-label={closeLabel}
-          className="ui-btn-icon w-8 h-8 row-start-1 col-end-[-1]"
-          disabled={pending}
-          onClick={onDismiss}
-        >
-          <X aria-hidden="true" className="w-4 h-4" />
-        </button>
-      </header>
+      <CardHeader
+        as="header"
+        icon={icon}
+        iconSize="sm"
+        title={title}
+        titleId={titleId}
+        truncateTitle={false}
+        titleClassName="wrap-anywhere"
+        layoutClassName={cn(
+          "grid items-center gap-2 shrink-0",
+          headerAction ? "grid-cols-[minmax(0,1fr)_auto_auto]" : "grid-cols-[minmax(0,1fr)_auto]",
+        )}
+        actions={
+          <>
+            {headerAction}
+            <IconButton
+              icon={X}
+              label={closeLabel}
+              className="row-start-1 col-end-[-1]"
+              disabled={pending}
+              onClick={onDismiss}
+            />
+          </>
+        }
+      />
       <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain space-y-4">{children}</div>
     </dialog>
   );
@@ -77,12 +87,10 @@ export function FormDialogActions({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-      <button type="button" className="ui-btn-text-muted" onClick={onDismiss}>
+      <Button variant="ghost" onClick={onDismiss}>
         {cancelLabel}
-      </button>
-      <button type="submit" className="ui-btn-primary">
-        {submitLabel}
-      </button>
+      </Button>
+      <Button type="submit">{submitLabel}</Button>
     </div>
   );
 }

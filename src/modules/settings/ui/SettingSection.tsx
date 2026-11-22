@@ -1,10 +1,11 @@
+import { IconBadge, cn } from "@shared/ui";
 import { Check, ChevronDown, type LucideIcon } from "lucide-react";
 import { useRef, type ReactNode } from "react";
 
 export function SettingSection({
   id,
   panelId,
-  icon: Icon,
+  icon,
   title,
   description,
   valueContent,
@@ -22,12 +23,10 @@ export function SettingSection({
   onToggle: () => void;
   children: ReactNode;
 }) {
-  const pillClass = expanded ? "ui-setting-value-pill-active" : "";
-
   return (
     <section
       aria-labelledby={id}
-      className={`ui-setting-section ${expanded ? "border-primary-outline/70" : ""}`}
+      className={cn("ui-setting-section", expanded && "border-primary-outline/70")}
     >
       <button
         type="button"
@@ -37,9 +36,7 @@ export function SettingSection({
         className="ui-setting-trigger"
       >
         <span className="flex items-center gap-3 min-w-0 min-h-10">
-          <span className="ui-icon-badge-tonal w-9 h-9 rounded-xl">
-            <Icon aria-hidden="true" className="w-4 h-4" />
-          </span>
+          <IconBadge as="span" tone="tonal" icon={icon} className="rounded-xl" />
           <span className="min-w-0">
             <span id={id} className="block text-sm font-semibold text-on-surface leading-snug">
               {title}
@@ -48,12 +45,15 @@ export function SettingSection({
           </span>
         </span>
         <span className="ui-setting-value-cell">
-          <span className={`ui-setting-value-pill ${pillClass}`}>{valueContent}</span>
+          <span className={cn("ui-setting-value-pill", expanded && "ui-setting-value-pill-active")}>
+            {valueContent}
+          </span>
           <ChevronDown
             aria-hidden="true"
-            className={`w-4 h-4 text-on-subtle self-center shrink-0 transition-transform duration-200 ${
-              expanded ? "rotate-180 text-primary" : ""
-            }`}
+            className={cn(
+              "w-4 h-4 text-on-subtle self-center shrink-0 transition-transform duration-200",
+              expanded && "rotate-180 text-primary",
+            )}
           />
         </span>
       </button>
@@ -88,16 +88,12 @@ export function SettingChoiceGroup<T extends string>({
 }) {
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const selectedIndex = options.findIndex((option) => option.value === value);
-  const gridClass =
-    columns === 2
-      ? "grid grid-cols-1 sm:grid-cols-2 gap-2"
-      : "grid grid-cols-1 sm:grid-cols-3 gap-2";
 
   return (
     <div
       role="radiogroup"
       aria-labelledby={labelledBy}
-      className={gridClass}
+      className={cn("grid grid-cols-1 gap-2", columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3")}
       onKeyDown={(event) => {
         if (
           !["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"].includes(event.key)
@@ -134,7 +130,10 @@ export function SettingChoiceGroup<T extends string>({
             aria-checked={selected}
             tabIndex={focusable ? 0 : -1}
             onClick={() => onChange(option.value)}
-            className={`ui-choice-card ${selected ? "ui-choice-card-active" : "ui-choice-card-idle"}`}
+            className={cn(
+              "ui-choice-card",
+              selected ? "ui-choice-card-active" : "ui-choice-card-idle",
+            )}
           >
             {option.leading}
             <span className="min-w-0 flex-1">

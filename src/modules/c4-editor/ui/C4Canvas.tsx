@@ -1,3 +1,4 @@
+import { cn } from "@shared/ui";
 import {
   Handle,
   NodeResizer,
@@ -32,9 +33,10 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
             ? "var(--c4-expandable-border)"
             : "var(--c4-leaf-border)",
       }}
-      className={`rounded-xl border-2 p-4 shadow-m3-1 transition-all flex flex-col justify-between text-on-surface ${
-        selected ? "ring-4 ring-primary/25 shadow-m3-2" : "hover:shadow-m3-2"
-      }`}
+      className={cn(
+        "c4-node-card",
+        selected ? "ring-4 ring-primary/25 shadow-m3-2" : "hover:shadow-m3-2",
+      )}
     >
       <NodeResizer
         isVisible={selected}
@@ -49,11 +51,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
       />
       <div className="min-h-0 overflow-y-auto nowheel">
         <div className="text-sm font-bold text-on-surface wrap-break-word">{data.title}</div>
-        {data.technology && (
-          <div className="mt-1.5 inline-block px-2.5 py-0.5 rounded-lg bg-surface-high text-[11px] font-mono text-primary wrap-break-word">
-            [{data.technology}]
-          </div>
-        )}
+        {data.technology && <div className="c4-node-tech">[{data.technology}]</div>}
         <p className="mt-2 text-xs text-on-muted wrap-break-word whitespace-pre-wrap leading-relaxed">
           {data.description}
         </p>
@@ -69,7 +67,7 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
 
 function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
   return (
-    <div className="c4-boundary-drag h-full w-full rounded-2xl border-2 border-dashed border-primary/70 bg-primary/5 cursor-move">
+    <div className="c4-boundary-drag c4-boundary-card">
       <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
       <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
     </div>

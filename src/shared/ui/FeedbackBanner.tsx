@@ -1,11 +1,13 @@
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { cn } from "./cn";
+
 export function FeedbackBanner({
   kind,
   children,
   action,
-  className = "",
+  className,
 }: {
   kind: "error" | "success";
   children: ReactNode;
@@ -17,7 +19,7 @@ export function FeedbackBanner({
   return (
     <div
       role={error ? "alert" : "status"}
-      className={`${error ? "ui-banner-danger" : "ui-banner-success"} ${className}`.trim()}
+      className={cn(error ? "ui-banner-danger" : "ui-banner-success", className)}
     >
       <div className="flex items-center gap-2">
         <Icon aria-hidden="true" className="w-4 h-4 shrink-0" />

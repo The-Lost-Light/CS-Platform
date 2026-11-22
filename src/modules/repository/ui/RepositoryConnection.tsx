@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
+import { Button, FeedbackBanner, TextInput } from "@shared/ui";
 import { FolderGit2, RefreshCw } from "lucide-react";
 
 import type { useRepository } from "../hooks/useRepository";
@@ -49,18 +49,16 @@ export function RepositoryConnection({
                 {repoUrl}
               </span>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="outlined"
+              icon={RefreshCw}
+              loading={isLoadingRepo}
               disabled={isLoadingRepo}
               onClick={() => void handleLoadRepo(repoUrl)}
-              className="ui-btn-outlined shrink-0"
+              className="shrink-0"
             >
-              <RefreshCw
-                aria-hidden="true"
-                className={`w-4 h-4 ${isLoadingRepo ? "animate-spin" : ""}`}
-              />
               <span>{t("workspace.sync")}</span>
-            </button>
+            </Button>
           </div>
         ) : (
           <p className="text-xs sm:text-sm text-on-muted">{t("workspace.studentNoRepo")}</p>
@@ -73,26 +71,26 @@ export function RepositoryConnection({
           }}
           className="flex flex-col md:flex-row items-stretch md:items-center gap-3"
         >
-          <div className="relative flex-1">
-            <FolderGit2
-              aria-hidden="true"
-              className="w-4 h-4 text-primary absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
-            <input
-              type="text"
-              value={repoUrlInput}
-              onChange={(e) => setRepoUrlInput(e.target.value)}
-              placeholder={t("workspace.repoPlaceholder")}
-              className="ui-input pl-10 pr-4 font-mono"
-            />
-          </div>
-          <button type="submit" disabled={isLoadingRepo} className="ui-btn-primary shrink-0">
-            <RefreshCw
-              aria-hidden="true"
-              className={`w-4 h-4 ${isLoadingRepo ? "animate-spin" : ""}`}
-            />
+          <TextInput
+            icon={FolderGit2}
+            iconTone="primary"
+            mono
+            type="text"
+            value={repoUrlInput}
+            onChange={(e) => setRepoUrlInput(e.target.value)}
+            placeholder={t("workspace.repoPlaceholder")}
+            wrapperClassName="flex-1"
+            className="pr-4"
+          />
+          <Button
+            type="submit"
+            icon={RefreshCw}
+            loading={isLoadingRepo}
+            disabled={isLoadingRepo}
+            className="shrink-0"
+          >
             <span>{t("workspace.sync")}</span>
-          </button>
+          </Button>
         </form>
       )}
 

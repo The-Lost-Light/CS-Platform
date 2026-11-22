@@ -1,8 +1,8 @@
 import { useI18n } from "@modules/i18n";
+import { IconBadge, IconButton, Tooltip } from "@shared/ui";
 import { CircleDot, GitFork, GitPullRequest, SquarePen, Star } from "lucide-react";
 
 import type { RepoBundle } from "../model/repository";
-import { IconTooltip } from "./IconTooltip";
 
 export function RepositoryMetrics({
   repo,
@@ -22,6 +22,13 @@ export function RepositoryMetrics({
   const forksCount = (repo.forks_count ?? 0).toLocaleString(locale);
   const starsCount = (repo.stargazers_count ?? 0).toLocaleString(locale);
 
+  const metrics = [
+    { label: t("github.openIssues"), count: issuesCount, icon: CircleDot, tone: "danger" },
+    { label: t("github.pullRequests"), count: pullsCount, icon: GitPullRequest, tone: "tonal" },
+    { label: t("github.forks"), count: forksCount, icon: GitFork, tone: "secondary" },
+    { label: t("github.stars"), count: starsCount, icon: Star, tone: "warning" },
+  ] as const;
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="flex items-center gap-3.5 min-w-0">
@@ -40,72 +47,31 @@ export function RepositoryMetrics({
             {repo.full_name}
           </a>
           {onEditRepo && (
-            <IconTooltip label={t("github.editRepoUrl")}>
-              <button
-                type="button"
+            <Tooltip label={t("github.editRepoUrl")}>
+              <IconButton
+                variant="surface"
+                icon={SquarePen}
+                label={t("github.editRepoUrl")}
                 onClick={onEditRepo}
-                aria-label={t("github.editRepoUrl")}
-                className="ui-btn-icon w-8 h-8 rounded-lg bg-surface-container hover:bg-primary-container text-on-muted hover:text-on-primary-container border border-outline-subtle shrink-0"
-              >
-                <SquarePen aria-hidden="true" className="w-4 h-4" />
-              </button>
-            </IconTooltip>
+              />
+            </Tooltip>
           )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4 sm:gap-6 shrink-0">
-        <IconTooltip label={t("github.openIssues")}>
-          <div
-            tabIndex={0}
-            aria-label={`${t("github.openIssues")}: ${issuesCount}`}
-            className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <span className="w-8 h-8 rounded-lg bg-danger-container text-on-danger-container inline-flex items-center justify-center shrink-0">
-              <CircleDot aria-hidden="true" className="w-4 h-4" />
-            </span>
-            <span className="text-base font-bold text-on-surface font-mono">{issuesCount}</span>
-          </div>
-        </IconTooltip>
-
-        <IconTooltip label={t("github.pullRequests")}>
-          <div
-            tabIndex={0}
-            aria-label={`${t("github.pullRequests")}: ${pullsCount}`}
-            className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <span className="w-8 h-8 rounded-lg bg-primary-container text-on-primary-container inline-flex items-center justify-center shrink-0">
-              <GitPullRequest aria-hidden="true" className="w-4 h-4" />
-            </span>
-            <span className="text-base font-bold text-on-surface font-mono">{pullsCount}</span>
-          </div>
-        </IconTooltip>
-
-        <IconTooltip label={t("github.forks")}>
-          <div
-            tabIndex={0}
-            aria-label={`${t("github.forks")}: ${forksCount}`}
-            className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <span className="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center justify-center shrink-0">
-              <GitFork aria-hidden="true" className="w-4 h-4" />
-            </span>
-            <span className="text-base font-bold text-on-surface font-mono">{forksCount}</span>
-          </div>
-        </IconTooltip>
-
-        <IconTooltip label={t("github.stars")}>
-          <div
-            tabIndex={0}
-            aria-label={`${t("github.stars")}: ${starsCount}`}
-            className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <span className="w-8 h-8 rounded-lg bg-warning-container text-on-warning-container inline-flex items-center justify-center shrink-0">
-              <Star aria-hidden="true" className="w-4 h-4" />
-            </span>
-            <span className="text-base font-bold text-on-surface font-mono">{starsCount}</span>
-          </div>
-        </IconTooltip>
+        {metrics.map(({ label, count, icon, tone }) => (
+          <Tooltip key={label} label={label}>
+            <div
+              tabIndex={0}
+              aria-label={`${label}: ${count}`}
+              className="inline-flex items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <IconBadge as="span" size="sm" tone={tone} icon={icon} />
+              <span className="text-base font-bold text-on-surface font-mono">{count}</span>
+            </div>
+          </Tooltip>
+        ))}
       </div>
     </div>
   );

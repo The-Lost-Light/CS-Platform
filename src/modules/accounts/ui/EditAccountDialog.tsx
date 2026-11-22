@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
+import { FeedbackBanner, FormDialog, FormDialogActions } from "@shared/ui";
 import { Pencil } from "lucide-react";
 
 import { useAccountUpdate } from "../hooks/useAccountUpdate";
@@ -65,9 +65,9 @@ export function EditAccountDialog({
           {management && <AccountRoleField role={management.role} isSelf={management.isSelf} />}
           <p className="ui-field-help">{t("admin.accountEditHelp")}</p>
           {error && (
-            <div role="alert" className="ui-banner-danger">
-              {t(error)}
-            </div>
+            <FeedbackBanner kind="error">
+              <span>{t(error)}</span>
+            </FeedbackBanner>
           )}
           <FormDialogActions
             cancelLabel={t("admin.cancel")}

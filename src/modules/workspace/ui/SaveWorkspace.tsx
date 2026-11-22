@@ -1,4 +1,5 @@
 import { useI18n } from "@modules/i18n";
+import { Tooltip, cn } from "@shared/ui";
 import { Cloud, CloudAlert, CloudCheck } from "lucide-react";
 
 import { useWorkspaceAutosave, type AutosaveOptions } from "../hooks/useWorkspaceAutosave";
@@ -41,17 +42,22 @@ export function SaveWorkspace(props: AutosaveOptions) {
         ? "bg-surface-container border-outline-subtle text-on-muted"
         : "bg-danger-container border-danger-outline text-on-danger-container";
 
-  const tooltipColor = isError
-    ? "bg-surface-elevated border-danger-outline text-danger"
-    : "bg-surface-elevated border-outline-subtle text-on-surface";
-
   return (
-    <div className="relative inline-flex shrink-0 group">
+    <Tooltip
+      as="div"
+      align="responsive-start"
+      tone={isError ? "danger" : "default"}
+      role={null}
+      label={message}
+    >
       <div
         role={isError ? "alert" : "status"}
         tabIndex={0}
         aria-label={message}
-        className={`inline-flex items-center justify-center w-9.5 h-9.5 rounded-full border transition-colors cursor-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${badgeColor}`}
+        className={cn(
+          "inline-flex items-center justify-center w-9.5 h-9.5 rounded-full border transition-colors cursor-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          badgeColor,
+        )}
       >
         {saved ? (
           <CloudCheck aria-hidden="true" className="w-4.5 h-4.5 shrink-0" />
@@ -64,12 +70,6 @@ export function SaveWorkspace(props: AutosaveOptions) {
         )}
         <span className="sr-only">{message}</span>
       </div>
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-opacity duration-150 absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-full mt-2 z-30 w-max max-w-64 rounded-xl px-3 py-1.5 text-xs font-semibold leading-snug shadow-m3-3 border backdrop-blur-xl ${tooltipColor}`}
-      >
-        {message}
-      </div>
-    </div>
+    </Tooltip>
   );
 }

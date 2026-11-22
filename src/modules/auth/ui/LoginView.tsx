@@ -1,4 +1,5 @@
 import { useI18n } from "@modules/i18n";
+import { Card } from "@shared/ui";
 import { CheckCircle2, Code2 } from "lucide-react";
 
 import type { LoginHandler } from "../hooks/useLoginForm";
@@ -9,7 +10,11 @@ export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
 
   return (
     <div className="min-h-screen bg-canvas text-on-surface flex items-center justify-center p-4 sm:p-6 relative transition-colors">
-      <div className="ui-card shadow-m3-2 w-full max-w-4xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
+      <Card
+        as="div"
+        overflowHidden
+        className="shadow-m3-2 w-full max-w-4xl grid grid-cols-1 md:grid-cols-12"
+      >
         <div className="md:col-span-5 relative overflow-hidden bg-brand-banner text-on-brand-banner p-8 flex flex-col justify-between">
           <div
             aria-hidden="true"
@@ -47,7 +52,7 @@ export function LoginView({ onLogin }: { onLogin: LoginHandler }) {
         <div className="md:col-span-7 p-7 sm:p-10 flex flex-col justify-center bg-surface">
           <LoginForm onLogin={onLogin} />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

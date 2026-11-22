@@ -6,6 +6,7 @@ import {
   type ThemeMode,
   type ThemePalette,
 } from "@modules/theme";
+import { CardHeader, IconBadge, IconButton } from "@shared/ui";
 import {
   ChevronRight,
   Languages,
@@ -132,24 +133,15 @@ export function SettingsDialog({
       }}
     >
       <div className="flex max-h-[min(86vh,46rem)] flex-col">
-        <header className="ui-card-header flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="ui-icon-badge w-9 h-9 rounded-xl">
-              <Settings aria-hidden="true" className="w-4 h-4" />
-            </div>
-            <h2 id={titleId} className="text-base font-bold text-on-primary-container truncate">
-              {t("settings.title")}
-            </h2>
-          </div>
-          <button
-            type="button"
-            aria-label={t("settings.close")}
-            className="ui-btn-icon w-8 h-8 shrink-0"
-            onClick={closeSettings}
-          >
-            <X aria-hidden="true" className="w-4 h-4" />
-          </button>
-        </header>
+        <CardHeader
+          as="header"
+          icon={Settings}
+          iconClassName="rounded-xl"
+          title={t("settings.title")}
+          titleId={titleId}
+          className="shrink-0"
+          actions={<IconButton icon={X} label={t("settings.close")} onClick={closeSettings} />}
+        />
 
         <div className="p-5 sm:p-6 space-y-3 overflow-y-auto">
           {account && (
@@ -160,9 +152,7 @@ export function SettingsDialog({
                 onClick={() => setEditingAccount(true)}
                 className="w-full flex items-center gap-3 p-4 text-left hover:bg-surface-hover cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
               >
-                <span className="ui-icon-badge-tonal w-9 h-9 rounded-xl">
-                  <UserRound aria-hidden="true" className="w-4 h-4" />
-                </span>
+                <IconBadge as="span" tone="tonal" icon={UserRound} className="rounded-xl" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold">{t("settings.account.edit")}</span>
                   <span className="block truncate text-xs text-on-muted mt-0.5">

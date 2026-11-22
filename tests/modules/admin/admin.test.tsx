@@ -172,3 +172,28 @@ test("account editor has a password action in the header and role controls for a
     }
   }
 });
+
+test("only administrators see the Student projects entry for each project on HomeDashboard", () => {
+  const project = PROJECTS[0];
+  for (const role of ["admin", "user"]) {
+    const html = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <SettingsProvider>
+          <HomeDashboard
+            projects={[project]}
+            onOpenProject={() => {}}
+            currentUser={{ name: "Test", studentId: "test@example.com", role }}
+          />
+        </SettingsProvider>
+      </I18nProvider>,
+    );
+    assert.strictEqual(
+      html.includes(`href="/projects/${encodeURIComponent(project.id)}?students=1"`),
+      role === "admin",
+    );
+    assert.strictEqual(html.includes(">Student projects<"), role === "admin");
+    if (role === "admin") {
+      assert.ok(html.indexOf(">Student projects<") < html.indexOf("lucide-chevron-right"));
+    }
+  }
+});

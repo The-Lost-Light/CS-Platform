@@ -125,6 +125,7 @@ function TestC4Diagram({
   nodes = selected ? [...path, selected] : path,
   selectedEdge,
   creating,
+  readOnly,
   contextMenu,
   setSelectedId,
   setEdgeId,
@@ -135,6 +136,7 @@ function TestC4Diagram({
   nodes?: C4Node[];
   selectedEdge?: C4Relationship;
   creating?: boolean;
+  readOnly?: boolean;
   contextMenu?: C4ContextMenu | null;
   setSelectedId?: (id: string) => void;
   setEdgeId?: (id: string) => void;
@@ -150,6 +152,7 @@ function TestC4Diagram({
     onChangeDesignDoc: () => {},
     designTab: "diagram",
     onChangeDesignTab: () => {},
+    readOnly,
   });
   const scope = path.at(-1);
   if (scope && editor.scope?.id !== scope.id) editor.navigate(scope.id);
@@ -576,4 +579,32 @@ test("clicking outside the currently edited node closes the edit inspector while
     </I18nProvider>,
   );
   assert.match(edgeMenuHtml, /role="menu"[\s\S]*>編輯<[\s\S]*>刪除</);
+});
+
+test("read-only C4Diagram hides editing toolbar actions, context menu, and inspector", () => {
+  const node = createC4NodeInScope([], "", "node-1", "System")!;
+  const readOnlyEmptyHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram readOnly />
+    </I18nProvider>,
+  );
+  assert.ok(readOnlyEmptyHtml.includes("C1 · Context"));
+  assert.ok(readOnlyEmptyHtml.includes("Help"));
+  assert.ok(readOnlyEmptyHtml.includes("No elements at this level."));
+  assert.ok(!readOnlyEmptyHtml.includes("Create node</button>"));
+  assert.ok(!readOnlyEmptyHtml.includes(">Undo</button>"));
+  assert.ok(!readOnlyEmptyHtml.includes(">Redo</button>"));
+
+  const readOnlySelectedHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram
+        nodes={[node]}
+        selected={node}
+        contextMenu={{ nodeId: node.id, x: 20, y: 20 }}
+        readOnly
+      />
+    </I18nProvider>,
+  );
+  assert.ok(!readOnlySelectedHtml.includes("<aside"));
+  assert.ok(!readOnlySelectedHtml.includes('role="menu"'));
 });

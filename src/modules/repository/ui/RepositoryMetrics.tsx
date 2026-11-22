@@ -11,7 +11,7 @@ export function RepositoryMetrics({
   openIssuesCount,
   onEditRepo,
 }: Pick<RepoBundle, "repo" | "pulls" | "totalPulls" | "openIssuesCount"> & {
-  onEditRepo: () => void;
+  onEditRepo?: () => void;
 }) {
   const { t, locale } = useI18n();
   const resolvedPullsCount = totalPulls ?? pulls.length;
@@ -39,16 +39,18 @@ export function RepositoryMetrics({
           >
             {repo.full_name}
           </a>
-          <IconTooltip label={t("github.editRepoUrl")}>
-            <button
-              type="button"
-              onClick={onEditRepo}
-              aria-label={t("github.editRepoUrl")}
-              className="ui-btn-icon w-8 h-8 rounded-lg bg-surface-container hover:bg-primary-container text-on-muted hover:text-on-primary-container border border-outline-subtle shrink-0"
-            >
-              <SquarePen aria-hidden="true" className="w-4 h-4" />
-            </button>
-          </IconTooltip>
+          {onEditRepo && (
+            <IconTooltip label={t("github.editRepoUrl")}>
+              <button
+                type="button"
+                onClick={onEditRepo}
+                aria-label={t("github.editRepoUrl")}
+                className="ui-btn-icon w-8 h-8 rounded-lg bg-surface-container hover:bg-primary-container text-on-muted hover:text-on-primary-container border border-outline-subtle shrink-0"
+              >
+                <SquarePen aria-hidden="true" className="w-4 h-4" />
+              </button>
+            </IconTooltip>
+          )}
         </div>
       </div>
 

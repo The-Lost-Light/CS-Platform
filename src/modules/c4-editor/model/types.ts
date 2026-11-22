@@ -11,4 +11,5 @@ export type C4ArchitectProps = {
   onChangeDesignTab: (tab: DesignTab) => void;
   importing?: boolean;
   importRevision?: number;
+  readOnly?: boolean;
 };

@@ -1,5 +1,7 @@
+import { isAdmin } from "@server/access";
 import {
   getWorkspaceRevision,
+  listStudentWorkspaces,
   loadWorkspace,
   readWorkspaceInput,
   saveWorkspace,
@@ -8,10 +10,21 @@ import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
 
 export const GET = defineHandler(async (c) => {
-  const { id: userId } = requireAuth(c);
+  const user = requireAuth(c);
   const projectId = c.req.param("id") ?? "";
   c.header("Cache-Control", "private, no-store");
-  const snapshot = await loadWorkspace(userId, projectId);
+  if (c.req.query("list") === "students") {
+    if (!isAdmin(user)) return c.json({ error: "forbidden" }, 403);
+    const students = await listStudentWorkspaces(projectId);
+    return students ? c.json({ students }) : c.notFound();
+  }
+  const targetUserId = c.req.query("userId");
+  if (targetUserId && targetUserId !== user.id) {
+    if (!isAdmin(user)) return c.json({ error: "forbidden" }, 403);
+    const snapshot = await loadWorkspace(targetUserId, projectId, true);
+    return snapshot ? c.json(snapshot) : c.notFound();
+  }
+  const snapshot = await loadWorkspace(user.id, projectId);
   return snapshot ? c.json(snapshot) : c.notFound();
 });
 

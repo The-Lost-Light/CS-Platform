@@ -3,16 +3,18 @@ import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { SettingsButton } from "@modules/settings";
 import { Link } from "@void/react";
-import { ChevronRight, Code2, FolderGit2, LogOut, ShieldCheck } from "lucide-react";
+import { ChevronRight, Code2, FolderGit2, LogOut, ShieldCheck, Users } from "lucide-react";
 
 export function HomeDashboard({
   projects,
   onOpenProject,
+  onOpenStudentProjects,
   currentUser,
   onLogout,
 }: {
   projects: Project[];
   onOpenProject: (project: Project) => void;
+  onOpenStudentProjects?: (project: Project) => void;
   currentUser: User;
   onLogout?: () => void | Promise<void>;
 }) {
@@ -75,25 +77,46 @@ export function HomeDashboard({
         {projects.length > 0 ? (
           <div className="divide-y divide-outline-subtle">
             {projects.map((proj) => (
-              <button
+              <div
                 key={proj.id}
-                type="button"
-                onClick={() => onOpenProject(proj)}
-                className="w-full px-5 sm:px-6 py-5 text-left bg-transparent hover:bg-surface-hover flex items-center justify-between gap-4 group transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
+                className="px-5 sm:px-6 py-4 hover:bg-surface-hover flex items-center justify-between gap-3 group transition-colors"
               >
-                <div className="flex items-center gap-3.5 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => onOpenProject(proj)}
+                  className="flex-1 min-w-0 py-1 text-left bg-transparent flex items-center gap-3.5 cursor-pointer rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
                   <span className="ui-code-badge">{proj.codeName}</span>
                   <span className="text-base sm:text-lg font-semibold text-on-surface group-hover:text-primary truncate transition-colors">
                     {proj.title}
                   </span>
+                </button>
+                <div className="flex items-center gap-2.5 shrink-0">
+                  {currentUser.role === "admin" && (
+                    <Link
+                      href={`/projects/${encodeURIComponent(proj.id)}?students=1`}
+                      onClick={(event) => {
+                        if (onOpenStudentProjects) {
+                          event.preventDefault();
+                          onOpenStudentProjects(proj);
+                        }
+                      }}
+                      className="ui-btn-tonal px-3.5 py-2 shrink-0"
+                    >
+                      <Users aria-hidden="true" className="w-3.5 h-3.5" />
+                      <span>{t("home.viewStudentProjects")}</span>
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    aria-label={proj.title}
+                    onClick={() => onOpenProject(proj)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-on-subtle group-hover:bg-primary-container group-hover:text-on-primary-container transition-all shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    <ChevronRight aria-hidden="true" className="w-4 h-4" />
+                  </button>
                 </div>
-                <span className="w-8 h-8 rounded-full flex items-center justify-center text-on-subtle group-hover:bg-primary-container group-hover:text-on-primary-container transition-all shrink-0">
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
-                  />
-                </span>
-              </button>
+              </div>
             ))}
           </div>
         ) : (

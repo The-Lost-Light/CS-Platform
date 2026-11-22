@@ -1,9 +1,15 @@
 import { workspaces, workspaceParts } from "@db/schema";
 import { validateC4File } from "@modules/c4-model";
-import type { PersonalWorkspace, WorkspaceSnapshot } from "@modules/workspace";
+import type {
+  PersonalWorkspace,
+  StudentWorkspaceSummary,
+  WorkspaceSnapshot,
+} from "@modules/workspace";
 import { isUniqueViolation } from "@server/errors";
 import { availableProject } from "@server/projects";
 import { db, eq, sql, and } from "void/db";
+
+import { userTable } from "../../.void/better-auth-schema";
 
 const workspaceKey = (userId: string, projectId: string) =>
   and(eq(workspaces.userId, userId), eq(workspaces.projectId, projectId));
@@ -11,8 +17,15 @@ const workspaceKey = (userId: string, projectId: string) =>
 export async function loadWorkspace(
   userId: string,
   projectId: string,
+  requireStudent = false,
 ): Promise<WorkspaceSnapshot | null> {
-  if (!(await db.get(sql`SELECT 1 WHERE ${availableProject(projectId)}`))) return null;
+  const available = requireStudent
+    ? sql`${availableProject(projectId)} AND EXISTS (
+        SELECT 1 FROM ${userTable}
+        WHERE ${userTable.id} = ${userId} AND COALESCE(${userTable.role}, 'user') != 'admin'
+      )`
+    : availableProject(projectId);
+  if (!(await db.get(sql`SELECT 1 WHERE ${available}`))) return null;
   const rows = await db
     .select({ revision: workspaces.revision, content: workspaceParts.content })
     .from(workspaces)
@@ -24,6 +37,36 @@ export async function loadWorkspace(
     : null;
   if (draft) draft.model = validateC4File(draft.model);
   return { accountId: userId, revision: rows[0]?.revision ?? null, draft };
+}
+
+export async function listStudentWorkspaces(
+  projectId: string,
+): Promise<StudentWorkspaceSummary[] | null> {
+  if (!(await db.get(sql`SELECT 1 WHERE ${availableProject(projectId)}`))) return null;
+  const rows = await db
+    .select({
+      id: userTable.id,
+      name: userTable.name,
+      email: userTable.email,
+      revision: workspaces.revision,
+    })
+    .from(userTable)
+    .leftJoin(
+      workspaces,
+      and(eq(workspaces.userId, userTable.id), eq(workspaces.projectId, projectId)),
+    )
+    .where(sql`COALESCE(${userTable.role}, 'user') != 'admin'`)
+    .orderBy(
+      sql`CASE WHEN ${workspaces.revision} IS NOT NULL THEN 0 ELSE 1 END`,
+      userTable.name,
+      userTable.email,
+    );
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    hasWorkspace: Boolean(row.revision),
+  }));
 }
 
 export function getWorkspaceRevision(userId: string, projectId: string) {

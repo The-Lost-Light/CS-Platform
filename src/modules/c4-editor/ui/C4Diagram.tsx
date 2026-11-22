@@ -10,6 +10,7 @@ const levelNames = ["Container", "Component", "Code"] as const;
 export function C4Diagram({ editor }: { editor: C4Editor }) {
   const {
     t,
+    readOnly,
     selected,
     selectedEdge,
     setSelectedId,
@@ -133,40 +134,44 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
             </nav>
           </div>
           <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
-            <button
-              type="button"
-              aria-pressed={drawing.creating}
-              onClick={() => {
-                setContextMenu(null);
-                drawing.toggleCreating();
-              }}
-              className={
-                drawing.creating
-                  ? "ui-btn-primary px-3 py-1.5 text-xs"
-                  : "ui-btn-outlined px-3 py-1.5 text-xs"
-              }
-            >
-              <Plus aria-hidden="true" className="w-3.5 h-3.5" />
-              {t("c4.createNode")}
-            </button>
-            <button
-              type="button"
-              disabled={!canUndo}
-              onClick={() => stepHistory("undo")}
-              className="ui-btn-outlined px-3 py-1.5 text-xs"
-            >
-              <Undo2 aria-hidden="true" className="w-3.5 h-3.5" />
-              {t("c4.undo")}
-            </button>
-            <button
-              type="button"
-              disabled={!canRedo}
-              onClick={() => stepHistory("redo")}
-              className="ui-btn-outlined px-3 py-1.5 text-xs"
-            >
-              <Redo2 aria-hidden="true" className="w-3.5 h-3.5" />
-              {t("c4.redo")}
-            </button>
+            {!readOnly && (
+              <>
+                <button
+                  type="button"
+                  aria-pressed={drawing.creating}
+                  onClick={() => {
+                    setContextMenu(null);
+                    drawing.toggleCreating();
+                  }}
+                  className={
+                    drawing.creating
+                      ? "ui-btn-primary px-3 py-1.5 text-xs"
+                      : "ui-btn-outlined px-3 py-1.5 text-xs"
+                  }
+                >
+                  <Plus aria-hidden="true" className="w-3.5 h-3.5" />
+                  {t("c4.createNode")}
+                </button>
+                <button
+                  type="button"
+                  disabled={!canUndo}
+                  onClick={() => stepHistory("undo")}
+                  className="ui-btn-outlined px-3 py-1.5 text-xs"
+                >
+                  <Undo2 aria-hidden="true" className="w-3.5 h-3.5" />
+                  {t("c4.undo")}
+                </button>
+                <button
+                  type="button"
+                  disabled={!canRedo}
+                  onClick={() => stepHistory("redo")}
+                  className="ui-btn-outlined px-3 py-1.5 text-xs"
+                >
+                  <Redo2 aria-hidden="true" className="w-3.5 h-3.5" />
+                  {t("c4.redo")}
+                </button>
+              </>
+            )}
             <details ref={helpRef} className="relative group">
               <summary className="ui-btn-outlined bg-surface text-primary border-primary-outline px-3 py-1.5 text-xs list-none [&::-webkit-details-marker]:hidden">
                 <HelpCircle aria-hidden="true" className="w-3.5 h-3.5" />
@@ -206,14 +211,15 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               overscrollBehavior: "contain",
               position: "relative",
             }}
-            className={drawing.creating ? "cursor-crosshair" : undefined}
+            className={!readOnly && drawing.creating ? "cursor-crosshair" : undefined}
             onContextMenu={(event) => event.preventDefault()}
             onPointerDownCapture={(event) => {
+              if (readOnly) return;
               beginEditGroup();
               drawing.startDrawing(event);
             }}
-            onPointerMove={drawing.previewDrawing}
-            onPointerUp={drawing.finishDrawing}
+            onPointerMove={readOnly ? undefined : drawing.previewDrawing}
+            onPointerUp={readOnly ? undefined : drawing.finishDrawing}
             onLostPointerCapture={drawing.abortDrawing}
             onPointerCancel={drawing.abortDrawing}
             onMouseDownCapture={(event) => {
@@ -235,16 +241,19 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               selectNodesOnDrag={false}
               nodesFocusable={false}
               edgesFocusable={false}
+              nodesDraggable={!readOnly}
+              nodesConnectable={!readOnly}
               fitView
               onInit={(instance) => {
                 flowInstance.current = instance;
               }}
-              panOnDrag={drawing.creating ? [1] : [0, 1]}
+              panOnDrag={!readOnly && drawing.creating ? [1] : [0, 1]}
               panActivationKeyCode={null}
               minZoom={0.15}
               maxZoom={2}
               onNodeClick={(_, node) => {
                 setContextMenu(null);
+                if (readOnly) return;
                 dismissInspector(node.type === "boundary" ? undefined : { nodeId: node.id });
               }}
               onNodeDoubleClick={(_, node) => {
@@ -252,7 +261,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                 if (node.type !== "boundary") navigate(node.id);
               }}
               onNodeContextMenu={(event, node) => {
-                if (node.type === "boundary") {
+                if (readOnly || node.type === "boundary") {
                   event.preventDefault();
                   event.stopPropagation();
                   setContextMenu(null);
@@ -275,16 +284,25 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               onMoveStart={() => setContextMenu(null)}
               onEdgeClick={(_, edge) => {
                 setContextMenu(null);
+                if (readOnly) return;
                 dismissInspector({ edgeId: edge.id });
               }}
-              onEdgeContextMenu={(event, edge) => openContextMenu(event, { edgeId: edge.id })}
+              onEdgeContextMenu={(event, edge) => {
+                if (readOnly) {
+                  event.preventDefault();
+                  return;
+                }
+                openContextMenu(event, { edgeId: edge.id });
+              }}
               onNodesChange={updateLayout}
-              onDelete={({ nodes, edges }) =>
-                remove(
-                  nodes.map((node) => node.id),
-                  edges.map((edge) => edge.id),
-                )
-              }
+              onDelete={({ nodes, edges }) => {
+                if (!readOnly) {
+                  remove(
+                    nodes.map((node) => node.id),
+                    edges.map((edge) => edge.id),
+                  );
+                }
+              }}
               isValidConnection={canConnect}
               onConnect={connect}
             >
@@ -292,7 +310,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               <Controls />
               <MiniMap nodeColor="var(--c4-node-bg)" pannable zoomable />
             </C4Canvas>
-            {drawing.preview && (
+            {!readOnly && drawing.preview && (
               <div
                 aria-hidden="true"
                 style={{
@@ -308,7 +326,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               />
             )}
           </div>
-          {contextMenu && (
+          {!readOnly && contextMenu && (
             <div
               ref={menuRef}
               role="menu"
@@ -347,11 +365,11 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               </button>
             </div>
           )}
-          <C4Inspector editor={editor} />
+          {!readOnly && <C4Inspector editor={editor} />}
         </div>
         {!visible.length && (
           <p className="px-5 py-3.5 text-xs sm:text-sm font-medium text-on-muted bg-surface-sunken border-t border-outline-subtle">
-            {t("c4.emptyLevel")}
+            {t(readOnly ? "c4.emptyLevelReadOnly" : "c4.emptyLevel")}
           </p>
         )}
       </div>

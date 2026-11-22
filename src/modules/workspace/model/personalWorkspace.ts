@@ -11,3 +11,10 @@ export interface WorkspaceSnapshot {
   revision: string | null;
   draft: PersonalWorkspace | null;
 }
+
+export interface StudentWorkspaceSummary {
+  id: string;
+  name: string;
+  email: string;
+  hasWorkspace: boolean;
+}

@@ -7,11 +7,14 @@ import { RepositoryMetrics } from "./RepositoryMetrics";
 
 export function RepositoryConnection({
   repository,
+  readOnly = false,
 }: {
   repository: ReturnType<typeof useRepository>;
+  readOnly?: boolean;
 }) {
   const { t } = useI18n();
   const {
+    repoUrl,
     repoUrlInput,
     setRepoUrlInput,
     repoBundle,
@@ -32,10 +35,35 @@ export function RepositoryConnection({
             pulls={repoBundle.pulls}
             totalPulls={repoBundle.totalPulls}
             openIssuesCount={repoBundle.openIssuesCount}
-            onEditRepo={startEditingRepo}
+            onEditRepo={readOnly ? undefined : startEditingRepo}
           />
           <RepositoryLanguages languages={repoBundle.languages} />
         </>
+      ) : readOnly ? (
+        repoUrl.trim() ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <FolderGit2 aria-hidden="true" className="w-4 h-4 text-primary shrink-0" />
+              <span className="font-mono text-xs sm:text-sm text-on-surface truncate">
+                {repoUrl}
+              </span>
+            </div>
+            <button
+              type="button"
+              disabled={isLoadingRepo}
+              onClick={() => void handleLoadRepo(repoUrl)}
+              className="ui-btn-outlined shrink-0"
+            >
+              <RefreshCw
+                aria-hidden="true"
+                className={`w-4 h-4 ${isLoadingRepo ? "animate-spin" : ""}`}
+              />
+              <span>{t("workspace.sync")}</span>
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs sm:text-sm text-on-muted">{t("workspace.studentNoRepo")}</p>
+        )
       ) : (
         <form
           onSubmit={(e) => {

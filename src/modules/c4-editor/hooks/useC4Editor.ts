@@ -32,6 +32,7 @@ export function useC4Editor({
   dispatchModel,
   importing = false,
   importRevision = 0,
+  readOnly = false,
 }: C4ArchitectProps) {
   const { t } = useI18n();
   const { nodes, relationships } = history.present;
@@ -40,10 +41,11 @@ export function useC4Editor({
     editGroup.current = Symbol();
   }
   function edit(apply: (graph: C4Graph) => C4Graph, group?: symbol) {
+    if (readOnly) return;
     dispatchModel({ type: "edit", apply, group });
   }
   const [readmeMode, setReadmeMode] = useState<"reading" | "source">(
-    designDoc ? "reading" : "source",
+    designDoc || readOnly ? "reading" : "source",
   );
   const [view, setView] = useState({
     revision: importRevision,
@@ -94,6 +96,7 @@ export function useC4Editor({
     position: { x: number; y: number },
     size?: { width: number; height: number },
   ) => {
+    if (readOnly) return;
     const node = createC4NodeInScope(
       nodes,
       scope?.id || "",
@@ -126,7 +129,7 @@ export function useC4Editor({
   };
   function stepHistory(type: "undo" | "redo") {
     const target = (type === "undo" ? history.past : history.future).at(-1);
-    if (!target || importing) return;
+    if (!target || importing || readOnly) return;
     drawing.cancelDrawing();
     const patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId" | "contextMenu">> = {
       contextMenu: null,
@@ -149,6 +152,7 @@ export function useC4Editor({
     );
   };
   const remove = (nodeIds: string[], edgeIds: string[] = []) => {
+    if (readOnly) return;
     updateView({ selectedId: "", edgeId: "", contextMenu: null });
     edit((graph) => removeC4Elements(graph, nodeIds, edgeIds));
   };
@@ -162,6 +166,7 @@ export function useC4Editor({
     updateView({ edgeId: id, selectedId: "", contextMenu: null });
   }
   function updateLayout(changes: NodeChangeset<CanvasNode>) {
+    if (readOnly) return;
     const resizing = changes.getByType("dimensions").some((change) => change.resizing);
     edit(
       (graph) => ({
@@ -183,12 +188,14 @@ export function useC4Editor({
     );
   }
   function canConnect({ source, target }: Pick<Connection, "source" | "target">) {
+    if (readOnly) return false;
     return (
       source !== target &&
       !relationships.some((edge) => edge.source === source && edge.target === target)
     );
   }
   function connect({ source, target }: Connection) {
+    if (readOnly) return;
     const edge = { id: crypto.randomUUID(), source, target, label: t("c4.uses"), technology: "" };
     edit((graph) => ({ ...graph, relationships: [...graph.relationships, edge] }));
     updateView({ selectedId: "", edgeId: "", contextMenu: null });
@@ -204,14 +211,15 @@ export function useC4Editor({
     showTechnology,
   });
   return {
+    readOnly,
     selectedSourceLabel:
       selectedEdge && nodes.find((node) => node.id === selectedEdge.source)?.label,
     selectedTargetLabel:
       selectedEdge && nodes.find((node) => node.id === selectedEdge.target)?.label,
     updateEdge,
     beginEditGroup,
-    canUndo: !importing && history.past.length > 0,
-    canRedo: !importing && history.future.length > 0,
+    canUndo: !readOnly && !importing && history.past.length > 0,
+    canRedo: !readOnly && !importing && history.future.length > 0,
     stepHistory,
     canConnect,
     connect,

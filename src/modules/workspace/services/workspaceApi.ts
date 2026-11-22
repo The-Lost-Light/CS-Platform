@@ -1,9 +1,19 @@
 import { isRecord } from "@shared/isRecord";
 
-import type { PersonalWorkspace, WorkspaceSnapshot } from "../model/personalWorkspace";
+import type {
+  PersonalWorkspace,
+  StudentWorkspaceSummary,
+  WorkspaceSnapshot,
+} from "../model/personalWorkspace";
 
-export async function loadSnapshot(projectId: string, accountId: string, signal: AbortSignal) {
-  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/workspace`, {
+export async function loadSnapshot(
+  projectId: string,
+  accountId: string,
+  signal: AbortSignal,
+  forStudent = false,
+) {
+  const query = forStudent ? `?userId=${encodeURIComponent(accountId)}` : "";
+  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/workspace${query}`, {
     cache: "no-store",
     signal,
   });
@@ -11,6 +21,19 @@ export async function loadSnapshot(projectId: string, accountId: string, signal:
   const snapshot: WorkspaceSnapshot = await response.json();
   if (snapshot.accountId !== accountId) throw new Error("Session changed");
   return snapshot;
+}
+
+export async function loadStudentWorkspaces(
+  projectId: string,
+  signal: AbortSignal,
+): Promise<StudentWorkspaceSummary[]> {
+  const response = await fetch(
+    `/api/projects/${encodeURIComponent(projectId)}/workspace?list=students`,
+    { cache: "no-store", signal },
+  );
+  if (!response.ok) throw new Error("Load failed");
+  const data: { students: StudentWorkspaceSummary[] } = await response.json();
+  return data.students;
 }
 
 export type SaveError =

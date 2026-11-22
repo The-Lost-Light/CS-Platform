@@ -9,7 +9,7 @@ import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
 import { Link } from "@void/react";
-import { Compass, FileText, FolderGit2, GitBranch, X } from "lucide-react";
+import { Compass, Eye, FileText, FolderGit2, GitBranch, X } from "lucide-react";
 
 import { useProjectWorkspace, type WorkspaceTab } from "../hooks/useProjectWorkspace";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
@@ -23,11 +23,23 @@ export function ProjectWorkspace({
   snapshot,
   initialActiveTab,
   initialDesignTab,
+  readOnly = false,
+  studentName,
+  closeHref,
+  onClose,
+  onActiveTabChange,
+  onDesignTabChange,
 }: {
   project: Project;
   snapshot: WorkspaceSnapshot;
   initialActiveTab?: WorkspaceTab;
   initialDesignTab?: DesignTab;
+  readOnly?: boolean;
+  studentName?: string;
+  closeHref?: string;
+  onClose?: () => void;
+  onActiveTabChange?: (tab: WorkspaceTab) => void;
+  onDesignTabChange?: (tab: DesignTab) => void;
 }) {
   const { t } = useI18n();
   const {
@@ -41,11 +53,19 @@ export function ProjectWorkspace({
     setDesignTab,
   } = useProjectWorkspace(snapshot, undefined, initialActiveTab, initialDesignTab);
   const { history, dispatchModel, designDoc, setDesignDoc } = draft;
+  function handleActiveTabChange(tab: WorkspaceTab) {
+    setActiveTab(tab);
+    onActiveTabChange?.(tab);
+  }
+  function handleDesignTabChange(tab: DesignTab) {
+    setDesignTab(tab);
+    onDesignTabChange?.(tab);
+  }
   const c4File = useC4ModelFile({
     nodes: history.present.nodes,
     relationships: history.present.relationships,
     dispatchModel,
-    onChangeDesignTab: setDesignTab,
+    onChangeDesignTab: handleDesignTabChange,
   });
 
   return (
@@ -56,28 +76,36 @@ export function ProjectWorkspace({
             <div className="ui-icon-badge w-11 h-11 rounded-xl">
               <FolderGit2 aria-hidden="true" className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="ui-code-badge">{project.codeName}</span>
-              <h1
-                title={project.title}
-                className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface truncate min-w-0"
-              >
-                {project.title}
-              </h1>
-            </div>
+            <h1
+              title={project.title}
+              className="text-xl sm:text-2xl font-bold tracking-tight text-on-surface truncate min-w-0"
+            >
+              {project.title}
+            </h1>
           </div>
 
           <div className="flex shrink-0 max-w-full flex-wrap items-center gap-2.5 self-start lg:self-auto">
-            <SaveWorkspace
-              projectId={project.id}
-              accountId={snapshot.accountId}
-              revision={revision}
-              onSaved={setRevision}
-              designDoc={designDoc}
-              nodes={history.present.nodes}
-              relationships={history.present.relationships}
-              repoUrl={repository.repoUrl}
-            />
+            {readOnly ? (
+              <span className="ui-chip-secondary shrink-0">
+                <Eye aria-hidden="true" className="w-3.5 h-3.5" />
+                <span>
+                  {studentName
+                    ? t("workspace.viewingStudent", { name: studentName })
+                    : t("workspace.readOnlyBadge")}
+                </span>
+              </span>
+            ) : (
+              <SaveWorkspace
+                projectId={project.id}
+                accountId={snapshot.accountId}
+                revision={revision}
+                onSaved={setRevision}
+                designDoc={designDoc}
+                nodes={history.present.nodes}
+                relationships={history.present.relationships}
+                repoUrl={repository.repoUrl}
+              />
+            )}
             <div
               role="tablist"
               aria-label={t("workspace.tabs.label")}
@@ -97,7 +125,7 @@ export function ProjectWorkspace({
                   id={`workspace-tab-${tab}`}
                   aria-controls={`workspace-panel-${tab}`}
                   aria-selected={activeTab === tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleActiveTabChange(tab)}
                   className={`ui-pill-item px-3 sm:px-4 ${
                     activeTab === tab ? "ui-pill-item-active" : "ui-pill-item-idle"
                   }`}
@@ -108,9 +136,19 @@ export function ProjectWorkspace({
               ))}
             </div>
             <Link
-              href="/"
-              aria-label={t("common.backHome")}
-              title={t("common.backHome")}
+              href={closeHref ?? "/"}
+              onClick={
+                onClose
+                  ? (event) => {
+                      event.preventDefault();
+                      onClose();
+                    }
+                  : undefined
+              }
+              aria-label={t(
+                onClose || closeHref ? "workspace.backToStudentList" : "common.backHome",
+              )}
+              title={t(onClose || closeHref ? "workspace.backToStudentList" : "common.backHome")}
               className="ui-btn-icon w-8 h-8 shrink-0"
             >
               <X aria-hidden="true" className="w-4 h-4" />
@@ -120,12 +158,12 @@ export function ProjectWorkspace({
 
         {activeTab === "design" && (
           <div className={`${toolbarRowClass} flex flex-wrap items-center justify-between gap-3`}>
-            <DesignTabs designTab={designTab} onChangeDesignTab={setDesignTab} />
-            {designTab === "diagram" && <C4FileActions file={c4File} />}
+            <DesignTabs designTab={designTab} onChangeDesignTab={handleDesignTabChange} />
+            {designTab === "diagram" && <C4FileActions file={c4File} readOnly={readOnly} />}
           </div>
         )}
         <div className={toolbarRowClass} hidden={activeTab !== "github"}>
-          <RepositoryConnection repository={repository} />
+          <RepositoryConnection repository={repository} readOnly={readOnly} />
         </div>
       </section>
 
@@ -152,9 +190,10 @@ export function ProjectWorkspace({
           designDoc={designDoc}
           onChangeDesignDoc={setDesignDoc}
           designTab={designTab}
-          onChangeDesignTab={setDesignTab}
+          onChangeDesignTab={handleDesignTabChange}
           importing={c4File.importing}
           importRevision={c4File.importRevision}
+          readOnly={readOnly}
         />
       </div>
       <div

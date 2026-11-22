@@ -9,11 +9,13 @@ export function DesignDocument({
   onChangeDesignDoc,
   readmeMode,
   setReadmeMode,
+  readOnly = false,
 }: {
   designDoc: string;
   onChangeDesignDoc: (doc: string) => void;
   readmeMode: "reading" | "source";
   setReadmeMode: Dispatch<SetStateAction<"reading" | "source">>;
+  readOnly?: boolean;
 }) {
   const { t } = useI18n();
   return (
@@ -50,10 +52,15 @@ export function DesignDocument({
           <textarea
             aria-label={t("c4.designDoc")}
             rows={22}
+            readOnly={readOnly}
             className="ui-input font-mono"
             value={designDoc}
-            onChange={(event) => onChangeDesignDoc(event.target.value)}
+            onChange={(event) => {
+              if (!readOnly) onChangeDesignDoc(event.target.value);
+            }}
           />
+        ) : readOnly && !designDoc.trim() ? (
+          <p className="ui-empty">{t("workspace.studentNoReadme")}</p>
         ) : (
           <article className="ui-markdown">
             <Markdown remarkPlugins={[remarkGfm]}>{designDoc}</Markdown>

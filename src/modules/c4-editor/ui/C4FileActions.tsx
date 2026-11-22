@@ -6,8 +6,10 @@ import type { C4ModelFile } from "../hooks/useC4ModelFile";
 
 export function C4FileActions({
   file,
+  readOnly = false,
 }: {
   file: Pick<C4ModelFile, "importing" | "fileStatus" | "exportModel" | "importModel">;
+  readOnly?: boolean;
 }) {
   const { t } = useI18n();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -32,16 +34,18 @@ export function C4FileActions({
           <span>{t(`c4.${fileStatus}`)}</span>
         </div>
       )}
-      <button
-        type="button"
-        disabled={importing}
-        title={t("c4.fileHelp")}
-        onClick={() => fileInput.current?.click()}
-        className="ui-btn-tonal border border-primary-outline/70 px-3 py-1.5 text-xs"
-      >
-        <Upload aria-hidden="true" className="w-3.5 h-3.5" />
-        <span>{t(importing ? "c4.importing" : "c4.importModel")}</span>
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          disabled={importing}
+          title={t("c4.fileHelp")}
+          onClick={() => fileInput.current?.click()}
+          className="ui-btn-tonal border border-primary-outline/70 px-3 py-1.5 text-xs"
+        >
+          <Upload aria-hidden="true" className="w-3.5 h-3.5" />
+          <span>{t(importing ? "c4.importing" : "c4.importModel")}</span>
+        </button>
+      )}
       <button
         type="button"
         disabled={importing}
@@ -51,18 +55,20 @@ export function C4FileActions({
         <Download aria-hidden="true" className="w-3.5 h-3.5" />
         <span>{t("c4.exportModel")}</span>
       </button>
-      <input
-        ref={fileInput}
-        type="file"
-        accept=".json,application/json"
-        aria-label={t("c4.importModel")}
-        className="hidden"
-        onChange={(event) => {
-          const selectedFile = event.target.files?.[0];
-          event.target.value = "";
-          if (selectedFile) void importModel(selectedFile);
-        }}
-      />
+      {!readOnly && (
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".json,application/json"
+          aria-label={t("c4.importModel")}
+          className="hidden"
+          onChange={(event) => {
+            const selectedFile = event.target.files?.[0];
+            event.target.value = "";
+            if (selectedFile) void importModel(selectedFile);
+          }}
+        />
+      )}
     </div>
   );
 }

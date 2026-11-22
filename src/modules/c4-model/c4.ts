@@ -1,4 +1,5 @@
-export type C4Kind = "person" | "system" | "container" | "component" | "code";
+export const C4_KINDS = ["person", "system", "container", "component", "code"] as const;
+export type C4Kind = (typeof C4_KINDS)[number];
 export interface C4Node {
   id: string;
   label: string;
@@ -21,6 +22,9 @@ export interface C4Relationship {
   technology: string;
 }
 export const C4_MAX_LEVELS = 4;
+export const BOUNDARY_ID = "__c4_boundary__";
+const DEFAULT_NODE_WIDTH = 280;
+const DEFAULT_NODE_HEIGHT = 230;
 
 export const SCOPE_OFFSET = { x: 40, y: 70 };
 
@@ -28,8 +32,8 @@ export function c4NodeBounds(node: C4Node) {
   return {
     x: node.x + (node.parentId ? SCOPE_OFFSET.x : 0),
     y: node.y + (node.parentId ? SCOPE_OFFSET.y : 0),
-    width: node.width ?? 280,
-    height: node.height ?? 230,
+    width: node.width ?? DEFAULT_NODE_WIDTH,
+    height: node.height ?? DEFAULT_NODE_HEIGHT,
   };
 }
 
@@ -37,8 +41,14 @@ function defaultBoundary(children: C4Node[]) {
   return {
     x: -40,
     y: -70,
-    width: Math.max(600, ...children.map((node) => node.x + (node.width ?? 280) + 80)),
-    height: Math.max(360, ...children.map((node) => node.y + (node.height ?? 230) + 110)),
+    width: Math.max(
+      600,
+      ...children.map((node) => node.x + (node.width ?? DEFAULT_NODE_WIDTH) + 80),
+    ),
+    height: Math.max(
+      360,
+      ...children.map((node) => node.y + (node.height ?? DEFAULT_NODE_HEIGHT) + 110),
+    ),
   };
 }
 
@@ -86,7 +96,7 @@ export function createC4NodeInScope(
     y:
       position?.y ??
       (siblings.length
-        ? Math.max(...siblings.map((node) => node.y + (node.height ?? 230))) + 50
+        ? Math.max(...siblings.map((node) => node.y + (node.height ?? DEFAULT_NODE_HEIGHT))) + 50
         : 0),
   };
 }

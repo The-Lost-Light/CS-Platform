@@ -8,6 +8,7 @@ export {
   overlapsC4Boundary,
   removeC4Nodes,
   SCOPE_OFFSET,
+  BOUNDARY_ID,
 } from "./c4";
 export {
   type C4File,

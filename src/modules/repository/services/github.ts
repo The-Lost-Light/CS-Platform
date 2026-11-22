@@ -12,20 +12,28 @@ import type {
 
 const commitDetailsCache = new Map<string, RepoCommitDetails>();
 
-function getCommitCacheKey(rawUrl: string, sha: string): string | null {
-  const parsed = parseGitHubRepoUrl(rawUrl);
-  const trimmedSha = sha.trim();
-  if (!parsed || !trimmedSha) return null;
-  return `${parsed.fullKey.toLowerCase()}:${trimmedSha}`;
+export function getCommitCacheKey(fullKey: string, sha: string): string {
+  return `${fullKey.toLowerCase()}:${sha}`;
 }
 
 export function getCachedCommitDetails(rawUrl: string, sha: string): RepoCommitDetails | undefined {
-  const key = getCommitCacheKey(rawUrl, sha);
-  return key ? commitDetailsCache.get(key) : undefined;
+  const repo = parseGitHubRepoUrl(rawUrl);
+  return repo ? commitDetailsCache.get(getCommitCacheKey(repo.fullKey, sha.trim())) : undefined;
 }
 
 export function clearCommitDetailsCache(): void {
   commitDetailsCache.clear();
+}
+
+function repositoryParams(rawUrl: string, query: Record<string, string> = {}) {
+  const parsed = parseGitHubRepoUrl(rawUrl);
+  if (!parsed) throw new Error("github.errors.invalidUrl");
+  return new URLSearchParams({ repo: parsed.fullKey, ...query });
+}
+
+function pageParam(page: number) {
+  if (!Number.isInteger(page) || page < 1) throw new Error("github.errors.invalidUrl");
+  return String(page);
 }
 
 async function requestRepositoryJson<T>(params: URLSearchParams): Promise<T> {
@@ -43,9 +51,7 @@ export async function fetchGitHubProjectBundle(
   rawUrl: string,
   branch?: string,
 ): Promise<RepoBundle> {
-  const parsed = parseGitHubRepoUrl(rawUrl);
-  if (!parsed) throw new Error("github.errors.invalidUrl");
-  const params = new URLSearchParams({ repo: parsed.fullKey });
+  const params = repositoryParams(rawUrl);
   if (branch !== undefined) params.set("branch", branch);
   return requestRepositoryJson<RepoBundle>(params);
 }
@@ -54,14 +60,9 @@ export async function fetchGitHubBranchSnapshot(
   rawUrl: string,
   branch: string,
 ): Promise<RepoBranchSnapshot> {
-  const parsed = parseGitHubRepoUrl(rawUrl);
   const trimmedBranch = branch.trim();
-  if (!parsed || !trimmedBranch) throw new Error("github.errors.invalidUrl");
-  const params = new URLSearchParams({
-    repo: parsed.fullKey,
-    branch: trimmedBranch,
-    scope: "branch",
-  });
+  if (!trimmedBranch) throw new Error("github.errors.invalidUrl");
+  const params = repositoryParams(rawUrl, { branch: trimmedBranch, scope: "branch" });
   return requestRepositoryJson<RepoBranchSnapshot>(params);
 }
 
@@ -69,15 +70,7 @@ export async function fetchGitHubBranchesPage(
   rawUrl: string,
   page: number,
 ): Promise<RepoBranchesPage> {
-  const parsed = parseGitHubRepoUrl(rawUrl);
-  if (!parsed || !Number.isInteger(page) || page < 1) {
-    throw new Error("github.errors.invalidUrl");
-  }
-  const params = new URLSearchParams({
-    repo: parsed.fullKey,
-    scope: "branches",
-    page: String(page),
-  });
+  const params = repositoryParams(rawUrl, { scope: "branches", page: pageParam(page) });
   return requestRepositoryJson<RepoBranchesPage>(params);
 }
 
@@ -86,15 +79,7 @@ export async function fetchGitHubCommitsPage(
   branch: string,
   page: number,
 ): Promise<RepoCommitsPage> {
-  const parsed = parseGitHubRepoUrl(rawUrl);
-  if (!parsed || !Number.isInteger(page) || page < 1) {
-    throw new Error("github.errors.invalidUrl");
-  }
-  const params = new URLSearchParams({
-    repo: parsed.fullKey,
-    branch,
-    page: String(page),
-  });
+  const params = repositoryParams(rawUrl, { branch, page: pageParam(page) });
   return requestRepositoryJson<RepoCommitsPage>(params);
 }
 
@@ -106,7 +91,7 @@ export async function fetchGitHubCommitDetails(
   const trimmedSha = sha.trim();
   if (!parsed || !trimmedSha) throw new Error("github.errors.invalidUrl");
 
-  const cacheKey = `${parsed.fullKey.toLowerCase()}:${trimmedSha}`;
+  const cacheKey = getCommitCacheKey(parsed.fullKey, trimmedSha);
   const cached = commitDetailsCache.get(cacheKey);
   if (cached) return cached;
 

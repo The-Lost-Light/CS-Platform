@@ -12,12 +12,6 @@ interface ThemePaletteSwatch {
 }
 
 export const DEFAULT_THEME_PALETTE: ThemePalette = "blue";
-export const SUPPORTED_THEME_PALETTES: readonly ThemePalette[] = [
-  "blue",
-  "lavender",
-  "sage",
-  "slate",
-];
 
 export const THEME_PALETTE_SWATCHES: readonly ThemePaletteSwatch[] = [
   {
@@ -51,12 +45,16 @@ export const THEME_PALETTE_SWATCHES: readonly ThemePaletteSwatch[] = [
   },
 ];
 
+export const SUPPORTED_THEME_PALETTES: readonly ThemePalette[] = THEME_PALETTE_SWATCHES.map(
+  (swatch) => swatch.value,
+);
+
 export function isThemeMode(value: unknown): value is ThemeMode {
   return value === "system" || value === "light" || value === "dark";
 }
 
 export function isThemePalette(value: unknown): value is ThemePalette {
-  return value === "blue" || value === "lavender" || value === "sage" || value === "slate";
+  return SUPPORTED_THEME_PALETTES.some((palette) => palette === value);
 }
 
 export function resolveTheme(mode: ThemeMode, systemPrefersDark: boolean): ResolvedTheme {

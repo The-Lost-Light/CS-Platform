@@ -1,18 +1,11 @@
 import { isRecord } from "@shared/isRecord";
 
-import { MAX_CONTENT_LENGTH, type Project } from "./project";
+import { MAX_PROJECT_POINTS, PROJECT_FIELD_LIMITS, type Project } from "./project";
 
 export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachments"> | null {
   if (!isRecord(value)) return null;
-  const limits = {
-    codeName: 30,
-    title: 120,
-    dueDate: 16,
-    tags: 500,
-    content: MAX_CONTENT_LENGTH,
-  };
   const fields: Record<string, string> = {};
-  for (const [key, max] of Object.entries(limits)) {
+  for (const [key, max] of Object.entries(PROJECT_FIELD_LIMITS)) {
     if (typeof value[key] !== "string" || value[key].length > max) return null;
     // Markdown indentation and trailing newlines can be meaningful.
     fields[key] = key === "content" ? value[key] : value[key].trim();
@@ -23,7 +16,7 @@ export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachm
     typeof value.points !== "number" ||
     !Number.isInteger(value.points) ||
     value.points < 0 ||
-    value.points > 10000
+    value.points > MAX_PROJECT_POINTS
   )
     return null;
   if (fields.dueDate) {

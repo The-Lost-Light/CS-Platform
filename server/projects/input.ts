@@ -1,6 +1,7 @@
 import {
   MAX_ATTACHMENTS,
   MAX_ATTACHMENT_BYTES,
+  attachmentsWithinLimit,
   parseProjectInput,
   type ProjectAttachment,
 } from "@modules/projects";
@@ -59,8 +60,7 @@ export async function readProjectInput(request: Request, existing: ProjectAttach
         return null;
       }
     }
-    if ([...retained, ...uploads].reduce((sum, file) => sum + file.size, 0) > MAX_ATTACHMENT_BYTES)
-      return null;
+    if (!attachmentsWithinLimit([...retained, ...uploads])) return null;
     return { project, retained, uploads };
   } catch {
     return null;

@@ -24,6 +24,19 @@ import { createRepoFixture } from "./fixtures/repository";
 const serverEnv = vi.hoisted(() => ({ GITHUB_TOKEN: undefined as string | undefined }));
 vi.mock("void/env", () => ({ env: serverEnv }));
 
+async function callRepositoryRoute(url: URL, signedIn = true) {
+  assert.equal(url.pathname, "/api/github/repository");
+  const headers = new Headers();
+  const response = await GET({
+    get: (key: string) => (key === "user" && signedIn ? { id: "student" } : null),
+    header: (key: string, value: string) => headers.set(key, value),
+    req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
+    json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
+  } as unknown as CloudContext);
+  assert.instanceOf(response, Response);
+  return response;
+}
+
 test("the dashboard uses the authenticated course API and only the server supplies credentials", async () => {
   let signedIn = false;
   const fixture = createRepoFixture();
@@ -32,7 +45,6 @@ test("the dashboard uses the authenticated course API and only the server suppli
   using transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
     if (url.origin === "https://course.example") {
-      assert.equal(url.pathname, "/api/github/repository");
       assert.deepEqual(
         [...url.searchParams],
         [
@@ -41,14 +53,7 @@ test("the dashboard uses the authenticated course API and only the server suppli
         ],
       );
       assert.isUndefined(init);
-      const headers = new Headers();
-      const response = await GET({
-        get: (key: string) => (key === "user" && signedIn ? { id: "student" } : null),
-        header: (key: string, value: string) => headers.set(key, value),
-        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
-        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
-      } as unknown as CloudContext);
-      assert.instanceOf(response, Response);
+      const response = await callRepositoryRoute(url, signedIn);
       assert.equal(response.headers.get("Cache-Control"), "private, no-store");
       assert.notInclude(await response.clone().text(), "fixture-secret");
       return response;
@@ -357,16 +362,7 @@ test("server commit pagination and client commit detail caching work through the
   using transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
     const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
     if (url.origin === "https://course.example") {
-      assert.equal(url.pathname, "/api/github/repository");
-      const headers = new Headers();
-      const response = await GET({
-        get: (key: string) => (key === "user" ? { id: "student" } : null),
-        header: (key: string, value: string) => headers.set(key, value),
-        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
-        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
-      } as unknown as CloudContext);
-      assert.instanceOf(response, Response);
-      return response;
+      return callRepositoryRoute(url);
     }
     githubRequests.push(url.pathname + url.search);
     if (url.pathname.endsWith(`/commits/${first.sha}`)) {
@@ -404,6 +400,25 @@ test("server commit pagination and client commit detail caching work through the
     clearCommitDetailsCache();
     serverEnv.GITHUB_TOKEN = undefined;
   }
+});
+
+test("branch history keeps the first page and estimates the total when the count request fails", async () => {
+  const { commits } = createRepoFixture();
+  const snapshot = await fetchServerBranchSnapshot("owner/repo", "main", {
+    token: "test-token",
+    fetch: async (input) => {
+      const url = new URL(new Request(input).url);
+      if (url.pathname.includes("/git/trees/")) return Response.json({ tree: [] });
+      if (url.searchParams.get("per_page") === "1") throw new Error("Count unavailable");
+      return Response.json(commits, {
+        headers: {
+          link: '<https://api.github.com/commits?page=2>; rel="next", <https://api.github.com/commits?page=3>; rel="last"',
+        },
+      });
+    },
+  });
+  assert.deepEqual(snapshot.commits, commits);
+  assert.strictEqual(snapshot.totalCommits, 21);
 });
 
 test("secondary endpoint failures yield empty sections without replacing live metadata", async () => {
@@ -444,16 +459,7 @@ test("branch-only snapshots fetch only commits and file tree through the API rou
   using _transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
     if (url.origin === "https://course.example") {
-      assert.equal(url.pathname, "/api/github/repository");
-      const headers = new Headers();
-      const response = await GET({
-        get: (key: string) => (key === "user" ? { id: "student" } : null),
-        header: (key: string, value: string) => headers.set(key, value),
-        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
-        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
-      } as unknown as CloudContext);
-      assert.instanceOf(response, Response);
-      return response;
+      return callRepositoryRoute(url);
     }
     assert.equal(url.origin, "https://api.github.com");
     assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer fixture-secret");
@@ -708,16 +714,7 @@ test("branch list pagination works through the API route", async () => {
   using _transport = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
     const url = new URL(input instanceof Request ? input.url : input, "https://course.example");
     if (url.origin === "https://course.example") {
-      assert.equal(url.pathname, "/api/github/repository");
-      const headers = new Headers();
-      const response = await GET({
-        get: (key: string) => (key === "user" ? { id: "student" } : null),
-        header: (key: string, value: string) => headers.set(key, value),
-        req: { query: (key: string) => url.searchParams.get(key) ?? undefined },
-        json: (data: unknown, status = 200) => Response.json(data, { status, headers }),
-      } as unknown as CloudContext);
-      assert.instanceOf(response, Response);
-      return response;
+      return callRepositoryRoute(url);
     }
     assert.strictEqual(
       url.href,

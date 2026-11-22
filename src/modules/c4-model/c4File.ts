@@ -1,6 +1,13 @@
 import { isRecord } from "@shared/isRecord";
 
-import { type C4Kind, type C4Node, type C4Relationship, C4_MAX_LEVELS } from "./c4";
+import {
+  type C4Kind,
+  type C4Node,
+  type C4Relationship,
+  C4_KINDS,
+  C4_MAX_LEVELS,
+  BOUNDARY_ID,
+} from "./c4";
 
 export interface C4File {
   format: "codepulse-c4";
@@ -10,7 +17,6 @@ export interface C4File {
 }
 
 export const C4_FILE_MAX_BYTES = 5 * 1024 * 1024;
-const kinds: C4Kind[] = ["person", "system", "container", "component", "code"];
 const invalid = (): never => {
   throw new Error("Invalid C4 model file");
 };
@@ -49,9 +55,9 @@ export function validateC4File(data: unknown): C4File {
     if (
       typeof id !== "string" ||
       !id.trim() ||
-      id === "__c4_boundary__" ||
+      id === BOUNDARY_ID ||
       ids.has(id) ||
-      !kinds.includes(kind as C4Kind) ||
+      !C4_KINDS.includes(kind as C4Kind) ||
       typeof label !== "string" ||
       typeof category !== "string" ||
       !(parentId === null || (typeof parentId === "string" && !!parentId.trim())) ||

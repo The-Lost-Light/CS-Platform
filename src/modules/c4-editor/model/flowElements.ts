@@ -1,7 +1,6 @@
-import { c4NodeBounds, type C4Node, type C4Relationship } from "@modules/c4-model";
+import { BOUNDARY_ID, c4NodeBounds, type C4Node, type C4Relationship } from "@modules/c4-model";
 import { MarkerType } from "@xyflow/react";
 
-import { BOUNDARY_ID } from "./canvasLayout";
 import type { CanvasNode } from "./flowTypes";
 
 interface FlowView {

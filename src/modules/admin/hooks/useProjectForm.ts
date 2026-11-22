@@ -1,11 +1,6 @@
 import { useProjectCatalog } from "@modules/catalog";
 import { useI18n } from "@modules/i18n";
-import {
-  MAX_ATTACHMENTS,
-  MAX_ATTACHMENT_BYTES,
-  type Project,
-  type ProjectAttachment,
-} from "@modules/projects";
+import { attachmentsWithinLimit, type Project, type ProjectAttachment } from "@modules/projects";
 import { useState, type FormEvent } from "react";
 
 export function useProjectForm(original: Project | undefined, onSaved: (project: Project) => void) {
@@ -20,10 +15,7 @@ export function useProjectForm(original: Project | undefined, onSaved: (project:
   );
   function addFiles(files: File[]) {
     const next = [...attachments, ...files];
-    if (
-      next.length > MAX_ATTACHMENTS ||
-      next.reduce((sum, file) => sum + file.size, 0) > MAX_ATTACHMENT_BYTES
-    ) {
+    if (!attachmentsWithinLimit(next)) {
       setError("attachments");
       return;
     }

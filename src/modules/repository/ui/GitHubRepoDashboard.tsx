@@ -7,6 +7,7 @@ import {
   fetchGitHubCommitDetails,
   fetchGitHubCommitsPage,
   getCachedCommitDetails,
+  getCommitCacheKey,
   type GitHubBranchesPageLoader,
   type GitHubCommitDetailsLoader,
   type GitHubCommitsPageLoader,
@@ -20,10 +21,6 @@ interface BranchControl {
   loadBranchesPage?: GitHubBranchesPageLoader;
   loadCommitDetails?: GitHubCommitDetailsLoader;
   loadCommitsPage?: GitHubCommitsPageLoader;
-}
-
-function getCommitCacheKey(repoFullName: string, sha: string): string {
-  return `${repoFullName.toLowerCase()}:${sha}`;
 }
 
 function mergeCommitDetails(commit: RepoCommit, details?: RepoCommitDetails): RepoCommit {
@@ -57,15 +54,14 @@ export function GitHubRepoDashboard({
 
   if (!repoBundle?.repo) return null;
 
+  const initialBranchState = {
+    source: repoBundle.branches,
+    branches: repoBundle.branches,
+    nextPage: 2,
+    hasMore: Boolean(repoBundle.hasMoreBranches),
+  };
   const activeBranchState =
-    branchPagination && branchPagination.source === repoBundle.branches
-      ? branchPagination
-      : {
-          source: repoBundle.branches,
-          branches: repoBundle.branches,
-          nextPage: 2,
-          hasMore: Boolean(repoBundle.hasMoreBranches),
-        };
+    branchPagination?.source === repoBundle.branches ? branchPagination : initialBranchState;
   const resolvedTotalBranches = Math.max(
     repoBundle.totalBranches ?? activeBranchState.branches.length,
     activeBranchState.branches.length,
@@ -87,15 +83,7 @@ export function GitHubRepoDashboard({
       const pageResult = await loadBranchesPage(targetRepo, pageToFetch);
       if (branchLoadRequest.current !== requestId) return;
       setBranchPagination((prev) => {
-        const current =
-          prev && prev.source === source
-            ? prev
-            : {
-                source,
-                branches: source,
-                nextPage: 2,
-                hasMore: Boolean(repoBundle.hasMoreBranches),
-              };
+        const current = prev?.source === source ? prev : initialBranchState;
         const seen = new Set(current.branches.map((b) => b.name));
         const appended = pageResult.branches.filter((b) => !seen.has(b.name));
         const merged = appended.length > 0 ? [...current.branches, ...appended] : current.branches;

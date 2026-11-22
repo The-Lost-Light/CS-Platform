@@ -1,3 +1,4 @@
+import { resolveLocale } from "@modules/i18n";
 import { allowsAdminMutation } from "@server/access";
 import { saveProject, listProjects, readProjectInput } from "@server/projects";
 import { defineHandler } from "void";
@@ -5,7 +6,7 @@ import { requireAuth } from "void/auth";
 
 export const GET = defineHandler(async (c) => {
   requireAuth(c);
-  return { projects: await listProjects(c.req.query("locale") === "zh-TW" ? "zh-TW" : "en") };
+  return { projects: await listProjects(resolveLocale(c.req.query("locale"))) };
 });
 
 export const POST = defineHandler(async (c) => {

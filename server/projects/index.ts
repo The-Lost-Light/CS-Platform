@@ -47,6 +47,10 @@ export function availableProject(id: string) {
     AND (${Number(builtIn)} OR EXISTS (SELECT 1 FROM ${projects} WHERE ${projects.id} = ${id}))`;
 }
 
+export async function projectExists(id: string) {
+  return Boolean(await db.get(sql`SELECT 1 WHERE ${availableProject(id)}`));
+}
+
 export async function saveProject(input: ProjectInput, userId: string, existingId?: string) {
   const id = existingId ?? crypto.randomUUID();
   const data = { ...input.project, id };
@@ -84,15 +88,14 @@ export async function saveProject(input: ProjectInput, userId: string, existingI
     if (!result[0].length) return undefined;
     return { ...data, attachments: result.at(-1) as ProjectAttachment[] };
   } catch (error) {
-    if (existingId && !(await db.get(sql`SELECT 1 WHERE ${availableProject(id)}`)))
-      return undefined;
+    if (existingId && !(await projectExists(id))) return undefined;
     if (isUniqueViolation(error)) return null;
     throw error;
   }
 }
 
 export async function deleteProject(id: string) {
-  if (!(await db.get(sql`SELECT 1 WHERE ${availableProject(id)}`))) return false;
+  if (!(await projectExists(id))) return false;
   await db.batch([
     db.insert(removedProjects).values({ id }).onConflictDoNothing(),
     db.delete(workspaces).where(eq(workspaces.projectId, id)),

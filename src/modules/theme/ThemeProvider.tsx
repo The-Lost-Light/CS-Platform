@@ -1,3 +1,4 @@
+import { useStoredPreference } from "@shared/useStoredPreference";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import {
@@ -12,30 +13,6 @@ import {
 
 const THEME_STORAGE_KEY = "codepulse.themeMode";
 const PALETTE_STORAGE_KEY = "codepulse.themePalette";
-
-function initialThemeMode(): ThemeMode {
-  try {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-      if (isThemeMode(stored)) return stored;
-    }
-  } catch {
-    /* Storage may be unavailable. */
-  }
-  return "system";
-}
-
-function initialThemePalette(): ThemePalette {
-  try {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const stored = window.localStorage.getItem(PALETTE_STORAGE_KEY);
-      if (isThemePalette(stored)) return stored;
-    }
-  } catch {
-    /* Storage may be unavailable. */
-  }
-  return DEFAULT_THEME_PALETTE;
-}
 
 function getSystemPrefersDark(): boolean {
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
@@ -73,9 +50,17 @@ export function ThemeProvider({
   initialMode?: ThemeMode;
   initialPalette?: ThemePalette;
 }) {
-  const [mode, setModeState] = useState<ThemeMode>(() => initialMode ?? initialThemeMode());
-  const [palette, setPaletteState] = useState<ThemePalette>(
-    () => initialPalette ?? initialThemePalette(),
+  const [mode, setMode] = useStoredPreference(
+    THEME_STORAGE_KEY,
+    isThemeMode,
+    "system",
+    initialMode,
+  );
+  const [palette, setPalette] = useStoredPreference(
+    PALETTE_STORAGE_KEY,
+    isThemePalette,
+    DEFAULT_THEME_PALETTE,
+    initialPalette,
   );
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(getSystemPrefersDark);
 
@@ -98,25 +83,13 @@ export function ThemeProvider({
       document.documentElement.style.colorScheme = resolvedTheme;
       document.documentElement.dataset.themePalette = palette;
     }
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        window.localStorage.setItem(THEME_STORAGE_KEY, mode);
-        window.localStorage.setItem(PALETTE_STORAGE_KEY, palette);
-      }
-    } catch {
-      /* In-memory switching still works. */
-    }
-  }, [isDark, mode, palette, resolvedTheme]);
+  }, [isDark, palette, resolvedTheme]);
 
   const value: ThemeContextValue = {
     mode,
-    setMode: (nextMode) => {
-      if (isThemeMode(nextMode)) setModeState(nextMode);
-    },
+    setMode,
     palette,
-    setPalette: (nextPalette) => {
-      if (isThemePalette(nextPalette)) setPaletteState(nextPalette);
-    },
+    setPalette,
     resolvedTheme,
     isDark,
   };

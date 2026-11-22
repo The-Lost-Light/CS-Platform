@@ -13,6 +13,13 @@ type RepoBranchItem = RepoBundle["branches"][number];
 type RepoTagItem = NonNullable<RepoBundle["tags"]>[number];
 type RepoPullItem = NonNullable<RepoBundle["pulls"]>[number];
 
+interface GitHubOptions {
+  token: string | undefined;
+  fetch?: typeof globalThis.fetch;
+}
+
+type GitHubRequest = (url: string) => Promise<Response>;
+
 export class GitHubRequestError extends Error {
   constructor(
     readonly status: 400 | 404 | 429 | 502 | 503,
@@ -68,11 +75,7 @@ function parseLastPage(response: Response): number | null {
   return null;
 }
 
-function createGitHubClient(
-  rawUrl: string,
-  token: string | undefined,
-  fetch: typeof globalThis.fetch,
-) {
+function createGitHubClient(rawUrl: string, { token, fetch = globalThis.fetch }: GitHubOptions) {
   const parsed = parseGitHubRepoUrl(rawUrl);
   if (!parsed) throw new GitHubRequestError(400, "github.errors.invalidUrl");
   if (!token?.trim()) throw new GitHubRequestError(503, "github.errors.notConfigured");
@@ -100,17 +103,11 @@ function createGitHubClient(
 export async function fetchGitHubCommitDetails(
   rawUrl: string,
   sha: string,
-  {
-    token,
-    fetch = globalThis.fetch,
-  }: {
-    token: string | undefined;
-    fetch?: typeof globalThis.fetch;
-  },
+  options: GitHubOptions,
 ): Promise<RepoCommitDetails> {
   const trimmedSha = sha.trim();
   if (!trimmedSha) throw new GitHubRequestError(400, "github.errors.invalidUrl");
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
+  const { repoApiUrl, request } = createGitHubClient(rawUrl, options);
 
   let result: RepoCommitDetails = { sha: trimmedSha };
   try {
@@ -153,71 +150,69 @@ export async function fetchGitHubCommitDetails(
 
 export async function fetchGitHubCommitsPage(
   rawUrl: string,
-  {
-    token,
-    branch,
-    page,
-    fetch = globalThis.fetch,
-  }: {
-    token: string | undefined;
-    branch?: string;
-    page: number;
-    fetch?: typeof globalThis.fetch;
-  },
+  options: GitHubOptions & { branch?: string; page: number },
 ): Promise<RepoCommitsPage> {
-  if (!Number.isInteger(page) || page < 1) {
-    throw new GitHubRequestError(400, "github.errors.invalidUrl");
-  }
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
+  const { branch, page } = options;
   const branchQuery = branch ? `sha=${encodeURIComponent(branch)}&` : "";
-  const response = await request(`${repoApiUrl}/commits?${branchQuery}per_page=10&page=${page}`);
+  const { items: commits, hasMore } = await fetchListPage<RepoCommit>(
+    rawUrl,
+    options,
+    `commits?${branchQuery}per_page=10&page=${page}`,
+  );
+  return { commits, hasMore: hasMore || commits.length >= 10 };
+}
+
+async function fetchListPage<T>(
+  rawUrl: string,
+  options: GitHubOptions & { page: number },
+  path: string,
+) {
+  if (!Number.isInteger(options.page) || options.page < 1)
+    throw new GitHubRequestError(400, "github.errors.invalidUrl");
+  const { repoApiUrl, request } = createGitHubClient(rawUrl, options);
+  const response = await request(`${repoApiUrl}/${path}`);
   checkResponse(response);
   const data: unknown = await response.json();
-  const commits: RepoCommit[] = Array.isArray(data) ? data : [];
-  return {
-    commits,
-    hasMore: hasNextPage(response) || commits.length >= 10,
-  };
+  const items: T[] = Array.isArray(data) ? data : [];
+  return { items, hasMore: hasNextPage(response) };
+}
+
+async function readPagination(
+  response: Response,
+  itemCount: number,
+  perPage: number,
+  fetchCount: () => Promise<Response>,
+) {
+  if (!hasNextPage(response)) return { total: itemCount, hasMore: false, exact: true };
+  try {
+    const countResponse = await fetchCount();
+    const exactTotal = countResponse.ok ? parseLastPage(countResponse) : null;
+    if (exactTotal !== null) return { total: exactTotal, hasMore: true, exact: true };
+  } catch {
+    // An unavailable count endpoint still leaves a usable first page.
+  }
+  const lastPage = parseLastPage(response);
+  const total = lastPage === null ? itemCount : Math.max(itemCount, (lastPage - 1) * perPage + 1);
+  return { total, hasMore: true, exact: false };
 }
 
 async function fetchBranchCommits(
   repoApiUrl: string,
-  request: (url: string) => Promise<Response>,
+  request: GitHubRequest,
   encodedBranch: string,
   { strict }: { strict: boolean },
 ): Promise<{ commits: RepoCommit[]; totalCommits: number; rateLimit?: string }> {
   try {
-    const response = await request(`${repoApiUrl}/commits?sha=${encodedBranch}&per_page=10`);
+    const prefix = `${repoApiUrl}/commits?sha=${encodedBranch}&per_page=`;
+    const response = await request(`${prefix}10`);
     checkResponse(response);
     const rateLimit = parseRateLimit(response);
     const list: unknown = await response.json();
     const commits: RepoCommit[] = Array.isArray(list) ? list : [];
-    let totalCommits = commits.length;
-
-    if (hasNextPage(response)) {
-      const lastPageFromList = parseLastPage(response);
-      try {
-        const countResponse = await request(
-          `${repoApiUrl}/commits?sha=${encodedBranch}&per_page=1`,
-        );
-        if (countResponse.ok) {
-          const exactTotal = parseLastPage(countResponse);
-          if (exactTotal !== null) {
-            totalCommits = exactTotal;
-          } else if (lastPageFromList !== null) {
-            totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
-          }
-        } else if (lastPageFromList !== null) {
-          totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
-        }
-      } catch {
-        if (lastPageFromList !== null) {
-          totalCommits = Math.max(commits.length, (lastPageFromList - 1) * 10 + 1);
-        }
-      }
-    }
-
-    return { commits, totalCommits, rateLimit };
+    const { total } = await readPagination(response, commits.length, 10, () =>
+      request(`${prefix}1`),
+    );
+    return { commits, totalCommits: total, rateLimit };
   } catch (error) {
     // Initial sync can show partial repository data. A switch must succeed as a unit.
     if (strict) throw error;
@@ -227,7 +222,7 @@ async function fetchBranchCommits(
 
 async function fetchBranchTree(
   repoApiUrl: string,
-  request: (url: string) => Promise<Response>,
+  request: GitHubRequest,
   encodedBranch: string,
   { strict }: { strict: boolean },
 ): Promise<{ fileTree: RepoBundle["fileTree"]; rateLimit?: string }> {
@@ -249,82 +244,46 @@ async function fetchBranchTree(
 
 async function fetchPaginatedCollection<T>(
   baseUrl: string,
-  request: (url: string) => Promise<Response>,
+  request: GitHubRequest,
   { perPage, extraQuery }: { perPage: number; extraQuery?: string },
 ): Promise<{ items: T[]; total: number; hasMore: boolean; ok: boolean; exact: boolean }> {
-  const prefix = extraQuery ? `${baseUrl}?${extraQuery}&` : `${baseUrl}?`;
+  const prefix = `${baseUrl}?${extraQuery ? extraQuery + "&" : ""}per_page=`;
+  const empty = { items: [], total: 0, hasMore: false, ok: false, exact: false };
   try {
-    const response = await request(`${prefix}per_page=${perPage}`);
-    if (!response.ok) return { items: [], total: 0, hasMore: false, ok: false, exact: false };
+    const response = await request(`${prefix}${perPage}`);
+    if (!response.ok) return empty;
     const data: unknown = await response.json();
-    if (!Array.isArray(data))
-      return { items: [], total: 0, hasMore: false, ok: false, exact: false };
+    if (!Array.isArray(data)) return empty;
     const items = data as T[];
-    if (!hasNextPage(response)) {
-      return { items, total: items.length, hasMore: false, ok: true, exact: true };
-    }
-    const lastPageFromList = parseLastPage(response);
-    try {
-      const countResponse = await request(`${prefix}per_page=1`);
-      if (countResponse.ok) {
-        const exactTotal = parseLastPage(countResponse);
-        if (exactTotal !== null) {
-          return { items, total: exactTotal, hasMore: true, ok: true, exact: true };
-        }
-      }
-    } catch {
-      // Fall back to the lower-bound estimate from the list response if count lookup fails.
-    }
-    const fallbackTotal =
-      lastPageFromList !== null
-        ? Math.max(items.length, (lastPageFromList - 1) * perPage + 1)
-        : items.length;
-    return { items, total: fallbackTotal, hasMore: true, ok: true, exact: false };
+    const pagination = await readPagination(response, items.length, perPage, () =>
+      request(`${prefix}1`),
+    );
+    return { items, ok: true, ...pagination };
   } catch {
-    return { items: [], total: 0, hasMore: false, ok: false, exact: false };
+    return empty;
   }
 }
 
 export async function fetchGitHubBranchesPage(
   rawUrl: string,
-  {
-    token,
-    page,
-    fetch = globalThis.fetch,
-  }: {
-    token: string | undefined;
-    page: number;
-    fetch?: typeof globalThis.fetch;
-  },
+  options: GitHubOptions & { page: number },
 ): Promise<RepoBranchesPage> {
-  if (!Number.isInteger(page) || page < 1) {
-    throw new GitHubRequestError(400, "github.errors.invalidUrl");
-  }
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
-  const response = await request(`${repoApiUrl}/branches?per_page=30&page=${page}`);
-  checkResponse(response);
-  const data: unknown = await response.json();
-  const branches: RepoBranchItem[] = Array.isArray(data) ? data : [];
-  return {
-    branches,
-    hasMore: hasNextPage(response),
-  };
+  const { items: branches, hasMore } = await fetchListPage<RepoBranchItem>(
+    rawUrl,
+    options,
+    `branches?per_page=30&page=${options.page}`,
+  );
+  return { branches, hasMore };
 }
 
 export async function fetchGitHubBranchSnapshot(
   rawUrl: string,
   branch: string,
-  {
-    token,
-    fetch = globalThis.fetch,
-  }: {
-    token: string | undefined;
-    fetch?: typeof globalThis.fetch;
-  },
+  options: GitHubOptions,
 ): Promise<RepoBranchSnapshot> {
   const trimmedBranch = branch.trim();
   if (!trimmedBranch) throw new GitHubRequestError(400, "github.errors.invalidUrl");
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
+  const { repoApiUrl, request } = createGitHubClient(rawUrl, options);
   const encodedBranch = encodeURIComponent(trimmedBranch);
 
   const [branchCommits, branchTree] = await Promise.all([
@@ -344,17 +303,10 @@ export async function fetchGitHubBranchSnapshot(
 
 export async function fetchGitHubRepository(
   rawUrl: string,
-  {
-    token,
-    branch,
-    fetch = globalThis.fetch,
-  }: {
-    token: string | undefined;
-    branch?: string;
-    fetch?: typeof globalThis.fetch;
-  },
+  options: GitHubOptions & { branch?: string },
 ): Promise<RepoBundle> {
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, token, fetch);
+  const { branch } = options;
+  const { repoApiUrl, request } = createGitHubClient(rawUrl, options);
   const repoRes = await request(repoApiUrl);
   checkResponse(repoRes);
 

@@ -1,5 +1,6 @@
 import { useI18n } from "@modules/i18n";
-import { AlertCircle, FolderGit2, RefreshCw } from "lucide-react";
+import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
+import { FolderGit2, RefreshCw } from "lucide-react";
 
 import type { useRepository } from "../hooks/useRepository";
 import { RepositoryLanguages } from "./RepositoryLanguages";
@@ -96,12 +97,9 @@ export function RepositoryConnection({
       )}
 
       {repoError && (
-        <div role="alert" className="ui-banner-danger">
-          <div className="flex items-center gap-2">
-            <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-            <span>{"key" in repoError ? t(repoError.key) : repoError.message}</span>
-          </div>
-        </div>
+        <FeedbackBanner kind="error">
+          <span>{"key" in repoError ? t(repoError.key) : repoError.message}</span>
+        </FeedbackBanner>
       )}
     </div>
   );

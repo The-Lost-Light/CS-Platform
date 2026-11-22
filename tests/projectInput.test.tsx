@@ -1,4 +1,5 @@
-import { parseProjectInput } from "@modules/projects";
+import { MAX_ATTACHMENTS, MAX_ATTACHMENT_BYTES, parseProjectInput } from "@modules/projects";
+import { readProjectInput } from "@server/projects";
 import { assert, test } from "vite-plus/test";
 
 const valid = {
@@ -55,4 +56,24 @@ test("optional project fields can remain empty", () => {
   assert.ok(project);
   assert.deepEqual(project.tags, []);
   assert.strictEqual(project.content, "");
+});
+
+test("project edits enforce the attachment limits across retained files and new uploads", async () => {
+  const existing = { id: "retained", name: "existing.txt", size: MAX_ATTACHMENT_BYTES - 1 };
+  function edit(files: string[]) {
+    const form = new FormData();
+    for (const [key, value] of Object.entries(valid)) form.set(key, String(value));
+    form.append("attachments", existing.id);
+    for (const content of files) form.append("attachments", new Blob([content]), "new.txt");
+    return readProjectInput(
+      new Request("https://course.example/api/projects/demo", {
+        method: "PATCH",
+        body: form,
+      }),
+      [existing],
+    );
+  }
+  assert.ok(await edit(["a", ...Array<string>(MAX_ATTACHMENTS - 2).fill("")]));
+  assert.isNull(await edit(["ab"]));
+  assert.isNull(await edit(Array<string>(MAX_ATTACHMENTS).fill("")));
 });

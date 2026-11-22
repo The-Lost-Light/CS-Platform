@@ -6,7 +6,7 @@ import type {
   WorkspaceSnapshot,
 } from "@modules/workspace";
 import { isUniqueViolation } from "@server/errors";
-import { availableProject } from "@server/projects";
+import { availableProject, projectExists } from "@server/projects";
 import { db, eq, sql, and } from "void/db";
 
 import { userTable } from "../../.void/better-auth-schema";
@@ -42,7 +42,7 @@ export async function loadWorkspace(
 export async function listStudentWorkspaces(
   projectId: string,
 ): Promise<StudentWorkspaceSummary[] | null> {
-  if (!(await db.get(sql`SELECT 1 WHERE ${availableProject(projectId)}`))) return null;
+  if (!(await projectExists(projectId))) return null;
   const rows = await db
     .select({
       id: userTable.id,
@@ -106,8 +106,7 @@ export async function saveWorkspace(
     ]);
   } catch (error) {
     if (isUniqueViolation(error)) return { status: "conflict" } as const;
-    if (!(await db.get(sql`SELECT 1 WHERE ${projectAvailable}`)))
-      return { status: "missing" } as const;
+    if (!(await projectExists(projectId))) return { status: "missing" } as const;
     throw error;
   }
   return { status: "saved", revision } as const;

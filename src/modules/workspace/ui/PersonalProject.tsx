@@ -6,8 +6,7 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 import type { WorkspaceTab } from "../hooks/useProjectWorkspace";
-import { useStudentWorkspaces } from "../hooks/useStudentWorkspaces";
-import { useWorkspaceSnapshot } from "../hooks/useWorkspaceSnapshot";
+import { useStudentWorkspaces, useWorkspaceSnapshot } from "../hooks/useWorkspaceData";
 import { ProjectWorkspace } from "./ProjectWorkspace";
 import { StudentWorkspaceList } from "./StudentWorkspaceList";
 

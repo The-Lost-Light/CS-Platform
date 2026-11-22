@@ -52,38 +52,41 @@ export function useRepository(
           };
         });
 
-  const handleLoadRepo = async (targetUrl = repoUrlInput, branch?: string) => {
+  async function loadLatest<T>(load: () => Promise<T>, apply: (value: T) => void) {
     const request = ++latestRequest.current;
+    setIsLoadingRepo(true);
+    setRepoError(null);
+    try {
+      const value = await load();
+      if (request === latestRequest.current) apply(value);
+    } catch (err) {
+      if (request === latestRequest.current) setRepoError(toRepoError(err));
+    } finally {
+      if (request === latestRequest.current) setIsLoadingRepo(false);
+    }
+  }
+
+  const handleLoadRepo = (targetUrl = repoUrlInput, branch?: string) => {
     const sameRepo =
       repoBundle &&
       parseGitHubRepoUrl(targetUrl)?.fullKey.toLowerCase() ===
         repoBundle.repo.full_name.toLowerCase();
     const targetBranch = branch ?? (sameRepo ? repoBundle.selectedBranch : undefined);
-    setIsLoadingRepo(true);
-    setRepoError(null);
-    try {
-      const bundle = await loadRepository(targetUrl, targetBranch);
-      if (request === latestRequest.current) {
+    return loadLatest(
+      () => loadRepository(targetUrl, targetBranch),
+      (bundle) => {
         setRepoBundle(bundle);
         setIsEditingRepo(false);
-      }
-    } catch (err) {
-      if (request !== latestRequest.current) return;
-      setRepoError(toRepoError(err));
-    } finally {
-      if (request === latestRequest.current) setIsLoadingRepo(false);
-    }
+      },
+    );
   };
 
-  const switchBranch = async (branch: string) => {
+  const switchBranch = (branch: string) => {
     if (!repoBundle) return;
     const targetRepo = repoBundle.repo.full_name;
-    const request = ++latestRequest.current;
-    setIsLoadingRepo(true);
-    setRepoError(null);
-    try {
-      const snapshot = await resolveBranch(targetRepo, branch);
-      if (request === latestRequest.current) {
+    return loadLatest(
+      () => resolveBranch(targetRepo, branch),
+      (snapshot) => {
         setRepoBundle((current) =>
           current && current.repo.full_name.toLowerCase() === targetRepo.toLowerCase()
             ? {
@@ -96,13 +99,8 @@ export function useRepository(
               }
             : current,
         );
-      }
-    } catch (err) {
-      if (request !== latestRequest.current) return;
-      setRepoError(toRepoError(err));
-    } finally {
-      if (request === latestRequest.current) setIsLoadingRepo(false);
-    }
+      },
+    );
   };
 
   return {

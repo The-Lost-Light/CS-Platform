@@ -1,8 +1,9 @@
-import { useI18n, type MessageKey } from "@modules/i18n";
+import { useI18n } from "@modules/i18n";
 import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
 import { Pencil } from "lucide-react";
-import { useState, type FormEvent } from "react";
 
+import { useAccountUpdate } from "../hooks/useAccountUpdate";
+import { AccountRoleField } from "./AccountFields";
 import { AccountProfileFields, type AccountProfile } from "./AccountProfileFields";
 import { ChangeAccountPassword } from "./ChangeAccountPassword";
 
@@ -18,51 +19,29 @@ export function EditAccountDialog({
   onSaved: () => void;
 }) {
   const { t } = useI18n();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<MessageKey | null>(null);
   const endpoint = management
     ? `/api/admin/accounts/${encodeURIComponent(management.id)}`
     : "/api/account";
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (pending) return;
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    setPending(true);
-    setError(null);
-    try {
-      const response = await fetch(endpoint, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = (await response.json()) as { error?: string; signedOut?: boolean };
-      if (!response.ok) {
-        switch (result.error) {
-          case "duplicate":
-            setError("admin.duplicateEmail");
-            break;
-          case "self":
-          case "protected":
-            setError("admin.protectedAccount");
-            break;
-          case "invalid":
-            setError(management ? "admin.invalidAccount" : "settings.account.invalid");
-            break;
-          default:
-            setError("admin.operationFailed");
-        }
-      } else if (result.signedOut) {
-        window.location.assign("/");
-      } else {
-        onSaved();
+  const { pending, error, submit } = useAccountUpdate(
+    endpoint,
+    (code) => {
+      switch (code) {
+        case "duplicate":
+          return "admin.duplicateEmail";
+        case "self":
+        case "protected":
+          return "admin.protectedAccount";
+        case "invalid":
+          return management ? "admin.invalidAccount" : "settings.account.invalid";
+        default:
+          return "admin.operationFailed";
       }
-    } catch {
-      setError("admin.operationFailed");
-    } finally {
-      setPending(false);
-    }
-  }
+    },
+    (signedOut) => {
+      if (!signedOut) onSaved();
+    },
+  );
 
   return (
     <FormDialog
@@ -83,21 +62,7 @@ export function EditAccountDialog({
       <form onSubmit={submit}>
         <fieldset disabled={pending} className="space-y-4">
           <AccountProfileFields account={account} />
-          {management && (
-            <label className="ui-field-label">
-              {t("auth.roleLabel")}
-              <select
-                className="ui-input mt-1.5"
-                name="role"
-                defaultValue={management.role ?? "user"}
-              >
-                <option value="user" disabled={management.isSelf}>
-                  {t("auth.roles.student")}
-                </option>
-                <option value="admin">{t("admin.role")}</option>
-              </select>
-            </label>
-          )}
+          {management && <AccountRoleField role={management.role} isSelf={management.isSelf} />}
           <p className="ui-field-help">{t("admin.accountEditHelp")}</p>
           {error && (
             <div role="alert" className="ui-banner-danger">

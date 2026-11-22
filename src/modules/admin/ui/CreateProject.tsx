@@ -2,11 +2,13 @@ import { useI18n } from "@modules/i18n";
 import {
   MAX_ATTACHMENTS,
   MAX_ATTACHMENT_BYTES,
-  MAX_CONTENT_LENGTH,
+  MAX_PROJECT_POINTS,
+  PROJECT_FIELD_LIMITS,
   type Project,
 } from "@modules/projects";
+import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
 import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
-import { AlertCircle, FolderPlus, Pencil } from "lucide-react";
+import { FolderPlus, Pencil } from "lucide-react";
 
 import { useProjectForm } from "../hooks/useProjectForm";
 
@@ -24,6 +26,10 @@ export function CreateProject({
     original,
     onSaved,
   );
+  const attachmentHelp = t("admin.projects.attachmentLimit", {
+    count: MAX_ATTACHMENTS,
+    size: MAX_ATTACHMENT_BYTES / 1024 / 1024,
+  });
   return (
     <FormDialog
       title={t(original ? "admin.editProject" : "admin.projects.create")}
@@ -43,7 +49,7 @@ export function CreateProject({
                 name="title"
                 defaultValue={original?.title}
                 required
-                maxLength={120}
+                maxLength={PROJECT_FIELD_LIMITS.title}
                 className="ui-input mt-1.5"
               />
             </label>
@@ -53,7 +59,7 @@ export function CreateProject({
                 name="codeName"
                 defaultValue={original?.codeName}
                 required
-                maxLength={30}
+                maxLength={PROJECT_FIELD_LIMITS.codeName}
                 pattern={"[A-Za-z0-9][A-Za-z0-9_\\-]{0,29}"}
                 placeholder="PROJ-03"
                 className="ui-input mt-1.5 font-mono"
@@ -80,7 +86,7 @@ export function CreateProject({
                 required
                 defaultValue={original?.points ?? 100}
                 min={0}
-                max={10000}
+                max={MAX_PROJECT_POINTS}
                 step={1}
                 className="ui-input mt-1.5 font-mono"
               />
@@ -91,7 +97,7 @@ export function CreateProject({
             <input
               name="tags"
               defaultValue={original?.tags.join(", ")}
-              maxLength={500}
+              maxLength={PROJECT_FIELD_LIMITS.tags}
               className="ui-input mt-1.5"
             />
           </label>
@@ -101,7 +107,7 @@ export function CreateProject({
               name="content"
               defaultValue={original?.content}
               rows={10}
-              maxLength={MAX_CONTENT_LENGTH}
+              maxLength={PROJECT_FIELD_LIMITS.content}
               className="ui-input mt-1.5 font-mono"
             />
           </label>
@@ -121,10 +127,7 @@ export function CreateProject({
               />
             </label>
             <p id="project-attachment-help" className="ui-field-help">
-              {t("admin.projects.attachmentLimit", {
-                count: MAX_ATTACHMENTS,
-                size: MAX_ATTACHMENT_BYTES / 1024 / 1024,
-              })}
+              {attachmentHelp}
             </p>
             {attachments.length > 0 && (
               <ul className="ui-panel divide-y divide-outline-subtle px-4">
@@ -148,25 +151,19 @@ export function CreateProject({
             )}
           </div>
           {error && (
-            <div role="alert" className="ui-banner-danger">
-              <div className="flex items-center gap-2">
-                <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-                <span>
-                  {error === "attachments"
-                    ? t("admin.projects.attachmentLimit", {
-                        count: MAX_ATTACHMENTS,
-                        size: MAX_ATTACHMENT_BYTES / 1024 / 1024,
-                      })
-                    : t(
-                        error === "duplicate"
-                          ? "admin.projects.duplicate"
-                          : error === "invalid"
-                            ? "admin.projects.invalid"
-                            : "admin.projects.failed",
-                      )}
-                </span>
-              </div>
-            </div>
+            <FeedbackBanner kind="error">
+              <span>
+                {error === "attachments"
+                  ? attachmentHelp
+                  : t(
+                      error === "duplicate"
+                        ? "admin.projects.duplicate"
+                        : error === "invalid"
+                          ? "admin.projects.invalid"
+                          : "admin.projects.failed",
+                    )}
+              </span>
+            </FeedbackBanner>
           )}
           <FormDialogActions
             cancelLabel={t("admin.cancel")}

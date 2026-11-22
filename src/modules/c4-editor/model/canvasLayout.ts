@@ -1,9 +1,14 @@
-import { SCOPE_OFFSET, type C4Node } from "@modules/c4-model";
+import { BOUNDARY_ID, SCOPE_OFFSET, type C4Node } from "@modules/c4-model";
 import type { NodeChangeset } from "@xyflow/react";
 
 import type { CanvasNode } from "./flowTypes";
 
-export const BOUNDARY_ID = "__c4_boundary__";
+export function toModelPosition(position: { x: number; y: number }, scope: C4Node | undefined) {
+  return {
+    x: position.x - (scope ? SCOPE_OFFSET.x : 0),
+    y: position.y - (scope ? SCOPE_OFFSET.y : 0),
+  };
+}
 
 export function applyCanvasLayout(
   nodes: C4Node[],
@@ -23,8 +28,7 @@ export function applyCanvasLayout(
     }
     const patch = patches.get(change.id) ?? {};
     if (change.type === "position" && change.position) {
-      patch.x = change.position.x - (scope ? SCOPE_OFFSET.x : 0);
-      patch.y = change.position.y - (scope ? SCOPE_OFFSET.y : 0);
+      Object.assign(patch, toModelPosition(change.position, scope));
     } else if (change.type === "dimensions" && change.dimensions) {
       patch.width = change.dimensions.width;
       patch.height = change.dimensions.height;

@@ -1,8 +1,9 @@
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
+import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
 import { LoadingPanel } from "@shared/ui/LoadingPanel";
 import { Link } from "@void/react";
-import { AlertCircle, CheckCircle2, ChevronRight, FolderGit2, Users, X } from "lucide-react";
+import { CheckCircle2, ChevronRight, FolderGit2, Users, X } from "lucide-react";
 
 import type { StudentWorkspaceSummary } from "../model/personalWorkspace";
 
@@ -80,17 +81,18 @@ export function StudentWorkspaceList({
 
         {error ? (
           <div className="p-5 sm:p-6">
-            <div role="alert" className="ui-banner-danger">
-              <div className="flex items-center gap-2">
-                <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-                <span>{t("workspace.studentListError")}</span>
-              </div>
-              {onRetry && (
-                <button type="button" onClick={onRetry} className="ui-btn-outlined shrink-0">
-                  {t("auth.retry")}
-                </button>
-              )}
-            </div>
+            <FeedbackBanner
+              kind="error"
+              action={
+                onRetry && (
+                  <button type="button" onClick={onRetry} className="ui-btn-outlined shrink-0">
+                    {t("auth.retry")}
+                  </button>
+                )
+              }
+            >
+              <span>{t("workspace.studentListError")}</span>
+            </FeedbackBanner>
           </div>
         ) : loading ? (
           <div className="p-5 sm:p-6">

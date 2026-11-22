@@ -9,39 +9,26 @@ import { useC4Editor, type C4ContextMenu } from "@/modules/c4-editor/hooks/useC4
 import type { CanvasNode } from "@/modules/c4-editor/model/flowTypes";
 import { C4Diagram } from "@/modules/c4-editor/ui/C4Diagram";
 
-const flowProps = vi.hoisted(() => ({
-  onPaneClick: undefined as ((event: unknown) => void) | undefined,
-  onPaneContextMenu: undefined as ((event: { preventDefault: () => void }) => void) | undefined,
-  onNodeClick: undefined as ((event: unknown, node: CanvasNode) => void) | undefined,
-  onNodeContextMenu: undefined as
-    | ((
-        event: {
-          preventDefault: () => void;
-          stopPropagation: () => void;
-          clientX: number;
-          clientY: number;
-        },
-        node: CanvasNode,
-      ) => void)
-    | undefined,
-  onEdgeClick: undefined as ((event: unknown, edge: { id: string }) => void) | undefined,
-  onEdgeContextMenu: undefined as
-    | ((
-        event: {
-          preventDefault: () => void;
-          stopPropagation: () => void;
-          clientX: number;
-          clientY: number;
-        },
-        edge: { id: string },
-      ) => void)
-    | undefined,
-  onMoveStart: undefined as (() => void) | undefined,
-  elementsSelectable: undefined as boolean | undefined,
-  selectNodesOnDrag: undefined as boolean | undefined,
-  nodesFocusable: undefined as boolean | undefined,
-  edgesFocusable: undefined as boolean | undefined,
-}));
+type ContextMenuEvent = {
+  preventDefault: () => void;
+  stopPropagation: () => void;
+  clientX: number;
+  clientY: number;
+};
+interface FlowInteractions {
+  onPaneClick?: (event: unknown) => void;
+  onPaneContextMenu?: (event: Pick<ContextMenuEvent, "preventDefault">) => void;
+  onNodeClick?: (event: unknown, node: CanvasNode) => void;
+  onNodeContextMenu?: (event: ContextMenuEvent, node: CanvasNode) => void;
+  onEdgeClick?: (event: unknown, edge: { id: string }) => void;
+  onEdgeContextMenu?: (event: ContextMenuEvent, edge: { id: string }) => void;
+  onMoveStart?: () => void;
+  elementsSelectable?: boolean;
+  selectNodesOnDrag?: boolean;
+  nodesFocusable?: boolean;
+  edgesFocusable?: boolean;
+}
+let flowProps: FlowInteractions = {};
 
 vi.mock("@xyflow/react", () => ({
   Background: () => null,
@@ -55,59 +42,12 @@ vi.mock("@xyflow/react", () => ({
   ReactFlow: ({
     children,
     nodes,
-    onPaneClick,
-    onPaneContextMenu,
-    onNodeClick,
-    onNodeContextMenu,
-    onEdgeClick,
-    onEdgeContextMenu,
-    onMoveStart,
-    elementsSelectable,
-    selectNodesOnDrag,
-    nodesFocusable,
-    edgesFocusable,
-  }: {
+    ...interactions
+  }: FlowInteractions & {
     children?: ReactNode;
     nodes: CanvasNode[];
-    onPaneClick?: (event: unknown) => void;
-    onPaneContextMenu?: (event: { preventDefault: () => void }) => void;
-    onNodeClick?: (event: unknown, node: CanvasNode) => void;
-    onNodeContextMenu?: (
-      event: {
-        preventDefault: () => void;
-        stopPropagation: () => void;
-        clientX: number;
-        clientY: number;
-      },
-      node: CanvasNode,
-    ) => void;
-    onEdgeClick?: (event: unknown, edge: { id: string }) => void;
-    onEdgeContextMenu?: (
-      event: {
-        preventDefault: () => void;
-        stopPropagation: () => void;
-        clientX: number;
-        clientY: number;
-      },
-      edge: { id: string },
-    ) => void;
-    onMoveStart?: () => void;
-    elementsSelectable?: boolean;
-    selectNodesOnDrag?: boolean;
-    nodesFocusable?: boolean;
-    edgesFocusable?: boolean;
   }) => {
-    flowProps.onPaneClick = onPaneClick;
-    flowProps.onPaneContextMenu = onPaneContextMenu;
-    flowProps.onNodeClick = onNodeClick;
-    flowProps.onNodeContextMenu = onNodeContextMenu;
-    flowProps.onEdgeClick = onEdgeClick;
-    flowProps.onEdgeContextMenu = onEdgeContextMenu;
-    flowProps.onMoveStart = onMoveStart;
-    flowProps.elementsSelectable = elementsSelectable;
-    flowProps.selectNodesOnDrag = selectNodesOnDrag;
-    flowProps.nodesFocusable = nodesFocusable;
-    flowProps.edgesFocusable = edgesFocusable;
+    flowProps = interactions;
     return (
       <div data-testid="flow">
         {nodes.map(

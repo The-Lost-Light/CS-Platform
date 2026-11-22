@@ -1,11 +1,17 @@
 import { useI18n } from "@modules/i18n";
+import { FeedbackBanner } from "@shared/ui/FeedbackBanner";
 import { Link } from "@void/react";
-import { AlertCircle, CheckCircle2, FolderGit2, Plus, Search } from "lucide-react";
+import { FolderGit2 } from "lucide-react";
 import { useImperativeHandle, useState, type Ref } from "react";
 
 import { useProjectList } from "../hooks/useProjectList";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { CreateProject } from "./CreateProject";
+import {
+  ManagementListHeader,
+  ManagementRowActions,
+  ManagementSearch,
+} from "./ManagementListControls";
 import type { ManagementListHandle } from "./ManagementListHandle";
 
 export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
@@ -38,68 +44,35 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
   }));
   return (
     <section className="ui-card overflow-hidden">
-      <header className="ui-card-header flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="ui-icon-badge w-9 h-9">
-            <FolderGit2 aria-hidden="true" className="w-4 h-4" />
-          </div>
-          <h2 className="text-base font-bold text-on-primary-container truncate">
-            {t("admin.allProjects", { count })}
-          </h2>
-        </div>
-        <button
-          type="button"
-          disabled={!!deleting}
-          aria-haspopup="dialog"
-          onClick={() => setCreating(true)}
-          className="ui-btn-primary px-4 py-2 text-xs sm:text-sm shrink-0"
-        >
-          <Plus aria-hidden="true" className="w-4 h-4" />
-          {t("admin.add")}
-        </button>
-      </header>
+      <ManagementListHeader
+        className="flex flex-wrap items-center justify-between gap-3"
+        title={t("admin.allProjects", { count })}
+        icon={FolderGit2}
+        disabled={!!deleting}
+        onAdd={() => setCreating(true)}
+      />
 
       <div className="p-5 sm:p-6 space-y-4">
-        <label className="ui-field-label">
-          {t("admin.search")}
-          <div className="relative mt-1.5">
-            <Search
-              aria-hidden="true"
-              className="w-4 h-4 text-on-subtle absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
-            <input
-              type="search"
-              className="ui-input pl-10"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-        </label>
+        <ManagementSearch value={search} onChange={setSearch} />
 
         {saved && (
-          <div role="status" className="ui-banner-success">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 aria-hidden="true" className="w-4 h-4 shrink-0" />
-              {saved === "updated" ? (
-                <span>{t("admin.saved")}</span>
-              ) : (
-                <>
-                  <span>{t("admin.projects.success")}</span>
-                  <Link href={`/projects/${saved.id}`} className="underline font-semibold">
-                    {t("admin.projects.open")} — {saved.title}
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+          <FeedbackBanner kind="success">
+            {saved === "updated" ? (
+              <span>{t("admin.saved")}</span>
+            ) : (
+              <>
+                <span>{t("admin.projects.success")}</span>
+                <Link href={`/projects/${saved.id}`} className="underline font-semibold">
+                  {t("admin.projects.open")} — {saved.title}
+                </Link>
+              </>
+            )}
+          </FeedbackBanner>
         )}
         {error && (
-          <div role="alert" className="ui-banner-danger">
-            <div className="flex items-center gap-2">
-              <AlertCircle aria-hidden="true" className="w-4 h-4 shrink-0" />
-              <span>{t("admin.operationFailed")}</span>
-            </div>
-          </div>
+          <FeedbackBanner kind="error">
+            <span>{t("admin.operationFailed")}</span>
+          </FeedbackBanner>
         )}
 
         {deleting && (
@@ -141,27 +114,11 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
                     <td className="whitespace-nowrap font-mono text-xs text-on-muted">
                       {project.dueDate || "—"}
                     </td>
-                    <td className="whitespace-nowrap">
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={!!deleting}
-                          className="ui-btn-tonal px-3 py-1.5"
-                          aria-haspopup="dialog"
-                          onClick={() => edit(project)}
-                        >
-                          {t("admin.edit")}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!!deleting}
-                          className="ui-btn-danger-tonal px-3 py-1.5"
-                          onClick={() => requestDelete(project)}
-                        >
-                          {t("admin.delete")}
-                        </button>
-                      </div>
-                    </td>
+                    <ManagementRowActions
+                      disabled={!!deleting}
+                      onEdit={() => edit(project)}
+                      onDelete={() => requestDelete(project)}
+                    />
                   </tr>
                 ))}
               </tbody>

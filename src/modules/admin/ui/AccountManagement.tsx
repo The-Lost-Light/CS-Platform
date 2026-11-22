@@ -1,9 +1,7 @@
-import { AccountProfileFields } from "@modules/accounts";
+import { AccountProfileFields, AccountRoleField, NewPasswordField } from "@modules/accounts";
 import { useI18n } from "@modules/i18n";
-import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 import { FormDialog, FormDialogActions } from "@shared/ui/FormDialog";
 import { UserPlus } from "lucide-react";
-import { useId } from "react";
 
 import { useCreateAccount } from "../hooks/useCreateAccount";
 
@@ -15,7 +13,6 @@ export function AccountManagement({
   onDismiss: () => void;
 }) {
   const { t } = useI18n();
-  const passwordHelpId = useId();
   const { pending, error, submit } = useCreateAccount(onCreated);
   return (
     <FormDialog
@@ -29,30 +26,9 @@ export function AccountManagement({
         <fieldset disabled={pending} className="space-y-4">
           <AccountProfileFields />
           <div>
-            <label className="ui-field-label">
-              {t("auth.passwordLabel")}
-              <input
-                className="ui-input mt-1.5"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={MIN_PASSWORD_LENGTH}
-                maxLength={MAX_PASSWORD_LENGTH}
-                aria-describedby={passwordHelpId}
-                required
-              />
-            </label>
-            <p id={passwordHelpId} className="ui-field-help">
-              {t("admin.passwordHelp", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH })}
-            </p>
+            <NewPasswordField name="password" label={t("auth.passwordLabel")} />
           </div>
-          <label className="ui-field-label">
-            {t("auth.roleLabel")}
-            <select className="ui-input mt-1.5" name="role">
-              <option value="user">{t("auth.roles.student")}</option>
-              <option value="admin">{t("admin.role")}</option>
-            </select>
-          </label>
+          <AccountRoleField />
           {error && (
             <div role="alert" className="ui-banner-danger">
               {t("admin.error")}

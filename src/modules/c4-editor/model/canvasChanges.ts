@@ -1,7 +1,6 @@
-import { overlapsC4Boundary } from "@modules/c4-model";
+import { BOUNDARY_ID, overlapsC4Boundary } from "@modules/c4-model";
 import { NodeChangeset } from "@xyflow/react";
 
-import { BOUNDARY_ID } from "./canvasLayout";
 import type { CanvasNode } from "./flowTypes";
 
 function canvasBounds(node: CanvasNode) {

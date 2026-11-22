@@ -1,4 +1,4 @@
-import { isAdmin } from "@server/access";
+import { isAdmin, isSameOrigin } from "@server/access";
 import {
   getWorkspaceRevision,
   listStudentWorkspaces,
@@ -19,22 +19,17 @@ export const GET = defineHandler(async (c) => {
     return students ? c.json({ students }) : c.notFound();
   }
   const targetUserId = c.req.query("userId");
-  if (targetUserId && targetUserId !== user.id) {
-    if (!isAdmin(user)) return c.json({ error: "forbidden" }, 403);
-    const snapshot = await loadWorkspace(targetUserId, projectId, true);
-    return snapshot ? c.json(snapshot) : c.notFound();
-  }
-  const snapshot = await loadWorkspace(user.id, projectId);
+  const accountId = targetUserId || user.id;
+  const forStudent = accountId !== user.id;
+  if (forStudent && !isAdmin(user)) return c.json({ error: "forbidden" }, 403);
+  const snapshot = await loadWorkspace(accountId, projectId, forStudent);
   return snapshot ? c.json(snapshot) : c.notFound();
 });
 
 export const PUT = defineHandler(async (c) => {
   const { id: userId } = requireAuth(c);
   const projectId = c.req.param("id") ?? "";
-  if (
-    c.req.header("Origin") !== new URL(c.req.url).origin ||
-    c.req.header("X-Workspace-Account") !== userId
-  )
+  if (!isSameOrigin(c.req.raw) || c.req.header("X-Workspace-Account") !== userId)
     return c.json({ error: "session" }, 403);
   const stored = await getWorkspaceRevision(userId, projectId);
   if (!stored) return c.notFound();

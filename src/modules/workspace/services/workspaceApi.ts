@@ -6,6 +6,20 @@ import type {
   WorkspaceSnapshot,
 } from "../model/personalWorkspace";
 
+function workspaceUrl(projectId: string) {
+  return `/api/projects/${encodeURIComponent(projectId)}/workspace`;
+}
+
+async function loadWorkspaceJson<T>(
+  projectId: string,
+  query: string,
+  signal: AbortSignal,
+): Promise<T> {
+  const response = await fetch(workspaceUrl(projectId) + query, { cache: "no-store", signal });
+  if (!response.ok) throw new Error("Load failed");
+  return response.json();
+}
+
 export async function loadSnapshot(
   projectId: string,
   accountId: string,
@@ -13,12 +27,7 @@ export async function loadSnapshot(
   forStudent = false,
 ) {
   const query = forStudent ? `?userId=${encodeURIComponent(accountId)}` : "";
-  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/workspace${query}`, {
-    cache: "no-store",
-    signal,
-  });
-  if (!response.ok) throw new Error("Load failed");
-  const snapshot: WorkspaceSnapshot = await response.json();
+  const snapshot = await loadWorkspaceJson<WorkspaceSnapshot>(projectId, query, signal);
   if (snapshot.accountId !== accountId) throw new Error("Session changed");
   return snapshot;
 }
@@ -27,12 +36,11 @@ export async function loadStudentWorkspaces(
   projectId: string,
   signal: AbortSignal,
 ): Promise<StudentWorkspaceSummary[]> {
-  const response = await fetch(
-    `/api/projects/${encodeURIComponent(projectId)}/workspace?list=students`,
-    { cache: "no-store", signal },
+  const data = await loadWorkspaceJson<{ students: StudentWorkspaceSummary[] }>(
+    projectId,
+    "?list=students",
+    signal,
   );
-  if (!response.ok) throw new Error("Load failed");
-  const data: { students: StudentWorkspaceSummary[] } = await response.json();
   return data.students;
 }
 
@@ -52,7 +60,7 @@ export async function saveDraft(
   revision: string | null,
   draft: PersonalWorkspace,
 ): Promise<SaveResult> {
-  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/workspace`, {
+  const response = await fetch(workspaceUrl(projectId), {
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-Workspace-Account": accountId },
     body: JSON.stringify({ revision, draft }),

@@ -2,7 +2,6 @@ import {
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
-  SCOPE_OFFSET,
   type C4Node,
   type C4Relationship,
 } from "@modules/c4-model";
@@ -10,7 +9,7 @@ import { useI18n } from "@modules/i18n";
 import { type Connection, type NodeChangeset, type ReactFlowInstance } from "@xyflow/react";
 import { useRef, useState } from "react";
 
-import { applyCanvasLayout } from "../model/canvasLayout";
+import { applyCanvasLayout, toModelPosition } from "../model/canvasLayout";
 import { buildFlowElements } from "../model/flowElements";
 import type { CanvasNode } from "../model/flowTypes";
 import { removeC4Elements, type C4Graph } from "../model/modelHistory";
@@ -47,37 +46,19 @@ export function useC4Editor({
   const [readmeMode, setReadmeMode] = useState<"reading" | "source">(
     designDoc || readOnly ? "reading" : "source",
   );
-  const [view, setView] = useState({
+  const emptyView = {
     revision: importRevision,
     scopeId: "",
     selectedId: "",
     edgeId: "",
     contextMenu: null as C4ContextMenu | null,
-  });
-  const currentView =
-    view.revision === importRevision
-      ? view
-      : {
-          revision: importRevision,
-          scopeId: "",
-          selectedId: "",
-          edgeId: "",
-          contextMenu: null as C4ContextMenu | null,
-        };
+  };
+  const [view, setView] = useState(emptyView);
+  const currentView = view.revision === importRevision ? view : emptyView;
   const { scopeId, selectedId, edgeId, contextMenu } = currentView;
-  const updateView = (
-    patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId" | "contextMenu">>,
-  ) => {
+  const updateView = (patch: Partial<Omit<typeof view, "revision">>) => {
     setView((previous) => ({
-      ...(previous.revision === importRevision
-        ? previous
-        : {
-            revision: importRevision,
-            scopeId: "",
-            selectedId: "",
-            edgeId: "",
-            contextMenu: null as C4ContextMenu | null,
-          }),
+      ...(previous.revision === importRevision ? previous : emptyView),
       ...patch,
     }));
   };
@@ -102,10 +83,7 @@ export function useC4Editor({
       scope?.id || "",
       crypto.randomUUID(),
       t("c4.newElement"),
-      {
-        x: position.x - (scope ? SCOPE_OFFSET.x : 0),
-        y: position.y - (scope ? SCOPE_OFFSET.y : 0),
-      },
+      toModelPosition(position, scope),
     );
     if (!node) return;
     edit((graph) => {
@@ -131,7 +109,7 @@ export function useC4Editor({
     const target = (type === "undo" ? history.past : history.future).at(-1);
     if (!target || importing || readOnly) return;
     drawing.cancelDrawing();
-    const patch: Partial<Pick<typeof view, "scopeId" | "selectedId" | "edgeId" | "contextMenu">> = {
+    const patch: Partial<Omit<typeof view, "revision">> = {
       contextMenu: null,
     };
     if (scopeId && !canExploreC4Node(target.nodes, scopeId)) {

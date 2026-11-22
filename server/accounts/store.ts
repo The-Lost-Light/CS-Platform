@@ -40,6 +40,15 @@ function activeActor(target: AccountTarget) {
     : sql`EXISTS (SELECT 1 FROM user WHERE id = ${target.id} AND COALESCE(banned, 0) = 0)`;
 }
 
+async function accountExists(id: string) {
+  const [row] = await db
+    .select({ id: userTable.id })
+    .from(userTable)
+    .where(eq(userTable.id, id))
+    .limit(1);
+  return Boolean(row);
+}
+
 export async function updateAccount(target: AccountTarget, body: unknown) {
   const { id } = target;
   if (
@@ -61,12 +70,7 @@ export async function updateAccount(target: AccountTarget, body: unknown) {
     role = body.role;
     if (id === target.actorId && role !== "admin") return "self";
   }
-  const [existing] = await db
-    .select({ id: userTable.id })
-    .from(userTable)
-    .where(eq(userTable.id, id))
-    .limit(1);
-  if (!existing) return "notFound";
+  if (!(await accountExists(id))) return "notFound";
   const email = body.email.trim().toLowerCase();
   const now = new Date();
   const editableUser = and(
@@ -160,12 +164,7 @@ export async function changeAccountPassword(
 
 export async function deleteAccount(actorId: string, id: string) {
   if (id === actorId) return "self";
-  const [existing] = await db
-    .select({ id: userTable.id })
-    .from(userTable)
-    .where(eq(userTable.id, id))
-    .limit(1);
-  if (!existing) return "notFound";
+  if (!(await accountExists(id))) return "notFound";
   const deleted = await db
     .delete(userTable)
     .where(and(eq(userTable.id, id), activeAdmin(actorId), anotherAdmin(id)))

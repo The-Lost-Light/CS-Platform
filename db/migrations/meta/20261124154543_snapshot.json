@@ -42,25 +42,15 @@
           "name": "project_attachment_part_project_id_attachment_id_project_attachment_project_id_attachment_id_fk",
           "tableFrom": "project_attachment_part",
           "tableTo": "project_attachment",
-          "columnsFrom": [
-            "project_id",
-            "attachment_id"
-          ],
-          "columnsTo": [
-            "project_id",
-            "attachment_id"
-          ],
+          "columnsFrom": ["project_id", "attachment_id"],
+          "columnsTo": ["project_id", "attachment_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "project_attachment_part_project_id_attachment_id_part_pk": {
-          "columns": [
-            "project_id",
-            "attachment_id",
-            "part"
-          ],
+          "columns": ["project_id", "attachment_id", "part"],
           "name": "project_attachment_part_project_id_attachment_id_part_pk"
         }
       },
@@ -110,13 +100,7 @@
       "indexes": {
         "project_attachment_order_idx": {
           "name": "project_attachment_order_idx",
-          "columns": [
-            "deleted",
-            "project_id",
-            "name",
-            "attachment_id",
-            "size"
-          ],
+          "columns": ["deleted", "project_id", "name", "attachment_id", "size"],
           "isUnique": false
         }
       },
@@ -125,22 +109,15 @@
           "name": "project_attachment_project_id_course_project_id_fk",
           "tableFrom": "project_attachment",
           "tableTo": "course_project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "project_attachment_project_id_attachment_id_pk": {
-          "columns": [
-            "project_id",
-            "attachment_id"
-          ],
+          "columns": ["project_id", "attachment_id"],
           "name": "project_attachment_project_id_attachment_id_pk"
         }
       },
@@ -197,19 +174,13 @@
       "indexes": {
         "course_project_active_index_unique": {
           "name": "course_project_active_index_unique",
-          "columns": [
-            "project_index"
-          ],
+          "columns": ["project_index"],
           "isUnique": true,
           "where": "\"course_project\".\"deleted\" = 0 AND \"course_project\".\"project_index\" > 0"
         },
         "course_project_deleted_index_idx": {
           "name": "course_project_deleted_index_idx",
-          "columns": [
-            "deleted",
-            "project_index",
-            "id"
-          ],
+          "columns": ["deleted", "project_index", "id"],
           "isUnique": false
         }
       },
@@ -249,22 +220,15 @@
           "name": "personal_workspace_part_revision_personal_workspace_revision_fk",
           "tableFrom": "personal_workspace_part",
           "tableTo": "personal_workspace",
-          "columnsFrom": [
-            "revision"
-          ],
-          "columnsTo": [
-            "revision"
-          ],
+          "columnsFrom": ["revision"],
+          "columnsTo": ["revision"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "personal_workspace_part_revision_part_pk": {
-          "columns": [
-            "revision",
-            "part"
-          ],
+          "columns": ["revision", "part"],
           "name": "personal_workspace_part_revision_part_pk"
         }
       },
@@ -307,17 +271,12 @@
       "indexes": {
         "personal_workspace_user_id_idx": {
           "name": "personal_workspace_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "personal_workspace_project_id_user_id_unique": {
           "name": "personal_workspace_project_id_user_id_unique",
-          "columns": [
-            "project_id",
-            "user_id"
-          ],
+          "columns": ["project_id", "user_id"],
           "isUnique": true
         }
       },
@@ -326,12 +285,8 @@
           "name": "personal_workspace_user_id_user_id_fk",
           "tableFrom": "personal_workspace",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -438,9 +393,7 @@
       "indexes": {
         "account_userId_idx": {
           "name": "account_userId_idx",
-          "columns": [
-            "userId"
-          ],
+          "columns": ["userId"],
           "isUnique": false
         }
       },
@@ -449,12 +402,8 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -533,16 +482,12 @@
       "indexes": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         },
         "session_userId_idx": {
           "name": "session_userId_idx",
-          "columns": [
-            "userId"
-          ],
+          "columns": ["userId"],
           "isUnique": false
         }
       },
@@ -551,12 +496,8 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -656,26 +597,17 @@
       "indexes": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         },
         "user_deleted_createdAt_idx": {
           "name": "user_deleted_createdAt_idx",
-          "columns": [
-            "deleted",
-            "createdAt"
-          ],
+          "columns": ["deleted", "createdAt"],
           "isUnique": false
         },
         "user_role_banned_deleted_idx": {
           "name": "user_role_banned_deleted_idx",
-          "columns": [
-            "deleted",
-            "role",
-            "banned"
-          ],
+          "columns": ["deleted", "role", "banned"],
           "isUnique": false
         }
       },
@@ -733,9 +665,7 @@
       "indexes": {
         "verification_identifier_idx": {
           "name": "verification_identifier_idx",
-          "columns": [
-            "identifier"
-          ],
+          "columns": ["identifier"],
           "isUnique": false
         }
       },

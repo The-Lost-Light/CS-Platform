@@ -2,6 +2,8 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { admin } from "better-auth/plugins";
 import { defineAuth } from "void/auth";
 
+import { parseCreateAccountInput } from "./src/shared/accountPolicy";
+import { isRecord } from "./src/shared/isRecord";
 import {
   isValidPasswordLength,
   MAX_CURRENT_PASSWORD_LENGTH,
@@ -45,10 +47,27 @@ export default defineAuth(({ defaults }) => ({
   hooks: {
     ...defaults.hooks,
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/admin/create-user") {
+        const parsed = parseCreateAccountInput(ctx.body);
+        if (!parsed.ok) throw new APIError("BAD_REQUEST", { message: parsed.message });
+        const nextCtx: typeof ctx = { ...ctx, body: parsed.value };
+        const defaultResult = await defaults.hooks?.before?.(nextCtx);
+        if (isRecord(defaultResult) && isRecord(defaultResult.context)) {
+          return {
+            ...defaultResult,
+            context: {
+              ...defaultResult.context,
+              body: {
+                ...parsed.value,
+                ...(isRecord(defaultResult.context.body) ? defaultResult.context.body : {}),
+              },
+            },
+          };
+        }
+        return defaultResult !== undefined ? defaultResult : { context: { body: parsed.value } };
+      }
       const newPassword =
-        ctx.path === "/admin/create-user" || ctx.path === "/sign-up/email"
-          ? ctx.body?.password
-          : ctx.body?.newPassword;
+        ctx.path === "/sign-up/email" ? ctx.body?.password : ctx.body?.newPassword;
       if (newPassword !== undefined && !isValidPasswordLength(newPassword))
         throw new APIError("BAD_REQUEST", {
           message: `Use a password of ${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} characters.`,

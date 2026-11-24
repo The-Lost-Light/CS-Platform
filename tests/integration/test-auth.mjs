@@ -48,6 +48,25 @@ for (const invalidPassword of [studentPassword.slice(1), newPassword + "a"]) {
     400,
   );
 }
+const { password: _omittedPassword, ...studentWithoutPassword } = student;
+const { role: _omittedRole, ...studentWithoutRole } = student;
+for (const invalidCreatePayload of [
+  studentWithoutPassword,
+  { ...student, name: "   " },
+  { ...student, name: "a".repeat(101) },
+  { ...student, email: "a".repeat(245) + "@example.test" },
+  studentWithoutRole,
+  { ...student, role: "owner" },
+  { ...student, role: ["user"] },
+  { ...student, data: { emailVerified: true } },
+  { ...student, data: { banned: true } },
+  { ...student, emailVerified: true },
+]) {
+  assert.equal(
+    (await request("/api/auth/admin/create-user", invalidCreatePayload, adminCookie)).status,
+    400,
+  );
+}
 const created = await request("/api/auth/admin/create-user", student, adminCookie);
 assert.equal(created.status, 200, await created.clone().text());
 const studentLogin = await request("/api/auth/sign-in/email", student);
@@ -228,16 +247,17 @@ assert.equal((await request("/api/admin/accounts", null, currentStudentCookie)).
 const accountUpdate = { name: "Updated student", email: "edited-" + studentEmail, role: "user" };
 const profilePath = "/api/admin/accounts/" + studentId;
 const passwordPath = profilePath + "/password";
-const passwordUpdate = { currentPassword: studentPassword, newPassword };
+const studentPasswordUpdate = { newPassword };
 // Each operation rejects a combined submission before applying either change.
 for (const path of [profilePath, passwordPath]) {
   assert.equal(
-    (await request(path, { ...accountUpdate, ...passwordUpdate }, adminCookie, "PATCH")).status,
+    (await request(path, { ...accountUpdate, ...studentPasswordUpdate }, adminCookie, "PATCH"))
+      .status,
     400,
   );
 }
 assert.equal(
-  (await request(passwordPath, passwordUpdate, currentStudentCookie, "PATCH")).status,
+  (await request(passwordPath, studentPasswordUpdate, currentStudentCookie, "PATCH")).status,
   403,
 );
 for (const invalidPassword of [studentPassword.slice(1), newPassword + "a"]) {
@@ -245,7 +265,7 @@ for (const invalidPassword of [studentPassword.slice(1), newPassword + "a"]) {
     (
       await request(
         passwordPath,
-        { ...passwordUpdate, newPassword: invalidPassword },
+        { ...studentPasswordUpdate, newPassword: invalidPassword },
         adminCookie,
         "PATCH",
       )
@@ -253,10 +273,20 @@ for (const invalidPassword of [studentPassword.slice(1), newPassword + "a"]) {
     400,
   );
 }
-for (const currentPassword of [undefined, "", "wrong-password"]) {
+for (const currentPassword of [studentPassword, "wrong-password"]) {
   const rejected = await request(
     passwordPath,
-    { ...passwordUpdate, currentPassword },
+    { ...studentPasswordUpdate, currentPassword },
+    adminCookie,
+    "PATCH",
+  );
+  assert.equal(rejected.status, 400);
+  assert.equal((await rejected.json()).error, "invalid");
+}
+for (const currentPassword of [undefined, "", "wrong-password"]) {
+  const rejected = await request(
+    "/api/admin/accounts/" + adminId + "/password",
+    { currentPassword, newPassword },
     adminCookie,
     "PATCH",
   );
@@ -351,10 +381,10 @@ const editedCookie = editedLogin.headers
   .getSetCookie()
   .map((c) => c.split(";")[0])
   .join("; ");
-const changePassword = () => request(passwordPath, passwordUpdate, adminCookie, "PATCH");
+const changePassword = () => request(passwordPath, studentPasswordUpdate, adminCookie, "PATCH");
 const attempts = await Promise.all([changePassword(), changePassword()]);
 assert.equal(attempts.filter((r) => r.status === 200).length, 1);
-assert.ok(attempts.some((r) => r.status === 400 || r.status === 409));
+assert.ok(attempts.some((r) => r.status === 409));
 const profiles = await (await request("/api/admin/accounts", null, adminCookie)).json();
 const edited = profiles.users.find((user) => user.id === studentId);
 assert.deepEqual({ name: edited.name, email: edited.email, role: edited.role }, accountUpdate);
@@ -493,15 +523,41 @@ assert.equal(
   200,
 );
 const promotedCookie = await signInToEditedAccount(studentPassword);
+for (const currentPassword of [undefined, "", "wrong-password"]) {
+  const rejected = await request(
+    passwordPath,
+    { currentPassword, newPassword },
+    adminCookie,
+    "PATCH",
+  );
+  assert.equal(rejected.status, 400);
+  assert.equal((await rejected.json()).error, "invalidCurrentPassword");
+}
+assert.equal(
+  (await (await request("/api/session", null, promotedCookie)).json()).user.id,
+  studentId,
+);
+assert.equal(
+  (
+    await request(
+      passwordPath,
+      { currentPassword: studentPassword, newPassword },
+      adminCookie,
+      "PATCH",
+    )
+  ).status,
+  200,
+);
+assert.equal((await (await request("/api/session", null, promotedCookie)).json()).user, null);
+const promotedAdminCookie = await signInToEditedAccount(newPassword);
 assert.equal(
   (await request("/api/admin/accounts/" + studentId, null, adminCookie, "DELETE")).status,
   200,
 );
-assert.equal((await (await request("/api/session", null, promotedCookie)).json()).user, null);
+assert.equal((await (await request("/api/session", null, promotedAdminCookie)).json()).user, null);
 assert.ok(
-  !(
-    await request("/api/auth/sign-in/email", { email: ownProfile.email, password: studentPassword })
-  ).ok,
+  !(await request("/api/auth/sign-in/email", { email: ownProfile.email, password: newPassword }))
+    .ok,
 );
 assert.ok(
   !(await (await request("/api/admin/accounts", null, adminCookie)).json()).users.some(

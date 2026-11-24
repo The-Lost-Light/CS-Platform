@@ -19,6 +19,8 @@ export function EditAccountDialog({
   onSaved: () => void;
 }) {
   const { t } = useI18n();
+  const isSelf = management?.isSelf ?? true;
+  const requireCurrentPassword = isSelf || management?.role === "admin";
   const endpoint = management
     ? `/api/admin/accounts/${encodeURIComponent(management.id)}`
     : "/api/account";
@@ -51,7 +53,8 @@ export function EditAccountDialog({
         <ChangeAccountPassword
           endpoint={endpoint}
           email={account.email}
-          isSelf={management?.isSelf ?? true}
+          isSelf={isSelf}
+          requireCurrentPassword={requireCurrentPassword}
           disabled={pending}
         />
       }

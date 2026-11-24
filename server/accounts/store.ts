@@ -1,4 +1,10 @@
 import { isUniqueViolation } from "@server/errors";
+import {
+  isAccountRole,
+  normalizeAccountEmail,
+  normalizeAccountName,
+  type AccountRole,
+} from "@shared/accountPolicy";
 import { isRecord } from "@shared/isRecord";
 import { isValidPasswordLength, MAX_CURRENT_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 import { db, desc, eq, and, exists, sql } from "void/db";
@@ -11,6 +17,8 @@ const activeAdmin = (id: string) =>
   sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND role = 'admin' AND COALESCE(banned, 0) = 0)`;
 const anotherAdmin = (id: string) =>
   sql`EXISTS (SELECT 1 FROM user WHERE id != ${id} AND role = 'admin' AND COALESCE(banned, 0) = 0)`;
+const studentAccount = (id: string) =>
+  sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND COALESCE(role, 'user') != 'admin')`;
 
 export function listAccounts() {
   return db
@@ -55,23 +63,19 @@ export async function updateAccount(target: AccountTarget, body: unknown) {
     !isRecord(body) ||
     Object.keys(body).some(
       (key) => key !== "name" && key !== "email" && !(key === "role" && target.scope === "admin"),
-    ) ||
-    typeof body.name !== "string" ||
-    !body.name.trim() ||
-    body.name.length > 100 ||
-    typeof body.email !== "string" ||
-    body.email.length > 254 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
+    )
   )
     return "invalid";
-  let role: "admin" | "user" | undefined;
+  const name = normalizeAccountName(body.name);
+  const email = normalizeAccountEmail(body.email);
+  if (!name || !email) return "invalid";
+  let role: AccountRole | undefined;
   if (target.scope === "admin") {
-    if (body.role !== "user" && body.role !== "admin") return "invalid";
+    if (!isAccountRole(body.role)) return "invalid";
     role = body.role;
     if (id === target.actorId && role !== "admin") return "self";
   }
   if (!(await accountExists(id))) return "notFound";
-  const email = body.email.trim().toLowerCase();
   const now = new Date();
   const editableUser = and(
     eq(userTable.id, id),
@@ -84,7 +88,7 @@ export async function updateAccount(target: AccountTarget, body: unknown) {
       db
         .update(userTable)
         .set({
-          name: body.name.trim(),
+          name,
           email,
           ...(role ? { role } : {}),
           emailVerified: sql`CASE WHEN ${userTable.email} = ${email} THEN ${userTable.emailVerified} ELSE 0 END`,
@@ -115,14 +119,12 @@ export async function changeAccountPassword(
   )
     return "invalid";
   const { currentPassword, newPassword } = body;
-  if (
-    typeof currentPassword !== "string" ||
-    !currentPassword ||
-    currentPassword.length > MAX_CURRENT_PASSWORD_LENGTH
-  )
-    return "invalidCurrentPassword";
   const [target] = await db
-    .select({ credentialId: accountTable.id, hash: accountTable.password })
+    .select({
+      role: userTable.role,
+      credentialId: accountTable.id,
+      hash: accountTable.password,
+    })
     .from(userTable)
     .leftJoin(
       accountTable,
@@ -131,17 +133,32 @@ export async function changeAccountPassword(
     .where(eq(userTable.id, id))
     .limit(1);
   if (!target) return "notFound";
-  if (
-    !target.credentialId ||
-    !target.hash ||
-    !(await hasher.verify({ password: currentPassword, hash: target.hash }))
-  )
-    return "invalidCurrentPassword";
+  const isAdminResettingStudent =
+    targetAccount.scope === "admin" && id !== targetAccount.actorId && target.role !== "admin";
+  const requiresCurrentPassword = !isAdminResettingStudent;
+  if (requiresCurrentPassword) {
+    if (
+      typeof currentPassword !== "string" ||
+      !currentPassword ||
+      currentPassword.length > MAX_CURRENT_PASSWORD_LENGTH
+    )
+      return "invalidCurrentPassword";
+    if (
+      !target.credentialId ||
+      !target.hash ||
+      !(await hasher.verify({ password: currentPassword, hash: target.hash }))
+    )
+      return "invalidCurrentPassword";
+  } else if (currentPassword !== undefined) {
+    return "invalid";
+  }
+  if (!target.credentialId || !target.hash) return "conflict";
   const newHash = await hasher.hash(newPassword);
   const verifiedCredential = and(
     eq(accountTable.id, target.credentialId),
     eq(accountTable.password, target.hash),
     activeActor(targetAccount),
+    isAdminResettingStudent ? studentAccount(id) : undefined,
   );
   // Recheck the verified hash in both statements. Only one concurrent change can succeed.
   const [, updated] = await db.batch([

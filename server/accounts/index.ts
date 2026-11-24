@@ -4,7 +4,7 @@ import { getAuth, requireAuth } from "void/auth";
 
 import { changeAccountPassword, updateAccount, type AccountTarget } from "./store";
 
-export { deleteAccount, listAccounts } from "./store";
+export { changeAccountPassword, deleteAccount, listAccounts, type AccountTarget } from "./store";
 
 export function accountEditHandler(
   scope: AccountTarget["scope"],

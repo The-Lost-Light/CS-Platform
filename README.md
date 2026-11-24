@@ -182,7 +182,7 @@ GET /api/projects 只允許登入者讀取完整專案列表（內建題庫、�
 
 管理員可在專案或帳號列表按「新增」或「編輯」開啟浮動視窗。儲存或取消後會回到原本的搜尋結果。「設定 → 編輯目前帳號」與帳號管理使用同一個「編輯帳號」視窗。學生可修改自己的姓名與電子郵件，管理員另可看到登入身分欄位。
 
-編輯帳號時，按卡片右上角的「修改密碼」可開啟獨立視窗。輸入該帳號的原密碼及 8–16 個字元的新密碼，再按「儲存新密碼」。既有超過 16 個字元的密碼仍可用於登入及驗證。編輯自己的帳號資料或密碼後須重新登入。
+編輯帳號時，按卡片右上角的「修改密碼」可開啟獨立視窗。修改自己的密碼或其他管理員的密碼時，須輸入該帳號的原密碼及 8–16 個字元的新密碼；管理員重設學生密碼時則無須輸入原密碼，只需填寫 8–16 個字元的新密碼，再按「儲存新密碼」。既有超過 16 個字元的密碼仍可用於登入及驗證。編輯自己的帳號資料或密碼後須重新登入。
 
 帳號列表只回傳 ID、姓名、電子郵件、角色與停權狀態。儲存帳號資料或密碼後會撤銷該帳號所有工作階段。變更電子郵件也會重設驗證狀態。刪除帳號會一併清除其憑證與工作階段。禁止自我刪除與自我降權，資料庫修改條件同時檢查操作者仍是管理員及其他可用管理員存在，避免並行操作造成失去管理員。原 Better Auth 的個人帳號變更端點（`update-user`、`change-password`、`change-email`、`delete-user`）及除 `admin/create-user` 以外的內建管理端點（包含 `admin/update-user`、`admin/set-user-password`、`admin/set-role`、`admin/remove-user`、`admin/ban-user`、`admin/unban-user`、`admin/impersonate-user`、`admin/stop-impersonating`、`admin/list-users`、`admin/get-user`、`admin/list-user-sessions`、`admin/revoke-user-session`、`admin/revoke-user-sessions`、`admin/has-permission`）均已停用。帳號資料由 `/api/admin/accounts/:id` 更新，密碼由 `/api/admin/accounts/:id/password` 更新。
 

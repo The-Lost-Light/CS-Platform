@@ -2,7 +2,10 @@ import { AuthProvider, useAuth, AuthGate, type User } from "@modules/auth";
 import { HomeDashboard } from "@modules/catalog";
 import { I18nProvider, createTranslator } from "@modules/i18n";
 import { ThemeProvider } from "@modules/theme";
+import { MAX_ACCOUNT_EMAIL_LENGTH, MAX_ACCOUNT_NAME_LENGTH } from "@shared/accountPolicy";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
@@ -63,7 +66,7 @@ test("AuthGate initially presents login and hides authenticated navigation and d
   assert.notMatch(html, /<(?:header|main)\b/);
 });
 
-test("Better Auth disables built-in account mutation and unused admin endpoints", async () => {
+function createAuthInstance() {
   const options = authConfig({
     defaults: {
       baseURL: "http://localhost/api/auth",
@@ -73,7 +76,11 @@ test("Better Auth disables built-in account mutation and unused admin endpoints"
     dialect: "sqlite",
     request: new Request("http://localhost/api/auth/ok"),
   });
-  const instance = betterAuth(options);
+  return { options, instance: betterAuth(options) };
+}
+
+test("Better Auth disables built-in account mutation and unused admin endpoints", async () => {
+  const { options, instance } = createAuthInstance();
 
   const disabledEndpoints: Array<[string, string]> = [
     ["POST", "/update-user"],
@@ -119,4 +126,171 @@ test("Better Auth disables built-in account mutation and unused admin endpoints"
 
   const okResponse = await instance.handler(new Request("http://localhost/api/auth/ok"));
   assert.strictEqual(okResponse.status, 200);
+});
+
+test("POST /api/auth/admin/create-user rejects missing passwords, invalid fields, and data injection", async () => {
+  const { instance } = createAuthInstance();
+  const basePayload = {
+    name: "Alex Chen",
+    email: "alex@example.com",
+    password: "password123",
+    role: "user",
+  };
+  const postCreate = (payload: unknown) =>
+    instance.handler(
+      new Request("http://localhost/api/auth/admin/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost",
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
+
+  const { password: _missingPassword, ...withoutPassword } = basePayload;
+  const { name: _missingName, ...withoutName } = basePayload;
+  const { email: _missingEmail, ...withoutEmail } = basePayload;
+  const { role: _missingRole, ...withoutRole } = basePayload;
+
+  const invalidPayloads: unknown[] = [
+    withoutPassword,
+    { ...basePayload, password: "1".repeat(MIN_PASSWORD_LENGTH - 1) },
+    { ...basePayload, password: "1".repeat(MAX_PASSWORD_LENGTH + 1) },
+    { ...basePayload, password: 12345678 },
+    withoutName,
+    { ...basePayload, name: "" },
+    { ...basePayload, name: "   \t\n  " },
+    { ...basePayload, name: "a".repeat(MAX_ACCOUNT_NAME_LENGTH + 1) },
+    withoutEmail,
+    { ...basePayload, email: "not-an-email" },
+    { ...basePayload, email: "user@invalid" },
+    { ...basePayload, email: "a".repeat(MAX_ACCOUNT_EMAIL_LENGTH - 10) + "@test.local" },
+    withoutRole,
+    { ...basePayload, role: ["user"] },
+    { ...basePayload, role: "owner" },
+    { ...basePayload, role: "ADMIN" },
+    { ...basePayload, role: "USER" },
+    { ...basePayload, data: { emailVerified: true } },
+    { ...basePayload, data: { banned: true } },
+    { ...basePayload, data: { role: "admin" } },
+    { ...basePayload, data: {} },
+    { ...basePayload, emailVerified: true },
+    { ...basePayload, id: "custom-id" },
+    { ...basePayload, banned: true },
+    null,
+    [],
+  ];
+
+  for (const payload of invalidPayloads) {
+    const response = await postCreate(payload);
+    assert.strictEqual(response.status, 400, `Expected 400 for payload ${JSON.stringify(payload)}`);
+  }
+
+  for (const validPayload of [
+    {
+      name: "  Alex Chen  ",
+      email: "  Alex@Example.com  ",
+      password: "password123",
+      role: "user",
+    },
+    {
+      name: "Admin User",
+      email: "admin@example.com",
+      password: "password123",
+      role: "admin",
+    },
+  ]) {
+    const response = await postCreate(validPayload);
+    assert.strictEqual(
+      response.status,
+      401,
+      `Expected valid payload to pass validation to auth check for ${validPayload.role}`,
+    );
+  }
+});
+
+test("createUser API normalizes name/email, stores credentials, and rejects invalid payloads", async () => {
+  const { instance } = createAuthInstance();
+
+  const created = await instance.api.createUser({
+    body: {
+      name: "  Alex Chen  ",
+      email: "  Alex.Chen@Example.COM ",
+      password: "password123",
+      role: "user",
+    },
+  });
+
+  assert.strictEqual(created.user.name, "Alex Chen");
+  assert.strictEqual(created.user.email, "alex.chen@example.com");
+  assert.strictEqual(created.user.role, "user");
+  assert.strictEqual(created.user.emailVerified, false);
+
+  const signedIn = await instance.api.signInEmail({
+    body: { email: "alex.chen@example.com", password: "password123" },
+  });
+  assert.strictEqual(signedIn.user.id, created.user.id);
+
+  const invalidCalls: Array<{ name: string; run: () => Promise<unknown> }> = [
+    {
+      name: "omitted password",
+      run: () =>
+        instance.api.createUser({
+          body: { name: "No Pass", email: "nopass@example.com", role: "user" },
+        }),
+    },
+    {
+      name: "data injection",
+      run: () =>
+        instance.api.createUser({
+          body: {
+            name: "Injected",
+            email: "inject@example.com",
+            password: "password123",
+            role: "user",
+            data: { emailVerified: true },
+          },
+        }),
+    },
+    {
+      name: "invalid role",
+      run: () =>
+        Reflect.apply(instance.api.createUser, instance.api, [
+          {
+            body: {
+              name: "Owner",
+              email: "owner@example.com",
+              password: "password123",
+              role: "owner",
+            },
+          },
+        ]) as Promise<unknown>,
+    },
+    {
+      name: "whitespace name",
+      run: () =>
+        instance.api.createUser({
+          body: {
+            name: "   ",
+            email: "blank@example.com",
+            password: "password123",
+            role: "user",
+          },
+        }),
+    },
+  ];
+
+  for (const testCase of invalidCalls) {
+    let caught: unknown;
+    try {
+      await testCase.run();
+    } catch (error) {
+      caught = error;
+    }
+    assert.ok(
+      caught instanceof APIError && caught.statusCode === 400,
+      `Expected 400 APIError for ${testCase.name}`,
+    );
+  }
 });

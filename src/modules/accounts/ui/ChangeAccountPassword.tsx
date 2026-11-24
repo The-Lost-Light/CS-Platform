@@ -18,15 +18,19 @@ export function ChangeAccountPassword({
   endpoint,
   email,
   isSelf,
+  requireCurrentPassword = true,
+  initialOpen = false,
   disabled,
 }: {
   endpoint: string;
   email: string;
   isSelf: boolean;
+  requireCurrentPassword?: boolean;
+  initialOpen?: boolean;
   disabled: boolean;
 }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [saved, setSaved] = useState(false);
   const limits = { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH };
 
@@ -35,7 +39,7 @@ export function ChangeAccountPassword({
     (code) => {
       switch (code) {
         case "invalidCurrentPassword":
-          return "admin.invalidCurrentPassword";
+          return requireCurrentPassword ? "admin.invalidCurrentPassword" : "admin.accountConflict";
         case "invalid":
           return "admin.passwordHelp";
         case "conflict":
@@ -81,14 +85,16 @@ export function ChangeAccountPassword({
         >
           <form onSubmit={submit}>
             <fieldset disabled={pending} className="space-y-4">
-              <FormField label={t("admin.currentPassword")}>
-                <TextInput
-                  name="currentPassword"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </FormField>
+              {requireCurrentPassword && (
+                <FormField label={t("admin.currentPassword")}>
+                  <TextInput
+                    name="currentPassword"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </FormField>
+              )}
               <NewPasswordField name="newPassword" label={t("admin.newPassword")} />
               <p className="ui-field-help">
                 {t(isSelf ? "admin.selfPasswordHelp" : "admin.accountEditHelp")}

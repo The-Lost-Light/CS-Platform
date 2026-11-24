@@ -36,7 +36,11 @@ export function useCatalogState(locale: Locale) {
   }, [attempt, locale]);
 
   const removeProject = useCallback((id: string) => {
-    setProjects((current) => current.filter((project) => project.id !== id));
+    setProjects((current) =>
+      current
+        .filter((project) => project.id !== id)
+        .map((project, index) => ({ ...project, index: index + 1 })),
+    );
     setWorkspaceStatuses((current) => {
       if (!(id in current)) return current;
       const { [id]: _, ...rest } = current;
@@ -45,7 +49,15 @@ export function useCatalogState(locale: Locale) {
   }, []);
 
   const addProject = useCallback((project: Project) => {
-    setProjects((current) => [project, ...current.filter((item) => item.id !== project.id)]);
+    setProjects((current) =>
+      [...current.filter((item) => item.id !== project.id), project].sort(
+        (a, b) => a.index - b.index,
+      ),
+    );
+  }, []);
+
+  const replaceProjects = useCallback((nextProjects: Project[]) => {
+    setProjects(nextProjects);
   }, []);
 
   const markWorkspaceSaved = useCallback((projectId: string, updatedAt: number) => {
@@ -66,6 +78,7 @@ export function useCatalogState(locale: Locale) {
       workspaceStatuses,
       removeProject,
       addProject,
+      replaceProjects,
       markWorkspaceSaved,
     },
   };

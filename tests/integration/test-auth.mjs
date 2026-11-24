@@ -112,7 +112,6 @@ assert.ok(
   ).ok,
 );
 const projectInput = {
-  codeName: "TEST-" + Date.now(),
   title: "Integration project",
   points: 100,
   dueDate: "2026-12-20T23:59",
@@ -129,10 +128,6 @@ assert.equal(
   (await request("/api/projects", { ...projectInput, points: -1 }, adminCookie)).status,
   400,
 );
-assert.equal(
-  (await request("/api/projects", { ...projectInput, codeName: "PROJ-01" }, adminCookie)).status,
-  409,
-);
 const upload = new FormData();
 for (const [key, value] of Object.entries(projectInput)) upload.set(key, String(value));
 const fileContents = "題目附件".repeat(60000);
@@ -146,15 +141,83 @@ assert.equal(createdProjectResponse.status, 201, await createdProjectResponse.cl
 const { project } = await createdProjectResponse.json();
 writeFileSync(".void/crud-project-ids.json", JSON.stringify([project.id]));
 assert.equal(project.title, projectInput.title);
+assert.ok(Number.isInteger(project.index) && project.index >= 3);
 assert.equal(project.attachments.length, 1);
 const attachmentPath = "/api/projects/" + project.id + "/attachments/" + project.attachments[0].id;
 assert.equal((await request(attachmentPath)).status, 401);
 const downloaded = await request(attachmentPath, null, studentCookie);
 assert.equal(downloaded.status, 200);
 assert.equal(await downloaded.text(), fileContents);
-assert.equal((await request("/api/projects", projectInput, adminCookie)).status, 409);
 const list = await (await request("/api/projects", null, studentCookie)).json();
 assert.ok(list.projects.some((item) => item.id === project.id));
+assert.deepEqual(
+  list.projects.map((item) => item.index),
+  list.projects.map((item) => item.index).sort((a, b) => a - b),
+);
+const initialOrderIds = list.projects.map((item) => item.id);
+assert.equal(
+  (await request("/api/projects", { orderedIds: initialOrderIds }, "", "PUT")).status,
+  401,
+);
+assert.equal(
+  (await request("/api/projects", { orderedIds: initialOrderIds }, studentCookie, "PUT")).status,
+  403,
+);
+assert.equal(
+  (
+    await request(
+      "/api/projects",
+      { orderedIds: initialOrderIds },
+      adminCookie,
+      "PUT",
+      "https://untrusted.example",
+    )
+  ).status,
+  403,
+);
+for (const invalidReorder of [
+  {},
+  { orderedIds: "not-an-array" },
+  { orderedIds: [project.id, project.id] },
+  { orderedIds: initialOrderIds, extra: true },
+]) {
+  assert.equal((await request("/api/projects", invalidReorder, adminCookie, "PUT")).status, 400);
+}
+for (const conflictReorder of [
+  { orderedIds: [project.id] },
+  { orderedIds: [...initialOrderIds, "missing-project-id"] },
+]) {
+  assert.equal((await request("/api/projects", conflictReorder, adminCookie, "PUT")).status, 409);
+}
+const movedFirstOrder = [project.id, ...initialOrderIds.filter((id) => id !== project.id)];
+const reorderedZhResponse = await request(
+  "/api/projects?locale=zh-TW",
+  { orderedIds: movedFirstOrder },
+  adminCookie,
+  "PUT",
+);
+assert.equal(reorderedZhResponse.status, 200, await reorderedZhResponse.clone().text());
+const reorderedZh = await reorderedZhResponse.json();
+assert.deepEqual(
+  reorderedZh.projects.map((item) => item.id),
+  movedFirstOrder,
+);
+assert.deepEqual(
+  reorderedZh.projects.map((item) => item.index),
+  movedFirstOrder.map((_, index) => index + 1),
+);
+const reorderedEn = await (await request("/api/projects?locale=en", null, studentCookie)).json();
+assert.deepEqual(
+  reorderedEn.projects.map((item) => item.id),
+  movedFirstOrder,
+);
+const builtInEn = reorderedEn.projects.find((item) => item.id === "project-fullstack-web");
+const builtInZh = reorderedZh.projects.find((item) => item.id === "project-fullstack-web");
+assert.ok(builtInEn && builtInZh && builtInEn.title !== builtInZh.title);
+assert.equal(
+  (await request("/api/projects", { orderedIds: initialOrderIds }, adminCookie, "PUT")).status,
+  200,
+);
 assert.equal((await request("/projects/" + project.id, null, studentCookie)).status, 200);
 // Keep a student's work while replacing a handout on the teacher's assignment.
 const projectPath = "/api/projects/" + project.id;
@@ -416,26 +479,16 @@ const updatedList = await (await request("/api/projects?locale=zh-TW", null, adm
 assert.equal(updatedList.projects.find((item) => item.id === project.id).title, "Updated project");
 assert.ok(updatedList.projects.some((item) => item.id === "project-fullstack-web"));
 assert.equal(
-  (
-    await request(
-      "/api/projects/" + project.id,
-      { ...editedProject, codeName: "PROJ-01" },
-      adminCookie,
-      "PATCH",
-    )
-  ).status,
-  409,
-);
-assert.equal(
   (await request("/api/projects/" + project.id, null, adminCookie, "DELETE")).status,
   200,
 );
 assert.equal((await request("/projects/" + project.id, null, adminCookie)).status, 404);
 assert.equal((await request(attachmentPath, null, adminCookie)).status, 404);
-assert.ok(
-  !(await (await request("/api/projects", null, adminCookie)).json()).projects.some(
-    (item) => item.id === project.id,
-  ),
+const afterDeleteCatalog = await (await request("/api/projects", null, adminCookie)).json();
+assert.ok(!afterDeleteCatalog.projects.some((item) => item.id === project.id));
+assert.deepEqual(
+  afterDeleteCatalog.projects.map((item) => item.index),
+  afterDeleteCatalog.projects.map((_, index) => index + 1),
 );
 assert.equal(
   (await request("/api/projects/" + project.id, editedProject, adminCookie, "PATCH")).status,

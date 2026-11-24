@@ -15,14 +15,14 @@ export const PATCH = defineHandler(async (c) => {
   const parsed = await readProjectInput(c.req.raw, existing.attachments);
   if (!parsed) return c.json({ error: "invalid" }, 400);
   const project = await saveProject(parsed, user.id, existing.id);
-  if (project === undefined) return c.json({ error: "notFound" }, 404);
-  if (!project) return c.json({ error: "duplicate" }, 409);
+  if (!project) return c.json({ error: "notFound" }, 404);
   return { project };
 });
 
 export const DELETE = defineHandler(async (c) => {
   const user = requireAuth(c);
   if (!allowsAdminMutation(user, c.req.raw)) return c.json({ error: "forbidden" }, 403);
-  if (!(await deleteProject(c.req.param("id") ?? ""))) return c.json({ error: "notFound" }, 404);
+  if (!(await deleteProject(c.req.param("id") ?? "", user.id)))
+    return c.json({ error: "notFound" }, 404);
   return { success: true };
 });

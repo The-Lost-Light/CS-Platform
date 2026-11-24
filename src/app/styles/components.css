@@ -231,7 +231,7 @@
   }
 
   .ui-code-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-lg bg-primary-container text-on-primary-container font-mono text-xs font-bold shrink-0;
+    @apply inline-flex items-center justify-center min-w-7 tabular-nums px-2.5 py-0.5 rounded-lg bg-primary-container text-on-primary-container font-mono text-xs font-bold shrink-0;
   }
 
   /* Form Fields */

@@ -50,27 +50,14 @@ export function CreateProject({
       {!original && <p className="ui-field-help">{t("admin.projects.description")}</p>}
       <form onSubmit={submit} className="space-y-4">
         <fieldset disabled={pending} className="space-y-4 disabled:opacity-60">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <FormField label={`${t("admin.projects.name")} *`}>
-              <TextInput
-                name="title"
-                defaultValue={original?.title}
-                required
-                maxLength={PROJECT_FIELD_LIMITS.title}
-              />
-            </FormField>
-            <FormField label={`${t("admin.projects.code")} *`} help={t("admin.projects.codeHelp")}>
-              <TextInput
-                name="codeName"
-                defaultValue={original?.codeName}
-                required
-                maxLength={PROJECT_FIELD_LIMITS.codeName}
-                pattern={"[A-Za-z0-9][A-Za-z0-9_\\-]{0,29}"}
-                placeholder="PROJ-03"
-                mono
-              />
-            </FormField>
-          </div>
+          <FormField label={`${t("admin.projects.name")} *`}>
+            <TextInput
+              name="title"
+              defaultValue={original?.title}
+              required
+              maxLength={PROJECT_FIELD_LIMITS.title}
+            />
+          </FormField>
           <div className="grid sm:grid-cols-2 gap-4">
             <FormField label={t("admin.projects.dueDate")} help={t("admin.projects.timezone")}>
               <TextInput
@@ -152,13 +139,7 @@ export function CreateProject({
               <span>
                 {error === "attachments"
                   ? attachmentHelp
-                  : t(
-                      error === "duplicate"
-                        ? "admin.projects.duplicate"
-                        : error === "invalid"
-                          ? "admin.projects.invalid"
-                          : "admin.projects.failed",
-                    )}
+                  : t(error === "invalid" ? "admin.projects.invalid" : "admin.projects.failed")}
               </span>
             </FeedbackBanner>
           )}

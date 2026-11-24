@@ -1,4 +1,4 @@
-import { isAdmin, isSameOrigin } from "@server/access";
+import { isAdmin, isDeletedUser, isSameOrigin } from "@server/access";
 import { defineHandler } from "void";
 import { getAuth, requireAuth } from "void/auth";
 
@@ -12,6 +12,7 @@ export function accountEditHandler(
 ) {
   return defineHandler(async (c) => {
     const actor = requireAuth(c);
+    if (isDeletedUser(actor)) return c.json({ error: "unauthorized" }, 401);
     if (!isSameOrigin(c.req.raw) || (scope === "admin" && !isAdmin(actor)))
       return c.json({ error: "forbidden" }, 403);
     const target: AccountTarget =

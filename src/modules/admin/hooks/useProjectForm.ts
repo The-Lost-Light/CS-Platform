@@ -10,9 +10,7 @@ export function useProjectForm(original: Project | undefined, onSaved: (project:
     original?.attachments ?? [],
   );
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<"duplicate" | "invalid" | "failed" | "attachments" | null>(
-    null,
-  );
+  const [error, setError] = useState<"invalid" | "failed" | "attachments" | null>(null);
   function addFiles(files: File[]) {
     const next = [...attachments, ...files];
     if (!attachmentsWithinLimit(next)) {
@@ -43,9 +41,7 @@ export function useProjectForm(original: Project | undefined, onSaved: (project:
         },
       );
       if (!response.ok) {
-        setError(
-          response.status === 409 ? "duplicate" : response.status === 400 ? "invalid" : "failed",
-        );
+        setError(response.status === 400 ? "invalid" : "failed");
         return;
       }
       const { project } = (await response.json()) as { project: Project };

@@ -173,11 +173,13 @@ test("POST /api/auth/admin/create-user rejects missing passwords, invalid fields
     { ...basePayload, role: "USER" },
     { ...basePayload, data: { emailVerified: true } },
     { ...basePayload, data: { banned: true } },
+    { ...basePayload, data: { deleted: true } },
     { ...basePayload, data: { role: "admin" } },
     { ...basePayload, data: {} },
     { ...basePayload, emailVerified: true },
     { ...basePayload, id: "custom-id" },
     { ...basePayload, banned: true },
+    { ...basePayload, deleted: true },
     null,
     [],
   ];
@@ -231,6 +233,21 @@ test("createUser API normalizes name/email, stores credentials, and rejects inva
     body: { email: "alex.chen@example.com", password: "password123" },
   });
   assert.strictEqual(signedIn.user.id, created.user.id);
+
+  await (
+    await instance.$context
+  ).internalAdapter.updateUser(created.user.id, {
+    deleted: true,
+  } as Record<string, unknown>);
+  let deletedLoginError: unknown;
+  try {
+    await instance.api.signInEmail({
+      body: { email: "alex.chen@example.com", password: "password123" },
+    });
+  } catch (error) {
+    deletedLoginError = error;
+  }
+  assert.ok(deletedLoginError instanceof APIError, "Expected soft-deleted user sign-in to fail");
 
   const invalidCalls: Array<{ name: string; run: () => Promise<unknown> }> = [
     {

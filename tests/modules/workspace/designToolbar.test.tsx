@@ -197,7 +197,7 @@ test("StudentWorkspaceList prioritizes submitted accounts and links back home", 
   assert.ok(zhHtml.indexOf("Alice") < zhHtml.indexOf("Bob"));
 });
 
-test("ProjectWorkspace hides project codeName and displays student name and back-to-list link in readOnly mode", () => {
+test("ProjectWorkspace hides project index badge and displays student name and back-to-list link in readOnly mode", () => {
   const ownHtml = renderToStaticMarkup(
     <ThemeProvider>
       <I18nProvider initialLanguage="en">
@@ -207,7 +207,7 @@ test("ProjectWorkspace hides project codeName and displays student name and back
   );
   const ownHeader = ownHtml.split("</section>")[0];
   assert.ok(ownHeader.includes(renderToStaticMarkup(<>{enProject.title}</>)));
-  assert.ok(!ownHeader.includes(enProject.codeName));
+  assert.ok(!ownHeader.includes("ui-code-badge"));
 
   const diagramHtml = renderToStaticMarkup(
     <ThemeProvider>
@@ -227,7 +227,7 @@ test("ProjectWorkspace hides project codeName and displays student name and back
   const headerSection = diagramHtml.split("</section>")[0];
   assert.ok(headerSection.includes("Viewing: Alice"));
   assert.ok(!headerSection.includes("· Alice"));
-  assert.ok(!headerSection.includes(enProject.codeName));
+  assert.ok(!headerSection.includes("ui-code-badge"));
   assert.ok(headerSection.includes(`href="/projects/${enProject.id}?students=1"`));
   assert.ok(headerSection.includes('aria-label="Back to student list"'));
   assert.ok(!headerSection.includes("Saved to your account"));

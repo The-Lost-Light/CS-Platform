@@ -2,7 +2,9 @@ import { isRecord } from "@shared/isRecord";
 
 import { MAX_PROJECT_POINTS, PROJECT_FIELD_LIMITS, type Project } from "./project";
 
-export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachments"> | null {
+export function parseProjectInput(
+  value: unknown,
+): Omit<Project, "id" | "index" | "attachments"> | null {
   if (!isRecord(value)) return null;
   const fields: Record<string, string> = {};
   for (const [key, max] of Object.entries(PROJECT_FIELD_LIMITS)) {
@@ -10,8 +12,7 @@ export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachm
     // Markdown indentation and trailing newlines can be meaningful.
     fields[key] = key === "content" ? value[key] : value[key].trim();
   }
-  const codeName = fields.codeName.toUpperCase();
-  if (!/^[A-Z0-9][A-Z0-9_-]{0,29}$/.test(codeName) || !fields.title) return null;
+  if (!fields.title) return null;
   if (
     typeof value.points !== "number" ||
     !Number.isInteger(value.points) ||
@@ -26,7 +27,6 @@ export function parseProjectInput(value: unknown): Omit<Project, "id" | "attachm
       return null;
   }
   return {
-    codeName,
     title: fields.title,
     dueDate: fields.dueDate.replace("T", " "),
     points: value.points,

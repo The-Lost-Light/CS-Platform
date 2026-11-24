@@ -29,8 +29,9 @@ export default {
   "admin.editAccount": "編輯帳號",
   "admin.confirmDelete": "確定要刪除「{name}」？",
   "admin.deleteAccountHelp":
-    "這會永久刪除帳號、登入憑證及該帳號在所有專案儲存的工作區，並撤銷所有登入工作階段。",
-  "admin.deleteProjectHelp": "這會永久刪除專案，以及所有帳號在此專案儲存的工作區。",
+    "這會在介面隱藏此帳號並禁止登入，同時保留資料庫紀錄及該帳號在所有專案儲存的工作區，並撤銷所有登入工作階段。",
+  "admin.deleteProjectHelp":
+    "這會在介面隱藏此專案，同時在資料庫保留專案與所有帳號在此專案儲存的工作區。",
   "admin.protectedAccount":
     "不能刪除自己的帳號、降低自己的管理員角色，或移除最後一位可用的管理員。",
   "admin.invalidAccount": "請檢查姓名、電子郵件與角色。",
@@ -53,8 +54,8 @@ export default {
   "admin.projects.create": "新增專案",
   "admin.projects.description": "建立後，所有已登入的使用者都能在首頁看到此專案。標示 * 為必填。",
   "admin.projects.name": "專案名稱",
-  "admin.projects.code": "專案代碼",
-  "admin.projects.codeHelp": "限英文字母、數字、底線或連字號，儲存時轉為大寫。",
+  "admin.projects.index": "編號",
+  "admin.projects.dragHint": "拖曳以調整專案順序",
   "admin.projects.dueDate": "截止時間（選填）",
   "admin.projects.timezone": "時間以台北時間（UTC+8）為準；留白表示不設定截止時間。",
   "admin.projects.points": "配分",
@@ -64,7 +65,6 @@ export default {
   "admin.projects.attachmentLimit": "最多 {count} 個檔案，合計上限 {size} MiB。",
   "admin.projects.removeAttachment": "移除 {name}",
   "admin.remove": "移除",
-  "admin.projects.duplicate": "此專案代碼已存在，請使用其他代碼。",
   "admin.projects.invalid": "請檢查必填欄位、截止時間、配分及附加文件。",
   "admin.projects.failed": "建立失敗，請確認管理員登入狀態並重試。",
   "admin.projects.success": "專案已建立。",

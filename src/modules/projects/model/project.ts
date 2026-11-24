@@ -11,8 +11,8 @@ export interface ProjectWorkspaceStatus {
 
 export interface Project {
   id: string;
+  index: number;
   title: string;
-  codeName: string;
   dueDate: string;
   points: number;
   tags: string[];
@@ -25,7 +25,6 @@ export const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
 export const MAX_CONTENT_LENGTH = 40000;
 
 export const PROJECT_FIELD_LIMITS = {
-  codeName: 30,
   title: 120,
   dueDate: 16,
   tags: 500,

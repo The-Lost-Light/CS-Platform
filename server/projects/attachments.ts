@@ -1,7 +1,11 @@
 import { Buffer } from "node:buffer";
 
-import { projectAttachmentParts as parts, projectAttachments as attachments } from "@db/schema";
-import { and, type BatchItem, db, eq } from "void/db";
+import {
+  projectAttachmentParts as parts,
+  projectAttachments as attachments,
+  projects,
+} from "@db/schema";
+import { and, type BatchItem, db, eq, sql } from "void/db";
 
 export const attachmentMetadata = {
   id: attachments.attachmentId,
@@ -49,7 +53,14 @@ export async function downloadProjectAttachment(projectId: string, attachmentId:
         eq(parts.attachmentId, attachments.attachmentId),
       ),
     )
-    .where(and(eq(attachments.projectId, projectId), eq(attachments.attachmentId, attachmentId)))
+    .where(
+      and(
+        eq(attachments.projectId, projectId),
+        eq(attachments.attachmentId, attachmentId),
+        eq(attachments.deleted, false),
+        sql`EXISTS (SELECT 1 FROM ${projects} WHERE ${projects.id} = ${projectId} AND ${projects.deleted} = 0)`,
+      ),
+    )
     .orderBy(parts.part);
   if (!rows.length) return null;
   return new Response(Buffer.from(rows.map((row) => row.content ?? "").join(""), "base64"), {

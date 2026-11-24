@@ -14,12 +14,40 @@ import {
 
 const userIndexesPlugin = {
   id: "user-indexes",
+  init(authContext) {
+    return {
+      options: {
+        databaseHooks: {
+          session: {
+            create: {
+              async before(session, ctx) {
+                const internalAdapter = ctx?.context.internalAdapter ?? authContext.internalAdapter;
+                const user = (await internalAdapter.findUserById(session.userId)) as {
+                  deleted?: boolean | null;
+                } | null;
+                if (user?.deleted) {
+                  throw new APIError("UNAUTHORIZED", { message: "Invalid email or password" });
+                }
+              },
+            },
+          },
+        },
+      },
+    };
+  },
   schema: {
     user: {
-      fields: {},
+      fields: {
+        deleted: {
+          type: "boolean",
+          required: true,
+          defaultValue: false,
+          input: false,
+        },
+      },
       indexes: [
-        { name: "user_createdAt_idx", fields: ["createdAt"] },
-        { name: "user_role_banned_idx", fields: ["role", "banned"] },
+        { name: "user_deleted_createdAt_idx", fields: ["deleted", "createdAt"] },
+        { name: "user_role_banned_deleted_idx", fields: ["deleted", "role", "banned"] },
       ],
     },
   },

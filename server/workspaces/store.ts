@@ -26,9 +26,12 @@ export async function loadWorkspace(
   const available = requireStudent
     ? sql`${availableProject(projectId)} AND EXISTS (
         SELECT 1 FROM ${userTable}
-        WHERE ${userTable.id} = ${userId} AND COALESCE(${userTable.role}, 'user') != 'admin'
+        WHERE ${userTable.id} = ${userId} AND ${userTable.deleted} = 0 AND COALESCE(${userTable.role}, 'user') != 'admin'
       )`
-    : availableProject(projectId);
+    : sql`${availableProject(projectId)} AND EXISTS (
+        SELECT 1 FROM ${userTable}
+        WHERE ${userTable.id} = ${userId} AND ${userTable.deleted} = 0
+      )`;
   if (!(await db.get(sql`SELECT 1 WHERE ${available}`))) return null;
   const rows = await db
     .select({
@@ -69,7 +72,7 @@ export async function listStudentWorkspaces(
       workspaces,
       and(eq(workspaces.userId, userTable.id), eq(workspaces.projectId, projectId)),
     )
-    .where(sql`COALESCE(${userTable.role}, 'user') != 'admin'`)
+    .where(sql`${userTable.deleted} = 0 AND COALESCE(${userTable.role}, 'user') != 'admin'`)
     .orderBy(
       sql`CASE WHEN ${workspaces.revision} IS NOT NULL THEN 0 ELSE 1 END`,
       userTable.name,
@@ -141,7 +144,9 @@ export async function saveWorkspace(
   draft: PersonalWorkspace,
   now = Date.now(),
 ) {
-  const projectAvailable = availableProject(projectId);
+  const projectAvailable = sql`${availableProject(projectId)} AND EXISTS (
+    SELECT 1 FROM ${userTable} WHERE ${userTable.id} = ${userId} AND ${userTable.deleted} = 0
+  )`;
   const revision = crypto.randomUUID();
   const updatedAt = now;
   const content = JSON.stringify(draft);

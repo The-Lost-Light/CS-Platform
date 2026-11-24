@@ -14,11 +14,13 @@ import { userTable, sessionTable, accountTable } from "../../.void/better-auth-s
 // The predicate runs in the mutation statement, so concurrent administrators
 // cannot remove each other's access based on an outdated role/count check.
 const activeAdmin = (id: string) =>
-  sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND role = 'admin' AND COALESCE(banned, 0) = 0)`;
+  sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND deleted = 0 AND role = 'admin' AND COALESCE(banned, 0) = 0)`;
 const anotherAdmin = (id: string) =>
-  sql`EXISTS (SELECT 1 FROM user WHERE id != ${id} AND role = 'admin' AND COALESCE(banned, 0) = 0)`;
+  sql`EXISTS (SELECT 1 FROM user WHERE id != ${id} AND deleted = 0 AND role = 'admin' AND COALESCE(banned, 0) = 0)`;
 const studentAccount = (id: string) =>
-  sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND COALESCE(role, 'user') != 'admin')`;
+  sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND deleted = 0 AND COALESCE(role, 'user') != 'admin')`;
+const activeTargetUser = (id: string) =>
+  sql`EXISTS (SELECT 1 FROM user WHERE id = ${id} AND deleted = 0)`;
 
 export function listAccounts() {
   return db
@@ -30,6 +32,7 @@ export function listAccounts() {
       banned: userTable.banned,
     })
     .from(userTable)
+    .where(eq(userTable.deleted, false))
     .orderBy(desc(userTable.createdAt));
 }
 
@@ -45,14 +48,14 @@ export type AccountTarget =
 function activeActor(target: AccountTarget) {
   return target.scope === "admin"
     ? activeAdmin(target.actorId)
-    : sql`EXISTS (SELECT 1 FROM user WHERE id = ${target.id} AND COALESCE(banned, 0) = 0)`;
+    : sql`EXISTS (SELECT 1 FROM user WHERE id = ${target.id} AND deleted = 0 AND COALESCE(banned, 0) = 0)`;
 }
 
 async function accountExists(id: string) {
   const [row] = await db
     .select({ id: userTable.id })
     .from(userTable)
-    .where(eq(userTable.id, id))
+    .where(and(eq(userTable.id, id), eq(userTable.deleted, false)))
     .limit(1);
   return Boolean(row);
 }
@@ -79,6 +82,7 @@ export async function updateAccount(target: AccountTarget, body: unknown) {
   const now = new Date();
   const editableUser = and(
     eq(userTable.id, id),
+    eq(userTable.deleted, false),
     activeActor(target),
     role === "user" ? anotherAdmin(id) : undefined,
   );
@@ -130,7 +134,7 @@ export async function changeAccountPassword(
       accountTable,
       and(eq(accountTable.userId, userTable.id), eq(accountTable.providerId, "credential")),
     )
-    .where(eq(userTable.id, id))
+    .where(and(eq(userTable.id, id), eq(userTable.deleted, false)))
     .limit(1);
   if (!target) return "notFound";
   const isAdminResettingStudent =
@@ -158,7 +162,7 @@ export async function changeAccountPassword(
     eq(accountTable.id, target.credentialId),
     eq(accountTable.password, target.hash),
     activeActor(targetAccount),
-    isAdminResettingStudent ? studentAccount(id) : undefined,
+    isAdminResettingStudent ? studentAccount(id) : activeTargetUser(id),
   );
   // Recheck the verified hash in both statements. Only one concurrent change can succeed.
   const [, updated] = await db.batch([
@@ -182,10 +186,22 @@ export async function changeAccountPassword(
 export async function deleteAccount(actorId: string, id: string) {
   if (id === actorId) return "self";
   if (!(await accountExists(id))) return "notFound";
-  const deleted = await db
-    .delete(userTable)
-    .where(and(eq(userTable.id, id), activeAdmin(actorId), anotherAdmin(id)))
-    .returning({ id: userTable.id });
-  if (!deleted.length) return "protected";
+  const deletableUser = and(
+    eq(userTable.id, id),
+    eq(userTable.deleted, false),
+    activeAdmin(actorId),
+    anotherAdmin(id),
+  );
+  const canDelete = exists(db.select({ id: userTable.id }).from(userTable).where(deletableUser));
+  // Revoke sessions before setting deleted=true so canDelete evaluates against the active row.
+  const [, updated] = await db.batch([
+    db.delete(sessionTable).where(and(eq(sessionTable.userId, id), canDelete)),
+    db
+      .update(userTable)
+      .set({ deleted: true, updatedAt: new Date() })
+      .where(deletableUser)
+      .returning({ id: userTable.id }),
+  ]);
+  if (!updated.length) return "protected";
   return "deleted";
 }

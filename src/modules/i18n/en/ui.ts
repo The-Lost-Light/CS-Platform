@@ -28,9 +28,9 @@ export default {
   "admin.editAccount": "Edit account",
   "admin.confirmDelete": "Delete “{name}”?",
   "admin.deleteAccountHelp":
-    "This permanently deletes the account, its credentials, and its saved workspaces across all projects. All sessions will be revoked.",
+    "This hides the account and blocks sign-in while keeping its database records and saved workspaces across all projects. All sessions will be revoked.",
   "admin.deleteProjectHelp":
-    "This permanently deletes the project and every account’s saved workspace for it.",
+    "This hides the project from all users while keeping the project and every account’s saved workspace in the database.",
   "admin.protectedAccount":
     "You cannot delete yourself, demote yourself or remove the last active administrator.",
   "admin.invalidAccount": "Check the name, email and role.",
@@ -56,8 +56,8 @@ export default {
   "admin.projects.description":
     "Once created, this project is visible to all signed-in users. Fields marked * are required.",
   "admin.projects.name": "Project name",
-  "admin.projects.code": "Project code",
-  "admin.projects.codeHelp": "Letters, numbers, underscores or hyphens; saved in uppercase.",
+  "admin.projects.index": "Index",
+  "admin.projects.dragHint": "Drag to reorder projects",
   "admin.projects.dueDate": "Due date (optional)",
   "admin.projects.timezone": "Taipei time (UTC+8); leave blank for no deadline.",
   "admin.projects.points": "Points",
@@ -67,7 +67,6 @@ export default {
   "admin.projects.attachmentLimit": "Up to {count} files, {size} MiB total.",
   "admin.projects.removeAttachment": "Remove {name}",
   "admin.remove": "Remove",
-  "admin.projects.duplicate": "This project code already exists. Choose another code.",
   "admin.projects.invalid": "Check the required fields, deadline, points and attachments.",
   "admin.projects.failed":
     "Could not create the project. Check your administrator session and retry.",

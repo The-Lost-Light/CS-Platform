@@ -6,7 +6,7 @@ export function createProjects(t: Translator): Project[] {
   return [
     {
       id: "project-fullstack-web",
-      codeName: "PROJ-01",
+      index: 1,
       title: t("courses.fullstack.title"),
       dueDate: "2026-11-25 23:59",
       points: 200,
@@ -16,7 +16,7 @@ export function createProjects(t: Translator): Project[] {
     },
     {
       id: "project-ai-rag-agent",
-      codeName: "PROJ-02",
+      index: 2,
       title: t("courses.react.title"),
       dueDate: "2026-12-18 23:59",
       points: 250,

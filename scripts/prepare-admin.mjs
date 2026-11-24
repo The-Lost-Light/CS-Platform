@@ -83,8 +83,8 @@ const hash = await hashPassword(password);
 mkdirSync(".void", { recursive: true });
 writeFileSync(
   ".void/bootstrap-admin.sql",
-  "INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt,role,banned) VALUES (" +
-    [quote(id), quote(name), quote(email), 0, now, now, quote("admin"), 0].join(",") +
+  "INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt,role,banned,deleted) VALUES (" +
+    [quote(id), quote(name), quote(email), 0, now, now, quote("admin"), 0, 0].join(",") +
     ");\n" +
     "INSERT INTO account (id,accountId,providerId,userId,password,createdAt,updatedAt) VALUES (" +
     [quote(randomUUID()), quote(id), quote("credential"), quote(id), quote(hash), now, now].join(

@@ -1,7 +1,7 @@
 import { EditAccountDialog } from "@modules/accounts";
 import { HomeDashboard } from "@modules/catalog";
 import { I18nProvider } from "@modules/i18n";
-import { PROJECTS } from "@modules/projects";
+import { PROJECTS, type Project } from "@modules/projects";
 import { SettingsProvider } from "@modules/settings";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -10,8 +10,14 @@ import { assert, test, vi } from "vite-plus/test";
 import { AccountManagement } from "@/modules/admin/ui/AccountManagement";
 import { ConfirmDelete } from "@/modules/admin/ui/ConfirmDelete";
 import { CreateProject } from "@/modules/admin/ui/CreateProject";
+import { ProjectList } from "@/modules/admin/ui/ProjectList";
 
 import AdminPage from "../../../pages/admin";
+
+const catalogMock = vi.hoisted(() => ({
+  projects: [] as Project[],
+}));
+
 vi.mock("@void/react", () => ({
   Link: ({ children, ...props }: { children: ReactNode; href: string }) => (
     <a {...props}>{children}</a>
@@ -19,7 +25,12 @@ vi.mock("@void/react", () => ({
 }));
 vi.mock("@modules/catalog", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@modules/catalog")>()),
-  useProjectCatalog: () => ({ projects: [], addProject: vi.fn() }),
+  useProjectCatalog: () => ({
+    projects: catalogMock.projects,
+    addProject: vi.fn(),
+    removeProject: vi.fn(),
+    replaceProjects: vi.fn(),
+  }),
 }));
 test("only administrators have a management navigation entry on the home dashboard card", () => {
   for (const role of ["admin", "user"]) {
@@ -80,7 +91,8 @@ test("project creation opens in a cancellable dialog and constrains inputs", () 
   assert.match(html, /<dialog\b[^>]*aria-labelledby=/);
   assert.ok(html.includes("Cancel"));
   assert.match(html, /<input(?=[^>]*name="title")(?=[^>]*required)[^>]*>/);
-  assert.match(html, /<input(?=[^>]*name="codeName")(?=[^>]*required)[^>]*>/);
+  assert.ok(!html.includes('name="codeName"'));
+  assert.ok(!html.includes('name="index"'));
   assert.match(html, /type="datetime-local"/);
   assert.match(html, /<textarea[^>]*name="content"/);
   assert.match(
@@ -101,13 +113,45 @@ test("project editor prepopulates the selected project and preserves its identif
   assert.ok(html.includes("Edit project"));
   assert.match(html, /<dialog\b[^>]*aria-labelledby=/);
   assert.ok(html.includes('value="Editable example"'));
-  assert.ok(html.includes('value="' + project.codeName + '"'));
   assert.ok(html.includes("Save changes"));
   assert.ok(html.includes("Cancel"));
   assert.ok(!html.includes('name="id"'));
+  assert.ok(!html.includes('name="codeName"'));
+  assert.ok(!html.includes('name="index"'));
 });
-test("deletion confirmation identifies the record and explains session revocation", () => {
-  const html = renderToStaticMarkup(
+test("ProjectList renders the Index header, drag handles, and sequential index badges", () => {
+  catalogMock.projects = [
+    { ...PROJECTS[0], index: 1, title: "Zeta Project" },
+    { ...PROJECTS[1], index: 2, title: "Alpha Project" },
+  ];
+  try {
+    const html = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <ProjectList ref={null} />
+      </I18nProvider>,
+    );
+    assert.ok(html.includes(">Index<"));
+    assert.ok(html.includes('class="ui-code-badge">1</span>'));
+    assert.ok(html.includes('class="ui-code-badge">2</span>'));
+    assert.ok(html.includes("lucide-grip-vertical"));
+    assert.ok(html.includes('draggable="true"'));
+    assert.ok(html.includes('title="Drag to reorder projects"'));
+    assert.ok(html.indexOf("Zeta Project") < html.indexOf("Alpha Project"));
+
+    catalogMock.projects = [{ ...PROJECTS[0], index: 1, title: "Single Project" }];
+    const singleHtml = renderToStaticMarkup(
+      <I18nProvider initialLanguage="en">
+        <ProjectList ref={null} />
+      </I18nProvider>,
+    );
+    assert.ok(singleHtml.includes('draggable="false"'));
+    assert.ok(!singleHtml.includes('draggable="true"'));
+  } finally {
+    catalogMock.projects = [];
+  }
+});
+test("deletion confirmation identifies the record and explains soft-delete retention and session revocation", () => {
+  const accountHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <ConfirmDelete
         name="Example account"
@@ -118,11 +162,24 @@ test("deletion confirmation identifies the record and explains session revocatio
       />
     </I18nProvider>,
   );
-  assert.match(html, /role="alertdialog"/);
-  assert.ok(html.includes("Example account"));
-  assert.match(html, /all sessions will be revoked/i);
-  assert.ok(html.includes("saved workspaces across all projects"));
-  assert.ok(html.includes("Cancel"));
+  assert.match(accountHtml, /role="alertdialog"/);
+  assert.ok(accountHtml.includes("Example account"));
+  assert.match(accountHtml, /all sessions will be revoked/i);
+  assert.ok(accountHtml.includes("keeping its database records"));
+  assert.ok(accountHtml.includes("saved workspaces across all projects"));
+  assert.ok(accountHtml.includes("Cancel"));
+
+  const projectHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <ConfirmDelete
+        name="Example project"
+        pending={false}
+        onConfirm={() => {}}
+        onCancel={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(projectHtml.includes("keeping the project and every account’s saved workspace"));
 });
 
 test("account creation places password help directly beneath password input before role", () => {

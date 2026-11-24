@@ -1,18 +1,39 @@
 import type { Project } from "@modules/projects";
-import { foreignKey, index, integer, primaryKey, sqliteTable, text, unique } from "void/schema-d1";
+import { sql } from "void/_db";
+import {
+  foreignKey,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  unique,
+  uniqueIndex,
+} from "void/schema-d1";
 
 import { userTable } from "../.void/better-auth-schema";
+
+export type CustomProjectData = Omit<Project, "index" | "attachments">;
+export type StoredProjectData =
+  | (CustomProjectData & { customized?: true })
+  | { id: string; customized: false };
 
 export const projects = sqliteTable(
   "course_project",
   {
     id: text("id").primaryKey(),
-    codeName: text("code_name").notNull().unique(),
-    data: text("data", { mode: "json" }).$type<Omit<Project, "attachments">>().notNull(),
+    index: integer("project_index").notNull(),
+    data: text("data", { mode: "json" }).$type<StoredProjectData>().notNull(),
     createdBy: text("created_by").notNull(),
     createdAt: integer("created_at").notNull(),
+    deleted: integer("deleted", { mode: "boolean" }).notNull().default(false),
   },
-  (table) => [index("course_project_created_at_idx").on(table.createdAt)],
+  (table) => [
+    uniqueIndex("course_project_active_index_unique")
+      .on(table.index)
+      .where(sql`${table.deleted} = 0 AND ${table.index} > 0`),
+    index("course_project_deleted_index_idx").on(table.deleted, table.index, table.id),
+  ],
 );
 
 // Store attachment metadata separately from chunk bytes so catalog reads never touch file content.
@@ -25,10 +46,12 @@ export const projectAttachments = sqliteTable(
     attachmentId: text("attachment_id").notNull(),
     name: text("name").notNull(),
     size: integer("size").notNull(),
+    deleted: integer("deleted", { mode: "boolean" }).notNull().default(false),
   },
   (table) => [
     primaryKey({ columns: [table.projectId, table.attachmentId] }),
     index("project_attachment_order_idx").on(
+      table.deleted,
       table.projectId,
       table.name,
       table.attachmentId,
@@ -53,11 +76,6 @@ export const projectAttachmentParts = sqliteTable(
     }).onDelete("cascade"),
   ],
 );
-
-// Persist removal of built-in templates so they cannot reappear after a reload.
-export const removedProjects = sqliteTable("removed_project", {
-  id: text("id").primaryKey(),
-});
 
 export const workspaces = sqliteTable(
   "personal_workspace",

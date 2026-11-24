@@ -118,7 +118,6 @@ export function HomeDashboard({
                     onClick={() => onOpenProject(proj)}
                     className="flex-1 min-w-0 py-1 text-left bg-transparent flex items-center gap-3.5 cursor-pointer rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
-                    <Chip variant="code">{proj.codeName}</Chip>
                     <div className="min-w-0 flex-1 flex flex-col gap-1">
                       <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <span className="text-base sm:text-lg font-semibold text-on-surface group-hover:text-primary truncate transition-colors">

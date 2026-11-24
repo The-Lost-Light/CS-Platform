@@ -154,8 +154,8 @@ test("dashboard lists every project and uses project-only navigation in both lan
     );
     const visibleText = html.replace(/<[^>]*>/g, "");
     const { projects } = getLocalizedProjects(locale);
+    assert.ok(!html.includes("ui-code-badge"));
     for (const project of projects) {
-      assert.ok(visibleText.includes(project.codeName));
       assert.ok(visibleText.includes(renderToStaticMarkup(<>{project.title}</>)));
     }
     assert.notMatch(visibleText, /基礎|進階|Python|Advanced|Recorded edits|編輯紀錄|HW-\d/i);
@@ -286,7 +286,7 @@ for (const [name, screen] of Object.entries(screens)) {
   });
 }
 
-test("HomeDashboard displays centered code badges, deadlines beneath titles, and student status without points or tags", () => {
+test("HomeDashboard displays deadlines beneath titles and student status without index badges, points or tags", () => {
   const dueSoonProject = {
     ...en.projects[0],
     dueDate: "2026-11-25 23:59",
@@ -320,9 +320,7 @@ test("HomeDashboard displays centered code badges, deadlines beneath titles, and
   const renderedDueSoonTitle = renderToStaticMarkup(<>{dueSoonProject.title}</>);
   assert.match(studentHtml, /<button[^>]*flex items-center gap-3\.5/);
   assert.ok(studentHtml.includes(renderedDueSoonTitle));
-  assert.ok(
-    studentHtml.indexOf(dueSoonProject.codeName) < studentHtml.indexOf(renderedDueSoonTitle),
-  );
+  assert.ok(!studentHtml.includes("ui-code-badge"));
   assert.ok(
     studentHtml.indexOf(renderedDueSoonTitle) < studentHtml.indexOf("2026-11-25 23:59 (UTC+8)"),
   );
@@ -355,6 +353,7 @@ test("HomeDashboard displays centered code badges, deadlines beneath titles, and
       </SettingsProvider>
     </I18nProvider>,
   );
+  assert.ok(!adminHtml.includes("ui-code-badge"));
   assert.ok(adminHtml.includes("Due soon"));
   assert.ok(adminHtml.includes("Student projects"));
   assert.ok(!adminHtml.includes("ArchitectureTag"));

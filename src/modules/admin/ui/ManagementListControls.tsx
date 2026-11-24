@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { Button, CardHeader, FormField, TextInput } from "@shared/ui";
+import { Button, CardHeader, TextInput } from "@shared/ui";
 import { Plus, Search, type LucideIcon } from "lucide-react";
 
 export function ManagementListHeader({
@@ -46,14 +46,14 @@ export function ManagementSearch({
 }) {
   const { t } = useI18n();
   return (
-    <FormField label={t("admin.search")}>
-      <TextInput
-        icon={Search}
-        type="search"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </FormField>
+    <TextInput
+      icon={Search}
+      type="search"
+      aria-label={t("admin.search")}
+      placeholder={t("admin.search")}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
   );
 }
 

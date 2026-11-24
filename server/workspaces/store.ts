@@ -14,6 +14,10 @@ import { userTable } from "../../.void/better-auth-schema";
 const workspaceKey = (userId: string, projectId: string) =>
   and(eq(workspaces.userId, userId), eq(workspaces.projectId, projectId));
 
+function normalizeUpdatedAt(value: number | null | undefined): number | null {
+  return typeof value === "number" && value > 0 ? value : null;
+}
+
 export async function loadWorkspace(
   userId: string,
   projectId: string,
@@ -27,7 +31,11 @@ export async function loadWorkspace(
     : availableProject(projectId);
   if (!(await db.get(sql`SELECT 1 WHERE ${available}`))) return null;
   const rows = await db
-    .select({ revision: workspaces.revision, content: workspaceParts.content })
+    .select({
+      revision: workspaces.revision,
+      updatedAt: workspaces.updatedAt,
+      content: workspaceParts.content,
+    })
     .from(workspaces)
     .innerJoin(workspaceParts, eq(workspaces.revision, workspaceParts.revision))
     .where(workspaceKey(userId, projectId))
@@ -36,7 +44,12 @@ export async function loadWorkspace(
     ? JSON.parse(rows.map((row) => row.content).join(""))
     : null;
   if (draft) draft.model = validateC4File(draft.model);
-  return { accountId: userId, revision: rows[0]?.revision ?? null, draft };
+  return {
+    accountId: userId,
+    revision: rows[0]?.revision ?? null,
+    updatedAt: rows[0] ? normalizeUpdatedAt(rows[0].updatedAt) : null,
+    draft,
+  };
 }
 
 export async function listStudentWorkspaces(
@@ -49,6 +62,7 @@ export async function listStudentWorkspaces(
       name: userTable.name,
       email: userTable.email,
       revision: workspaces.revision,
+      updatedAt: workspaces.updatedAt,
     })
     .from(userTable)
     .leftJoin(
@@ -66,6 +80,7 @@ export async function listStudentWorkspaces(
     name: row.name,
     email: row.email,
     hasWorkspace: Boolean(row.revision),
+    updatedAt: row.revision ? normalizeUpdatedAt(row.updatedAt) : null,
   }));
 }
 
@@ -124,9 +139,11 @@ export async function saveWorkspace(
   projectId: string,
   previous: string | null,
   draft: PersonalWorkspace,
+  now = Date.now(),
 ) {
   const projectAvailable = availableProject(projectId);
   const revision = crypto.randomUUID();
+  const updatedAt = now;
   const content = JSON.stringify(draft);
   const partInserts = splitWorkspaceContent(content).map((chunk, part) =>
     db.insert(workspaceParts).values({ revision, part, content: chunk }),
@@ -140,7 +157,9 @@ export async function saveWorkspace(
         .where(and(workspaceKey(userId, projectId), eq(workspaces.revision, previous ?? ""))),
       db
         .insert(workspaces)
-        .select(sql`SELECT ${revision}, ${projectId}, ${userId} WHERE ${projectAvailable}`),
+        .select(
+          sql`SELECT ${revision}, ${projectId}, ${userId}, ${updatedAt} WHERE ${projectAvailable}`,
+        ),
       ...partInserts,
     ]);
   } catch (error) {
@@ -148,5 +167,5 @@ export async function saveWorkspace(
     if (!(await projectExists(projectId))) return { status: "missing" } as const;
     throw error;
   }
-  return { status: "saved", revision } as const;
+  return { status: "saved", revision, updatedAt } as const;
 }

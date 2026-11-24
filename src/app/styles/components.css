@@ -201,6 +201,7 @@
   .ui-chip-secondary,
   .ui-chip-neutral,
   .ui-chip-success,
+  .ui-chip-warning,
   .ui-chip-danger {
     @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
   }
@@ -219,6 +220,10 @@
 
   .ui-chip-success {
     @apply bg-success-container text-on-success-container;
+  }
+
+  .ui-chip-warning {
+    @apply bg-warning-container text-on-warning-container;
   }
 
   .ui-chip-danger {
@@ -244,12 +249,17 @@
 
   /* Banners & Alerts */
   .ui-banner-success,
+  .ui-banner-warning,
   .ui-banner-danger {
     @apply flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-xs sm:text-sm font-medium;
   }
 
   .ui-banner-success {
     @apply bg-success-container border-success-outline text-on-success-container;
+  }
+
+  .ui-banner-warning {
+    @apply bg-warning-container border-warning-outline text-on-warning-container;
   }
 
   .ui-banner-danger {

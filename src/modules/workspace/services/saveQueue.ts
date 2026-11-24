@@ -15,7 +15,7 @@ export function createSaveQueue(
   draft: PersonalWorkspace,
   revision: string | null,
   write: (revision: string | null, draft: PersonalWorkspace) => Promise<SaveResult>,
-  onSaved: (revision: string) => void,
+  onSaved: (revision: string, updatedAt: number) => void,
   setStatus: (status: SaveStatus) => void,
 ) {
   let latest = draft;
@@ -38,7 +38,10 @@ export function createSaveQueue(
     try {
       const result = await write(version, writing);
       if (!result.ok) {
-        blocked = result.error === "draft.conflict" || result.error === "draft.session";
+        blocked =
+          result.error === "draft.conflict" ||
+          result.error === "draft.session" ||
+          result.error === "draft.deadlinePassed";
         if (mounted) setStatus(result.error);
         if (mounted && result.retry) schedule(5000);
         return;
@@ -46,7 +49,7 @@ export function createSaveQueue(
       version = result.revision;
       saved = writing;
       if (mounted) {
-        onSaved(result.revision);
+        onSaved(result.revision, result.updatedAt);
         setStatus(latest === saved ? "draft.saved" : "draft.unsaved");
       }
     } catch {

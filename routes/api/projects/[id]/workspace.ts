@@ -1,4 +1,6 @@
+import { isProjectOverdue } from "@modules/projects";
 import { isAdmin, isSameOrigin } from "@server/access";
+import { getProjectDeadline } from "@server/projects";
 import {
   getWorkspaceRevision,
   listStudentWorkspaces,
@@ -27,10 +29,15 @@ export const GET = defineHandler(async (c) => {
 });
 
 export const PUT = defineHandler(async (c) => {
-  const { id: userId } = requireAuth(c);
+  const user = requireAuth(c);
+  const { id: userId } = user;
   const projectId = c.req.param("id") ?? "";
   if (!isSameOrigin(c.req.raw) || c.req.header("X-Workspace-Account") !== userId)
     return c.json({ error: "session" }, 403);
+  const deadline = await getProjectDeadline(projectId);
+  if (!deadline) return c.notFound();
+  if (!isAdmin(user) && isProjectOverdue(deadline.dueDate))
+    return c.json({ error: "deadlinePassed" }, 403);
   const stored = await getWorkspaceRevision(userId, projectId);
   if (!stored) return c.notFound();
   const input = await readWorkspaceInput(c.req.raw);
@@ -39,5 +46,5 @@ export const PUT = defineHandler(async (c) => {
   const result = await saveWorkspace(userId, projectId, input.previous, input.draft);
   if (result.status === "conflict") return c.json({ error: "conflict" }, 409);
   if (result.status === "missing") return c.notFound();
-  return c.json({ revision: result.revision });
+  return c.json({ revision: result.revision, updatedAt: result.updatedAt });
 });

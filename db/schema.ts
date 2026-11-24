@@ -67,6 +67,7 @@ export const workspaces = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => userTable.id, { onDelete: "cascade" }),
+    updatedAt: integer("updated_at").notNull().default(0),
   },
   (table) => [
     unique().on(table.projectId, table.userId),

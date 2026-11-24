@@ -3,7 +3,7 @@ import type { Project } from "@modules/projects";
 import { useParams, useRouter } from "@void/react";
 
 export function usePageNavigation() {
-  const { projects } = useProjectCatalog();
+  const { projects, workspaceStatuses, markWorkspaceSaved } = useProjectCatalog();
   const router = useRouter();
   const { id } = useParams();
   const selectedProject = id ? projects.find((project) => project.id === id) : undefined;
@@ -29,6 +29,8 @@ export function usePageNavigation() {
 
   return {
     projects,
+    workspaceStatuses,
+    markWorkspaceSaved,
     selectedProject,
     showingStudentList,
     selectedStudentId,

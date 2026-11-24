@@ -1,7 +1,13 @@
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "./cn";
+
+const bannerStyles = {
+  error: { role: "alert", className: "ui-banner-danger", icon: AlertCircle },
+  warning: { role: "status", className: "ui-banner-warning", icon: AlertTriangle },
+  success: { role: "status", className: "ui-banner-success", icon: CheckCircle2 },
+} as const;
 
 export function FeedbackBanner({
   kind,
@@ -9,18 +15,14 @@ export function FeedbackBanner({
   action,
   className,
 }: {
-  kind: "error" | "success";
+  kind: "error" | "success" | "warning";
   children: ReactNode;
   action?: ReactNode;
   className?: string;
 }) {
-  const error = kind === "error";
-  const Icon = error ? AlertCircle : CheckCircle2;
+  const { role, className: kindClassName, icon: Icon } = bannerStyles[kind];
   return (
-    <div
-      role={error ? "alert" : "status"}
-      className={cn(error ? "ui-banner-danger" : "ui-banner-success", className)}
-    >
+    <div role={role} className={cn(kindClassName, className)}>
       <div className="flex items-center gap-2">
         <Icon aria-hidden="true" className="w-4 h-4 shrink-0" />
         {children}

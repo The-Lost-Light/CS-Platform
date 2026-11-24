@@ -1,0 +1,1 @@
+ALTER TABLE `personal_workspace` ADD `updated_at` integer DEFAULT 0 NOT NULL;

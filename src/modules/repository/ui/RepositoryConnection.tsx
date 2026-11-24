@@ -9,9 +9,11 @@ import { RepositoryMetrics } from "./RepositoryMetrics";
 export function RepositoryConnection({
   repository,
   readOnly = false,
+  emptyReadOnlyMessage,
 }: {
   repository: ReturnType<typeof useRepository>;
   readOnly?: boolean;
+  emptyReadOnlyMessage?: string;
 }) {
   const { t } = useI18n();
   const {
@@ -61,7 +63,9 @@ export function RepositoryConnection({
             </Button>
           </div>
         ) : (
-          <p className="text-xs sm:text-sm text-on-muted">{t("workspace.studentNoRepo")}</p>
+          <p className="text-xs sm:text-sm text-on-muted">
+            {emptyReadOnlyMessage ?? t("workspace.studentNoRepo")}
+          </p>
         )
       ) : (
         <form

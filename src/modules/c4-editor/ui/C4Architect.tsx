@@ -12,7 +12,7 @@ const C4Diagram = lazy(() =>
 );
 
 export function C4Architect(props: C4ArchitectProps) {
-  const { designDoc, onChangeDesignDoc, readOnly } = props;
+  const { designDoc, onChangeDesignDoc, readOnly, emptyReadOnlyMessage } = props;
   const editor = useC4Editor(props);
   const { t, designTab, readmeMode, setReadmeMode } = editor;
   return designTab === "readme" ? (
@@ -22,6 +22,7 @@ export function C4Architect(props: C4ArchitectProps) {
       readmeMode={readmeMode}
       setReadmeMode={setReadmeMode}
       readOnly={readOnly}
+      emptyReadOnlyMessage={emptyReadOnlyMessage}
     />
   ) : (
     <Suspense fallback={<LoadingPanel label={t("common.loading")} />}>

@@ -4,7 +4,9 @@ import {
   PROJECTS,
   getLocalizedProjects,
   mergeProjectCatalog,
+  type Project,
   type ProjectAttachment,
+  type ProjectWorkspaceStatus,
 } from "@modules/projects";
 import { isUniqueViolation } from "@server/errors";
 import { and, db, desc, eq, notInArray, sql } from "void/db";
@@ -15,8 +17,8 @@ import type { ProjectInput } from "./input";
 export { downloadProjectAttachment } from "./attachments";
 export { readProjectInput } from "./input";
 
-export async function listProjects(locale: Locale = "en") {
-  const [rows, files, removed] = await db.batch([
+function catalogQueries() {
+  return [
     db.select({ data: projects.data }).from(projects).orderBy(desc(projects.createdAt)),
     db
       .select({ projectId: projectAttachments.projectId, ...attachmentMetadata })
@@ -27,7 +29,15 @@ export async function listProjects(locale: Locale = "en") {
         projectAttachments.attachmentId,
       ),
     db.select().from(removedProjects),
-  ]);
+  ] as const;
+}
+
+function assembleCatalog(
+  locale: Locale,
+  rows: Array<{ data: Omit<Project, "attachments"> }>,
+  files: Array<ProjectAttachment & { projectId: string }>,
+  removed: Array<{ id: string }>,
+): Project[] {
   const attachments = new Map<string, ProjectAttachment[]>();
   for (const { projectId, ...file } of files) {
     const group = attachments.get(projectId) ?? [];
@@ -42,6 +52,49 @@ export async function listProjects(locale: Locale = "en") {
     }),
     removed.map((row) => row.id),
   );
+}
+
+export async function listProjects(locale: Locale = "en") {
+  const [rows, files, removed] = await db.batch([...catalogQueries()]);
+  return assembleCatalog(locale, rows, files, removed);
+}
+
+export async function listCatalog(
+  locale: Locale = "en",
+  userId?: string,
+): Promise<{ projects: Project[]; workspaceStatuses: Record<string, ProjectWorkspaceStatus> }> {
+  if (!userId) {
+    return { projects: await listProjects(locale), workspaceStatuses: {} };
+  }
+  const [rows, files, removed, userWorkspaces] = await db.batch([
+    ...catalogQueries(),
+    db
+      .select({ projectId: workspaces.projectId, updatedAt: workspaces.updatedAt })
+      .from(workspaces)
+      .where(eq(workspaces.userId, userId)),
+  ]);
+  const catalog = assembleCatalog(locale, rows, files, removed);
+  const visibleIds = new Set(catalog.map((project) => project.id));
+  const workspaceStatuses: Record<string, ProjectWorkspaceStatus> = {};
+  for (const row of userWorkspaces) {
+    if (!visibleIds.has(row.projectId)) continue;
+    workspaceStatuses[row.projectId] = {
+      hasWorkspace: true,
+      updatedAt: row.updatedAt > 0 ? row.updatedAt : null,
+    };
+  }
+  return { projects: catalog, workspaceStatuses };
+}
+
+export async function getProjectDeadline(id: string): Promise<{ dueDate: string } | null> {
+  const [rows, removed] = await db.batch([
+    db.select({ data: projects.data }).from(projects).where(eq(projects.id, id)).limit(1),
+    db.select().from(removedProjects).where(eq(removedProjects.id, id)).limit(1),
+  ]);
+  if (removed.length > 0) return null;
+  if (rows.length > 0) return { dueDate: rows[0].data.dueDate };
+  const builtIn = PROJECTS.find((project) => project.id === id);
+  return builtIn ? { dueDate: builtIn.dueDate } : null;
 }
 
 export function availableProject(id: string) {

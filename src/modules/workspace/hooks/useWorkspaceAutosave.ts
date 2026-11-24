@@ -1,5 +1,5 @@
 import type { C4Node, C4Relationship } from "@modules/c4-model";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 
 import type { PersonalWorkspace } from "../model/personalWorkspace";
 import { createSaveQueue, type SaveStatus } from "../services/saveQueue";
@@ -9,7 +9,8 @@ export interface AutosaveOptions {
   projectId: string;
   accountId: string;
   revision: string | null;
-  onSaved: (revision: string) => void;
+  onSaved: (revision: string, updatedAt: number) => void;
+  onDeadlineLocked?: () => void;
   designDoc: string;
   nodes: C4Node[];
   relationships: C4Relationship[];
@@ -21,6 +22,7 @@ export function useWorkspaceAutosave({
   accountId,
   revision,
   onSaved,
+  onDeadlineLocked,
   designDoc,
   nodes,
   relationships,
@@ -35,6 +37,12 @@ export function useWorkspaceAutosave({
     [designDoc, nodes, relationships, repoUrl],
   );
   const [status, setStatus] = useState<SaveStatus>(revision ? "draft.saved" : "draft.empty");
+  const notifyDeadlineLocked = useEffectEvent(() => {
+    onDeadlineLocked?.();
+  });
+  useEffect(() => {
+    if (status === "draft.deadlinePassed") notifyDeadlineLocked();
+  }, [status]);
   const [queue] = useState(() =>
     createSaveQueue(
       draft,

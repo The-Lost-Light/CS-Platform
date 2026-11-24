@@ -9,6 +9,7 @@ export interface PersonalWorkspace {
 export interface WorkspaceSnapshot {
   accountId: string;
   revision: string | null;
+  updatedAt: number | null;
   draft: PersonalWorkspace | null;
 }
 
@@ -17,4 +18,5 @@ export interface StudentWorkspaceSummary {
   name: string;
   email: string;
   hasWorkspace: boolean;
+  updatedAt: number | null;
 }

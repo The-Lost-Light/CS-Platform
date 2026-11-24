@@ -6,11 +6,37 @@ import {
   useC4ModelFile,
 } from "@modules/c4-editor";
 import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
+import {
+  formatTaipeiDateTime,
+  isWorkspaceLate,
+  toTaipeiIsoString,
+  type Project,
+} from "@modules/projects";
 import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
-import { Chip, PageContainer, PageHeaderCard, SegmentedControl, cn } from "@shared/ui";
+import {
+  Chip,
+  FeedbackBanner,
+  IconButton,
+  PageContainer,
+  PageHeaderCard,
+  SegmentedControl,
+  cn,
+} from "@shared/ui";
 import { Link } from "@void/react";
-import { Compass, Eye, FileText, FolderGit2, GitBranch, X } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Compass,
+  Eye,
+  FileText,
+  FolderGit2,
+  GitBranch,
+  Lock,
+  X,
+} from "lucide-react";
+import { useState } from "react";
 
 import { useProjectWorkspace, type WorkspaceTab } from "../hooks/useProjectWorkspace";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
@@ -19,28 +45,47 @@ import { SaveWorkspace } from "./SaveWorkspace";
 
 const toolbarRowClass = "mt-4 -mx-5 sm:-mx-6 border-t border-outline-subtle px-5 sm:px-6 pt-4";
 
+export interface StudentNavigation {
+  currentIndex: number;
+  total: number;
+  previousName?: string;
+  nextName?: string;
+  onPrevious?: () => void;
+  onNext?: () => void;
+}
+
 export function ProjectWorkspace({
   project,
   snapshot,
   initialActiveTab,
   initialDesignTab,
   readOnly = false,
+  deadlineLocked = false,
+  onDeadlineLocked,
+  onWorkspaceSaved,
   studentName,
+  studentNavigation,
   closeHref,
   onClose,
   onActiveTabChange,
   onDesignTabChange,
+  now,
 }: {
   project: Project;
   snapshot: WorkspaceSnapshot;
   initialActiveTab?: WorkspaceTab;
   initialDesignTab?: DesignTab;
   readOnly?: boolean;
+  deadlineLocked?: boolean;
+  onDeadlineLocked?: () => void;
+  onWorkspaceSaved?: (projectId: string, updatedAt: number) => void;
   studentName?: string;
+  studentNavigation?: StudentNavigation;
   closeHref?: string;
   onClose?: () => void;
   onActiveTabChange?: (tab: WorkspaceTab) => void;
   onDesignTabChange?: (tab: DesignTab) => void;
+  now?: number;
 }) {
   const { t } = useI18n();
   const {
@@ -54,6 +99,9 @@ export function ProjectWorkspace({
     setDesignTab,
   } = useProjectWorkspace(snapshot, undefined, initialActiveTab, initialDesignTab);
   const { history, dispatchModel, designDoc, setDesignDoc } = draft;
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(snapshot.updatedAt ?? null);
+  const effectiveReadOnly = readOnly || deadlineLocked;
+
   function handleActiveTabChange(tab: WorkspaceTab) {
     setActiveTab(tab);
     onActiveTabChange?.(tab);
@@ -70,6 +118,7 @@ export function ProjectWorkspace({
   });
 
   const backLabel = t(onClose || closeHref ? "workspace.backToStudentList" : "common.backHome");
+  const lateSaved = lastSavedAt !== null && isWorkspaceLate(project.dueDate, lastSavedAt);
 
   return (
     <PageContainer variant="workspace">
@@ -83,19 +132,77 @@ export function ProjectWorkspace({
         actions={
           <>
             {readOnly ? (
-              <Chip variant="secondary" icon={Eye} className="shrink-0">
-                <span>
-                  {studentName
-                    ? t("workspace.viewingStudent", { name: studentName })
-                    : t("workspace.readOnlyBadge")}
-                </span>
+              <>
+                <Chip variant="secondary" icon={Eye} className="shrink-0">
+                  <span>
+                    {studentName
+                      ? t("workspace.viewingStudent", { name: studentName })
+                      : t("workspace.readOnlyBadge")}
+                  </span>
+                </Chip>
+                {lastSavedAt !== null && (
+                  <Chip
+                    variant={lateSaved ? "danger" : "neutral"}
+                    icon={lateSaved ? AlertCircle : Clock}
+                    className="shrink-0"
+                  >
+                    <time dateTime={toTaipeiIsoString(lastSavedAt)}>
+                      {t(lateSaved ? "workspace.lateSavedAt" : "workspace.lastUpdatedAt", {
+                        time: formatTaipeiDateTime(lastSavedAt),
+                      })}
+                    </time>
+                  </Chip>
+                )}
+                {studentNavigation && studentNavigation.total > 1 && (
+                  <div className="inline-flex items-center gap-1 rounded-full border border-outline-subtle bg-surface-container px-1.5 py-0.5 shrink-0">
+                    <IconButton
+                      icon={ChevronLeft}
+                      size="sm"
+                      disabled={!studentNavigation.onPrevious}
+                      onClick={studentNavigation.onPrevious}
+                      label={
+                        studentNavigation.previousName
+                          ? t("workspace.previousStudentNamed", {
+                              name: studentNavigation.previousName,
+                            })
+                          : t("workspace.previousStudent")
+                      }
+                      withTitle
+                    />
+                    <span className="px-1.5 font-mono text-xs font-semibold text-on-muted tabular-nums">
+                      {studentNavigation.currentIndex + 1} / {studentNavigation.total}
+                    </span>
+                    <IconButton
+                      icon={ChevronRight}
+                      size="sm"
+                      disabled={!studentNavigation.onNext}
+                      onClick={studentNavigation.onNext}
+                      label={
+                        studentNavigation.nextName
+                          ? t("workspace.nextStudentNamed", { name: studentNavigation.nextName })
+                          : t("workspace.nextStudent")
+                      }
+                      withTitle
+                    />
+                  </div>
+                )}
+              </>
+            ) : deadlineLocked ? (
+              <Chip variant="danger" icon={Lock} className="shrink-0">
+                <span>{t("workspace.deadlineLockedBadge")}</span>
               </Chip>
             ) : (
               <SaveWorkspace
                 projectId={project.id}
                 accountId={snapshot.accountId}
                 revision={revision}
-                onSaved={setRevision}
+                updatedAt={lastSavedAt}
+                onSaved={(nextRevision, nextUpdatedAt) => {
+                  setRevision(nextRevision);
+                  setLastSavedAt(nextUpdatedAt);
+                  onWorkspaceSaved?.(project.id, nextUpdatedAt);
+                }}
+                onDeadlineLocked={onDeadlineLocked}
                 designDoc={designDoc}
                 nodes={history.present.nodes}
                 relationships={history.present.relationships}
@@ -154,13 +261,31 @@ export function ProjectWorkspace({
         {activeTab === "design" && (
           <div className={cn(toolbarRowClass, "flex flex-wrap items-center justify-between gap-3")}>
             <DesignTabs designTab={designTab} onChangeDesignTab={handleDesignTabChange} />
-            {designTab === "diagram" && <C4FileActions file={c4File} readOnly={readOnly} />}
+            {designTab === "diagram" && (
+              <C4FileActions file={c4File} readOnly={effectiveReadOnly} />
+            )}
           </div>
         )}
         <div className={toolbarRowClass} hidden={activeTab !== "github"}>
-          <RepositoryConnection repository={repository} readOnly={readOnly} />
+          <RepositoryConnection
+            repository={repository}
+            readOnly={effectiveReadOnly}
+            emptyReadOnlyMessage={
+              deadlineLocked && !readOnly ? t("workspace.lockedNoRepo") : undefined
+            }
+          />
         </div>
       </PageHeaderCard>
+
+      {!readOnly && deadlineLocked && (
+        <FeedbackBanner kind="error" className="mt-4">
+          <span>
+            {t("workspace.deadlineLockedNotice", { deadline: project.dueDate })}
+            {lastSavedAt !== null &&
+              ` · ${t("workspace.lastUpdatedAt", { time: formatTaipeiDateTime(lastSavedAt) })}`}
+          </span>
+        </FeedbackBanner>
+      )}
 
       <div
         role="tabpanel"
@@ -169,7 +294,7 @@ export function ProjectWorkspace({
         className="mt-6"
         hidden={activeTab !== "assignment"}
       >
-        <AssignmentPanel project={project} />
+        <AssignmentPanel project={project} now={now} />
       </div>
       <div
         role="tabpanel"
@@ -188,7 +313,10 @@ export function ProjectWorkspace({
           onChangeDesignTab={handleDesignTabChange}
           importing={c4File.importing}
           importRevision={c4File.importRevision}
-          readOnly={readOnly}
+          readOnly={effectiveReadOnly}
+          emptyReadOnlyMessage={
+            deadlineLocked && !readOnly ? t("workspace.lockedNoReadme") : undefined
+          }
         />
       </div>
       <div

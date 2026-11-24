@@ -12,4 +12,5 @@ export type C4ArchitectProps = {
   importing?: boolean;
   importRevision?: number;
   readOnly?: boolean;
+  emptyReadOnlyMessage?: string;
 };

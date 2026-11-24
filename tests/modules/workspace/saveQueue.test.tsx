@@ -17,7 +17,7 @@ test("autosave debounces edits and flushes the newest draft after an in-flight w
     const write = vi
       .fn<(revision: string | null, draft: PersonalWorkspace) => Promise<SaveResult>>()
       .mockReturnValueOnce(first.promise)
-      .mockResolvedValueOnce({ ok: true, revision: "next" });
+      .mockResolvedValueOnce({ ok: true, revision: "next", updatedAt: 2000 });
     const saved = vi.fn();
     const queue = createSaveQueue(template, null, write, saved, vi.fn());
     const unmount = queue.mount();
@@ -34,7 +34,7 @@ test("autosave debounces edits and flushes the newest draft after an in-flight w
     const latest = { ...edited, designDoc: "latest" };
     queue.update(latest);
     unmount();
-    first.resolve({ ok: true, revision: "first" });
+    first.resolve({ ok: true, revision: "first", updatedAt: 1000 });
     await vi.runAllTimersAsync();
     assert.deepEqual(write.mock.calls, [
       [null, edited],
@@ -47,7 +47,7 @@ test("autosave debounces edits and flushes the newest draft after an in-flight w
   }
 });
 
-test("transient failures retry while conflicts stop later writes", async () => {
+test("transient failures retry while conflicts and deadline locks stop later writes", async () => {
   vi.useFakeTimers();
   try {
     const write = vi
@@ -66,6 +66,20 @@ test("transient failures retry while conflicts stop later writes", async () => {
     unmount();
     await vi.runAllTimersAsync();
     assert.strictEqual(write.mock.calls.length, 2);
+
+    const lockedWrite = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, error: "draft.deadlinePassed", retry: false });
+    const lockedStatus = vi.fn();
+    const lockedQueue = createSaveQueue(template, "original", lockedWrite, vi.fn(), lockedStatus);
+    const unmountLocked = lockedQueue.mount();
+    lockedQueue.update({ ...template, designDoc: "late" });
+    await vi.advanceTimersByTimeAsync(1000);
+    assert.strictEqual(lockedStatus.mock.lastCall?.[0], "draft.deadlinePassed");
+    lockedQueue.update({ ...template, designDoc: "even-later" });
+    unmountLocked();
+    await vi.runAllTimersAsync();
+    assert.strictEqual(lockedWrite.mock.calls.length, 1);
   } finally {
     vi.useRealTimers();
   }

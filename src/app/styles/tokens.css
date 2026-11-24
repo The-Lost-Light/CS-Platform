@@ -55,6 +55,7 @@
 
   --warning-container: rgba(248, 238, 214, 0.8);
   --on-warning-container: #634416;
+  --warning-outline: rgba(186, 152, 92, 0.65);
 
   --danger: #a84848;
   --danger-hover: #8c3737;
@@ -293,6 +294,7 @@
 
   --warning-container: rgba(84, 65, 29, 0.65);
   --on-warning-container: #f7e6c0;
+  --warning-outline: rgba(176, 140, 74, 0.5);
 
   --danger: #e09c9c;
   --danger-hover: #ecc0c0;
@@ -538,6 +540,7 @@
 
   --color-warning-container: var(--warning-container);
   --color-on-warning-container: var(--on-warning-container);
+  --color-warning-outline: var(--warning-outline);
 
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);

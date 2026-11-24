@@ -193,7 +193,7 @@ test("new workspaces show teacher handouts and start with an empty student READM
       <I18nProvider initialLanguage="en">
         <ProjectWorkspace
           project={project}
-          snapshot={{ accountId: "student", draft: null, revision: null }}
+          snapshot={{ accountId: "student", draft: null, revision: null, updatedAt: null }}
         />
       </I18nProvider>
     </ThemeProvider>,
@@ -213,6 +213,7 @@ test("the project editor renders a saved personal README and repository in the c
           snapshot={{
             accountId: "student",
             revision: "saved",
+            updatedAt: null,
             draft: {
               designDoc: "# Private architecture notes",
               repoUrl: "https://github.com/example/my-assignment",
@@ -256,7 +257,7 @@ const screens = {
   project: (
     <ProjectWorkspace
       project={en.projects[0]}
-      snapshot={{ accountId: "student", draft: null, revision: null }}
+      snapshot={{ accountId: "student", draft: null, revision: null, updatedAt: null }}
     />
   ),
   github: <GitHubRepoDashboard repoBundle={bundle} onBranchChange={() => {}} />,
@@ -284,3 +285,80 @@ for (const [name, screen] of Object.entries(screens)) {
     );
   });
 }
+
+test("HomeDashboard displays centered code badges, deadlines beneath titles, and student status without points or tags", () => {
+  const dueSoonProject = {
+    ...en.projects[0],
+    dueDate: "2026-11-25 23:59",
+    points: 200,
+    tags: ["ArchitectureTag", "C4Tag"],
+  };
+  const overdueProject = {
+    ...en.projects[1],
+    dueDate: "2026-11-20 12:00",
+    points: 150,
+    tags: ["GitTag"],
+  };
+  const now = Date.parse("2026-11-25T10:00:00+08:00");
+  const savedAt = Date.parse("2026-11-24T18:30:00+08:00");
+
+  const studentHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <SettingsProvider>
+        <HomeDashboard
+          projects={[dueSoonProject, overdueProject]}
+          workspaceStatuses={{
+            [dueSoonProject.id]: { hasWorkspace: true, updatedAt: savedAt },
+          }}
+          currentUser={testUser}
+          onOpenProject={noop}
+          now={now}
+        />
+      </SettingsProvider>
+    </I18nProvider>,
+  );
+  const renderedDueSoonTitle = renderToStaticMarkup(<>{dueSoonProject.title}</>);
+  assert.match(studentHtml, /<button[^>]*flex items-center gap-3\.5/);
+  assert.ok(studentHtml.includes(renderedDueSoonTitle));
+  assert.ok(
+    studentHtml.indexOf(dueSoonProject.codeName) < studentHtml.indexOf(renderedDueSoonTitle),
+  );
+  assert.ok(
+    studentHtml.indexOf(renderedDueSoonTitle) < studentHtml.indexOf("2026-11-25 23:59 (UTC+8)"),
+  );
+  assert.ok(studentHtml.includes("2026-11-25 23:59 (UTC+8)"));
+  assert.ok(studentHtml.includes("即將截止"));
+  assert.ok(studentHtml.includes("已儲存"));
+  assert.ok(studentHtml.includes("最後更新 2026-11-24 18:30"));
+  assert.ok(studentHtml.includes("已逾期"));
+  assert.ok(studentHtml.includes("尚未開始"));
+  assert.ok(!studentHtml.includes("ArchitectureTag"));
+  assert.ok(!studentHtml.includes("C4Tag"));
+  assert.ok(!studentHtml.includes("GitTag"));
+  assert.ok(!studentHtml.includes("配分"));
+  assert.ok(!studentHtml.includes(">200<"));
+  assert.ok(!studentHtml.includes(">150<"));
+
+  const adminUser: User = { ...testUser, role: "admin" };
+  const adminHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <SettingsProvider>
+        <HomeDashboard
+          projects={[dueSoonProject]}
+          workspaceStatuses={{
+            [dueSoonProject.id]: { hasWorkspace: true, updatedAt: savedAt },
+          }}
+          currentUser={adminUser}
+          onOpenProject={noop}
+          now={now}
+        />
+      </SettingsProvider>
+    </I18nProvider>,
+  );
+  assert.ok(adminHtml.includes("Due soon"));
+  assert.ok(adminHtml.includes("Student projects"));
+  assert.ok(!adminHtml.includes("ArchitectureTag"));
+  assert.ok(!adminHtml.includes("Points"));
+  assert.ok(!adminHtml.includes(">Saved<"));
+  assert.ok(!adminHtml.includes(">Not started<"));
+});

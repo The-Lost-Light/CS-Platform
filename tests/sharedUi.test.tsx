@@ -217,6 +217,13 @@ test("SegmentedControl, Tooltip, DataTable, Menu, FeedbackBanner, and LoadingPan
   assert.ok(menuHtml.includes("ui-menu-item-active"));
   assert.ok(menuHtml.includes("ui-menu-item-danger"));
 
+  const warningChip = renderToStaticMarkup(
+    <Chip variant="warning" size="sm">
+      Due soon
+    </Chip>,
+  );
+  assert.ok(warningChip.includes("ui-chip-warning"));
+
   const bannerHtml = renderToStaticMarkup(
     <FeedbackBanner kind="success" action={<Button size="sm">Undo</Button>}>
       <span>Saved</span>
@@ -225,6 +232,14 @@ test("SegmentedControl, Tooltip, DataTable, Menu, FeedbackBanner, and LoadingPan
   assert.ok(bannerHtml.includes('role="status"'));
   assert.ok(bannerHtml.includes("Saved"));
   assert.ok(bannerHtml.includes("Undo"));
+
+  const warningBanner = renderToStaticMarkup(
+    <FeedbackBanner kind="warning">
+      <span>Deadline soon</span>
+    </FeedbackBanner>,
+  );
+  assert.ok(warningBanner.includes("ui-banner-warning"));
+  assert.ok(warningBanner.includes('role="status"'));
 
   const loadingHtml = renderToStaticMarkup(<LoadingPanel label="Loading..." />);
   assert.ok(loadingHtml.includes('role="status"'));

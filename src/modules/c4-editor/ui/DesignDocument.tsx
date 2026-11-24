@@ -12,12 +12,14 @@ export function DesignDocument({
   readmeMode,
   setReadmeMode,
   readOnly = false,
+  emptyReadOnlyMessage,
 }: {
   designDoc: string;
   onChangeDesignDoc: (doc: string) => void;
   readmeMode: "reading" | "source";
   setReadmeMode: Dispatch<SetStateAction<"reading" | "source">>;
   readOnly?: boolean;
+  emptyReadOnlyMessage?: string;
 }) {
   const { t } = useI18n();
   return (
@@ -61,7 +63,7 @@ export function DesignDocument({
             }}
           />
         ) : readOnly && !designDoc.trim() ? (
-          <EmptyState>{t("workspace.studentNoReadme")}</EmptyState>
+          <EmptyState>{emptyReadOnlyMessage ?? t("workspace.studentNoReadme")}</EmptyState>
         ) : (
           <article className="ui-markdown">
             <Markdown remarkPlugins={[remarkGfm]}>{designDoc}</Markdown>

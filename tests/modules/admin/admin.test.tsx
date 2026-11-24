@@ -60,6 +60,11 @@ test("each management list has an Add button in its header", () => {
         ([header]) => header.includes(title) && header.includes(">Add</button>"),
       ),
     );
+  assert.ok(!html.includes("<label"));
+  assert.match(
+    html,
+    /<input(?=[^>]*type="search")(?=[^>]*aria-label="Search")(?=[^>]*placeholder="Search")[^>]*>/,
+  );
   assert.ok(!html.includes(">View</button>"));
   assert.ok(!html.includes("<form"));
 });

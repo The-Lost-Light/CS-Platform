@@ -4,6 +4,11 @@ export interface ProjectAttachment {
   size: number;
 }
 
+export interface ProjectWorkspaceStatus {
+  hasWorkspace: boolean;
+  updatedAt: number | null;
+}
+
 export interface Project {
   id: string;
   title: string;

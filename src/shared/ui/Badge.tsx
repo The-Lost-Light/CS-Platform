@@ -58,6 +58,7 @@ export type ChipVariant =
   | "secondary"
   | "neutral"
   | "success"
+  | "warning"
   | "danger"
   | "code"
   | "outline";
@@ -69,6 +70,7 @@ const chipVariants: Record<ChipVariant, string> = {
   secondary: "ui-chip-secondary",
   neutral: "ui-chip-neutral",
   success: "ui-chip-success",
+  warning: "ui-chip-warning",
   danger: "ui-chip-danger",
   code: "ui-code-badge",
   outline:

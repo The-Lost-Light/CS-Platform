@@ -1,4 +1,5 @@
 import { useI18n } from "@modules/i18n";
+import { formatTaipeiDateTime } from "@modules/projects";
 import { Tooltip, cn } from "@shared/ui";
 import { Cloud, CloudAlert, CloudCheck } from "lucide-react";
 
@@ -25,14 +26,20 @@ function SavingUploadIcon({ className }: { className?: string }) {
   );
 }
 
-export function SaveWorkspace(props: AutosaveOptions) {
+export function SaveWorkspace({
+  updatedAt,
+  ...options
+}: AutosaveOptions & { updatedAt?: number | null }) {
   const { t } = useI18n();
-  const status = useWorkspaceAutosave(props);
-  const message = t(status);
+  const status = useWorkspaceAutosave(options);
   const saved = status === "draft.saved";
   const saving = status === "draft.saving";
   const neutral = status === "draft.empty" || status === "draft.unsaved";
   const isError = !saved && !saving && !neutral;
+  const message =
+    saved && typeof updatedAt === "number" && updatedAt > 0
+      ? t("draft.savedAt", { time: formatTaipeiDateTime(updatedAt) })
+      : t(status);
 
   const badgeColor = saved
     ? "bg-success-container border-success-outline text-on-success-container"

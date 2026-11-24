@@ -58,13 +58,17 @@ try {
   const secondCookie = await login(second);
   assert.equal((await read("/api/session", firstCookie)).user.id, first.id);
   const { projects } = await read("/api/projects", firstCookie);
-  assert.ok(projects.length >= 2, "Two local course projects are required");
-  const [path, otherProject] = projects.map(
+  const openProjects = projects.filter(
+    (p) => !p.dueDate || Date.parse(p.dueDate.replace(" ", "T") + ":00+08:00") > Date.now(),
+  );
+  assert.ok(openProjects.length >= 2, "Two open local course projects are required");
+  const [path, otherProject] = openProjects.map(
     (p) => "/api/projects/" + encodeURIComponent(p.id) + "/workspace",
   );
   assert.deepEqual(await read(path, firstCookie), {
     accountId: first.id,
     revision: null,
+    updatedAt: null,
     draft: null,
   });
   const hugeNodes = Array.from({ length: 250 }, (_, index) => ({
@@ -95,7 +99,9 @@ try {
   assert.equal((await save(firstCookie, first, randomUUID(), draft)).status, 409);
   const response = await save(firstCookie, first, null, draft);
   assert.equal(response.status, 200, (await response.clone().text()).slice(0, 500));
-  const { revision } = await response.json();
+  const { revision, updatedAt } = await response.json();
+  assert.equal(typeof updatedAt, "number");
+  assert.ok(updatedAt > 0);
   assert.equal(
     (await save(firstCookie, first, revision, { ...draft, designDoc: "x".repeat(100_001) })).status,
     400,

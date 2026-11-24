@@ -4,11 +4,12 @@ import { HomeDashboard } from "@modules/catalog";
 
 export default function HomePage() {
   const { currentUser, logout } = useAuth();
-  const { projects, openProject, openStudentProjects } = usePageNavigation();
+  const { projects, workspaceStatuses, openProject, openStudentProjects } = usePageNavigation();
   return (
     currentUser && (
       <HomeDashboard
         projects={projects}
+        workspaceStatuses={workspaceStatuses}
         onOpenProject={openProject}
         onOpenStudentProjects={openStudentProjects}
         currentUser={currentUser}

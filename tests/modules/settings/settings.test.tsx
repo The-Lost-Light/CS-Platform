@@ -148,7 +148,7 @@ test("SettingsButton and ProjectWorkspace render without a personal token", () =
         <SettingsProvider>
           <ProjectWorkspace
             project={enProjects[0]}
-            snapshot={{ accountId: "student", draft: null, revision: null }}
+            snapshot={{ accountId: "student", draft: null, revision: null, updatedAt: null }}
           />
         </SettingsProvider>
       </I18nProvider>

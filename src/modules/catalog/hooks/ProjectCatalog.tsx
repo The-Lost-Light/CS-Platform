@@ -1,13 +1,15 @@
 import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
+import type { Project, ProjectWorkspaceStatus } from "@modules/projects";
 import { createContext, useContext, type ReactNode } from "react";
 
 import { useCatalogState } from "./useCatalogState";
 
 const CatalogContext = createContext<{
   projects: Project[];
+  workspaceStatuses: Record<string, ProjectWorkspaceStatus>;
   addProject: (project: Project) => void;
   removeProject: (id: string) => void;
+  markWorkspaceSaved: (projectId: string, updatedAt: number) => void;
 } | null>(null);
 export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
   const { t, locale } = useI18n();

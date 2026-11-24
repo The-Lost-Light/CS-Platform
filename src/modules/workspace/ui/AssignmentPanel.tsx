@@ -1,12 +1,23 @@
 import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
+import { getDeadlineState, type Project } from "@modules/projects";
 import { Card, CardHeader, Chip } from "@shared/ui";
-import { Award, CalendarClock, Download, FileText, Paperclip } from "lucide-react";
+import {
+  AlertCircle,
+  Award,
+  CalendarClock,
+  Clock,
+  Download,
+  FileText,
+  Paperclip,
+} from "lucide-react";
+import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-export function AssignmentPanel({ project }: { project: Project }) {
+export function AssignmentPanel({ project, now }: { project: Project; now?: number }) {
   const { t } = useI18n();
+  const [defaultNow] = useState(() => Date.now());
+  const deadlineState = getDeadlineState(project.dueDate, now ?? defaultNow);
   return (
     <Card overflowHidden>
       <CardHeader
@@ -21,13 +32,23 @@ export function AssignmentPanel({ project }: { project: Project }) {
                 <CalendarClock aria-hidden="true" className="w-3.5 h-3.5 text-secondary" />
                 <span>{t("project.deadline")}</span>
               </dt>
-              <dd className="font-semibold text-on-surface">
+              <dd className="flex flex-wrap items-center gap-1.5 font-semibold text-on-surface">
                 {project.dueDate ? (
                   <time dateTime={project.dueDate.replace(" ", "T") + ":00+08:00"}>
                     {project.dueDate} (UTC+8)
                   </time>
                 ) : (
                   t("project.noDeadline")
+                )}
+                {deadlineState === "overdue" && (
+                  <Chip variant="danger" size="sm" icon={AlertCircle}>
+                    <span>{t("project.overdue")}</span>
+                  </Chip>
+                )}
+                {deadlineState === "dueSoon" && (
+                  <Chip variant="warning" size="sm" icon={Clock}>
+                    <span>{t("project.dueSoon")}</span>
+                  </Chip>
                 )}
               </dd>
             </div>

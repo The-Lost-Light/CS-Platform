@@ -1,12 +1,17 @@
 import type { DesignTab } from "@modules/c4-editor";
 import { useI18n } from "@modules/i18n";
-import type { Project } from "@modules/projects";
+import { isProjectOverdue, parseProjectDueDate, type Project } from "@modules/projects";
 import { Button, Card, FeedbackBanner, LoadingPanel, PageContainer } from "@shared/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { WorkspaceTab } from "../hooks/useProjectWorkspace";
 import { useStudentWorkspaces, useWorkspaceSnapshot } from "../hooks/useWorkspaceData";
-import { ProjectWorkspace } from "./ProjectWorkspace";
+import {
+  filterStudentWorkspaces,
+  sortStudentWorkspaces,
+  type StudentStatusFilter,
+} from "../model/studentList";
+import { ProjectWorkspace, type StudentNavigation } from "./ProjectWorkspace";
 import { StudentWorkspaceList } from "./StudentWorkspaceList";
 
 export function PersonalProject({
@@ -16,6 +21,7 @@ export function PersonalProject({
   initialShowStudentList = false,
   initialStudentId = "",
   onStudentChange,
+  onWorkspaceSaved,
 }: {
   project: Project;
   accountId: string;
@@ -23,6 +29,7 @@ export function PersonalProject({
   initialShowStudentList?: boolean;
   initialStudentId?: string;
   onStudentChange?: (studentId: string) => void;
+  onWorkspaceSaved?: (projectId: string, updatedAt: number) => void;
 }) {
   const { t } = useI18n();
   const urlKey = `${initialShowStudentList}:${initialStudentId}`;
@@ -43,12 +50,29 @@ export function PersonalProject({
       ? viewOverride
       : { mode: defaultMode, studentId: isAdmin ? initialStudentId : "" };
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("assignment");
+  const [selfTab, setSelfTab] = useState<WorkspaceTab>("assignment");
+  const [studentTab, setStudentTab] = useState<WorkspaceTab>("design");
   const [designTab, setDesignTab] = useState<DesignTab>("readme");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentStatusFilter, setStudentStatusFilter] = useState<StudentStatusFilter>("all");
+  const [now, setNow] = useState(() => Date.now());
+  const [serverDeadlineLocked, setServerDeadlineLocked] = useState(false);
 
   const viewingStudent = activeView.mode === "student" && Boolean(activeView.studentId);
   const showingList = isAdmin && activeView.mode === "list";
   const targetAccountId = viewingStudent ? activeView.studentId : accountId;
+  const dueTimestamp = parseProjectDueDate(project.dueDate);
+
+  useEffect(() => {
+    if (isAdmin || viewingStudent || dueTimestamp === null || now > dueTimestamp) return;
+    const remaining = dueTimestamp - Date.now();
+    const timer = setTimeout(
+      () => setNow(Date.now()),
+      remaining <= 0 ? 0 : Math.min(remaining + 50, 2_147_483_647),
+    );
+    return () => clearTimeout(timer);
+  }, [isAdmin, viewingStudent, dueTimestamp, now]);
+
   const { snapshot, error, retry } = useWorkspaceSnapshot(
     project.id,
     targetAccountId,
@@ -75,13 +99,48 @@ export function PersonalProject({
         loading={studentList.loading}
         error={studentList.error}
         onRetry={studentList.retry}
+        search={studentSearch}
+        onSearchChange={setStudentSearch}
+        statusFilter={studentStatusFilter}
+        onStatusFilterChange={setStudentStatusFilter}
+        now={now}
       />
     );
   }
 
+  const sortedStudents = sortStudentWorkspaces(studentList.students);
   const selectedStudent = viewingStudent
-    ? studentList.students.find((student) => student.id === activeView.studentId)
+    ? sortedStudents.find((student) => student.id === activeView.studentId)
     : undefined;
+  const filteredStudents = filterStudentWorkspaces(sortedStudents, {
+    search: studentSearch,
+    status: studentStatusFilter,
+    dueDate: project.dueDate,
+    now,
+  });
+
+  let studentNavigation: StudentNavigation | undefined;
+  if (viewingStudent) {
+    const navList = filteredStudents.some((student) => student.id === activeView.studentId)
+      ? filteredStudents
+      : sortedStudents;
+    const currentIndex = navList.findIndex((student) => student.id === activeView.studentId);
+    if (currentIndex >= 0) {
+      const prevStudent = currentIndex > 0 ? navList[currentIndex - 1] : undefined;
+      const nextStudent = currentIndex < navList.length - 1 ? navList[currentIndex + 1] : undefined;
+      studentNavigation = {
+        currentIndex,
+        total: navList.length,
+        previousName: prevStudent?.name,
+        nextName: nextStudent?.name,
+        onPrevious: prevStudent ? () => handleSelectStudent(prevStudent.id) : undefined,
+        onNext: nextStudent ? () => handleSelectStudent(nextStudent.id) : undefined,
+      };
+    }
+  }
+
+  const deadlineLocked =
+    !isAdmin && !viewingStudent && (serverDeadlineLocked || isProjectOverdue(project.dueDate, now));
 
   if (error)
     return (
@@ -113,16 +172,21 @@ export function PersonalProject({
       key={`${project.id}/${snapshot.accountId}`}
       project={project}
       snapshot={snapshot}
-      initialActiveTab={activeTab}
+      initialActiveTab={viewingStudent ? studentTab : selfTab}
       initialDesignTab={designTab}
       readOnly={viewingStudent}
+      deadlineLocked={deadlineLocked}
+      onDeadlineLocked={() => setServerDeadlineLocked(true)}
+      onWorkspaceSaved={onWorkspaceSaved}
       studentName={selectedStudent?.name}
+      studentNavigation={studentNavigation}
       closeHref={
         viewingStudent ? `/projects/${encodeURIComponent(project.id)}?students=1` : undefined
       }
       onClose={viewingStudent ? () => handleSelectStudent("") : undefined}
-      onActiveTabChange={setActiveTab}
+      onActiveTabChange={viewingStudent ? setStudentTab : setSelfTab}
       onDesignTabChange={setDesignTab}
+      now={now}
     />
   );
 }

@@ -6,8 +6,13 @@ import { LoadingPanel } from "@shared/ui/LoadingPanel";
 
 export default function ProjectPage() {
   const { t } = useI18n();
-  const { selectedProject, showingStudentList, selectedStudentId, selectStudent } =
-    usePageNavigation();
+  const {
+    selectedProject,
+    showingStudentList,
+    selectedStudentId,
+    selectStudent,
+    markWorkspaceSaved,
+  } = usePageNavigation();
   const { currentUser } = useAuth();
   if (!selectedProject || !currentUser?.id) return <LoadingPanel label={t("common.loading")} />;
   return (
@@ -19,6 +24,7 @@ export default function ProjectPage() {
       initialShowStudentList={showingStudentList}
       initialStudentId={selectedStudentId}
       onStudentChange={selectStudent}
+      onWorkspaceSaved={markWorkspaceSaved}
     />
   );
 }

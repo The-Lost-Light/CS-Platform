@@ -2,15 +2,21 @@ import { I18nProvider } from "@modules/i18n";
 import { getLocalizedProjects } from "@modules/projects";
 import { RepositoryConnection } from "@modules/repository";
 import { ThemeProvider } from "@modules/theme";
-import { ProjectWorkspace, StudentWorkspaceList } from "@modules/workspace";
+import { PersonalProject, ProjectWorkspace, StudentWorkspaceList } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
+
+import {
+  filterStudentWorkspaces,
+  sortStudentWorkspaces,
+} from "@/modules/workspace/model/studentList";
+import { AssignmentPanel } from "@/modules/workspace/ui/AssignmentPanel";
 
 import { createRepoFixture } from "../../fixtures/repository";
 
 const enProject = getLocalizedProjects("en").projects[0];
 const zhProject = getLocalizedProjects("zh-TW").projects[0];
-const emptySnapshot = { accountId: "student", draft: null, revision: null };
+const emptySnapshot = { accountId: "student", draft: null, revision: null, updatedAt: null };
 
 test("Repo tab renders the URL and sync button in the workspace header card when unconfigured", () => {
   const html = renderToStaticMarkup(
@@ -138,29 +144,54 @@ test("design tab bar hides file actions outside C4 Model and anchors them on the
 
 test("StudentWorkspaceList prioritizes submitted accounts and links back home", () => {
   const students = [
-    { id: "s2", name: "Bob", email: "bob@example.com", hasWorkspace: false },
-    { id: "s1", name: "Alice", email: "alice@example.com", hasWorkspace: true },
+    { id: "s2", name: "Bob", email: "bob@example.com", hasWorkspace: false, updatedAt: null },
+    {
+      id: "s1",
+      name: "Alice",
+      email: "alice@example.com",
+      hasWorkspace: true,
+      updatedAt: Date.parse("2026-11-24T15:45:00+08:00"),
+    },
   ];
+  const openNow = Date.parse("2026-11-24T16:00:00+08:00");
   const enHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
-      <StudentWorkspaceList project={enProject} students={students} onSelectStudent={() => {}} />
+      <StudentWorkspaceList
+        project={enProject}
+        students={students}
+        onSelectStudent={() => {}}
+        now={openNow}
+      />
     </I18nProvider>,
   );
   const renderedTitle = renderToStaticMarkup(<>{enProject.title}</>);
+  const enTopHeader = enHtml.split("</section>")[0];
+  const enCardHeader = enHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
   assert.ok(enHtml.includes(renderedTitle));
-  assert.ok(enHtml.includes("All students (2)"));
-  assert.ok(enHtml.includes("Submitted: 1 / 2"));
+  assert.ok(enCardHeader.includes("All students (2)"));
+  assert.ok(enCardHeader.includes("Submitted: 1 / 2"));
+  assert.ok(enCardHeader.indexOf("All students (2)") < enCardHeader.indexOf("Submitted: 1 / 2"));
+  assert.ok(!enTopHeader.includes("Submitted: 1 / 2"));
+  assert.ok(enHtml.includes("2026-11-24 15:45"));
   assert.ok(enHtml.includes('href="/"'));
   assert.ok(enHtml.includes('aria-label="Back to home"'));
   assert.ok(enHtml.indexOf("Alice") < enHtml.indexOf("Bob"));
 
   const zhHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="zh-TW">
-      <StudentWorkspaceList project={zhProject} students={students} onSelectStudent={() => {}} />
+      <StudentWorkspaceList
+        project={zhProject}
+        students={students}
+        onSelectStudent={() => {}}
+        now={openNow}
+      />
     </I18nProvider>,
   );
-  assert.ok(zhHtml.includes("所有學生（2）"));
-  assert.ok(zhHtml.includes("已繳交：1 / 2"));
+  const zhTopHeader = zhHtml.split("</section>")[0];
+  const zhCardHeader = zhHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+  assert.ok(zhCardHeader.includes("所有學生（2）"));
+  assert.ok(zhCardHeader.includes("已繳交：1 / 2"));
+  assert.ok(!zhTopHeader.includes("已繳交：1 / 2"));
   assert.ok(zhHtml.includes(">已繳交<"));
   assert.ok(zhHtml.includes(">未繳交<"));
   assert.ok(zhHtml.indexOf("Alice") < zhHtml.indexOf("Bob"));
@@ -183,7 +214,7 @@ test("ProjectWorkspace hides project codeName and displays student name and back
       <I18nProvider initialLanguage="en">
         <ProjectWorkspace
           project={enProject}
-          snapshot={{ accountId: "s1", draft: null, revision: null }}
+          snapshot={{ accountId: "s1", draft: null, revision: null, updatedAt: null }}
           initialActiveTab="design"
           initialDesignTab="diagram"
           readOnly
@@ -209,7 +240,7 @@ test("ProjectWorkspace hides project codeName and displays student name and back
       <I18nProvider initialLanguage="zh-TW">
         <ProjectWorkspace
           project={zhProject}
-          snapshot={{ accountId: "s1", draft: null, revision: null }}
+          snapshot={{ accountId: "s1", draft: null, revision: null, updatedAt: null }}
           readOnly
           studentName="Alice"
           closeHref={`/projects/${zhProject.id}?students=1`}
@@ -224,7 +255,7 @@ test("ProjectWorkspace hides project codeName and displays student name and back
       <I18nProvider initialLanguage="en">
         <ProjectWorkspace
           project={enProject}
-          snapshot={{ accountId: "s1", draft: null, revision: null }}
+          snapshot={{ accountId: "s1", draft: null, revision: null, updatedAt: null }}
           initialActiveTab="design"
           initialDesignTab="readme"
           readOnly
@@ -239,7 +270,7 @@ test("ProjectWorkspace hides project codeName and displays student name and back
       <I18nProvider initialLanguage="en">
         <ProjectWorkspace
           project={enProject}
-          snapshot={{ accountId: "s1", draft: null, revision: null }}
+          snapshot={{ accountId: "s1", draft: null, revision: null, updatedAt: null }}
           initialActiveTab="github"
           readOnly
         />
@@ -271,4 +302,197 @@ test("ProjectWorkspace hides project codeName and displays student name and back
   );
   assert.ok(repoConnectedHtml.includes("owner/repo"));
   assert.notMatch(repoConnectedHtml, /修改 Repo 網址/);
+});
+
+test("student list sorting and filtering handle search, submission states, and overdue status", () => {
+  const dueDate = "2026-11-25 23:59";
+  const students = [
+    {
+      id: "s3",
+      name: "Charlie",
+      email: "charlie@example.com",
+      hasWorkspace: true,
+      updatedAt: Date.parse("2026-11-26T01:00:00+08:00"),
+    },
+    { id: "s2", name: "Bob", email: "bob@example.com", hasWorkspace: false, updatedAt: null },
+    {
+      id: "s1",
+      name: "Alice",
+      email: "alice@example.com",
+      hasWorkspace: true,
+      updatedAt: Date.parse("2026-11-24T12:00:00+08:00"),
+    },
+  ];
+  const sorted = sortStudentWorkspaces(students);
+  assert.deepEqual(
+    sorted.map((s) => s.id),
+    ["s1", "s3", "s2"],
+  );
+  assert.deepEqual(
+    filterStudentWorkspaces(sorted, { search: "BOB@", status: "all", dueDate }).map((s) => s.id),
+    ["s2"],
+  );
+  assert.deepEqual(
+    filterStudentWorkspaces(sorted, { search: "", status: "submitted", dueDate }).map((s) => s.id),
+    ["s1", "s3"],
+  );
+  assert.deepEqual(
+    filterStudentWorkspaces(sorted, { search: "", status: "empty", dueDate }).map((s) => s.id),
+    ["s2"],
+  );
+  const beforeDue = Date.parse("2026-11-25T10:00:00+08:00");
+  assert.deepEqual(
+    filterStudentWorkspaces(sorted, { search: "", status: "late", dueDate, now: beforeDue }).map(
+      (s) => s.id,
+    ),
+    ["s3"],
+  );
+  const afterDue = Date.parse("2026-11-26T10:00:00+08:00");
+  assert.deepEqual(
+    filterStudentWorkspaces(sorted, { search: "", status: "late", dueDate, now: afterDue }).map(
+      (s) => s.id,
+    ),
+    ["s3", "s2"],
+  );
+});
+
+test("StudentWorkspaceList renders search, filter pills, and late/overdue indicators", () => {
+  const project = { ...enProject, dueDate: "2026-11-25 23:59" };
+  const students = [
+    {
+      id: "s1",
+      name: "Alice",
+      email: "alice@example.com",
+      hasWorkspace: true,
+      updatedAt: Date.parse("2026-11-26T00:30:00+08:00"),
+    },
+    { id: "s2", name: "Bob", email: "bob@example.com", hasWorkspace: false, updatedAt: null },
+  ];
+  const afterDue = Date.parse("2026-11-26T01:00:00+08:00");
+  const enHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <StudentWorkspaceList
+        project={project}
+        students={students}
+        onSelectStudent={() => {}}
+        now={afterDue}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(enHtml.includes('type="search"'));
+  assert.ok(!enHtml.includes("<label"));
+  assert.ok(enHtml.includes('aria-label="Search students"'));
+  assert.ok(enHtml.includes('placeholder="Filter by student name or email…"'));
+  assert.ok(enHtml.includes("All (2)"));
+  assert.ok(enHtml.includes("Submitted (1)"));
+  assert.ok(enHtml.includes("Not submitted (1)"));
+  assert.ok(enHtml.includes("Overdue (2)"));
+  assert.ok(enHtml.includes(">Late<"));
+  assert.ok(enHtml.includes(">Overdue<"));
+
+  const zhHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <StudentWorkspaceList
+        project={{ ...zhProject, dueDate: "2026-11-25 23:59" }}
+        students={students}
+        onSelectStudent={() => {}}
+        now={afterDue}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(!zhHtml.includes("<label"));
+  assert.ok(zhHtml.includes('aria-label="搜尋學生"'));
+  assert.ok(zhHtml.includes('placeholder="輸入學生姓名或電子郵件搜尋…"'));
+  assert.ok(zhHtml.includes("搜尋學生"));
+  assert.ok(zhHtml.includes("逾期（2）"));
+  assert.ok(zhHtml.includes(">逾期<"));
+  assert.ok(zhHtml.includes(">已逾期<"));
+});
+
+test("AssignmentPanel shows overdue and due-soon badges deterministically", () => {
+  const project = { ...enProject, dueDate: "2026-11-25 23:59" };
+  const dueSoonHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <AssignmentPanel project={project} now={Date.parse("2026-11-25T12:00:00+08:00")} />
+    </I18nProvider>,
+  );
+  assert.ok(dueSoonHtml.includes("Due soon"));
+
+  const overdueHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <AssignmentPanel project={project} now={Date.parse("2026-11-26T00:01:00+08:00")} />
+    </I18nProvider>,
+  );
+  assert.ok(overdueHtml.includes("已逾期"));
+});
+
+test("ProjectWorkspace locks edits when deadlineLocked and renders student navigation in read-only mode", () => {
+  const lockedHtml = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="zh-TW">
+        <ProjectWorkspace
+          project={{ ...zhProject, dueDate: "2026-11-25 23:59" }}
+          snapshot={{
+            accountId: "student",
+            draft: null,
+            revision: null,
+            updatedAt: Date.parse("2026-11-25T20:00:00+08:00"),
+          }}
+          initialActiveTab="design"
+          initialDesignTab="readme"
+          deadlineLocked
+        />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  assert.ok(lockedHtml.includes("已截止・已鎖定"));
+  assert.ok(lockedHtml.includes("本專案已超過截止時間（2026-11-25 23:59 UTC+8）"));
+  assert.ok(lockedHtml.includes("最後更新：2026-11-25 20:00 (UTC+8)"));
+  assert.ok(lockedHtml.includes("截止前尚未撰寫 README 設計文件。"));
+  assert.ok(lockedHtml.includes("截止前尚未綁定 GitHub 倉庫。"));
+  assert.ok(!lockedHtml.includes("尚未儲存作業"));
+  assert.notMatch(lockedHtml, /type="file"/);
+
+  const navHtml = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="en">
+        <ProjectWorkspace
+          project={{ ...enProject, dueDate: "2026-11-25 23:59" }}
+          snapshot={{
+            accountId: "s2",
+            draft: null,
+            revision: "rev-2",
+            updatedAt: Date.parse("2026-11-26T01:15:00+08:00"),
+          }}
+          initialActiveTab="design"
+          readOnly
+          studentName="Bob"
+          studentNavigation={{
+            currentIndex: 1,
+            total: 3,
+            previousName: "Alice",
+            nextName: "Charlie",
+            onPrevious: () => {},
+            onNext: () => {},
+          }}
+        />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  assert.ok(navHtml.includes("Viewing: Bob"));
+  assert.ok(navHtml.includes("Late · Updated 2026-11-26 01:15 (UTC+8)"));
+  assert.ok(navHtml.includes("2 / 3"));
+  assert.ok(navHtml.includes('aria-label="Previous student: Alice"'));
+  assert.ok(navHtml.includes('aria-label="Next student: Charlie"'));
+});
+
+test("PersonalProject renders StudentWorkspaceList when initialShowStudentList is set for admin", () => {
+  const html = renderToStaticMarkup(
+    <ThemeProvider>
+      <I18nProvider initialLanguage="en">
+        <PersonalProject project={enProject} accountId="admin-1" isAdmin initialShowStudentList />
+      </I18nProvider>
+    </ThemeProvider>,
+  );
+  assert.ok(html.includes("All students (0)"));
 });

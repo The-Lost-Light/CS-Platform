@@ -112,7 +112,7 @@ React 畫面透過各自功能的 hooks 取得狀態與操作。工作區的儲�
 
 本機開發時，在根目錄的 `.env` 設定 `GITHUB_TOKEN` 並重新啟動開發伺服器。正式環境由管理員執行 `pnpm exec void secret put GITHUB_TOKEN`，依提示將實際值存成 Cloudflare Worker secret。缺少 token 時，GitHub 同步會提示聯絡管理員，其他平台功能可照常使用。
 
-請使用專用的 fine-grained token，僅授予 Contents 與 Metadata 的讀取權限。所有已登入的課程帳號都能查詢此 token 可讀取的倉庫，因此私有倉庫請只選擇可供全班閱讀的項目。
+請使用專用的 **Fine-grained token**，並設定為 **Public Repositories (read-only)**（或使用不勾選任何 scope 的 Classic token），不要授予私有倉庫讀取權限。後端會拒絕非公開倉庫（偵測到 `private` 或非 `public` 可見度時回傳 `404`），並於 `GET /api/github/repository` 套用伺服器端 `ETag`（`If-None-Match`）條件式快取、不可變 Commit Diff 快取、並行請求去重、依需求分頁載入 Commit Diff（每次最多 100 個檔案），以及每位使用者的查詢頻率與並行上限。
 
 ### 本機啟動
 

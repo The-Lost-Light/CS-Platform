@@ -9,16 +9,35 @@ import type {
 import { parseGitHubRepoUrl } from "@shared/githubRepoUrl";
 import { isRecord } from "@shared/isRecord";
 
+import {
+  ETAG_CACHE_TTL_MS,
+  getGitHubCacheStore,
+  MAX_ETAG_CACHE_BODY_CHARS,
+  snapshotToResponse,
+  type HttpResponseSnapshot,
+} from "./cache";
+
+export { clearServerGitHubCache } from "./cache";
+export {
+  acquireGitHubUserQuota,
+  createGitHubUserRateLimiter,
+  GITHUB_USER_MAX_CONCURRENT,
+  GITHUB_USER_MAX_REQUESTS,
+  GITHUB_USER_WINDOW_MS,
+  resetGitHubUserRateLimiter,
+} from "./rateLimit";
+
 type RepoBranchItem = RepoBundle["branches"][number];
-type RepoTagItem = NonNullable<RepoBundle["tags"]>[number];
-type RepoPullItem = NonNullable<RepoBundle["pulls"]>[number];
 
 interface GitHubOptions {
   token: string | undefined;
   fetch?: typeof globalThis.fetch;
 }
 
-type GitHubRequest = (url: string) => Promise<Response>;
+type GitHubRequest = (
+  url: string,
+  options?: { skipVisibilityVerify?: boolean },
+) => Promise<Response>;
 
 export class GitHubRequestError extends Error {
   constructor(
@@ -75,74 +94,212 @@ function parseLastPage(response: Response): number | null {
   return null;
 }
 
+function isNonPublicRepoPayload(data: unknown): boolean {
+  return (
+    !isRecord(data) ||
+    data.private === true ||
+    (typeof data.visibility === "string" && data.visibility !== "public")
+  );
+}
+
+function hasPrivateRepoOAuthScope(response: Response): boolean {
+  const scopes = response.headers.get("x-oauth-scopes");
+  if (!scopes) return false;
+  return scopes.split(",").some((scope) => scope.trim() === "repo");
+}
+
 function createGitHubClient(rawUrl: string, { token, fetch = globalThis.fetch }: GitHubOptions) {
   const parsed = parseGitHubRepoUrl(rawUrl);
   if (!parsed) throw new GitHubRequestError(400, "github.errors.invalidUrl");
-  if (!token?.trim()) throw new GitHubRequestError(503, "github.errors.notConfigured");
-  const headers = {
+  const { owner, repo, fullKey } = parsed;
+  const trimmedToken = token?.trim();
+  if (!trimmedToken) throw new GitHubRequestError(503, "github.errors.notConfigured");
+
+  const store = getGitHubCacheStore(fetch);
+  const tokenId = store.getTokenId(trimmedToken);
+  const baseHeaders = {
     Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${token.trim()}`,
+    Authorization: `Bearer ${trimmedToken}`,
     "User-Agent": "CodePulse-Edu",
   };
-  async function request(url: string) {
+  const repoApiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+
+  async function fetchSingleHop(url: string): Promise<HttpResponseSnapshot> {
+    const key = `${tokenId}:${url}`;
+    const existing = store.inFlight.get(key);
+    if (existing) return existing;
+
+    const task = (async (): Promise<HttpResponseSnapshot> => {
+      const cached = store.etagResponses.get(key);
+      const headers = cached ? { ...baseHeaders, "If-None-Match": cached.etag } : baseHeaders;
+      const response = await fetch(url, { headers, redirect: "manual" });
+
+      if (response.status === 304 && cached) {
+        const merged = new Headers(cached.headers);
+        for (const [headerName, headerValue] of response.headers.entries()) {
+          if (headerValue) merged.set(headerName, headerValue);
+        }
+        const mergedHeaders = [...merged.entries()];
+        const nextEtag = merged.get("etag") ?? cached.etag;
+        const nextSnapshot: HttpResponseSnapshot = {
+          status: cached.status,
+          statusText: cached.statusText,
+          headers: mergedHeaders,
+          bodyText: cached.bodyText,
+        };
+        store.etagResponses.set(key, { ...nextSnapshot, etag: nextEtag }, ETAG_CACHE_TTL_MS);
+        return nextSnapshot;
+      }
+
+      const bodyText = await response.text();
+      const headersEntries = [...response.headers.entries()];
+      const etag = response.headers.get("etag");
+      if (response.status === 200 && etag && bodyText.length <= MAX_ETAG_CACHE_BODY_CHARS) {
+        store.etagResponses.set(
+          key,
+          {
+            status: 200,
+            statusText: response.statusText,
+            headers: headersEntries,
+            bodyText,
+            etag,
+          },
+          ETAG_CACHE_TTL_MS,
+        );
+      } else if (response.status === 404 || response.status === 410) {
+        store.etagResponses.delete(key);
+      }
+
+      return {
+        status: response.status,
+        statusText: response.statusText,
+        headers: headersEntries,
+        bodyText,
+      };
+    })();
+
+    store.inFlight.set(key, task);
+    try {
+      return await task;
+    } finally {
+      store.inFlight.delete(key);
+    }
+  }
+
+  async function ensurePublicRepository(): Promise<void> {
+    const visibility = store.getRepoVisibility(tokenId, fullKey);
+    if (visibility === "private") throw new GitHubRequestError(404, "github.errors.notFound");
+    if (visibility === "public") return;
+
+    const repoResponse = await request(repoApiUrl, { skipVisibilityVerify: true });
+    checkResponse(repoResponse);
+    const repoData: unknown = await repoResponse.json();
+    if (isNonPublicRepoPayload(repoData)) {
+      store.setRepoVisibility(tokenId, fullKey, "private");
+      if (isRecord(repoData) && typeof repoData.full_name === "string") {
+        store.setRepoVisibility(tokenId, repoData.full_name, "private");
+      }
+      throw new GitHubRequestError(404, "github.errors.notFound");
+    }
+    store.setRepoVisibility(tokenId, fullKey, "public");
+    if (isRecord(repoData) && typeof repoData.full_name === "string") {
+      store.setRepoVisibility(tokenId, repoData.full_name, "public");
+    }
+  }
+
+  async function request(
+    url: string,
+    requestOptions?: { skipVisibilityVerify?: boolean },
+  ): Promise<Response> {
+    if (store.getRepoVisibility(tokenId, fullKey) === "private") {
+      throw new GitHubRequestError(404, "github.errors.notFound");
+    }
+    let currentUrl = url;
     // Renamed repositories redirect within the GitHub API. Only send the token there.
     for (let redirects = 0; redirects <= 3; redirects++) {
-      const response = await fetch(url, { headers, redirect: "manual" });
+      const snapshot = await fetchSingleHop(currentUrl);
+      const response = snapshotToResponse(snapshot);
       const location = response.headers.get("location");
-      if (![301, 302, 303, 307, 308].includes(response.status) || !location) return response;
-      const next = new URL(location, url);
+      if (![301, 302, 303, 307, 308].includes(response.status) || !location) {
+        if (
+          !requestOptions?.skipVisibilityVerify &&
+          currentUrl !== repoApiUrl &&
+          response.ok &&
+          hasPrivateRepoOAuthScope(response) &&
+          store.getRepoVisibility(tokenId, fullKey) !== "public"
+        ) {
+          await ensurePublicRepository();
+        }
+        return response;
+      }
+      const next = new URL(location, currentUrl);
       if (next.origin !== "https://api.github.com") break;
-      url = next.href;
+      currentUrl = next.href;
     }
     throw new GitHubRequestError(502, "workspace.errors.syncFailed");
   }
-  const repoApiUrl = `https://api.github.com/repos/${encodeURIComponent(parsed.owner)}/${encodeURIComponent(parsed.repo)}`;
-  return { repoApiUrl, request };
+
+  return { parsed: { owner, repo, fullKey }, repoApiUrl, request, store, tokenId };
 }
 
 export async function fetchGitHubCommitDetails(
   rawUrl: string,
   sha: string,
-  options: GitHubOptions,
+  options: GitHubOptions & { page?: number },
 ): Promise<RepoCommitDetails> {
   const trimmedSha = sha.trim();
-  if (!trimmedSha) throw new GitHubRequestError(400, "github.errors.invalidUrl");
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, options);
+  const page = options.page ?? 1;
+  if (!trimmedSha || !Number.isInteger(page) || page < 1) {
+    throw new GitHubRequestError(400, "github.errors.invalidUrl");
+  }
+  const { parsed, repoApiUrl, request, store, tokenId } = createGitHubClient(rawUrl, options);
+  if (store.getRepoVisibility(tokenId, parsed.fullKey) === "private") {
+    throw new GitHubRequestError(404, "github.errors.notFound");
+  }
 
-  let result: RepoCommitDetails = { sha: trimmedSha };
+  const isImmutableSha = /^[0-9a-f]{40}$/i.test(trimmedSha);
+  if (isImmutableSha) {
+    const cached = store.getCommitDetails(tokenId, parsed.fullKey, trimmedSha, page);
+    if (cached) return cached;
+  }
+
   try {
     // The list endpoint has no files or stats. Only commit details contain patches.
-    for (let page = 1; page <= 30; page++) {
-      const response = await request(
-        `${repoApiUrl}/commits/${encodeURIComponent(trimmedSha)}?per_page=100&page=${page}`,
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const details: Pick<RepoCommit, "stats" | "files"> = await response.json();
-      if (!Array.isArray(details.files)) {
-        throw new Error("Invalid commit details");
-      }
-      result = {
-        ...result,
-        stats: details.stats ?? result.stats,
-        files: [
-          ...(page === 1 ? [] : (result.files ?? [])),
-          ...details.files.map(({ filename, status, additions, deletions, changes, patch }) => ({
-            filename,
-            status,
-            additions,
-            deletions,
-            changes,
-            patch,
-          })),
-        ],
-      };
-      if (!hasNextPage(response)) break;
+    const response = await request(
+      `${repoApiUrl}/commits/${encodeURIComponent(trimmedSha)}?per_page=100&page=${page}`,
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const details: Pick<RepoCommit, "stats" | "files"> = await response.json();
+    if (!Array.isArray(details.files)) {
+      throw new Error("Invalid commit details");
+    }
+    const hasMore = hasNextPage(response);
+    const result: RepoCommitDetails = {
+      sha: trimmedSha,
+      ...(details.stats !== undefined ? { stats: details.stats } : {}),
+      files: details.files.map(({ filename, status, additions, deletions, changes, patch }) => ({
+        filename,
+        status,
+        additions,
+        deletions,
+        changes,
+        patch,
+      })),
+      ...(hasMore ? { hasMoreFiles: true } : {}),
+    };
+    if (isImmutableSha) {
+      store.setCommitDetails(tokenId, parsed.fullKey, trimmedSha, page, result);
     }
     return result;
-  } catch {
-    // Keep any fetched pages when a diff cannot load.
+  } catch (error) {
+    if (
+      error instanceof GitHubRequestError &&
+      store.getRepoVisibility(tokenId, parsed.fullKey) === "private"
+    ) {
+      throw error;
+    }
     return {
-      ...result,
+      sha: trimmedSha,
       diffError: true,
     };
   }
@@ -264,6 +421,30 @@ async function fetchPaginatedCollection<T>(
   }
 }
 
+async function fetchCollectionCount(
+  baseUrl: string,
+  request: GitHubRequest,
+  extraQuery?: string,
+): Promise<{ total: number; ok: boolean; exact: boolean }> {
+  const query = `${extraQuery ? `${extraQuery}&` : ""}per_page=1`;
+  try {
+    const response = await request(`${baseUrl}?${query}`);
+    if (!response.ok) return { total: 0, ok: false, exact: false };
+    const data: unknown = await response.json();
+    if (!Array.isArray(data)) return { total: 0, ok: false, exact: false };
+    if (!hasNextPage(response)) {
+      return { total: data.length, ok: true, exact: true };
+    }
+    const lastPage = parseLastPage(response);
+    if (lastPage !== null) {
+      return { total: lastPage, ok: true, exact: true };
+    }
+    return { total: data.length, ok: true, exact: false };
+  } catch {
+    return { total: 0, ok: false, exact: false };
+  }
+}
+
 export async function fetchGitHubBranchesPage(
   rawUrl: string,
   options: GitHubOptions & { page: number },
@@ -306,12 +487,28 @@ export async function fetchGitHubRepository(
   options: GitHubOptions & { branch?: string },
 ): Promise<RepoBundle> {
   const { branch } = options;
-  const { repoApiUrl, request } = createGitHubClient(rawUrl, options);
+  const { parsed, repoApiUrl, request, store, tokenId } = createGitHubClient(rawUrl, options);
   const repoRes = await request(repoApiUrl);
   checkResponse(repoRes);
 
   const rateLimit = parseRateLimit(repoRes);
-  const repoData: RepoBundle["repo"] = await repoRes.json();
+  const rawRepoData: unknown = await repoRes.json();
+  if (!isRecord(rawRepoData) || !isRecord(rawRepoData.owner)) {
+    throw new GitHubRequestError(502, "workspace.errors.syncFailed");
+  }
+  if (isNonPublicRepoPayload(rawRepoData)) {
+    store.setRepoVisibility(tokenId, parsed.fullKey, "private");
+    if (typeof rawRepoData.full_name === "string") {
+      store.setRepoVisibility(tokenId, rawRepoData.full_name, "private");
+    }
+    throw new GitHubRequestError(404, "github.errors.notFound");
+  }
+  store.setRepoVisibility(tokenId, parsed.fullKey, "public");
+  if (typeof rawRepoData.full_name === "string") {
+    store.setRepoVisibility(tokenId, rawRepoData.full_name, "public");
+  }
+
+  const repoData = rawRepoData as unknown as RepoBundle["repo"];
   const selectedBranch = branch ?? (repoData.default_branch || "main");
   const encodedBranch = encodeURIComponent(selectedBranch);
   const strictBranch = branch !== undefined;
@@ -322,11 +519,10 @@ export async function fetchGitHubRepository(
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({})),
       fetchPaginatedCollection<RepoBranchItem>(`${repoApiUrl}/branches`, request, { perPage: 30 }),
-      fetchPaginatedCollection<RepoTagItem>(`${repoApiUrl}/tags`, request, { perPage: 30 }),
-      fetchPaginatedCollection<RepoPullItem>(`${repoApiUrl}/pulls`, request, {
-        perPage: 30,
-        extraQuery: "state=open",
-      }),
+      fetchCollectionCount(`${repoApiUrl}/tags`, request),
+      (repoData.open_issues_count ?? 0) > 0
+        ? fetchCollectionCount(`${repoApiUrl}/pulls`, request, "state=open")
+        : Promise.resolve({ total: 0, ok: true, exact: true }),
       fetchBranchCommits(repoApiUrl, request, encodedBranch, { strict: strictBranch }),
       fetchBranchTree(repoApiUrl, request, encodedBranch, { strict: strictBranch }),
     ]);
@@ -360,9 +556,9 @@ export async function fetchGitHubRepository(
     branches: branchesResult.items,
     totalBranches: branchesResult.total,
     hasMoreBranches: branchesResult.hasMore,
-    tags: tagsResult.items,
+    tags: [],
     totalTags: tagsResult.total,
-    pulls: pullsResult.items,
+    pulls: [],
     ...(pullsResult.ok ? { totalPulls: pullsResult.total } : {}),
     openIssuesCount,
     commits: branchCommits.commits,

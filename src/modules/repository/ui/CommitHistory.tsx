@@ -20,6 +20,8 @@ export function CommitHistory({
   expandedCommitSha,
   setExpandedCommitSha,
   loadingCommitSha = null,
+  loadingMoreFilesCommitSha = null,
+  onLoadMoreCommitFiles,
   hasMoreCommits,
   isLoadingMore = false,
   onLoadMore,
@@ -29,6 +31,8 @@ export function CommitHistory({
   expandedCommitSha: string | null;
   setExpandedCommitSha: (value: string | null) => void;
   loadingCommitSha?: string | null;
+  loadingMoreFilesCommitSha?: string | null;
+  onLoadMoreCommitFiles?: (sha: string) => void;
   hasMoreCommits?: boolean;
   isLoadingMore?: boolean;
   onLoadMore?: () => void;
@@ -157,6 +161,24 @@ export function CommitHistory({
                             </div>
                           </details>
                         ))}
+                        {c.hasMoreFiles && onLoadMoreCommitFiles && (
+                          <div className="pt-1 flex justify-center">
+                            <Button
+                              variant="outlined"
+                              loading={loadingMoreFilesCommitSha === c.sha}
+                              disabled={loadingMoreFilesCommitSha === c.sha}
+                              onClick={() => onLoadMoreCommitFiles(c.sha)}
+                              iconClassName="w-3.5 h-3.5"
+                              className="w-full"
+                            >
+                              <span>
+                                {loadingMoreFilesCommitSha === c.sha
+                                  ? t("common.loading")
+                                  : t("github.diff.loadMoreFiles")}
+                              </span>
+                            </Button>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>

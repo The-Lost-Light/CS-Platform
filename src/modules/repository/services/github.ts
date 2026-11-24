@@ -10,15 +10,44 @@ import type {
   RepoCommitsPage,
 } from "../model/repository";
 
+const MAX_COMMIT_CACHE_ENTRIES = 500;
 const commitDetailsCache = new Map<string, RepoCommitDetails>();
+
+function setCommitDetailsCache(key: string, details: RepoCommitDetails): void {
+  if (commitDetailsCache.has(key)) {
+    commitDetailsCache.delete(key);
+  }
+  while (commitDetailsCache.size >= MAX_COMMIT_CACHE_ENTRIES) {
+    const oldestKey = commitDetailsCache.keys().next().value;
+    if (oldestKey === undefined) break;
+    commitDetailsCache.delete(oldestKey);
+  }
+  commitDetailsCache.set(key, details);
+}
 
 export function getCommitCacheKey(fullKey: string, sha: string): string {
   return `${fullKey.toLowerCase()}:${sha}`;
 }
 
-export function getCachedCommitDetails(rawUrl: string, sha: string): RepoCommitDetails | undefined {
+function getCommitPageCacheKey(fullKey: string, sha: string, page: number): string {
+  const baseKey = getCommitCacheKey(fullKey, sha);
+  return page === 1 ? baseKey : `${baseKey}:page:${page}`;
+}
+
+export function getCachedCommitDetails(
+  rawUrl: string,
+  sha: string,
+  page = 1,
+): RepoCommitDetails | undefined {
   const repo = parseGitHubRepoUrl(rawUrl);
-  return repo ? commitDetailsCache.get(getCommitCacheKey(repo.fullKey, sha.trim())) : undefined;
+  if (!repo || !Number.isInteger(page) || page < 1) return undefined;
+  const key = getCommitPageCacheKey(repo.fullKey, sha.trim(), page);
+  const cached = commitDetailsCache.get(key);
+  if (cached) {
+    commitDetailsCache.delete(key);
+    commitDetailsCache.set(key, cached);
+  }
+  return cached;
 }
 
 export function clearCommitDetailsCache(): void {
@@ -86,22 +115,29 @@ export async function fetchGitHubCommitsPage(
 export async function fetchGitHubCommitDetails(
   rawUrl: string,
   sha: string,
+  page = 1,
 ): Promise<RepoCommitDetails> {
   const parsed = parseGitHubRepoUrl(rawUrl);
   const trimmedSha = sha.trim();
+  const validatedPage = pageParam(page);
   if (!parsed || !trimmedSha) throw new Error("github.errors.invalidUrl");
 
-  const cacheKey = getCommitCacheKey(parsed.fullKey, trimmedSha);
+  const cacheKey = getCommitPageCacheKey(parsed.fullKey, trimmedSha, page);
   const cached = commitDetailsCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    commitDetailsCache.delete(cacheKey);
+    commitDetailsCache.set(cacheKey, cached);
+    return cached;
+  }
 
   const params = new URLSearchParams({
     repo: parsed.fullKey,
     commit: trimmedSha,
+    ...(page > 1 ? { page: validatedPage } : {}),
   });
   const details = await requestRepositoryJson<RepoCommitDetails>(params);
   if (!details.diffError && Array.isArray(details.files)) {
-    commitDetailsCache.set(cacheKey, details);
+    setCommitDetailsCache(cacheKey, details);
   }
   return details;
 }

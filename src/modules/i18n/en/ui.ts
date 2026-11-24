@@ -160,6 +160,7 @@ export default {
   "github.diff.split": "Split",
   "github.diff.loadFailed":
     "Could not load all commit changes. Sync the repository again to retry.",
+  "github.diff.loadMoreFiles": "Load more files",
   "github.diff.noFiles": "This commit has no changed files.",
   "github.diff.noPatch":
     "No text diff is available for this file (it may be binary, too large, or only renamed).",

@@ -30,7 +30,17 @@ function mergeCommitDetails(commit: RepoCommit, details?: RepoCommitDetails): Re
     ...(details.stats !== undefined ? { stats: details.stats } : {}),
     ...(details.files !== undefined ? { files: details.files } : {}),
     diffError: details.diffError,
+    hasMoreFiles: details.hasMoreFiles,
   };
+}
+
+function mergeCommitFiles(
+  existing: NonNullable<RepoCommit["files"]>,
+  incoming: NonNullable<RepoCommit["files"]>,
+) {
+  const seen = new Set(existing.map((file) => file.filename));
+  const appended = incoming.filter((file) => !seen.has(file.filename));
+  return appended.length > 0 ? [...existing, ...appended] : existing;
 }
 
 export function GitHubRepoDashboard({
@@ -162,6 +172,8 @@ function LoadedGitHubRepoDashboard({
   const [reachedEnd, setReachedEnd] = useState(() => repoBundle.commits.length >= initialTotal);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadingCommitShas, setLoadingCommitShas] = useState<Set<string>>(() => new Set());
+  const [commitFilePages, setCommitFilePages] = useState<Record<string, number>>({});
+  const [loadingMoreFilesShas, setLoadingMoreFilesShas] = useState<Set<string>>(() => new Set());
 
   const totalCommits = Math.max(repoBundle.totalCommits ?? commits.length, commits.length);
   const hasMoreCommits = !reachedEnd && commits.length < totalCommits;
@@ -200,6 +212,65 @@ function LoadedGitHubRepoDashboard({
         if (!prev.has(nextSha)) return prev;
         const next = new Set(prev);
         next.delete(nextSha);
+        return next;
+      });
+    }
+  };
+
+  const handleLoadMoreCommitFiles = async (sha: string) => {
+    const current = commits.find((c) => c.sha === sha);
+    if (!current?.hasMoreFiles || loadingMoreFilesShas.has(sha)) return;
+
+    const pageToFetch =
+      commitFilePages[sha] ?? Math.max(2, Math.floor((current.files?.length ?? 0) / 100) + 1);
+    setLoadingMoreFilesShas((prev) => new Set(prev).add(sha));
+    try {
+      const details = await loadCommitDetails(repo.full_name, sha, pageToFetch);
+      if (details.diffError || !Array.isArray(details.files)) {
+        setCommits((prev) =>
+          prev.map((c) => (c.sha === sha ? { ...c, diffError: true, hasMoreFiles: true } : c)),
+        );
+        return;
+      }
+
+      const incomingFiles = details.files;
+      const hasMoreFiles = Boolean(details.hasMoreFiles);
+      const cacheKey = getCommitCacheKey(repo.full_name, sha);
+      const existingCached = detailsCacheRef.current.get(cacheKey);
+      const mergedFiles = mergeCommitFiles(
+        existingCached?.files ?? current.files ?? [],
+        incomingFiles,
+      );
+      detailsCacheRef.current.set(cacheKey, {
+        sha,
+        stats: details.stats ?? existingCached?.stats ?? current.stats,
+        files: mergedFiles,
+        hasMoreFiles,
+      });
+
+      setCommits((prev) =>
+        prev.map((c) =>
+          c.sha === sha
+            ? {
+                ...c,
+                ...(details.stats !== undefined ? { stats: details.stats } : {}),
+                files: mergeCommitFiles(c.files ?? [], incomingFiles),
+                diffError: undefined,
+                hasMoreFiles,
+              }
+            : c,
+        ),
+      );
+      setCommitFilePages((prev) => ({ ...prev, [sha]: pageToFetch + 1 }));
+    } catch {
+      setCommits((prev) =>
+        prev.map((c) => (c.sha === sha ? { ...c, diffError: true, hasMoreFiles: true } : c)),
+      );
+    } finally {
+      setLoadingMoreFilesShas((prev) => {
+        if (!prev.has(sha)) return prev;
+        const next = new Set(prev);
+        next.delete(sha);
         return next;
       });
     }
@@ -271,6 +342,14 @@ function LoadedGitHubRepoDashboard({
         loadingCommitSha={
           expandedCommitSha && loadingCommitShas.has(expandedCommitSha) ? expandedCommitSha : null
         }
+        loadingMoreFilesCommitSha={
+          expandedCommitSha && loadingMoreFilesShas.has(expandedCommitSha)
+            ? expandedCommitSha
+            : null
+        }
+        onLoadMoreCommitFiles={(sha) => {
+          void handleLoadMoreCommitFiles(sha);
+        }}
         hasMoreCommits={hasMoreCommits}
         isLoadingMore={isLoadingMore}
         onLoadMore={() => {

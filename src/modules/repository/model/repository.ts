@@ -75,6 +75,7 @@ export interface RepoCommit {
     deletions: number;
   };
   diffError?: boolean;
+  hasMoreFiles?: boolean;
   files?: Array<{
     filename: string;
     status: string;
@@ -85,7 +86,10 @@ export interface RepoCommit {
   }>;
 }
 
-export type RepoCommitDetails = Pick<RepoCommit, "sha" | "stats" | "files" | "diffError">;
+export type RepoCommitDetails = Pick<
+  RepoCommit,
+  "sha" | "stats" | "files" | "diffError" | "hasMoreFiles"
+>;
 
 export interface RepoCommitsPage {
   commits: RepoCommit[];

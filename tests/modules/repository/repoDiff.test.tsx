@@ -421,3 +421,66 @@ test("RepoFileTree normalizes search queries and RepositoryTree renders filtered
   assert.ok(treeHtml.includes("file-259.ts"));
   assert.ok(!treeHtml.includes("feature-only.ts"));
 });
+
+test("CommitHistory renders Load more files button only when hasMoreFiles is true", () => {
+  const snapshot = createRepoFixture();
+  const commit = snapshot.commits[0];
+
+  const hasMoreEn = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <CommitHistory
+        commits={[{ ...commit, hasMoreFiles: true }]}
+        expandedCommitSha={commit.sha}
+        setExpandedCommitSha={() => {}}
+        onLoadMoreCommitFiles={() => {}}
+        diffMode="unified"
+        setDiffMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(hasMoreEn.includes("Load more files"));
+
+  const hasMoreZh = renderToStaticMarkup(
+    <I18nProvider initialLanguage="zh-TW">
+      <CommitHistory
+        commits={[{ ...commit, hasMoreFiles: true }]}
+        expandedCommitSha={commit.sha}
+        setExpandedCommitSha={() => {}}
+        onLoadMoreCommitFiles={() => {}}
+        diffMode="unified"
+        setDiffMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(hasMoreZh.includes("載入更多檔案"));
+
+  const loadingMoreHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <CommitHistory
+        commits={[{ ...commit, hasMoreFiles: true }]}
+        expandedCommitSha={commit.sha}
+        setExpandedCommitSha={() => {}}
+        loadingMoreFilesCommitSha={commit.sha}
+        onLoadMoreCommitFiles={() => {}}
+        diffMode="unified"
+        setDiffMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.match(loadingMoreHtml, /disabled=""[^>]*>[\s\S]*Loading…/);
+  assert.ok(!loadingMoreHtml.includes("Load more files"));
+
+  const completeHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <CommitHistory
+        commits={[{ ...commit, hasMoreFiles: false }]}
+        expandedCommitSha={commit.sha}
+        setExpandedCommitSha={() => {}}
+        onLoadMoreCommitFiles={() => {}}
+        diffMode="unified"
+        setDiffMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(!completeHtml.includes("Load more files"));
+});

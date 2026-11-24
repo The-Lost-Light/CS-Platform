@@ -11,14 +11,28 @@ import {
 
 export default defineAuth(({ defaults }) => ({
   ...defaults,
-  // Account mutations use our guarded, transactional management endpoints.
+  // Account mutations and admin user operations use our guarded, transactional endpoints.
   disabledPaths: [
     ...(defaults.disabledPaths ?? []),
+    "/update-user",
+    "/change-password",
+    "/change-email",
+    "/delete-user",
+    "/delete-user/callback",
     "/admin/update-user",
     "/admin/set-user-password",
     "/admin/set-role",
     "/admin/remove-user",
     "/admin/ban-user",
+    "/admin/unban-user",
+    "/admin/impersonate-user",
+    "/admin/stop-impersonating",
+    "/admin/list-users",
+    "/admin/get-user",
+    "/admin/list-user-sessions",
+    "/admin/revoke-user-session",
+    "/admin/revoke-user-sessions",
+    "/admin/has-permission",
   ],
   emailAndPassword: {
     ...defaults.emailAndPassword,

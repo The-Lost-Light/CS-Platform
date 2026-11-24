@@ -311,15 +311,29 @@ assert.equal(
   ).status,
   409,
 );
-assert.ok(
-  !(
+assert.equal(
+  (
     await request(
       "/api/auth/admin/update-user",
       { userId: studentId, data: { role: "admin" } },
       adminCookie,
     )
-  ).ok,
+  ).status,
+  404,
 );
+for (const [path, body, method] of [
+  ["/api/auth/admin/impersonate-user", { userId: studentId }, "POST"],
+  ["/api/auth/admin/stop-impersonating", {}, "POST"],
+  ["/api/auth/admin/unban-user", { userId: studentId }, "POST"],
+  ["/api/auth/admin/list-users", null, "GET"],
+  ["/api/auth/admin/get-user?id=" + encodeURIComponent(studentId), null, "GET"],
+  ["/api/auth/admin/list-user-sessions", { userId: studentId }, "POST"],
+  ["/api/auth/admin/revoke-user-session", { sessionToken: "invalid" }, "POST"],
+  ["/api/auth/admin/revoke-user-sessions", { userId: studentId }, "POST"],
+  ["/api/auth/admin/has-permission", { permissions: { user: ["list"] } }, "POST"],
+]) {
+  assert.equal((await request(path, body, adminCookie, method)).status, 404, path);
+}
 const changedAccount = await request(
   "/api/admin/accounts/" + studentId,
   accountUpdate,
@@ -420,6 +434,30 @@ assert.ok([401, 403].includes(crossOriginEdit.status));
 assert.equal((await patchOwnProfile({ ...ownProfile, id: adminId })).status, 400);
 assert.equal((await patchOwnProfile({ ...ownProfile, role: "admin" })).status, 400);
 assert.equal((await patchOwnProfile({ ...ownProfile, email })).status, 409);
+assert.equal(
+  (await request("/api/auth/update-user", { name: "Bypassed name" }, lastCookie, "POST")).status,
+  404,
+);
+assert.equal(
+  (
+    await request(
+      "/api/auth/change-password",
+      { currentPassword: newPassword, newPassword: studentPassword, revokeOtherSessions: false },
+      lastCookie,
+      "POST",
+    )
+  ).status,
+  404,
+);
+assert.equal(
+  (await request("/api/auth/change-email", { newEmail: ownProfile.email }, lastCookie, "POST"))
+    .status,
+  404,
+);
+assert.equal(
+  (await request("/api/auth/delete-user", { password: newPassword }, lastCookie, "POST")).status,
+  404,
+);
 assert.equal((await (await patchOwnProfile(ownProfile)).json()).signedOut, true);
 assert.equal((await (await request("/api/session", null, lastCookie)).json()).user, null);
 

@@ -2,8 +2,11 @@ import { AuthProvider, useAuth, AuthGate, type User } from "@modules/auth";
 import { HomeDashboard } from "@modules/catalog";
 import { I18nProvider, createTranslator } from "@modules/i18n";
 import { ThemeProvider } from "@modules/theme";
+import { betterAuth } from "better-auth";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
+
+import authConfig from "../auth";
 
 const stubAuthService = {
   login: () => ({ ok: false as const, error: "invalidCredentials" as const }),
@@ -58,4 +61,62 @@ test("AuthGate initially presents login and hides authenticated navigation and d
   assert.ok(!visibleText.includes(t("auth.signOut")));
   assert.ok(!visibleText.includes(t("home.title")));
   assert.notMatch(html, /<(?:header|main)\b/);
+});
+
+test("Better Auth disables built-in account mutation and unused admin endpoints", async () => {
+  const options = authConfig({
+    defaults: {
+      baseURL: "http://localhost/api/auth",
+      secret: "test-secret-0123456789abcdef0123456789abcdef",
+    },
+    env: {},
+    dialect: "sqlite",
+    request: new Request("http://localhost/api/auth/ok"),
+  });
+  const instance = betterAuth(options);
+
+  const disabledEndpoints: Array<[string, string]> = [
+    ["POST", "/update-user"],
+    ["POST", "/update-user/"],
+    ["POST", "/change-password"],
+    ["POST", "/change-email"],
+    ["POST", "/delete-user"],
+    ["GET", "/delete-user/callback"],
+    ["POST", "/admin/update-user"],
+    ["POST", "/admin/set-user-password"],
+    ["POST", "/admin/set-role"],
+    ["POST", "/admin/remove-user"],
+    ["POST", "/admin/ban-user"],
+    ["POST", "/admin/unban-user"],
+    ["POST", "/admin/impersonate-user"],
+    ["POST", "/admin/impersonate-user/"],
+    ["POST", "/admin/stop-impersonating"],
+    ["GET", "/admin/list-users"],
+    ["GET", "/admin/get-user"],
+    ["POST", "/admin/list-user-sessions"],
+    ["POST", "/admin/revoke-user-session"],
+    ["POST", "/admin/revoke-user-sessions"],
+    ["POST", "/admin/has-permission"],
+  ];
+
+  for (const [method, path] of disabledEndpoints) {
+    const response = await instance.handler(
+      new Request("http://localhost/api/auth" + path, {
+        method,
+        headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
+        body: method === "POST" ? "{}" : undefined,
+      }),
+    );
+    assert.strictEqual(response.status, 404, `${method} /api/auth${path} should return 404`);
+  }
+
+  for (const allowedPath of ["/sign-in/email", "/sign-out", "/get-session", "/admin/create-user"]) {
+    assert.ok(
+      !(options.disabledPaths ?? []).includes(allowedPath),
+      `${allowedPath} must remain enabled`,
+    );
+  }
+
+  const okResponse = await instance.handler(new Request("http://localhost/api/auth/ok"));
+  assert.strictEqual(okResponse.status, 200);
 });

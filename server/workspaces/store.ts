@@ -76,6 +76,49 @@ export function getWorkspaceRevision(userId: string, projectId: string) {
   ) AS revision WHERE ${projectAvailable}`);
 }
 
+export const WORKSPACE_PART_MAX_BYTES = 384 * 1024;
+
+/** Split serialized workspace JSON into UTF-8 byte-bounded chunks without splitting surrogate pairs. */
+export function splitWorkspaceContent(
+  content: string,
+  maxBytes = WORKSPACE_PART_MAX_BYTES,
+): string[] {
+  if (!Number.isInteger(maxBytes) || maxBytes < 4) {
+    throw new RangeError("maxBytes must be an integer >= 4");
+  }
+  // Every UTF-16 code unit encodes to at most 3 UTF-8 bytes (surrogate pairs take 2 units -> 4 bytes).
+  if (content.length * 3 <= maxBytes) return [content];
+  const chunks: string[] = [];
+  let start = 0;
+  let bytes = 0;
+  for (let i = 0; i < content.length;) {
+    const code = content.charCodeAt(i);
+    let unitLen = 1;
+    let byteLen = 3;
+    if (code <= 0x7f) {
+      byteLen = 1;
+    } else if (code <= 0x7ff) {
+      byteLen = 2;
+    } else if (code >= 0xd800 && code <= 0xdbff && i + 1 < content.length) {
+      const next = content.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        unitLen = 2;
+        byteLen = 4;
+      }
+    }
+    if (bytes + byteLen > maxBytes) {
+      chunks.push(content.slice(start, i));
+      start = i;
+      bytes = byteLen;
+    } else {
+      bytes += byteLen;
+    }
+    i += unitLen;
+  }
+  chunks.push(content.slice(start));
+  return chunks;
+}
+
 export async function saveWorkspace(
   userId: string,
   projectId: string,
@@ -85,13 +128,9 @@ export async function saveWorkspace(
   const projectAvailable = availableProject(projectId);
   const revision = crypto.randomUUID();
   const content = JSON.stringify(draft);
-  const parts = [];
-  for (let offset = 0; offset < content.length;) {
-    let end = Math.min(content.length, offset + 384 * 1024);
-    if (end < content.length && /[\uD800-\uDBFF]/.test(content[end - 1])) end--;
-    parts.push({ revision, part: parts.length, content: content.slice(offset, end) });
-    offset = end;
-  }
+  const partInserts = splitWorkspaceContent(content).map((chunk, part) =>
+    db.insert(workspaceParts).values({ revision, part, content: chunk }),
+  );
   // Compare-and-swap and insert all parts in one transaction. A stale writer
   // collides with the current owner's unique key; its entire batch rolls back.
   try {
@@ -102,7 +141,7 @@ export async function saveWorkspace(
       db
         .insert(workspaces)
         .select(sql`SELECT ${revision}, ${projectId}, ${userId} WHERE ${projectAvailable}`),
-      db.insert(workspaceParts).values(parts),
+      ...partInserts,
     ]);
   } catch (error) {
     if (isUniqueViolation(error)) return { status: "conflict" } as const;

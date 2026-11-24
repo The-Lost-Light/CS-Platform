@@ -57,6 +57,13 @@
       "when": 1795507407725,
       "tag": "20261124080327_gifted_major_mapleleaf",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1795508776682,
+      "tag": "20261124082616_faithful_northstar",
+      "breakpoints": true
     }
   ]
 }

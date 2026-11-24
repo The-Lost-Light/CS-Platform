@@ -182,13 +182,14 @@ beforeEach(() => {
 
 test("table-split migration preserves existing metadata and chunks while enforcing cascade deletes", () => {
   const tags = readJournalTags();
-  const splitTag = tags.at(-1);
-  assert.ok(splitTag);
+  const splitTag = "20261124080327_gifted_major_mapleleaf";
+  const splitIndex = tags.indexOf(splitTag);
+  assert.ok(splitIndex >= 0, `Missing expected migration tag ${splitTag}`);
 
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec("PRAGMA foreign_keys = ON;");
   try {
-    for (const tag of tags.slice(0, -1)) applyMigrationTag(sqlite, tag);
+    for (const tag of tags.slice(0, splitIndex)) applyMigrationTag(sqlite, tag);
     seedProjects(sqlite);
 
     const insertLegacyPart = sqlite.prepare(

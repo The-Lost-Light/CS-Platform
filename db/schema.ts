@@ -3,13 +3,17 @@ import { foreignKey, index, integer, primaryKey, sqliteTable, text, unique } fro
 
 import { userTable } from "../.void/better-auth-schema";
 
-export const projects = sqliteTable("course_project", {
-  id: text("id").primaryKey(),
-  codeName: text("code_name").notNull().unique(),
-  data: text("data", { mode: "json" }).$type<Omit<Project, "attachments">>().notNull(),
-  createdBy: text("created_by").notNull(),
-  createdAt: integer("created_at").notNull(),
-});
+export const projects = sqliteTable(
+  "course_project",
+  {
+    id: text("id").primaryKey(),
+    codeName: text("code_name").notNull().unique(),
+    data: text("data", { mode: "json" }).$type<Omit<Project, "attachments">>().notNull(),
+    createdBy: text("created_by").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [index("course_project_created_at_idx").on(table.createdAt)],
+);
 
 // Store attachment metadata separately from chunk bytes so catalog reads never touch file content.
 export const projectAttachments = sqliteTable(
@@ -64,7 +68,10 @@ export const workspaces = sqliteTable(
       .notNull()
       .references(() => userTable.id, { onDelete: "cascade" }),
   },
-  (table) => [unique().on(table.projectId, table.userId)],
+  (table) => [
+    unique().on(table.projectId, table.userId),
+    index("personal_workspace_user_id_idx").on(table.userId),
+  ],
 );
 
 // A supported C4 import can exceed D1's maximum size for a single row.

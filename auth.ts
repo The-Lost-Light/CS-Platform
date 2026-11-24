@@ -1,3 +1,4 @@
+import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { admin } from "better-auth/plugins";
 import { defineAuth } from "void/auth";
@@ -10,6 +11,19 @@ import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
 } from "./src/shared/passwordPolicy";
+
+const userIndexesPlugin = {
+  id: "user-indexes",
+  schema: {
+    user: {
+      fields: {},
+      indexes: [
+        { name: "user_createdAt_idx", fields: ["createdAt"] },
+        { name: "user_role_banned_idx", fields: ["role", "banned"] },
+      ],
+    },
+  },
+} satisfies BetterAuthPlugin;
 
 export default defineAuth(({ defaults }) => ({
   ...defaults,
@@ -75,5 +89,5 @@ export default defineAuth(({ defaults }) => ({
       return defaults.hooks?.before?.(ctx);
     }),
   },
-  plugins: [...(defaults.plugins ?? []), admin()],
+  plugins: [...(defaults.plugins ?? []), admin(), userIndexesPlugin],
 }));

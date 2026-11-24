@@ -150,6 +150,36 @@ test("ProjectList renders the Index header, drag handles, and sequential index b
     catalogMock.projects = [];
   }
 });
+
+test("ProjectList renders reorder saved notice as a status chip before the Add button", () => {
+  for (const [locale, savedLabel, addButton] of [
+    ["zh-TW", "變更已儲存。", ">新增</button>"],
+    ["en", "Changes saved.", ">Add</button>"],
+  ] as const) {
+    const idleHtml = renderToStaticMarkup(
+      <I18nProvider initialLanguage={locale}>
+        <ProjectList ref={null} />
+      </I18nProvider>,
+    );
+    const idleHeader = idleHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+    assert.ok(!idleHeader.includes('role="status"'));
+    assert.ok(!idleHtml.includes(savedLabel));
+
+    const savedHtml = renderToStaticMarkup(
+      <I18nProvider initialLanguage={locale}>
+        <ProjectList ref={null} initialReorderSaved />
+      </I18nProvider>,
+    );
+    const savedHeader = savedHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+    assert.match(savedHeader, /role="status"/);
+    assert.ok(savedHeader.includes("ui-chip-success"));
+    assert.ok(savedHeader.includes("border-success-outline"));
+    assert.ok(savedHeader.includes(savedLabel));
+    assert.ok(savedHeader.includes(addButton));
+    assert.ok(savedHeader.indexOf(savedLabel) < savedHeader.indexOf(addButton));
+    assert.ok(!savedHtml.includes("ui-banner-success"));
+  }
+});
 test("deletion confirmation identifies the record and explains soft-delete retention and session revocation", () => {
   const accountHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">

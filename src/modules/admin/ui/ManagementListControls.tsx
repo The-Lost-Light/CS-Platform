@@ -1,18 +1,21 @@
 import { useI18n } from "@modules/i18n";
 import { Button, CardHeader, TextInput } from "@shared/ui";
 import { Plus, Search, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 export function ManagementListHeader({
   title,
   icon,
   className,
   disabled,
+  status,
   onAdd,
 }: {
   title: string;
   icon: LucideIcon;
   className: string;
   disabled: boolean;
+  status?: ReactNode;
   onAdd: () => void;
 }) {
   const { t } = useI18n();
@@ -23,15 +26,18 @@ export function ManagementListHeader({
       title={title}
       layoutClassName={className}
       actions={
-        <Button
-          icon={Plus}
-          disabled={disabled}
-          aria-haspopup="dialog"
-          onClick={onAdd}
-          className="px-4 py-2 shrink-0"
-        >
-          {t("admin.add")}
-        </Button>
+        <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
+          {status}
+          <Button
+            icon={Plus}
+            disabled={disabled}
+            aria-haspopup="dialog"
+            onClick={onAdd}
+            className="px-4 py-2 shrink-0"
+          >
+            {t("admin.add")}
+          </Button>
+        </div>
       }
     />
   );

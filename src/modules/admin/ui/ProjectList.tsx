@@ -1,7 +1,7 @@
 import { useI18n } from "@modules/i18n";
 import { Card, Chip, DataTable, FeedbackBanner } from "@shared/ui";
 import { Link } from "@void/react";
-import { FolderGit2, GripVertical } from "lucide-react";
+import { CheckCircle2, FolderGit2, GripVertical } from "lucide-react";
 import { useImperativeHandle, useState, type DragEvent, type Ref } from "react";
 
 import { useProjectList } from "../hooks/useProjectList";
@@ -14,7 +14,13 @@ import {
 } from "./ManagementListControls";
 import type { ManagementListHandle } from "./ManagementListHandle";
 
-export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
+export function ProjectList({
+  ref,
+  initialReorderSaved = false,
+}: {
+  ref: Ref<ManagementListHandle>;
+  initialReorderSaved?: boolean;
+}) {
   const { t } = useI18n();
   const [creating, setCreating] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -25,6 +31,7 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
     search,
     setSearch,
     saved,
+    reorderSaved,
     pending,
     editing,
     deleting,
@@ -38,7 +45,7 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
     finishEdit,
     finishCreate,
     cancelDelete,
-  } = useProjectList();
+  } = useProjectList(initialReorderSaved);
   useImperativeHandle(ref, () => ({
     showList() {
       setCreating(false);
@@ -71,6 +78,18 @@ export function ProjectList({ ref }: { ref: Ref<ManagementListHandle> }) {
         title={t("admin.allProjects", { count })}
         icon={FolderGit2}
         disabled={!!deleting}
+        status={
+          reorderSaved && (
+            <Chip
+              variant="success"
+              icon={CheckCircle2}
+              role="status"
+              className="max-w-full sm:max-w-sm px-3.5 py-1.5 border border-success-outline transition-colors"
+            >
+              <span>{t("admin.saved")}</span>
+            </Chip>
+          )
+        }
         onAdd={() => setCreating(true)}
       />
 

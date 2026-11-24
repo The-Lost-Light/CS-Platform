@@ -1,9 +1,11 @@
 import { useProjectCatalog } from "@modules/catalog";
 import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export function useProjectList() {
+const REORDER_SAVED_DURATION_MS = 3500;
+
+export function useProjectList(initialReorderSaved = false) {
   const { locale } = useI18n();
   const { projects, removeProject, replaceProjects } = useProjectCatalog();
   const [editing, setEditing] = useState<Project | null>(null);
@@ -11,6 +13,21 @@ export function useProjectList() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const [saved, setSaved] = useState<Project | "updated" | null>(null);
+  const [reorderNotice, setReorderNotice] = useState<{ id: number } | null>(
+    initialReorderSaved ? { id: 1 } : null,
+  );
+  const reorderSaved = reorderNotice !== null;
+  const showReorderSaved = () => {
+    setReorderNotice((previous) => ({ id: (previous?.id ?? 0) + 1 }));
+  };
+  const clearReorderSaved = () => setReorderNotice(null);
+  useEffect(() => {
+    if (!reorderNotice) return;
+    const timer = setTimeout(() => {
+      setReorderNotice((current) => (current?.id === reorderNotice.id ? null : current));
+    }, REORDER_SAVED_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [reorderNotice]);
   const [search, setSearch] = useState("");
   const canReorder = search.trim() === "" && !pending && !deleting && projects.length > 1;
   async function remove() {
@@ -18,6 +35,7 @@ export function useProjectList() {
     setPending(true);
     setError(false);
     setSaved(null);
+    clearReorderSaved();
     try {
       const response = await fetch(`/api/projects/${deleting.id}`, { method: "DELETE" });
       if (!response.ok && response.status !== 404) throw new Error("Delete failed");
@@ -44,6 +62,7 @@ export function useProjectList() {
     setPending(true);
     setError(false);
     setSaved(null);
+    clearReorderSaved();
     try {
       const response = await fetch(`/api/projects?locale=${encodeURIComponent(locale)}`, {
         method: "PUT",
@@ -53,7 +72,7 @@ export function useProjectList() {
       if (!response.ok) throw new Error("Reorder failed");
       const data = (await response.json()) as { projects: Project[] };
       replaceProjects(data.projects);
-      setSaved("updated");
+      showReorderSaved();
     } catch {
       replaceProjects(previous);
       setError(true);
@@ -70,6 +89,7 @@ export function useProjectList() {
     search,
     setSearch,
     saved,
+    reorderSaved,
     pending,
     editing,
     deleting,
@@ -80,17 +100,23 @@ export function useProjectList() {
     edit: (project: Project) => {
       setEditing(project);
       setSaved(null);
+      clearReorderSaved();
       setError(false);
     },
     requestDelete: (project: Project) => {
       setDeleting(project);
       setSaved(null);
+      clearReorderSaved();
       setError(false);
     },
     cancelEdit: () => setEditing(null),
-    finishCreate: (project: Project) => setSaved(project),
+    finishCreate: (project: Project) => {
+      clearReorderSaved();
+      setSaved(project);
+    },
     finishEdit: () => {
       setEditing(null);
+      clearReorderSaved();
       setSaved("updated");
     },
     cancelDelete: () => setDeleting(null),

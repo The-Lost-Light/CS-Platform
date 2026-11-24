@@ -43,6 +43,20 @@
       "when": 1795178154000,
       "tag": "20261120123554_remove_project_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795493640908,
+      "tag": "20261124041400_even_titania",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1795507407725,
+      "tag": "20261124080327_gifted_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }

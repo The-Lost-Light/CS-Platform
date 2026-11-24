@@ -1,5 +1,5 @@
 import type { Project } from "@modules/projects";
-import { sqliteTable, text, integer, primaryKey, unique } from "void/schema-d1";
+import { foreignKey, index, integer, primaryKey, sqliteTable, text, unique } from "void/schema-d1";
 
 import { userTable } from "../.void/better-auth-schema";
 
@@ -11,20 +11,43 @@ export const projects = sqliteTable("course_project", {
   createdAt: integer("created_at").notNull(),
 });
 
-// Store file bytes separately so a catalog read only loads names and sizes.
-export const projectAttachmentParts = sqliteTable(
-  "project_attachment_part",
+// Store attachment metadata separately from chunk bytes so catalog reads never touch file content.
+export const projectAttachments = sqliteTable(
+  "project_attachment",
   {
     projectId: text("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     attachmentId: text("attachment_id").notNull(),
-    part: integer("part").notNull(),
     name: text("name").notNull(),
     size: integer("size").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.projectId, table.attachmentId] }),
+    index("project_attachment_order_idx").on(
+      table.projectId,
+      table.name,
+      table.attachmentId,
+      table.size,
+    ),
+  ],
+);
+
+export const projectAttachmentParts = sqliteTable(
+  "project_attachment_part",
+  {
+    projectId: text("project_id").notNull(),
+    attachmentId: text("attachment_id").notNull(),
+    part: integer("part").notNull(),
     content: text("content").notNull(),
   },
-  (table) => [primaryKey({ columns: [table.projectId, table.attachmentId, table.part] })],
+  (table) => [
+    primaryKey({ columns: [table.projectId, table.attachmentId, table.part] }),
+    foreignKey({
+      columns: [table.projectId, table.attachmentId],
+      foreignColumns: [projectAttachments.projectId, projectAttachments.attachmentId],
+    }).onDelete("cascade"),
+  ],
 );
 
 // Persist removal of built-in templates so they cannot reappear after a reload.

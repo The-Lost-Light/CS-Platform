@@ -1,26 +1,35 @@
 import { Buffer } from "node:buffer";
 
-import { projectAttachmentParts as parts } from "@db/schema";
-import { and, db, eq } from "void/db";
+import { projectAttachmentParts as parts, projectAttachments as attachments } from "@db/schema";
+import { and, type BatchItem, db, eq } from "void/db";
 
-export const attachmentMetadata = { id: parts.attachmentId, name: parts.name, size: parts.size };
+export const attachmentMetadata = {
+  id: attachments.attachmentId,
+  name: attachments.name,
+  size: attachments.size,
+};
 
-export async function insertAttachmentParts(projectId: string, files: File[]) {
-  const inserts = [];
+export async function insertAttachments(projectId: string, files: File[]) {
+  const inserts: BatchItem<"sqlite">[] = [];
   for (const file of files) {
     const attachmentId = crypto.randomUUID();
     const bytes = Buffer.from(await file.arrayBuffer());
-    // Each encoded chunk stays within D1's single-row limit. Part zero also indexes empty files.
+    inserts.push(
+      db.insert(attachments).values({
+        projectId,
+        attachmentId,
+        name: file.name,
+        size: file.size,
+      }),
+    );
+    // Each encoded chunk stays within D1's single-row limit; 0-byte files need no chunk rows.
     const chunkSize = 384 * 1024;
-    const count = Math.max(1, Math.ceil(bytes.length / chunkSize));
-    for (let part = 0; part < count; part++) {
+    for (let part = 0; part * chunkSize < bytes.length; part++) {
       inserts.push(
         db.insert(parts).values({
           projectId,
           attachmentId,
           part,
-          name: file.name,
-          size: file.size,
           content: bytes.toString("base64", part * chunkSize, (part + 1) * chunkSize),
         }),
       );
@@ -31,12 +40,19 @@ export async function insertAttachmentParts(projectId: string, files: File[]) {
 
 export async function downloadProjectAttachment(projectId: string, attachmentId: string) {
   const rows = await db
-    .select({ name: parts.name, content: parts.content })
-    .from(parts)
-    .where(and(eq(parts.projectId, projectId), eq(parts.attachmentId, attachmentId)))
+    .select({ name: attachments.name, content: parts.content })
+    .from(attachments)
+    .leftJoin(
+      parts,
+      and(
+        eq(parts.projectId, attachments.projectId),
+        eq(parts.attachmentId, attachments.attachmentId),
+      ),
+    )
+    .where(and(eq(attachments.projectId, projectId), eq(attachments.attachmentId, attachmentId)))
     .orderBy(parts.part);
   if (!rows.length) return null;
-  return new Response(Buffer.from(rows.map((row) => row.content).join(""), "base64"), {
+  return new Response(Buffer.from(rows.map((row) => row.content ?? "").join(""), "base64"), {
     headers: {
       "Content-Type": "application/octet-stream",
       "Content-Disposition":

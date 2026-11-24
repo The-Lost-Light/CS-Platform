@@ -1,4 +1,4 @@
-import { projectAttachmentParts as parts, projects, removedProjects, workspaces } from "@db/schema";
+import { projectAttachments, projects, removedProjects, workspaces } from "@db/schema";
 import type { Locale } from "@modules/i18n";
 import {
   PROJECTS,
@@ -9,7 +9,7 @@ import {
 import { isUniqueViolation } from "@server/errors";
 import { and, db, desc, eq, notInArray, sql } from "void/db";
 
-import { attachmentMetadata, insertAttachmentParts } from "./attachments";
+import { attachmentMetadata, insertAttachments } from "./attachments";
 import type { ProjectInput } from "./input";
 
 export { downloadProjectAttachment } from "./attachments";
@@ -19,10 +19,13 @@ export async function listProjects(locale: Locale = "en") {
   const [rows, files, removed] = await db.batch([
     db.select({ data: projects.data }).from(projects).orderBy(desc(projects.createdAt)),
     db
-      .select({ projectId: parts.projectId, ...attachmentMetadata })
-      .from(parts)
-      .where(eq(parts.part, 0))
-      .orderBy(parts.name, parts.attachmentId),
+      .select({ projectId: projectAttachments.projectId, ...attachmentMetadata })
+      .from(projectAttachments)
+      .orderBy(
+        projectAttachments.projectId,
+        projectAttachments.name,
+        projectAttachments.attachmentId,
+      ),
     db.select().from(removedProjects),
   ]);
   const attachments = new Map<string, ProjectAttachment[]>();
@@ -65,25 +68,25 @@ export async function saveProject(input: ProjectInput, userId: string, existingI
         .onConflictDoUpdate({ target: projects.id, set: { codeName: data.codeName, data } })
     : db.insert(projects).values(row);
   const keepIds = input.retained.map((file) => file.id);
-  const uploads = await insertAttachmentParts(id, input.uploads);
+  const uploads = await insertAttachments(id, input.uploads);
   try {
     // Metadata and file edits share one transaction, including a duplicate-code rollback.
     const result = await db.batch([
       write.returning({ id: projects.id }),
       db
-        .delete(parts)
+        .delete(projectAttachments)
         .where(
           and(
-            eq(parts.projectId, id),
-            keepIds.length ? notInArray(parts.attachmentId, keepIds) : undefined,
+            eq(projectAttachments.projectId, id),
+            keepIds.length ? notInArray(projectAttachments.attachmentId, keepIds) : undefined,
           ),
         ),
       ...uploads,
       db
         .select(attachmentMetadata)
-        .from(parts)
-        .where(and(eq(parts.projectId, id), eq(parts.part, 0)))
-        .orderBy(parts.name, parts.attachmentId),
+        .from(projectAttachments)
+        .where(eq(projectAttachments.projectId, id))
+        .orderBy(projectAttachments.name, projectAttachments.attachmentId),
     ]);
     if (!result[0].length) return undefined;
     return { ...data, attachments: result.at(-1) as ProjectAttachment[] };

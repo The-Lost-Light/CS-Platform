@@ -1,0 +1,1 @@
+CREATE INDEX `project_attachment_part_metadata_idx` ON `project_attachment_part` (`project_id`,`name`,`attachment_id`,`size`) WHERE "project_attachment_part"."part" = 0;

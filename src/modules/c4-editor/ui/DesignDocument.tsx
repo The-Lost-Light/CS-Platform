@@ -1,5 +1,6 @@
 import { useI18n } from "@modules/i18n";
 import { Button, Card, CardHeader, EmptyState, TextArea } from "@shared/ui";
+import { MAX_DESIGN_DOC_LENGTH } from "@shared/workspacePolicy";
 import { Code2, Eye, FileText } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import Markdown from "react-markdown";
@@ -53,9 +54,10 @@ export function DesignDocument({
             rows={22}
             readOnly={readOnly}
             mono
+            maxLength={MAX_DESIGN_DOC_LENGTH}
             value={designDoc}
             onChange={(event) => {
-              if (!readOnly) onChangeDesignDoc(event.target.value);
+              if (!readOnly) onChangeDesignDoc(event.target.value.slice(0, MAX_DESIGN_DOC_LENGTH));
             }}
           />
         ) : readOnly && !designDoc.trim() ? (

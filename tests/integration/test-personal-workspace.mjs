@@ -67,24 +67,26 @@ try {
     revision: null,
     draft: null,
   });
-  const node = {
-    id: "a",
+  const hugeNodes = Array.from({ length: 250 }, (_, index) => ({
+    id: `node-${index}`,
     kind: "system",
-    label: "API",
+    label: `API ${index}`,
     category: "",
     parentId: null,
-    description: "架構📚".repeat(220000),
+    description: "架構📚".repeat(500),
     technology: "",
-    x: 100,
+    x: index * 100,
     y: 50,
-  };
+  }));
   const draft = {
     designDoc: "# 我的 README\n測試",
     model: {
       format: "codepulse-c4",
       version: 1,
-      nodes: [node, { ...node, id: "b", label: "Data", description: "", x: 300 }],
-      relationships: [{ id: "ab", source: "a", target: "b", label: "writes", technology: "SQL" }],
+      nodes: hugeNodes,
+      relationships: [
+        { id: "ab", source: "node-0", target: "node-1", label: "writes", technology: "SQL" },
+      ],
     },
     repoUrl: "https://github.com/example/first",
   };
@@ -94,6 +96,31 @@ try {
   const response = await save(firstCookie, first, null, draft);
   assert.equal(response.status, 200, (await response.clone().text()).slice(0, 500));
   const { revision } = await response.json();
+  assert.equal(
+    (await save(firstCookie, first, revision, { ...draft, designDoc: "x".repeat(100_001) })).status,
+    400,
+  );
+  const oversizedNodes = Array.from({ length: 501 }, (_, index) => ({
+    id: `over-${index}`,
+    kind: "system",
+    label: "Node",
+    category: "",
+    parentId: null,
+    description: "",
+    technology: "",
+    x: 0,
+    y: 0,
+  }));
+  assert.equal(
+    (
+      await save(firstCookie, first, revision, {
+        designDoc: "",
+        model: { format: "codepulse-c4", version: 1, nodes: oversizedNodes, relationships: [] },
+        repoUrl: "",
+      })
+    ).status,
+    400,
+  );
   assert.deepEqual((await read(path, firstCookie)).draft, draft);
   assert.equal((await read(path, secondCookie)).draft, null);
   assert.equal((await read(otherProject, firstCookie)).draft, null);

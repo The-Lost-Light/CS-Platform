@@ -1,3 +1,4 @@
+import { C4_NODE_FIELD_LIMITS, C4_RELATIONSHIP_FIELD_LIMITS } from "@modules/c4-model";
 import { Card, Chip, FormField, IconButton, TextArea, TextInput } from "@shared/ui";
 import { X } from "lucide-react";
 
@@ -49,6 +50,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
               <FormField label={t("c4.name")}>
                 <TextInput
                   compact
+                  maxLength={C4_NODE_FIELD_LIMITS.label}
                   value={selected.label}
                   onChange={(event) => update({ label: event.target.value })}
                 />
@@ -58,6 +60,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                   <TextInput
                     compact
                     mono
+                    maxLength={C4_NODE_FIELD_LIMITS.technology}
                     value={selected.technology}
                     onChange={(event) => update({ technology: event.target.value })}
                     placeholder="React / REST / MySQL"
@@ -68,6 +71,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
                 <TextArea
                   compact
                   rows={3}
+                  maxLength={C4_NODE_FIELD_LIMITS.description}
                   value={selected.description}
                   onChange={(event) => update({ description: event.target.value })}
                 />
@@ -83,6 +87,7 @@ export function C4Inspector({ editor }: { editor: C4Editor }) {
               <FormField label={t("c4.relationshipDescription")}>
                 <TextInput
                   compact
+                  maxLength={C4_RELATIONSHIP_FIELD_LIMITS.label}
                   value={selectedEdge.label}
                   onChange={(event) => updateEdge({ label: event.target.value })}
                 />

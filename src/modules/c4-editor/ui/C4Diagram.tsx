@@ -34,6 +34,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     updateLayout,
     canConnect,
     connect,
+    canCreateNode,
     canUndo,
     canRedo,
     stepHistory,
@@ -140,6 +141,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
                   size="sm"
                   variant={drawing.creating ? "primary" : "outlined"}
                   icon={Plus}
+                  disabled={!canCreateNode}
                   aria-pressed={drawing.creating}
                   onClick={() => {
                     setContextMenu(null);

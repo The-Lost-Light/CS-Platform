@@ -1,4 +1,5 @@
 import {
+  C4_MAX_NODES,
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
@@ -169,4 +170,16 @@ test("boundary movement includes partial overlaps but excludes separated nodes",
   ]) {
     assert.strictEqual(overlapsC4Boundary({ x, y, width: 100, height: 100 }, boundary), false);
   }
+});
+
+test("createC4NodeInScope stops at C4_MAX_NODES", () => {
+  const atLimitMinusOne = Array.from({ length: C4_MAX_NODES - 1 }, (_, index) => ({
+    ...nodes[0],
+    id: `node-${index}`,
+    parentId: null,
+    y: index * 300,
+  }));
+  assert.ok(createC4NodeInScope(atLimitMinusOne, "", "last", "Last"));
+  const atLimit = [...atLimitMinusOne, { ...nodes[0], id: "last", parentId: null, y: 0 }];
+  assert.strictEqual(createC4NodeInScope(atLimit, "", "overflow", "Overflow"), undefined);
 });

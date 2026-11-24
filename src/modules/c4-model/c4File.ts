@@ -6,6 +6,10 @@ import {
   type C4Relationship,
   C4_KINDS,
   C4_MAX_LEVELS,
+  C4_MAX_NODES,
+  C4_MAX_RELATIONSHIPS,
+  C4_NODE_FIELD_LIMITS,
+  C4_RELATIONSHIP_FIELD_LIMITS,
   BOUNDARY_ID,
 } from "./c4";
 
@@ -45,7 +49,9 @@ export function validateC4File(data: unknown): C4File {
     data.format !== "codepulse-c4" ||
     data.version !== 1 ||
     !Array.isArray(data.nodes) ||
-    !Array.isArray(data.relationships)
+    !Array.isArray(data.relationships) ||
+    data.nodes.length > C4_MAX_NODES ||
+    data.relationships.length > C4_MAX_RELATIONSHIPS
   )
     return invalid();
   const ids = new Set<string>();
@@ -55,14 +61,24 @@ export function validateC4File(data: unknown): C4File {
     if (
       typeof id !== "string" ||
       !id.trim() ||
+      id.length > C4_NODE_FIELD_LIMITS.id ||
       id === BOUNDARY_ID ||
       ids.has(id) ||
       !C4_KINDS.includes(kind as C4Kind) ||
       typeof label !== "string" ||
+      label.length > C4_NODE_FIELD_LIMITS.label ||
       typeof category !== "string" ||
-      !(parentId === null || (typeof parentId === "string" && !!parentId.trim())) ||
+      category.length > C4_NODE_FIELD_LIMITS.category ||
+      !(
+        parentId === null ||
+        (typeof parentId === "string" &&
+          !!parentId.trim() &&
+          parentId.length <= C4_NODE_FIELD_LIMITS.id)
+      ) ||
       typeof description !== "string" ||
+      description.length > C4_NODE_FIELD_LIMITS.description ||
       typeof technology !== "string" ||
+      technology.length > C4_NODE_FIELD_LIMITS.technology ||
       typeof x !== "number" ||
       !Number.isFinite(x) ||
       typeof y !== "number" ||
@@ -134,6 +150,7 @@ export function validateC4File(data: unknown): C4File {
     if (
       typeof id !== "string" ||
       !id.trim() ||
+      id.length > C4_RELATIONSHIP_FIELD_LIMITS.id ||
       edgeIds.has(id) ||
       typeof source !== "string" ||
       !ids.has(source) ||
@@ -141,7 +158,9 @@ export function validateC4File(data: unknown): C4File {
       !ids.has(target) ||
       source === target ||
       typeof label !== "string" ||
-      typeof technology !== "string"
+      label.length > C4_RELATIONSHIP_FIELD_LIMITS.label ||
+      typeof technology !== "string" ||
+      technology.length > C4_RELATIONSHIP_FIELD_LIMITS.technology
     )
       return invalid();
     edgeIds.add(id);

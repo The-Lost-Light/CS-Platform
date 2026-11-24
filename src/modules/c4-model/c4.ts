@@ -22,6 +22,20 @@ export interface C4Relationship {
   technology: string;
 }
 export const C4_MAX_LEVELS = 4;
+export const C4_MAX_NODES = 500;
+export const C4_MAX_RELATIONSHIPS = 1_000;
+export const C4_NODE_FIELD_LIMITS = {
+  id: 128,
+  label: 200,
+  category: 64,
+  description: 2_000,
+  technology: 200,
+} as const;
+export const C4_RELATIONSHIP_FIELD_LIMITS = {
+  id: 128,
+  label: 200,
+  technology: 200,
+} as const;
 export const BOUNDARY_ID = "__c4_boundary__";
 const DEFAULT_NODE_WIDTH = 280;
 const DEFAULT_NODE_HEIGHT = 230;
@@ -70,6 +84,7 @@ export function createC4NodeInScope(
   label: string,
   position?: { x: number; y: number },
 ): C4Node | undefined {
+  if (nodes.length >= C4_MAX_NODES) return undefined;
   const scope = nodes.find((node) => node.id === scopeId);
   if (scopeId && !canExploreC4Node(nodes, scopeId)) return undefined;
   const children: Record<C4Kind, C4Kind> = {

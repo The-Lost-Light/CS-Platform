@@ -2,6 +2,8 @@ import {
   c4Drilldown,
   canExploreC4Node,
   createC4NodeInScope,
+  C4_MAX_NODES,
+  C4_MAX_RELATIONSHIPS,
   type C4Node,
   type C4Relationship,
 } from "@modules/c4-model";
@@ -73,11 +75,13 @@ export function useC4Editor({
   const selected = nodes.find((node) => node.id === selectedId);
   const selectedEdge = relationships.find((edge) => edge.id === edgeId);
 
+  const canCreateNode = !readOnly && nodes.length < C4_MAX_NODES;
+
   const addNode = (
     position: { x: number; y: number },
     size?: { width: number; height: number },
   ) => {
-    if (readOnly) return;
+    if (readOnly || nodes.length >= C4_MAX_NODES) return;
     const node = createC4NodeInScope(
       nodes,
       scope?.id || "",
@@ -87,6 +91,7 @@ export function useC4Editor({
     );
     if (!node) return;
     edit((graph) => {
+      if (graph.nodes.length >= C4_MAX_NODES) return graph;
       // Keep the visible frame in place when drawing a new node outside it.
       const existing =
         scope && !scope.boundary
@@ -166,16 +171,20 @@ export function useC4Editor({
     );
   }
   function canConnect({ source, target }: Pick<Connection, "source" | "target">) {
-    if (readOnly) return false;
+    if (readOnly || relationships.length >= C4_MAX_RELATIONSHIPS) return false;
     return (
       source !== target &&
       !relationships.some((edge) => edge.source === source && edge.target === target)
     );
   }
   function connect({ source, target }: Connection) {
-    if (readOnly) return;
+    if (readOnly || relationships.length >= C4_MAX_RELATIONSHIPS) return;
     const edge = { id: crypto.randomUUID(), source, target, label: t("c4.uses"), technology: "" };
-    edit((graph) => ({ ...graph, relationships: [...graph.relationships, edge] }));
+    edit((graph) =>
+      graph.relationships.length >= C4_MAX_RELATIONSHIPS
+        ? graph
+        : { ...graph, relationships: [...graph.relationships, edge] },
+    );
     updateView({ selectedId: "", edgeId: "", contextMenu: null });
   }
   const { flowNodes, flowEdges } = buildFlowElements({
@@ -190,6 +199,7 @@ export function useC4Editor({
   });
   return {
     readOnly,
+    canCreateNode,
     selectedSourceLabel:
       selectedEdge && nodes.find((node) => node.id === selectedEdge.source)?.label,
     selectedTargetLabel:

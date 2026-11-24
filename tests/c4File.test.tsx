@@ -1,4 +1,12 @@
-import { parseC4File, serializeC4File } from "@modules/c4-model";
+import {
+  C4_MAX_NODES,
+  C4_MAX_RELATIONSHIPS,
+  C4_NODE_FIELD_LIMITS,
+  C4_RELATIONSHIP_FIELD_LIMITS,
+  parseC4File,
+  serializeC4File,
+  validateC4File,
+} from "@modules/c4-model";
 import { assert, test } from "vite-plus/test";
 
 import { sampleC4Nodes as nodes } from "./fixtures/c4Model";
@@ -125,4 +133,104 @@ test("legacy external settings and GitHub paths are discarded on import and expo
   delete file.nodes[0].technology;
   assert.deepEqual(parseC4File(JSON.stringify(file)), fixture());
   assert.deepEqual(JSON.parse(serializeC4File(file.nodes, file.relationships)), fixture());
+});
+
+test("validateC4File enforces node, relationship, and field length limits", () => {
+  const maxNodes = Array.from({ length: C4_MAX_NODES }, (_, index) => ({
+    ...nodes[0],
+    id: `n-${index}`,
+    parentId: null,
+  }));
+  assert.strictEqual(
+    validateC4File({
+      format: "codepulse-c4",
+      version: 1,
+      nodes: maxNodes,
+      relationships: [],
+    }).nodes.length,
+    C4_MAX_NODES,
+  );
+  assert.throws(() =>
+    validateC4File({
+      format: "codepulse-c4",
+      version: 1,
+      nodes: [...maxNodes, { ...nodes[0], id: "overflow", parentId: null }],
+      relationships: [],
+    }),
+  );
+
+  const pairNodes = maxNodes.slice(0, 35);
+  const maxRelationships = Array.from({ length: C4_MAX_RELATIONSHIPS }, (_, index) => {
+    const sourceIndex = index % pairNodes.length;
+    const targetIndex = (sourceIndex + 1 + Math.floor(index / pairNodes.length)) % pairNodes.length;
+    return {
+      id: `e-${index}`,
+      source: pairNodes[sourceIndex].id,
+      target: pairNodes[targetIndex].id,
+      label: "Uses",
+      technology: "HTTPS",
+    };
+  });
+  assert.strictEqual(
+    validateC4File({
+      format: "codepulse-c4",
+      version: 1,
+      nodes: pairNodes,
+      relationships: maxRelationships,
+    }).relationships.length,
+    C4_MAX_RELATIONSHIPS,
+  );
+  assert.throws(() =>
+    validateC4File({
+      format: "codepulse-c4",
+      version: 1,
+      nodes: pairNodes,
+      relationships: [
+        ...maxRelationships,
+        {
+          id: "e-overflow",
+          source: pairNodes[0].id,
+          target: pairNodes[1].id,
+          label: "x",
+          technology: "",
+        },
+      ],
+    }),
+  );
+
+  for (const [field, max] of Object.entries(C4_NODE_FIELD_LIMITS) as Array<
+    [keyof typeof C4_NODE_FIELD_LIMITS, number]
+  >) {
+    const atMax = fixture();
+    atMax.nodes[0][field] = "x".repeat(max);
+    if (field === "id") {
+      atMax.nodes.slice(1).forEach((node: { parentId: string | null }) => {
+        if (node.parentId === nodes[0].id) node.parentId = atMax.nodes[0].id;
+      });
+      atMax.relationships[0].source = atMax.nodes[0].id;
+    }
+    assert.strictEqual(validateC4File(atMax).nodes[0][field].length, max);
+
+    const overMax = fixture();
+    overMax.nodes[0][field] = "x".repeat(max + 1);
+    if (field === "id") {
+      overMax.nodes.slice(1).forEach((node: { parentId: string | null }) => {
+        if (node.parentId === nodes[0].id) node.parentId = overMax.nodes[0].id;
+      });
+      overMax.relationships[0].source = overMax.nodes[0].id;
+    }
+    assert.throws(() => validateC4File(overMax));
+  }
+
+  for (const [field, max] of Object.entries(C4_RELATIONSHIP_FIELD_LIMITS) as Array<
+    [keyof typeof C4_RELATIONSHIP_FIELD_LIMITS, number]
+  >) {
+    const atMax = fixture();
+    atMax.relationships[0][field] = "x".repeat(max);
+    assert.strictEqual(validateC4File(atMax).relationships[0][field].length, max);
+
+    const overMax = fixture();
+    overMax.relationships[0][field] = "x".repeat(max + 1);
+    assert.throws(() => validateC4File(overMax));
+  }
 });

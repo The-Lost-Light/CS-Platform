@@ -1,6 +1,14 @@
 import { C4FileActions, createC4History } from "@modules/c4-editor";
-import { createC4NodeInScope, type C4Node, type C4Relationship } from "@modules/c4-model";
+import {
+  C4_MAX_NODES,
+  C4_NODE_FIELD_LIMITS,
+  C4_RELATIONSHIP_FIELD_LIMITS,
+  createC4NodeInScope,
+  type C4Node,
+  type C4Relationship,
+} from "@modules/c4-model";
 import { I18nProvider } from "@modules/i18n";
+import { MAX_DESIGN_DOC_LENGTH } from "@shared/workspacePolicy";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test, vi } from "vite-plus/test";
@@ -8,6 +16,7 @@ import { assert, test, vi } from "vite-plus/test";
 import { useC4Editor, type C4ContextMenu } from "@/modules/c4-editor/hooks/useC4Editor";
 import type { CanvasNode } from "@/modules/c4-editor/model/flowTypes";
 import { C4Diagram } from "@/modules/c4-editor/ui/C4Diagram";
+import { DesignDocument } from "@/modules/c4-editor/ui/DesignDocument";
 
 type ContextMenuEvent = {
   preventDefault: () => void;
@@ -547,4 +556,60 @@ test("read-only C4Diagram hides editing toolbar actions, context menu, and inspe
   );
   assert.ok(!readOnlySelectedHtml.includes("<aside"));
   assert.ok(!readOnlySelectedHtml.includes('role="menu"'));
+});
+
+test("editor UI enforces maxLength attributes and disables Create node at C4_MAX_NODES", () => {
+  const systemNode = createC4NodeInScope([], "", "sys", "Core System")!;
+  const containerNode = createC4NodeInScope([systemNode], "sys", "ctr", "Web App")!;
+  const edge: C4Relationship = {
+    id: "edge-1",
+    source: systemNode.id,
+    target: containerNode.id,
+    label: "Uses",
+    technology: "HTTPS",
+  };
+
+  const nodeInspectorHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram path={[systemNode]} selected={containerNode} />
+    </I18nProvider>,
+  )
+    .split("<aside")[1]
+    .split("</aside>")[0];
+  assert.ok(nodeInspectorHtml.includes(`maxLength="${C4_NODE_FIELD_LIMITS.label}"`));
+  assert.ok(nodeInspectorHtml.includes(`maxLength="${C4_NODE_FIELD_LIMITS.technology}"`));
+  assert.ok(nodeInspectorHtml.includes(`maxLength="${C4_NODE_FIELD_LIMITS.description}"`));
+
+  const edgeInspectorHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram nodes={[systemNode, containerNode]} selectedEdge={edge} />
+    </I18nProvider>,
+  )
+    .split("<aside")[1]
+    .split("</aside>")[0];
+  assert.ok(edgeInspectorHtml.includes(`maxLength="${C4_RELATIONSHIP_FIELD_LIMITS.label}"`));
+
+  const maxNodes = Array.from({ length: C4_MAX_NODES }, (_, index) => ({
+    ...systemNode,
+    id: `n-${index}`,
+  }));
+  const maxedHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <TestC4Diagram nodes={maxNodes} />
+    </I18nProvider>,
+  );
+  const createButton = maxedHtml.match(/<button[^>]*>[\s\S]*?Create node<\/button>/)?.[0] ?? "";
+  assert.ok(createButton.includes('disabled=""'));
+
+  const designHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <DesignDocument
+        designDoc=""
+        onChangeDesignDoc={() => {}}
+        readmeMode="source"
+        setReadmeMode={() => {}}
+      />
+    </I18nProvider>,
+  );
+  assert.ok(designHtml.includes(`maxLength="${MAX_DESIGN_DOC_LENGTH}"`));
 });

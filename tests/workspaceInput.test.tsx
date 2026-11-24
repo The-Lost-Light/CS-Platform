@@ -1,5 +1,13 @@
+import {
+  C4_FILE_MAX_BYTES,
+  C4_MAX_NODES,
+  C4_MAX_RELATIONSHIPS,
+  C4_NODE_FIELD_LIMITS,
+  C4_RELATIONSHIP_FIELD_LIMITS,
+} from "@modules/c4-model";
 import { readWorkspaceInput } from "@server/workspaces";
 import { isValidWorkspaceRepoUrl, resolveWorkspaceRepoUrl } from "@shared/githubRepoUrl";
+import { MAX_DESIGN_DOC_LENGTH } from "@shared/workspacePolicy";
 import { assert, test } from "vite-plus/test";
 
 function makeWorkspaceRequest(repoUrl: string) {
@@ -84,4 +92,144 @@ test("workspace repository URL helpers ignore incomplete edits and invalid legac
   );
   assert.strictEqual(resolveWorkspaceRepoUrl("", "https://github.com/owner/repo"), "");
   assert.strictEqual(resolveWorkspaceRepoUrl("   ", "https://github.com/owner/repo"), "");
+});
+
+test("readWorkspaceInput enforces designDoc and C4 size limits while keeping 413 for oversized payloads", async () => {
+  function makeDraftRequest(draft: Record<string, unknown>) {
+    return new Request("https://course.example/api/projects/demo/workspace", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ revision: null, draft }),
+    });
+  }
+
+  const baseModel = {
+    format: "codepulse-c4",
+    version: 1,
+    nodes: [
+      {
+        id: "n1",
+        kind: "system",
+        label: "API",
+        category: "system",
+        parentId: null,
+        description: "",
+        technology: "",
+        x: 0,
+        y: 0,
+      },
+      {
+        id: "n2",
+        kind: "system",
+        label: "DB",
+        category: "system",
+        parentId: null,
+        description: "",
+        technology: "",
+        x: 200,
+        y: 0,
+      },
+    ],
+    relationships: [{ id: "e1", source: "n1", target: "n2", label: "Reads", technology: "SQL" }],
+  };
+
+  const acceptedDoc = await readWorkspaceInput(
+    makeDraftRequest({
+      designDoc: "x".repeat(MAX_DESIGN_DOC_LENGTH),
+      repoUrl: "",
+      model: baseModel,
+    }),
+  );
+  assert.strictEqual(acceptedDoc.ok, true);
+  if (acceptedDoc.ok) {
+    assert.strictEqual(acceptedDoc.draft.designDoc.length, MAX_DESIGN_DOC_LENGTH);
+  }
+
+  const rejectedDoc = await readWorkspaceInput(
+    makeDraftRequest({
+      designDoc: "x".repeat(MAX_DESIGN_DOC_LENGTH + 1),
+      repoUrl: "",
+      model: baseModel,
+    }),
+  );
+  assert.deepEqual(rejectedDoc, { ok: false, error: "invalid" });
+
+  const tooManyNodes = Array.from({ length: C4_MAX_NODES + 1 }, (_, index) => ({
+    ...baseModel.nodes[0],
+    id: `node-${index}`,
+  }));
+  assert.deepEqual(
+    await readWorkspaceInput(
+      makeDraftRequest({
+        designDoc: "",
+        repoUrl: "",
+        model: { ...baseModel, nodes: tooManyNodes, relationships: [] },
+      }),
+    ),
+    { ok: false, error: "invalid" },
+  );
+
+  const tooManyEdges = Array.from({ length: C4_MAX_RELATIONSHIPS + 1 }, (_, index) => ({
+    id: `edge-${index}`,
+    source: "n1",
+    target: "n2",
+    label: "Uses",
+    technology: "",
+  }));
+  assert.deepEqual(
+    await readWorkspaceInput(
+      makeDraftRequest({
+        designDoc: "",
+        repoUrl: "",
+        model: { ...baseModel, relationships: tooManyEdges },
+      }),
+    ),
+    { ok: false, error: "invalid" },
+  );
+
+  assert.deepEqual(
+    await readWorkspaceInput(
+      makeDraftRequest({
+        designDoc: "",
+        repoUrl: "",
+        model: {
+          ...baseModel,
+          nodes: [
+            {
+              ...baseModel.nodes[0],
+              description: "x".repeat(C4_NODE_FIELD_LIMITS.description + 1),
+            },
+            baseModel.nodes[1],
+          ],
+        },
+      }),
+    ),
+    { ok: false, error: "invalid" },
+  );
+
+  assert.deepEqual(
+    await readWorkspaceInput(
+      makeDraftRequest({
+        designDoc: "",
+        repoUrl: "",
+        model: {
+          ...baseModel,
+          relationships: [
+            {
+              ...baseModel.relationships[0],
+              label: "x".repeat(C4_RELATIONSHIP_FIELD_LIMITS.label + 1),
+            },
+          ],
+        },
+      }),
+    ),
+    { ok: false, error: "invalid" },
+  );
+
+  const oversizedBody = new Request("https://course.example/api/projects/demo/workspace", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: "x".repeat(C4_FILE_MAX_BYTES + 1024 * 1024 + 1),
+  });
+  assert.deepEqual(await readWorkspaceInput(oversizedBody), { ok: false, error: "tooLarge" });
 });

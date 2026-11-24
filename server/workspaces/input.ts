@@ -3,6 +3,7 @@ import type { PersonalWorkspace } from "@modules/workspace";
 import { isValidWorkspaceRepoUrl } from "@shared/githubRepoUrl";
 import { readLimitedText } from "@shared/http/readLimitedText";
 import { isRecord } from "@shared/isRecord";
+import { isValidDesignDoc } from "@shared/workspacePolicy";
 type WorkspaceInput =
   | { ok: true; draft: PersonalWorkspace; previous: string | null }
   | { ok: false; error: "tooLarge" | "invalid" | "repo" };
@@ -16,7 +17,7 @@ export async function readWorkspaceInput(request: Request): Promise<WorkspaceInp
     if (previous !== null && (typeof previous !== "string" || previous.length !== 36))
       return { ok: false, error: "invalid" };
     const { designDoc, repoUrl, model } = body.draft;
-    if (typeof designDoc !== "string" || typeof repoUrl !== "string")
+    if (!isValidDesignDoc(designDoc) || typeof repoUrl !== "string")
       return { ok: false, error: "invalid" };
     // Accept the URL and owner/repository formats used by the GitHub panel.
     if (!isValidWorkspaceRepoUrl(repoUrl)) return { ok: false, error: "repo" };

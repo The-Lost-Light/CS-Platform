@@ -19,7 +19,7 @@ function makeWorkspaceRequest(repoUrl: string) {
       draft: {
         designDoc: "# doc",
         repoUrl,
-        model: { format: "codepulse-c4", version: 1, nodes: [], relationships: [] },
+        model: { format: "cap-c4", version: 1, nodes: [], relationships: [] },
       },
     }),
   });
@@ -104,7 +104,7 @@ test("readWorkspaceInput enforces designDoc and C4 size limits while keeping 413
   }
 
   const baseModel = {
-    format: "codepulse-c4",
+    format: "cap-c4",
     version: 1,
     nodes: [
       {

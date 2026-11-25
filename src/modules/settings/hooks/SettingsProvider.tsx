@@ -37,7 +37,7 @@ export function SettingsProvider({
       const storage = window.localStorage;
       for (let i = storage.length - 1; i >= 0; i--) {
         const key = storage.key(i);
-        if (key === "codepulse.githubToken" || key?.startsWith("codepulse.githubToken."))
+        if (key && (key.endsWith(".githubToken") || key.includes(".githubToken.")))
           storage.removeItem(key);
       }
     } catch {

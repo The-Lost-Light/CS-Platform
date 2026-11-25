@@ -59,8 +59,12 @@ test("AuthGate initially presents login and hides authenticated navigation and d
   );
   const visibleText = html.replace(/<[^>]*>/g, "");
 
+  assert.ok(visibleText.includes(t("app.title")));
+  assert.ok(visibleText.includes(t("auth.intro")));
   assert.ok(visibleText.includes(t("auth.title")));
   assert.match(html, /<form\b/);
+  assert.notMatch(visibleText, /code\s*pulse/i);
+  assert.ok(!visibleText.includes("Material You 3"));
   assert.ok(!visibleText.includes(t("auth.signOut")));
   assert.ok(!visibleText.includes(t("home.title")));
   assert.notMatch(html, /<(?:header|main)\b/);

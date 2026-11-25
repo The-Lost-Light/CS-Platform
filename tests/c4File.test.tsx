@@ -143,7 +143,7 @@ test("validateC4File enforces node, relationship, and field length limits", () =
   }));
   assert.strictEqual(
     validateC4File({
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes: maxNodes,
       relationships: [],
@@ -152,7 +152,7 @@ test("validateC4File enforces node, relationship, and field length limits", () =
   );
   assert.throws(() =>
     validateC4File({
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes: [...maxNodes, { ...nodes[0], id: "overflow", parentId: null }],
       relationships: [],
@@ -173,7 +173,7 @@ test("validateC4File enforces node, relationship, and field length limits", () =
   });
   assert.strictEqual(
     validateC4File({
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes: pairNodes,
       relationships: maxRelationships,
@@ -182,7 +182,7 @@ test("validateC4File enforces node, relationship, and field length limits", () =
   );
   assert.throws(() =>
     validateC4File({
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes: pairNodes,
       relationships: [

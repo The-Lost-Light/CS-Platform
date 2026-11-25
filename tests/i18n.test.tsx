@@ -74,7 +74,7 @@ test("semantic keys resolve in both languages and interpolation preserves litera
   const input = "${value} {count} <script> $&";
   assert.strictEqual(t("home.projectCount", { count: input }), `Projects: ${input}`);
   assert.strictEqual(createTranslator("zh-TW")("home.projectCount", { count: 3 }), "專案數：3");
-  assert.strictEqual(t("auth.title"), "Sign in to CodePulse Edu");
+  assert.strictEqual(t("auth.title"), "Sign in to Course Assignment Platform");
   assert.strictEqual(createTranslator("zh-TW")("auth.title"), "登入課程作業系統");
   assert.strictEqual(t("language.autoDetected", { language: "English" }), "Auto (English)");
   assert.strictEqual(t("home.projectCount"), "Projects: {count}");
@@ -217,7 +217,7 @@ test("the project editor renders a saved personal README and repository in the c
             draft: {
               designDoc: "# Private architecture notes",
               repoUrl: "https://github.com/example/my-assignment",
-              model: { format: "codepulse-c4", version: 1, nodes: [], relationships: [] },
+              model: { format: "cap-c4", version: 1, nodes: [], relationships: [] },
             },
           }}
         />

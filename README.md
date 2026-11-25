@@ -1,4 +1,4 @@
-# CodePulse Edu — 課程專案平台
+# Course Assignment Platform (CAP) — 課程作業平台
 
 使用 React 19、TypeScript、Vite+、Tailwind CSS 4 與 pnpm 開發的課程專案平台，透過 Void 部署至 Cloudflare Workers，整合 C4 架構圖設計、專案設計文件與 GitHub 倉庫瀏覽。
 
@@ -71,7 +71,7 @@ React Compiler 透過 `@rolldown/plugin-babel` 與 `reactCompilerPreset` 整合�
 
 ## Void / Cloudflare 部署
 
-正式網站：[CodePulse Edu](https://course-assignment-platform.mono-lts.workers.dev)。
+正式網站：[Course Assignment Platform](https://course-assignment-platform.mono-lts.workers.dev)。
 
 採用 [Void Pages 檔案式路由](https://void.cloud/guide/pages-routing/overview)，透過 `voidPlugin()` 與 `voidReact()` 建置 Cloudflare Worker 與前端資產。根目錄 `pages/index.tsx` 對應 `/`，`pages/projects/[id].tsx` 對應 `/projects/:id`；專案 loader 驗證 ID，不存在時回傳 404。`pages/layout.tsx` 保留登入、語言、主題與設定視窗，`src/modules/` 保存各功能的畫面元件。頁面設定 `ssr = false`，維持瀏覽器端渲染；Void 負責頁面載入、網址更新和上一頁／下一頁導覽。未登入時開啟專案網址會導回首頁登入。
 
@@ -158,7 +158,7 @@ pnpm check、pnpm test 與 pnpm build 檢查程式、單元測試與 Worker 建�
 
 ## 多國語言
 
-設定視窗提供自動、English 與繁體中文選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `codepulse.languagePreference`。
+設定視窗提供自動、English 與繁體中文選單；自動模式依瀏覽器語言選擇，無支援語言時使用英文。語言偏好儲存於 `localStorage` 的 `cap.languagePreference`。
 
 翻譯集中於 `src/modules/i18n/`：`ui.ts` 為介面、`courses.ts` 為專案題庫、`runtime.ts` 為分析與系統提示，各自置於 `en/` 與 `zh-TW/` 語言資料夾。元件使用語意化 key，例如 `useI18n().t('auth.title')`；帶參數的文案使用 `t('home.projectCount', { count: projects.length })`。英文與繁體中文文案只存放於語系檔，不作為查找鍵。
 

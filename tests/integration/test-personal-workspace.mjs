@@ -85,7 +85,7 @@ try {
   const draft = {
     designDoc: "# 我的 README\n測試",
     model: {
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes: hugeNodes,
       relationships: [
@@ -121,7 +121,7 @@ try {
     (
       await save(firstCookie, first, revision, {
         designDoc: "",
-        model: { format: "codepulse-c4", version: 1, nodes: oversizedNodes, relationships: [] },
+        model: { format: "cap-c4", version: 1, nodes: oversizedNodes, relationships: [] },
         repoUrl: "",
       })
     ).status,
@@ -132,7 +132,7 @@ try {
   assert.equal((await read(otherProject, firstCookie)).draft, null);
   const empty = {
     designDoc: "",
-    model: { format: "codepulse-c4", version: 1, nodes: [], relationships: [] },
+    model: { format: "cap-c4", version: 1, nodes: [], relationships: [] },
     repoUrl: "",
   };
   assert.equal((await save(secondCookie, second, null, empty)).status, 200);

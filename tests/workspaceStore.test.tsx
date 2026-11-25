@@ -112,7 +112,7 @@ test("saveWorkspace emits separate single-row part inserts bounded by UTF-8 byte
     designDoc: "架構📚".repeat(160_000),
     repoUrl: "https://github.com/example/course-project",
     model: {
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes: [
         {
@@ -169,7 +169,7 @@ test("saveWorkspace maps unique violations to conflict and missing project error
   const draft: PersonalWorkspace = {
     designDoc: "# README",
     repoUrl: "",
-    model: { format: "codepulse-c4", version: 1, nodes: [], relationships: [] },
+    model: { format: "cap-c4", version: 1, nodes: [], relationships: [] },
   };
 
   dbState.batch.mockRejectedValueOnce(new Error("UNIQUE constraint failed: personal_workspace"));

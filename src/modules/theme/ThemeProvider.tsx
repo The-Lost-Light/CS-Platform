@@ -11,8 +11,8 @@ import {
   type ThemePalette,
 } from "./model";
 
-const THEME_STORAGE_KEY = "codepulse.themeMode";
-const PALETTE_STORAGE_KEY = "codepulse.themePalette";
+const THEME_STORAGE_KEY = "cap.themeMode";
+const PALETTE_STORAGE_KEY = "cap.themePalette";
 
 function getSystemPrefersDark(): boolean {
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {

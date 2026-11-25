@@ -120,7 +120,7 @@ function createGitHubClient(rawUrl: string, { token, fetch = globalThis.fetch }:
   const baseHeaders = {
     Accept: "application/vnd.github+json",
     Authorization: `Bearer ${trimmedToken}`,
-    "User-Agent": "CodePulse-Edu",
+    "User-Agent": "Course-Assignment-Platform",
   };
   const repoApiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
 

@@ -10,7 +10,7 @@ import {
 } from "./messages";
 
 export type LanguagePreference = "auto" | Locale;
-const PREFERENCE_KEY = "codepulse.languagePreference";
+const PREFERENCE_KEY = "cap.languagePreference";
 interface I18nContextValue {
   locale: Locale;
   preference: LanguagePreference;
@@ -55,7 +55,7 @@ export function I18nProvider({
   };
   useEffect(() => {
     document.documentElement.lang = locale === "en" ? "en" : "zh-Hant";
-    document.title = `CodePulse Edu — ${createTranslator(locale)("app.title")}`;
+    document.title = createTranslator(locale)("app.title");
   }, [locale]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

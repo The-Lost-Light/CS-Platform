@@ -1,8 +1,8 @@
 {
-  "name": "cs-platform",
+  "name": "cap",
   "version": "0.0.0",
   "private": true,
-  "description": "CS course assignment platform",
+  "description": "Course Assignment Platform",
   "type": "module",
   "scripts": {
     "Dev": "vp dev",

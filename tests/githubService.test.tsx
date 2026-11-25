@@ -213,7 +213,7 @@ test("live loading preserves headers, branch encoding, rate limits, full file tr
     assert.deepEqual(request.headers, {
       Accept: "application/vnd.github+json",
       Authorization: "Bearer test-token",
-      "User-Agent": "CodePulse-Edu",
+      "User-Agent": "Course-Assignment-Platform",
     });
   assert.ok(requests.some((r) => r.url.includes("sha=feature%2Fa%20b")));
   assert.ok(requests.some((r) => r.url.includes("/trees/feature%2Fa%20b?recursive=1")));

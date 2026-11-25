@@ -7,7 +7,7 @@ import type { SaveResult } from "@/modules/workspace/services/workspaceApi";
 const template: PersonalWorkspace = {
   designDoc: "",
   repoUrl: "",
-  model: { format: "codepulse-c4", version: 1, nodes: [], relationships: [] },
+  model: { format: "cap-c4", version: 1, nodes: [], relationships: [] },
 };
 
 test("autosave debounces edits and flushes the newest draft after an in-flight write on unmount", async () => {

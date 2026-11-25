@@ -227,7 +227,7 @@ const draft = {
   designDoc: "# My README",
   repoUrl: "student/work",
   model: {
-    format: "codepulse-c4",
+    format: "cap-c4",
     version: 1,
     relationships: [],
     nodes: [

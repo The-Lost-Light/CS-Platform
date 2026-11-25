@@ -3,12 +3,12 @@ import { defineConfig } from "void/config";
 export default defineConfig({
   target: "cloudflare",
   head: {
-    title: "CS Course Platform",
+    title: "Course Assignment Platform",
     meta: [
       {
         name: "description",
         content:
-          "CS Course Platform - A CS course assignment and architecture visualization platform.",
+          "Course Assignment Platform - A course assignment and architecture visualization platform.",
       },
     ],
     link: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],

@@ -14,7 +14,7 @@ import {
 } from "./c4";
 
 export interface C4File {
-  format: "codepulse-c4";
+  format: "cap-c4";
   version: 1;
   nodes: C4Node[];
   relationships: C4Relationship[];
@@ -28,7 +28,7 @@ const invalid = (): never => {
 export function serializeC4File(nodes: C4Node[], relationships: C4Relationship[]): string {
   return JSON.stringify(
     validateC4File({
-      format: "codepulse-c4",
+      format: "cap-c4",
       version: 1,
       nodes,
       relationships,
@@ -46,7 +46,7 @@ export function parseC4File(text: string): C4File {
 export function validateC4File(data: unknown): C4File {
   if (
     !isRecord(data) ||
-    data.format !== "codepulse-c4" ||
+    data.format !== "cap-c4" ||
     data.version !== 1 ||
     !Array.isArray(data.nodes) ||
     !Array.isArray(data.relationships) ||
@@ -166,5 +166,5 @@ export function validateC4File(data: unknown): C4File {
     edgeIds.add(id);
     return { id, source, target, label, technology };
   });
-  return { format: "codepulse-c4", version: 1, nodes, relationships };
+  return { format: "cap-c4", version: 1, nodes, relationships };
 }

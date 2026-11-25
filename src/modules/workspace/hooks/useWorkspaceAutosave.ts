@@ -31,7 +31,7 @@ export function useWorkspaceAutosave({
   const draft = useMemo<PersonalWorkspace>(
     () => ({
       designDoc,
-      model: { format: "codepulse-c4", version: 1, nodes, relationships },
+      model: { format: "cap-c4", version: 1, nodes, relationships },
       repoUrl: repoUrl.trim(),
     }),
     [designDoc, nodes, relationships, repoUrl],

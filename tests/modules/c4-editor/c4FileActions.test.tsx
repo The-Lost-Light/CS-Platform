@@ -1,4 +1,4 @@
-import { C4FileActions, createC4History } from "@modules/c4-editor";
+import { C4FileActions, createC4History, reduceC4History } from "@modules/c4-editor";
 import {
   C4_MAX_NODES,
   C4_NODE_FIELD_LIMITS,
@@ -9,7 +9,7 @@ import {
 } from "@modules/c4-model";
 import { I18nProvider } from "@modules/i18n";
 import { MAX_DESIGN_DOC_LENGTH } from "@shared/workspacePolicy";
-import type { ReactNode } from "react";
+import { useReducer, useRef, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test, vi } from "vite-plus/test";
 
@@ -612,4 +612,69 @@ test("editor UI enforces maxLength attributes and disables Create node at C4_MAX
     </I18nProvider>,
   );
   assert.ok(designHtml.includes(`maxLength="${MAX_DESIGN_DOC_LENGTH}"`));
+});
+
+test("creating a node or connection opens C4Inspector for the new element", () => {
+  function StatefulEditorHarness({
+    initialNodes = [],
+    run,
+  }: {
+    initialNodes?: C4Node[];
+    run: (editor: ReturnType<typeof useC4Editor>) => void;
+  }) {
+    const [history, dispatchModel] = useReducer(
+      reduceC4History,
+      { nodes: initialNodes, relationships: [] },
+      createC4History,
+    );
+    const editor = useC4Editor({
+      history,
+      dispatchModel,
+      designDoc: "",
+      onChangeDesignDoc: () => {},
+      designTab: "diagram",
+      onChangeDesignTab: () => {},
+    });
+    const ran = useRef(false);
+    if (!ran.current) {
+      ran.current = true;
+      run(editor);
+    }
+    return <C4Diagram editor={editor} />;
+  }
+
+  const nodeHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <StatefulEditorHarness
+        run={(editor) => {
+          editor.addNode({ x: 100, y: 120 });
+        }}
+      />
+    </I18nProvider>,
+  );
+  const nodeInspector = nodeHtml.split("<aside")[1]?.split("</aside>")[0] ?? "";
+  assert.ok(nodeInspector.includes("Edit element · context"));
+  assert.ok(nodeInspector.includes('value="New element"'));
+
+  const source = createC4NodeInScope([], "", "src", "Core System")!;
+  const target = createC4NodeInScope([], "", "dst", "Web App")!;
+  const edgeHtml = renderToStaticMarkup(
+    <I18nProvider initialLanguage="en">
+      <StatefulEditorHarness
+        initialNodes={[source, target]}
+        run={(editor) => {
+          editor.connect({
+            source: source.id,
+            target: target.id,
+            sourceHandle: null,
+            targetHandle: null,
+          });
+        }}
+      />
+    </I18nProvider>,
+  );
+  const edgeInspector = edgeHtml.split("<aside")[1]?.split("</aside>")[0] ?? "";
+  assert.ok(edgeInspector.includes("Edit relationship"));
+  assert.ok(edgeInspector.includes("Core System → Web App"));
+  assert.ok(edgeInspector.includes('value="Uses"'));
 });

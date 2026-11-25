@@ -100,7 +100,7 @@ export function useC4Editor({
       return { ...graph, nodes: [...existing, { ...node, ...size }] };
     });
     onChangeDesignTab("diagram");
-    updateView({ selectedId: "", edgeId: "", contextMenu: null });
+    updateView({ selectedId: node.id, edgeId: "", contextMenu: null });
   };
 
   const drawing = useNodeDrawing(flowInstance, addNode);
@@ -185,7 +185,7 @@ export function useC4Editor({
         ? graph
         : { ...graph, relationships: [...graph.relationships, edge] },
     );
-    updateView({ selectedId: "", edgeId: "", contextMenu: null });
+    updateView({ selectedId: "", edgeId: edge.id, contextMenu: null });
   }
   const { flowNodes, flowEdges } = buildFlowElements({
     visible,
@@ -234,6 +234,7 @@ export function useC4Editor({
     flowNodes,
     flowEdges,
     navigate,
+    addNode,
     update,
     remove,
   };

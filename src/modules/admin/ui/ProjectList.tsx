@@ -83,21 +83,10 @@ export function ProjectList({
       <div className="p-5 sm:p-6 space-y-4">
         <ManagementSearch value={search} onChange={setSearch} />
 
-        {error && (
+        {error && !deleting && (
           <FeedbackBanner kind="error">
             <span>{t("admin.operationFailed")}</span>
           </FeedbackBanner>
-        )}
-
-        {deleting && (
-          <ConfirmDelete
-            name={deleting.title}
-            pending={pending}
-            onCancel={cancelDelete}
-            onConfirm={() => {
-              void remove();
-            }}
-          />
         )}
 
         <DataTable
@@ -205,6 +194,17 @@ export function ProjectList({
           project={editing}
           onCancel={cancelEdit}
           onSaved={finishEdit}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          name={deleting.title}
+          pending={pending}
+          error={error ? t("admin.operationFailed") : null}
+          onCancel={cancelDelete}
+          onConfirm={() => {
+            void remove();
+          }}
         />
       )}
     </Card>

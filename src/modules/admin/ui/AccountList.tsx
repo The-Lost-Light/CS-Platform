@@ -75,7 +75,7 @@ export function AccountList({
       />
 
       <div className="p-5 sm:p-6 space-y-4">
-        {error && (
+        {error && !deleting && (
           <FeedbackBanner
             kind="error"
             action={
@@ -89,15 +89,6 @@ export function AccountList({
         )}
 
         <ManagementSearch value={search} onChange={setSearch} />
-        {deleting && (
-          <ConfirmDelete
-            name={`${deleting.name} (${deleting.email})`}
-            account
-            pending={pending}
-            onCancel={cancelDelete}
-            onConfirm={confirmDelete}
-          />
-        )}
         {loading ? (
           <LoadingPanel label={t("common.loading")} />
         ) : (
@@ -164,6 +155,16 @@ export function AccountList({
           management={{ id: editing.id, role: editing.role, isSelf: editing.id === selfId }}
           onDismiss={cancelEdit}
           onSaved={finishEdit}
+        />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          name={`${deleting.name} (${deleting.email})`}
+          account
+          pending={pending}
+          error={error ? t(accountErrors.get(error) ?? "admin.operationFailed") : null}
+          onCancel={cancelDelete}
+          onConfirm={confirmDelete}
         />
       )}
     </Card>

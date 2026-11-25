@@ -225,7 +225,7 @@ test("AccountList renders create and save notices as a status chip before the Ad
     }
   }
 });
-test("deletion confirmation identifies the record and explains soft-delete retention and session revocation", () => {
+test("deletion confirmation uses a modal alertdialog matching edit dialogs and explains retention", () => {
   const accountHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <ConfirmDelete
@@ -237,24 +237,36 @@ test("deletion confirmation identifies the record and explains soft-delete reten
       />
     </I18nProvider>,
   );
-  assert.match(accountHtml, /role="alertdialog"/);
+  assert.match(
+    accountHtml,
+    /<dialog\b[^>]*role="alertdialog"[^>]*aria-labelledby="[^"]+"[^>]*aria-describedby="[^"]+"/,
+  );
+  assert.ok(!accountHtml.includes("ui-alert-dialog"));
+  assert.ok(accountHtml.includes("ui-icon-badge-danger"));
+  assert.ok(accountHtml.includes("ui-btn-danger"));
+  assert.ok(accountHtml.includes('aria-label="Close"'));
   assert.ok(accountHtml.includes("Example account"));
   assert.match(accountHtml, /all sessions will be revoked/i);
   assert.ok(accountHtml.includes("keeping its database records"));
   assert.ok(accountHtml.includes("saved workspaces across all projects"));
   assert.ok(accountHtml.includes("Cancel"));
+  assert.ok(accountHtml.includes(">Delete<"));
 
   const projectHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <ConfirmDelete
         name="Example project"
         pending={false}
+        error="Operation failed. Refresh and try again."
         onConfirm={() => {}}
         onCancel={() => {}}
       />
     </I18nProvider>,
   );
+  assert.match(projectHtml, /<dialog\b[^>]*role="alertdialog"/);
   assert.ok(projectHtml.includes("keeping the project and every account’s saved workspace"));
+  assert.match(projectHtml, /role="alert"/);
+  assert.ok(projectHtml.includes("Operation failed. Refresh and try again."));
 });
 
 test("account creation places password help directly beneath password input before role", () => {

@@ -1,27 +1,34 @@
 import { X, type LucideIcon } from "lucide-react";
 import { useId, useLayoutEffect, useRef, type ReactNode } from "react";
 
-import { Button, IconButton } from "./Button";
+import type { IconBadgeTone } from "./Badge";
+import { Button, IconButton, type ButtonVariant } from "./Button";
 import { CardHeader } from "./Card";
 import { cn } from "./cn";
 
 export function FormDialog({
   title,
   icon,
+  iconTone,
   headerAction,
   closeLabel,
   onDismiss,
   pending,
   wide = false,
+  role,
+  describedBy,
   children,
 }: {
   title: string;
   icon: LucideIcon;
+  iconTone?: IconBadgeTone;
   headerAction?: ReactNode;
   closeLabel: string;
   onDismiss: () => void;
   pending: boolean;
   wide?: boolean;
+  role?: "alertdialog";
+  describedBy?: string;
   children: ReactNode;
 }) {
   const titleId = useId();
@@ -35,7 +42,9 @@ export function FormDialog({
   return (
     <dialog
       ref={ref}
+      role={role}
       aria-labelledby={titleId}
+      aria-describedby={describedBy}
       className={cn(
         "ui-dialog fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[calc(100dvh-2rem)] p-0 overflow-hidden open:flex flex-col",
         wide ? "max-w-2xl" : "max-w-md",
@@ -49,6 +58,7 @@ export function FormDialog({
       <CardHeader
         as="header"
         icon={icon}
+        iconTone={iconTone}
         iconSize="sm"
         title={title}
         titleId={titleId}
@@ -79,18 +89,31 @@ export function FormDialog({
 export function FormDialogActions({
   cancelLabel,
   submitLabel,
+  submitVariant = "primary",
+  disabled = false,
   onDismiss,
+  onSubmit,
 }: {
   cancelLabel: string;
   submitLabel: string;
+  submitVariant?: ButtonVariant;
+  disabled?: boolean;
   onDismiss: () => void;
+  onSubmit?: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-      <Button variant="ghost" onClick={onDismiss}>
+      <Button variant="ghost" disabled={disabled} onClick={onDismiss}>
         {cancelLabel}
       </Button>
-      <Button type="submit">{submitLabel}</Button>
+      <Button
+        type={onSubmit ? "button" : "submit"}
+        variant={submitVariant}
+        disabled={disabled}
+        onClick={onSubmit}
+      >
+        {submitLabel}
+      </Button>
     </div>
   );
 }

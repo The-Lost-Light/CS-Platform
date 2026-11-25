@@ -89,6 +89,7 @@ export function ManagementRowActions({
           size="sm"
           disabled={disabled || deleteDisabledReason !== undefined}
           title={deleteDisabledReason}
+          aria-haspopup="dialog"
           onClick={onDelete}
         >
           {t("admin.delete")}

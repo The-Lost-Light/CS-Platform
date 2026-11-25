@@ -126,7 +126,10 @@ export function useAccountList(initialNotice: AccountListNotice | null = null) {
       setEditing(null);
       setError(null);
     },
-    cancelDelete: () => setDeleting(null),
+    cancelDelete: () => {
+      setDeleting(null);
+      setError(null);
+    },
     confirmDelete,
   };
 }

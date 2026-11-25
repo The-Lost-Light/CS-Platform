@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { HTMLAttributes, ReactNode, Ref } from "react";
 
-import { IconBadge, type IconBadgeSize } from "./Badge";
+import { IconBadge, type IconBadgeSize, type IconBadgeTone } from "./Badge";
 import { cn } from "./cn";
 
 export interface PageContainerProps {
@@ -61,6 +61,7 @@ export function Card({
 export interface CardHeaderProps {
   as?: "header" | "div";
   icon?: LucideIcon;
+  iconTone?: IconBadgeTone;
   iconSize?: IconBadgeSize;
   iconClassName?: string;
   title?: ReactNode;
@@ -77,6 +78,7 @@ export interface CardHeaderProps {
 export function CardHeader({
   as: Tag = "div",
   icon,
+  iconTone,
   iconSize = "md",
   iconClassName,
   title,
@@ -95,7 +97,9 @@ export function CardHeader({
     <Tag className={cn("ui-card-header", layoutClassName, className)}>
       {(icon || title) && (
         <div className={cn("flex items-center min-w-0", iconGap)}>
-          {icon && <IconBadge icon={icon} size={iconSize} className={iconClassName} />}
+          {icon && (
+            <IconBadge icon={icon} tone={iconTone} size={iconSize} className={iconClassName} />
+          )}
           {title && (
             <HeadingTag
               id={titleId}

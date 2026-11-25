@@ -102,6 +102,9 @@ export function useProjectList(initialNotice: ProjectListNotice | null = null) {
       setError(false);
       showNotice("admin.saved");
     },
-    cancelDelete: () => setDeleting(null),
+    cancelDelete: () => {
+      setDeleting(null);
+      setError(false);
+    },
   };
 }

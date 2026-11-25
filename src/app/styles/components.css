@@ -1,15 +1,11 @@
 @layer components {
-  /* Layout Shells & Dialog Alerts */
+  /* Layout Shells */
   .ui-page-shell {
     @apply max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-6;
   }
 
   .ui-workspace-shell {
     @apply w-[80%] mx-auto py-4;
-  }
-
-  .ui-alert-dialog {
-    @apply rounded-xl border border-danger-outline bg-danger-container p-5 text-on-danger-container shadow-m3-1 space-y-3.5 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-danger;
   }
 
   /* Cards & Frosted Containers */

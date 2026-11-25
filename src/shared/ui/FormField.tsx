@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import { ChevronDown, type LucideIcon } from "lucide-react";
 import type {
   InputHTMLAttributes,
   ReactNode,
@@ -119,14 +119,26 @@ export function TextArea({ mono = false, compact = false, className, ...props }:
   );
 }
 
-export function SelectField({
-  className,
-  children,
-  ...props
-}: SelectHTMLAttributes<HTMLSelectElement>) {
+export interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  wrapperClassName?: string;
+}
+
+export function SelectField({ wrapperClassName, className, children, ...props }: SelectFieldProps) {
   return (
-    <select className={cn("ui-input", className)} {...props}>
-      {children}
-    </select>
+    <div className={cn("relative", wrapperClassName)}>
+      <select
+        className={cn(
+          "peer ui-input appearance-none pr-10 cursor-pointer disabled:cursor-default",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        aria-hidden="true"
+        className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-on-subtle peer-disabled:opacity-55"
+      />
+    </div>
   );
 }

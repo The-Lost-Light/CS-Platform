@@ -43,6 +43,7 @@ export {
   TextArea,
   TextInput,
   type FormFieldProps,
+  type SelectFieldProps,
   type TextAreaProps,
   type TextInputProps,
 } from "./FormField";

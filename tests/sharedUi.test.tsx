@@ -135,7 +135,13 @@ test("FormField, TextInput, TextArea, and SelectField support inline and externa
       </SelectField>
     </FormField>,
   );
-  assert.ok(selectHtml.includes('class="ui-input"'));
+  assert.match(
+    selectHtml,
+    /<select\b[^>]*class="[^"]*\bui-input\b[^"]*\bappearance-none\b[^"]*\bpr-10\b/,
+  );
+  const chevronSvg = selectHtml.match(/<svg\b[^>]*lucide-chevron-down[^>]*>/)?.[0] ?? "";
+  assert.ok(chevronSvg.includes("right-3.5"));
+  assert.ok(chevronSvg.includes("pointer-events-none"));
 });
 
 test("SegmentedControl, Tooltip, DataTable, Menu, FeedbackBanner, and LoadingPanel render semantics", () => {

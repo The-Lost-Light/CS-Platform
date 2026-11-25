@@ -57,7 +57,7 @@ export function validateC4File(data: unknown): C4File {
   const ids = new Set<string>();
   const nodes = data.nodes.map((value: unknown): C4Node => {
     if (!isRecord(value)) return invalid();
-    const { id, kind, label, category, parentId, description, technology = "", x, y } = value;
+    const { id, kind, label, category, parentId, description, technology, x, y } = value;
     if (
       typeof id !== "string" ||
       !id.trim() ||

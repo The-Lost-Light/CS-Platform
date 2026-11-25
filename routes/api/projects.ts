@@ -1,4 +1,3 @@
-import { resolveLocale } from "@modules/i18n";
 import { allowsAdminMutation, isDeletedUser } from "@server/access";
 import { listCatalog, readProjectInput, reorderProjects, saveProject } from "@server/projects";
 import { defineHandler } from "void";
@@ -10,7 +9,7 @@ export const GET = defineHandler(async (c) => {
   const user = requireAuth(c);
   if (isDeletedUser(user)) return c.json({ error: "unauthorized" }, 401);
   c.header("Cache-Control", "private, no-store");
-  return await listCatalog(resolveLocale(c.req.query("locale")), user.id);
+  return await listCatalog(user.id);
 });
 
 export const POST = defineHandler(async (c) => {
@@ -45,7 +44,7 @@ export const PUT = defineHandler(async (c) => {
   } catch {
     return c.json({ error: "invalid" }, 400);
   }
-  const result = await reorderProjects(body, user.id, resolveLocale(c.req.query("locale")));
+  const result = await reorderProjects(body);
   if (result === "invalid") return c.json({ error: "invalid" }, 400);
   if (result === "conflict") return c.json({ error: "conflict" }, 409);
   return { projects: result };

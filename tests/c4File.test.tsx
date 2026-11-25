@@ -109,7 +109,7 @@ test("import strips unrelated object properties", () => {
   assert.deepEqual(parseC4File(JSON.stringify(file)).nodes, nodes);
 });
 
-test("C4 dimensions survive export and import while legacy nodes remain unchanged", () => {
+test("C4 dimensions survive export and import and omit optional sizes when absent", () => {
   const resized = nodes.map((node, index) =>
     index === 0 ? { ...node, width: 412.5, height: 360 } : node,
   );
@@ -121,18 +121,6 @@ test("C4 dimensions survive export and import while legacy nodes remain unchange
       assert.throws(() => parseC4File(JSON.stringify(file)));
     }
   }
-});
-
-test("legacy external settings and GitHub paths are discarded on import and export", () => {
-  const file = fixture();
-  Object.assign(file.nodes[0], {
-    external: true,
-    contextPositions: { peer: { x: 1100, y: -60 } },
-    expectedPath: "src/legacy.ts",
-  });
-  delete file.nodes[0].technology;
-  assert.deepEqual(parseC4File(JSON.stringify(file)), fixture());
-  assert.deepEqual(JSON.parse(serializeC4File(file.nodes, file.relationships)), fixture());
 });
 
 test("validateC4File enforces node, relationship, and field length limits", () => {

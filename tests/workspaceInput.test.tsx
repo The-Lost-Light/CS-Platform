@@ -65,7 +65,7 @@ test("readWorkspaceInput rejects repository URLs not accepted by parseGitHubRepo
   }
 });
 
-test("workspace repository URL helpers ignore incomplete edits and invalid legacy defaults", () => {
+test("workspace repository URL helpers ignore incomplete or invalid edits", () => {
   assert.strictEqual(isValidWorkspaceRepoUrl(""), true);
   assert.strictEqual(isValidWorkspaceRepoUrl("   "), true);
   assert.strictEqual(isValidWorkspaceRepoUrl("https://github.com/owner/repo/tree/main"), true);

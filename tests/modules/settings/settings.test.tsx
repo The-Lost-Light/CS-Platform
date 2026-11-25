@@ -1,12 +1,11 @@
 import { I18nProvider } from "@modules/i18n";
-import { getLocalizedProjects } from "@modules/projects";
 import { SettingsButton, SettingsDialog, SettingsProvider } from "@modules/settings";
 import { ThemeProvider } from "@modules/theme";
 import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
-const enProjects = getLocalizedProjects("en").projects;
+import { sampleProjects } from "../../fixtures/projects";
 
 test("SettingsDialog renders localized language, dark mode, and palette settings for signed-in users", () => {
   const enHtml = renderToStaticMarkup(
@@ -147,7 +146,7 @@ test("SettingsButton and ProjectWorkspace render without a personal token", () =
       <I18nProvider initialLanguage="en">
         <SettingsProvider>
           <ProjectWorkspace
-            project={enProjects[0]}
+            project={sampleProjects[0]}
             snapshot={{ accountId: "student", draft: null, revision: null, updatedAt: null }}
           />
         </SettingsProvider>

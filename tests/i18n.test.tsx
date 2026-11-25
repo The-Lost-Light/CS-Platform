@@ -9,7 +9,6 @@ import {
   traditionalChineseMessages,
   type MessageKey,
 } from "@modules/i18n";
-import { getLocalizedProjects } from "@modules/projects";
 import { GitHubRepoDashboard, fetchGitHubProjectBundle } from "@modules/repository";
 import { SettingsButton, SettingsDialog, SettingsProvider } from "@modules/settings";
 import {
@@ -24,6 +23,7 @@ import { ProjectWorkspace } from "@modules/workspace";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, expect, test } from "vite-plus/test";
 
+import { sampleProjects } from "./fixtures/projects";
 import { createRepoFixture } from "./fixtures/repository";
 
 const testUser: User = {
@@ -36,8 +36,6 @@ const stubAuthService = {
   login: () => ({ ok: false as const, error: "invalidCredentials" as const }),
 };
 
-const en = getLocalizedProjects("en");
-const zh = getLocalizedProjects("zh-TW");
 const t = createTranslator("en");
 const han = /[\u3400-\u9fff]/;
 const bundle = createRepoFixture();
@@ -127,16 +125,6 @@ test("GitHub validation exposes a key that can be translated after a language ch
   });
 });
 
-test("built-in assignment briefs are localized independently of student work", () => {
-  assert.strictEqual(han.test(JSON.stringify(en)), false);
-  for (const [i, project] of en.projects.entries()) {
-    assert.strictEqual(project.id, zh.projects[i].id);
-    assert.ok(project.content.includes("## Assignment instructions"));
-    assert.ok(zh.projects[i].content.includes("## 作業說明"));
-    assert.deepEqual(project.attachments, []);
-  }
-});
-
 const noop = () => {};
 
 test("dashboard lists every project and uses project-only navigation in both languages", () => {
@@ -144,16 +132,12 @@ test("dashboard lists every project and uses project-only navigation in both lan
     const html = renderToStaticMarkup(
       <ThemeProvider>
         <I18nProvider initialLanguage={locale}>
-          <HomeDashboard
-            projects={getLocalizedProjects(locale).projects}
-            currentUser={testUser}
-            onOpenProject={noop}
-          />
+          <HomeDashboard projects={sampleProjects} currentUser={testUser} onOpenProject={noop} />
         </I18nProvider>
       </ThemeProvider>,
     );
     const visibleText = html.replace(/<[^>]*>/g, "");
-    const { projects } = getLocalizedProjects(locale);
+    const projects = sampleProjects;
     assert.ok(!html.includes("ui-code-badge"));
     for (const project of projects) {
       assert.ok(visibleText.includes(renderToStaticMarkup(<>{project.title}</>)));
@@ -184,7 +168,7 @@ test("dashboard lists every project and uses project-only navigation in both lan
 
 test("new workspaces show teacher handouts and start with an empty student README", () => {
   const project = {
-    ...en.projects[0],
+    ...sampleProjects[0],
     content: "# Handout",
     attachments: [{ id: "worksheet", name: "題目.pdf", size: 100 }],
   };
@@ -209,7 +193,7 @@ test("the project editor renders a saved personal README and repository in the c
     <ThemeProvider>
       <I18nProvider initialLanguage="zh-TW">
         <ProjectWorkspace
-          project={zh.projects[0]}
+          project={{ ...sampleProjects[0], content: "## 作業說明\n\n題目內容" }}
           snapshot={{
             accountId: "student",
             revision: "saved",
@@ -248,15 +232,17 @@ const screens = {
   authGate: (
     <AuthProvider service={stubAuthService}>
       <AuthGate>
-        <HomeDashboard projects={en.projects} currentUser={testUser} onOpenProject={noop} />
+        <HomeDashboard projects={sampleProjects} currentUser={testUser} onOpenProject={noop} />
       </AuthGate>
     </AuthProvider>
   ),
-  dashboard: <HomeDashboard projects={en.projects} currentUser={testUser} onOpenProject={noop} />,
+  dashboard: (
+    <HomeDashboard projects={sampleProjects} currentUser={testUser} onOpenProject={noop} />
+  ),
   login: <LoginView onLogin={() => stubAuthService.login()} />,
   project: (
     <ProjectWorkspace
-      project={en.projects[0]}
+      project={sampleProjects[0]}
       snapshot={{ accountId: "student", draft: null, revision: null, updatedAt: null }}
     />
   ),
@@ -288,12 +274,12 @@ for (const [name, screen] of Object.entries(screens)) {
 
 test("HomeDashboard displays deadlines beneath titles and student status without index badges or points", () => {
   const dueSoonProject = {
-    ...en.projects[0],
+    ...sampleProjects[0],
     dueDate: "2026-11-25 23:59",
     points: 200,
   };
   const overdueProject = {
-    ...en.projects[1],
+    ...sampleProjects[1],
     dueDate: "2026-11-20 12:00",
     points: 150,
   };

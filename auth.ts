@@ -5,12 +5,7 @@ import { defineAuth } from "void/auth";
 
 import { parseCreateAccountInput } from "./src/shared/accountPolicy";
 import { isRecord } from "./src/shared/isRecord";
-import {
-  isValidPasswordLength,
-  MAX_CURRENT_PASSWORD_LENGTH,
-  MAX_PASSWORD_LENGTH,
-  MIN_PASSWORD_LENGTH,
-} from "./src/shared/passwordPolicy";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./src/shared/passwordPolicy";
 
 const userIndexesPlugin = {
   id: "user-indexes",
@@ -83,8 +78,7 @@ export default defineAuth(({ defaults }) => ({
     enabled: true,
     disableSignUp: true,
     minPasswordLength: MIN_PASSWORD_LENGTH,
-    // Better Auth also applies this limit to sign-in and current-password checks.
-    maxPasswordLength: MAX_CURRENT_PASSWORD_LENGTH,
+    maxPasswordLength: MAX_PASSWORD_LENGTH,
   },
   hooks: {
     ...defaults.hooks,
@@ -108,12 +102,6 @@ export default defineAuth(({ defaults }) => ({
         }
         return defaultResult !== undefined ? defaultResult : { context: { body: parsed.value } };
       }
-      const newPassword =
-        ctx.path === "/sign-up/email" ? ctx.body?.password : ctx.body?.newPassword;
-      if (newPassword !== undefined && !isValidPasswordLength(newPassword))
-        throw new APIError("BAD_REQUEST", {
-          message: `Use a password of ${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} characters.`,
-        });
       return defaults.hooks?.before?.(ctx);
     }),
   },

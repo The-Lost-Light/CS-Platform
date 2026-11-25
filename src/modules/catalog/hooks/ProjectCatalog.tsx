@@ -13,8 +13,8 @@ const CatalogContext = createContext<{
   markWorkspaceSaved: (projectId: string, updatedAt: number) => void;
 } | null>(null);
 export function ProjectCatalogProvider({ children }: { children: ReactNode }) {
-  const { t, locale } = useI18n();
-  const { status, retry, catalog } = useCatalogState(locale);
+  const { t } = useI18n();
+  const { status, retry, catalog } = useCatalogState();
   if (status === "loading")
     return (
       <p className="p-6" role="status">

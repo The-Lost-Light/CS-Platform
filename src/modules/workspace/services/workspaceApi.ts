@@ -67,12 +67,8 @@ export async function saveDraft(
     body: JSON.stringify({ revision, draft }),
   });
   if (response.ok) {
-    const data: { revision: string; updatedAt?: number } = await response.json();
-    return {
-      ok: true,
-      revision: data.revision,
-      updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : Date.now(),
-    };
+    const data: { revision: string; updatedAt: number } = await response.json();
+    return { ok: true, revision: data.revision, updatedAt: data.updatedAt };
   }
   let error: SaveError = "draft.saveError";
   if (response.status === 409) error = "draft.conflict";

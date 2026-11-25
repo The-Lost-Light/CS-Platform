@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bc4d0359-78da-4cb5-b67d-2d3ac23825f8",
-  "prevId": "a7f24c18-9d4e-4b32-8c51-6e90d1b3f520",
+  "id": "fc685088-3c32-49a0-b6f3-85eeee9f1393",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "project_attachment_part": {
       "name": "project_attachment_part",
@@ -28,6 +28,52 @@
           "notNull": true,
           "autoincrement": false
         },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "project_attachment_part_project_id_attachment_id_project_attachment_project_id_attachment_id_fk": {
+          "name": "project_attachment_part_project_id_attachment_id_project_attachment_project_id_attachment_id_fk",
+          "tableFrom": "project_attachment_part",
+          "tableTo": "project_attachment",
+          "columnsFrom": ["project_id", "attachment_id"],
+          "columnsTo": ["project_id", "attachment_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "project_attachment_part_project_id_attachment_id_part_pk": {
+          "columns": ["project_id", "attachment_id", "part"],
+          "name": "project_attachment_part_project_id_attachment_id_part_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "project_attachment": {
+      "name": "project_attachment",
+      "columns": {
+        "project_id": {
+          "name": "project_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attachment_id": {
+          "name": "attachment_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "name": {
           "name": "name",
           "type": "text",
@@ -42,26 +88,26 @@
           "notNull": true,
           "autoincrement": false
         },
-        "content": {
-          "name": "content",
-          "type": "text",
+        "deleted": {
+          "name": "deleted",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": false
         }
       },
       "indexes": {
-        "project_attachment_part_metadata_idx": {
-          "name": "project_attachment_part_metadata_idx",
-          "columns": ["project_id", "name", "attachment_id", "size"],
-          "isUnique": false,
-          "where": "\"project_attachment_part\".\"part\" = 0"
+        "project_attachment_order_idx": {
+          "name": "project_attachment_order_idx",
+          "columns": ["deleted", "project_id", "name", "attachment_id", "size"],
+          "isUnique": false
         }
       },
       "foreignKeys": {
-        "project_attachment_part_project_id_course_project_id_fk": {
-          "name": "project_attachment_part_project_id_course_project_id_fk",
-          "tableFrom": "project_attachment_part",
+        "project_attachment_project_id_course_project_id_fk": {
+          "name": "project_attachment_project_id_course_project_id_fk",
+          "tableFrom": "project_attachment",
           "tableTo": "course_project",
           "columnsFrom": ["project_id"],
           "columnsTo": ["id"],
@@ -70,9 +116,9 @@
         }
       },
       "compositePrimaryKeys": {
-        "project_attachment_part_project_id_attachment_id_part_pk": {
-          "columns": ["project_id", "attachment_id", "part"],
-          "name": "project_attachment_part_project_id_attachment_id_part_pk"
+        "project_attachment_project_id_attachment_id_pk": {
+          "columns": ["project_id", "attachment_id"],
+          "name": "project_attachment_project_id_attachment_id_pk"
         }
       },
       "uniqueConstraints": {},
@@ -88,9 +134,9 @@
           "notNull": true,
           "autoincrement": false
         },
-        "code_name": {
-          "name": "code_name",
-          "type": "text",
+        "project_index": {
+          "name": "project_index",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -115,32 +161,29 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "deleted": {
+          "name": "deleted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         }
       },
       "indexes": {
-        "course_project_code_name_unique": {
-          "name": "course_project_code_name_unique",
-          "columns": ["code_name"],
-          "isUnique": true
+        "course_project_active_index_unique": {
+          "name": "course_project_active_index_unique",
+          "columns": ["project_index"],
+          "isUnique": true,
+          "where": "\"course_project\".\"deleted\" = 0 AND \"course_project\".\"project_index\" > 0"
+        },
+        "course_project_deleted_index_idx": {
+          "name": "course_project_deleted_index_idx",
+          "columns": ["deleted", "project_index", "id"],
+          "isUnique": false
         }
       },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "removed_project": {
-      "name": "removed_project",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -215,9 +258,21 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {
+        "personal_workspace_user_id_idx": {
+          "name": "personal_workspace_user_id_idx",
+          "columns": ["user_id"],
+          "isUnique": false
+        },
         "personal_workspace_project_id_user_id_unique": {
           "name": "personal_workspace_project_id_user_id_unique",
           "columns": ["project_id", "user_id"],
@@ -529,6 +584,13 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "deleted": {
+          "name": "deleted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -536,6 +598,16 @@
           "name": "user_email_unique",
           "columns": ["email"],
           "isUnique": true
+        },
+        "user_deleted_createdAt_idx": {
+          "name": "user_deleted_createdAt_idx",
+          "columns": ["deleted", "createdAt"],
+          "isUnique": false
+        },
+        "user_role_banned_deleted_idx": {
+          "name": "user_role_banned_deleted_idx",
+          "columns": ["deleted", "role", "banned"],
+          "isUnique": false
         }
       },
       "foreignKeys": {},

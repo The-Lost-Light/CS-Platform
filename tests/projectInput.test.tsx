@@ -11,7 +11,7 @@ const valid = {
 test("project creation normalizes fields and preserves Markdown without accepting student data or supplied IDs", () => {
   const project = parseProjectInput({
     ...valid,
-    id: "project-fullstack-web",
+    id: "forged-project-id",
     index: 99,
     codeName: "FORGED",
     createdBy: "forged",

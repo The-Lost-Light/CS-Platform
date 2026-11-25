@@ -13,10 +13,7 @@ import {
 
 import { userTable } from "../.void/better-auth-schema";
 
-export type CustomProjectData = Omit<Project, "index" | "attachments">;
-export type StoredProjectData =
-  | (CustomProjectData & { customized?: true })
-  | { id: string; customized: false };
+export type StoredProjectData = Omit<Project, "index" | "attachments">;
 
 export const projects = sqliteTable(
   "course_project",
@@ -85,7 +82,7 @@ export const workspaces = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => userTable.id, { onDelete: "cascade" }),
-    updatedAt: integer("updated_at").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
   },
   (table) => [
     unique().on(table.projectId, table.userId),

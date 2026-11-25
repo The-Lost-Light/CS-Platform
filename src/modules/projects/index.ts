@@ -21,6 +21,3 @@ export {
   toTaipeiIsoString,
 } from "./model/deadline";
 export { parseProjectInput } from "./model/projectInput";
-export { mergeProjectCatalog } from "./model/projectCatalog";
-export { PROJECTS } from "./data/projectsData";
-export { getLocalizedProjects } from "./data/localizedProjects";

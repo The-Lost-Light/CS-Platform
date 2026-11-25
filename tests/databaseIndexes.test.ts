@@ -1,11 +1,11 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { DatabaseSync, type SQLInputValue } from "node:sqlite";
+import type { SQLInputValue } from "node:sqlite";
 
 import type { StoredProjectData } from "@db/schema";
 import { listAccounts } from "@server/accounts";
 import { listProjects } from "@server/projects";
 import { assert, beforeEach, test, vi } from "vite-plus/test";
+
+import { createMigratedDb } from "./fixtures/migratedDb";
 
 type SqlQuery = { sql: string; params: SQLInputValue[] };
 type SelectStatement = { toSQL: () => SqlQuery };
@@ -63,26 +63,11 @@ function isSelectStatement(statement: unknown): statement is SelectStatement {
   );
 }
 
-function createMigratedDb(throughTag?: string) {
-  const sqlite = new DatabaseSync(":memory:");
-  sqlite.exec("PRAGMA foreign_keys = ON;");
-  const journalPath = path.resolve("db/migrations/meta/_journal.json");
-  const journal = JSON.parse(readFileSync(journalPath, "utf8")) as {
-    entries: Array<{ tag: string }>;
-  };
-  const limit = throughTag ? journal.entries.findIndex((entry) => entry.tag === throughTag) : -1;
-  const entries = limit >= 0 ? journal.entries.slice(0, limit + 1) : journal.entries;
-  for (const { tag } of entries) {
-    const sqlText = readFileSync(path.resolve("db/migrations", `${tag}.sql`), "utf8");
-    for (const statement of sqlText.split("--> statement-breakpoint")) {
-      const trimmed = statement.trim();
-      if (trimmed) sqlite.exec(trimmed);
-    }
-  }
-  return sqlite;
-}
-
-function getIndexColumns(sqlite: DatabaseSync, tableName: string, indexName: string) {
+function getIndexColumns(
+  sqlite: ReturnType<typeof createMigratedDb>,
+  tableName: string,
+  indexName: string,
+) {
   const indexes = sqlite.prepare(`PRAGMA index_list(${tableName})`).all() as Array<
     IndexListRow & { partial: number }
   >;
@@ -157,19 +142,18 @@ test("migrations create expected FK and sort/filter indexes cleanly", () => {
   }
 });
 
-test("partial active index normalizes legacy soft-deleted rows and allows atomic reorders while keeping soft-deleted records", () => {
-  const prePartialDb = createMigratedDb("20261124143707_remarkable_stardust");
+test("partial active index allows atomic reorders while keeping soft-deleted records", () => {
+  const sqlite = createMigratedDb();
   try {
-    const insertLegacy = prePartialDb.prepare(
+    const insertProject = sqlite.prepare(
       "INSERT INTO course_project (id, project_index, data, created_by, created_at, deleted) VALUES (?, ?, ?, ?, ?, ?)",
     );
     const data = {
       dueDate: "2026-12-31 23:59",
       points: 100,
-      tags: ["Architecture"],
-      content: "# Legacy",
+      content: "# Assignment",
     };
-    insertLegacy.run(
+    insertProject.run(
       "proj-1",
       1,
       JSON.stringify({ id: "proj-1", title: "One", ...data }),
@@ -177,15 +161,15 @@ test("partial active index normalizes legacy soft-deleted rows and allows atomic
       1,
       0,
     );
-    insertLegacy.run(
+    insertProject.run(
       "proj-del-old",
-      2,
+      0,
       JSON.stringify({ id: "proj-del-old", title: "Old Deleted", ...data }),
       "a",
       2,
       1,
     );
-    insertLegacy.run(
+    insertProject.run(
       "proj-3",
       3,
       JSON.stringify({ id: "proj-3", title: "Three", ...data }),
@@ -193,27 +177,7 @@ test("partial active index normalizes legacy soft-deleted rows and allows atomic
       3,
       0,
     );
-
-    const migrationSql = readFileSync(
-      path.resolve("db/migrations/20261124154543_silly_emma_frost.sql"),
-      "utf8",
-    );
-    for (const statement of migrationSql.split("--> statement-breakpoint")) {
-      const trimmed = statement.trim();
-      if (trimmed) prePartialDb.exec(trimmed);
-    }
-
-    const afterUpgrade = prePartialDb
-      .prepare("SELECT id, project_index, deleted FROM course_project ORDER BY id")
-      .all()
-      .map((row) => ({ ...row }));
-    assert.deepEqual(afterUpgrade, [
-      { id: "proj-1", project_index: 1, deleted: 0 },
-      { id: "proj-3", project_index: 3, deleted: 0 },
-      { id: "proj-del-old", project_index: 0, deleted: 1 },
-    ]);
-
-    insertLegacy.run(
+    insertProject.run(
       "proj-del-2",
       0,
       JSON.stringify({ id: "proj-del-2", title: "Second Deleted", ...data }),
@@ -222,7 +186,7 @@ test("partial active index normalizes legacy soft-deleted rows and allows atomic
       1,
     );
     assert.throws(() => {
-      insertLegacy.run(
+      insertProject.run(
         "proj-dup-active",
         1,
         JSON.stringify({ id: "proj-dup-active", title: "Duplicate", ...data }),
@@ -232,11 +196,11 @@ test("partial active index normalizes legacy soft-deleted rows and allows atomic
       );
     }, /UNIQUE constraint failed/);
 
-    prePartialDb.exec("UPDATE course_project SET project_index = 0 WHERE deleted = 0;");
-    prePartialDb.exec(
+    sqlite.exec("UPDATE course_project SET project_index = 0 WHERE deleted = 0;");
+    sqlite.exec(
       "UPDATE course_project SET project_index = CASE WHEN id = 'proj-3' THEN 1 WHEN id = 'proj-1' THEN 2 ELSE 0 END WHERE deleted = 0;",
     );
-    const reordered = prePartialDb
+    const reordered = sqlite
       .prepare(
         "SELECT id, project_index, deleted FROM course_project ORDER BY deleted, project_index, id",
       )
@@ -249,7 +213,7 @@ test("partial active index normalizes legacy soft-deleted rows and allows atomic
       { id: "proj-del-old", project_index: 0, deleted: 1 },
     ]);
   } finally {
-    prePartialDb.close();
+    sqlite.close();
   }
 });
 
@@ -291,10 +255,10 @@ test("soft-deleting a user uses user_role_banned_deleted_idx and preserves accou
     insertAccount.run("acc-2", "student-2", "student-2");
 
     const insertWorkspace = sqlite.prepare(
-      "INSERT INTO personal_workspace (revision, project_id, user_id) VALUES (?, ?, ?)",
+      "INSERT INTO personal_workspace (revision, project_id, user_id, updated_at) VALUES (?, ?, ?, ?)",
     );
-    insertWorkspace.run("rev-s1", "proj-1", "student-1");
-    insertWorkspace.run("rev-s2", "proj-1", "student-2");
+    insertWorkspace.run("rev-s1", "proj-1", "student-1", 1000);
+    insertWorkspace.run("rev-s2", "proj-1", "student-2", 2000);
 
     const insertPart = sqlite.prepare(
       "INSERT INTO personal_workspace_part (revision, part, content) VALUES (?, 0, ?)",
@@ -390,13 +354,12 @@ test("listProjects and listAccounts use sort/deleted indexes without TEMP B-TREE
   insertUser.run("u-deleted", "Deleted User", "deleted@example.com", 9000, 9000, "user", 0, 1);
 
   dbState.batch.mockImplementationOnce(async (statements) => {
-    assert.strictEqual(statements.length, 3);
+    assert.strictEqual(statements.length, 2);
     assert.ok(statements.every(isSelectStatement));
 
-    const [projectsStmt, attachmentsStmt, deletedStmt] = statements;
+    const [projectsStmt, attachmentsStmt] = statements;
     const projectsSql = projectsStmt.toSQL();
     const attachmentsSql = attachmentsStmt.toSQL();
-    const deletedSql = deletedStmt.toSQL();
     capturedProjectsQuery = { ...projectsSql, params: toSqliteParams(projectsSql.params) };
 
     const projectRows = sqlite
@@ -410,11 +373,7 @@ test("listProjects and listAccounts use sort/deleted indexes without TEMP B-TREE
     const attachmentRows = sqlite
       .prepare(attachmentsSql.sql)
       .all(...toSqliteParams(attachmentsSql.params));
-    const deletedRows = sqlite
-      .prepare(deletedSql.sql)
-      .all(...toSqliteParams(deletedSql.params))
-      .map((row) => ({ id: String(row.id) }));
-    return [projectRows, attachmentRows, deletedRows];
+    return [projectRows, attachmentRows];
   });
 
   dbState.select.mockImplementationOnce(async (statement) => {
@@ -434,7 +393,7 @@ test("listProjects and listAccounts use sort/deleted indexes without TEMP B-TREE
   });
 
   try {
-    const catalog = await listProjects("en");
+    const catalog = await listProjects();
     assert.ok(capturedProjectsQuery);
     const projectsPlan = sqlite
       .prepare(`EXPLAIN QUERY PLAN ${capturedProjectsQuery.sql}`)
@@ -454,10 +413,8 @@ test("listProjects and listAccounts use sort/deleted indexes without TEMP B-TREE
     assert.deepEqual(
       catalog.map((item) => ({ id: item.id, index: item.index })),
       [
-        { id: "project-fullstack-web", index: 1 },
-        { id: "project-ai-rag-agent", index: 2 },
-        { id: "proj-3", index: 3 },
-        { id: "proj-4", index: 4 },
+        { id: "proj-3", index: 1 },
+        { id: "proj-4", index: 2 },
       ],
     );
 
@@ -480,195 +437,6 @@ test("listProjects and listAccounts use sort/deleted indexes without TEMP B-TREE
       accounts.map((account) => account.id),
       ["u-2", "u-3", "u-1"],
     );
-  } finally {
-    sqlite.close();
-  }
-});
-
-test("reordered unedited built-in templates retain dynamic localization per locale", async () => {
-  const sqlite = createMigratedDb();
-  const insertProject = sqlite.prepare(
-    "INSERT INTO course_project (id, project_index, data, created_by, created_at, deleted) VALUES (?, ?, ?, ?, ?, ?)",
-  );
-  insertProject.run(
-    "project-ai-rag-agent",
-    1,
-    JSON.stringify({ id: "project-ai-rag-agent", customized: false }),
-    "admin-1",
-    1000,
-    0,
-  );
-  insertProject.run(
-    "project-fullstack-web",
-    2,
-    JSON.stringify({ id: "project-fullstack-web", customized: false }),
-    "admin-1",
-    2000,
-    0,
-  );
-  insertProject.run(
-    "deleted-gap",
-    0,
-    JSON.stringify({
-      id: "deleted-gap",
-      title: "Deleted",
-      dueDate: "",
-      points: 100,
-      content: "",
-    }),
-    "admin-1",
-    3000,
-    1,
-  );
-
-  dbState.batch.mockImplementation(async (statements) => {
-    const [projectsStmt, attachmentsStmt, deletedStmt] = statements as SelectStatement[];
-    return [
-      sqlite
-        .prepare(projectsStmt.toSQL().sql)
-        .all(...toSqliteParams(projectsStmt.toSQL().params))
-        .map((row) => ({
-          id: String(row.id),
-          index: Number(row.project_index),
-          data: JSON.parse(String(row.data)) as StoredProjectData,
-        })),
-      sqlite
-        .prepare(attachmentsStmt.toSQL().sql)
-        .all(...toSqliteParams(attachmentsStmt.toSQL().params)),
-      sqlite
-        .prepare(deletedStmt.toSQL().sql)
-        .all(...toSqliteParams(deletedStmt.toSQL().params))
-        .map((row) => ({ id: String(row.id) })),
-    ];
-  });
-
-  try {
-    const enCatalog = await listProjects("en");
-    const zhCatalog = await listProjects("zh-TW");
-    assert.deepEqual(
-      enCatalog.map((item) => ({ id: item.id, index: item.index })),
-      [
-        { id: "project-ai-rag-agent", index: 1 },
-        { id: "project-fullstack-web", index: 2 },
-      ],
-    );
-    assert.deepEqual(
-      zhCatalog.map((item) => ({ id: item.id, index: item.index })),
-      [
-        { id: "project-ai-rag-agent", index: 1 },
-        { id: "project-fullstack-web", index: 2 },
-      ],
-    );
-    assert.notStrictEqual(enCatalog[0].title, zhCatalog[0].title);
-    assert.notStrictEqual(enCatalog[1].title, zhCatalog[1].title);
-  } finally {
-    sqlite.close();
-  }
-});
-
-test("remove_project_tags migration strips $.tags from stored project JSON and listProjects omits residual tags", async () => {
-  const sqlite = createMigratedDb("20261124154543_silly_emma_frost");
-  const insertProject = sqlite.prepare(
-    "INSERT INTO course_project (id, project_index, data, created_by, created_at, deleted) VALUES (?, ?, ?, ?, ?, ?)",
-  );
-  insertProject.run(
-    "proj-active-tags",
-    3,
-    JSON.stringify({
-      id: "proj-active-tags",
-      title: "Active With Tags",
-      dueDate: "2026-12-31 23:59",
-      points: 100,
-      tags: ["Architecture", "C4"],
-      content: "# Assignment",
-    }),
-    "admin-1",
-    1000,
-    0,
-  );
-  insertProject.run(
-    "proj-deleted-tags",
-    0,
-    JSON.stringify({
-      id: "proj-deleted-tags",
-      title: "Deleted With Tags",
-      dueDate: "",
-      points: 50,
-      tags: ["Legacy"],
-      content: "# Deleted",
-    }),
-    "admin-1",
-    2000,
-    1,
-  );
-  insertProject.run(
-    "project-fullstack-web",
-    1,
-    JSON.stringify({ id: "project-fullstack-web", customized: false }),
-    "admin-1",
-    3000,
-    0,
-  );
-
-  const migrationSql = readFileSync(
-    path.resolve("db/migrations/20261125023500_remove_project_tags.sql"),
-    "utf8",
-  );
-  for (const statement of migrationSql.split("--> statement-breakpoint")) {
-    const trimmed = statement.trim();
-    if (trimmed) sqlite.exec(trimmed);
-  }
-
-  try {
-    const rows = sqlite.prepare("SELECT id, data FROM course_project ORDER BY id").all() as Array<{
-      id: string;
-      data: string;
-    }>;
-    const byId = new Map(
-      rows.map((row) => [row.id, JSON.parse(row.data) as Record<string, unknown>]),
-    );
-
-    assert.deepEqual(byId.get("proj-active-tags"), {
-      id: "proj-active-tags",
-      title: "Active With Tags",
-      dueDate: "2026-12-31 23:59",
-      points: 100,
-      content: "# Assignment",
-    });
-    assert.deepEqual(byId.get("proj-deleted-tags"), {
-      id: "proj-deleted-tags",
-      title: "Deleted With Tags",
-      dueDate: "",
-      points: 50,
-      content: "# Deleted",
-    });
-    assert.deepEqual(byId.get("project-fullstack-web"), {
-      id: "project-fullstack-web",
-      customized: false,
-    });
-
-    dbState.batch.mockImplementationOnce(async () => [
-      [
-        {
-          id: "proj-legacy-residual",
-          index: 3,
-          data: {
-            id: "proj-legacy-residual",
-            title: "Residual Tags",
-            dueDate: "",
-            points: 100,
-            tags: ["ShouldBeStripped"],
-            content: "# Legacy",
-          } as unknown as StoredProjectData,
-        },
-      ],
-      [],
-      [],
-    ]);
-    const catalog = await listProjects("en");
-    const legacy = catalog.find((item) => item.id === "proj-legacy-residual");
-    assert.ok(legacy);
-    assert.strictEqual("tags" in legacy, false);
   } finally {
     sqlite.close();
   }

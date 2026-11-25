@@ -1,12 +1,10 @@
 import { useProjectCatalog } from "@modules/catalog";
-import { useI18n } from "@modules/i18n";
 import type { Project } from "@modules/projects";
 import { useEffect, useState } from "react";
 
 const REORDER_SAVED_DURATION_MS = 3500;
 
 export function useProjectList(initialReorderSaved = false) {
-  const { locale } = useI18n();
   const { projects, removeProject, replaceProjects } = useProjectCatalog();
   const [editing, setEditing] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState<Project | null>(null);
@@ -64,7 +62,7 @@ export function useProjectList(initialReorderSaved = false) {
     setSaved(null);
     clearReorderSaved();
     try {
-      const response = await fetch(`/api/projects?locale=${encodeURIComponent(locale)}`, {
+      const response = await fetch("/api/projects", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderedIds }),

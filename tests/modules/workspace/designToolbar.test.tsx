@@ -1,5 +1,4 @@
 import { I18nProvider } from "@modules/i18n";
-import { getLocalizedProjects } from "@modules/projects";
 import { RepositoryConnection } from "@modules/repository";
 import { ThemeProvider } from "@modules/theme";
 import { PersonalProject, ProjectWorkspace, StudentWorkspaceList } from "@modules/workspace";
@@ -12,10 +11,11 @@ import {
 } from "@/modules/workspace/model/studentList";
 import { AssignmentPanel } from "@/modules/workspace/ui/AssignmentPanel";
 
+import { sampleProjects } from "../../fixtures/projects";
 import { createRepoFixture } from "../../fixtures/repository";
 
-const enProject = getLocalizedProjects("en").projects[0];
-const zhProject = getLocalizedProjects("zh-TW").projects[0];
+const enProject = sampleProjects[0];
+const zhProject = sampleProjects[0];
 const emptySnapshot = { accountId: "student", draft: null, revision: null, updatedAt: null };
 
 test("Repo tab renders the URL and sync button in the workspace header card when unconfigured", () => {

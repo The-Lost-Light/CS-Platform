@@ -1,7 +1,7 @@
 import { EditAccountDialog } from "@modules/accounts";
 import { HomeDashboard } from "@modules/catalog";
 import { I18nProvider } from "@modules/i18n";
-import { PROJECTS, type Project } from "@modules/projects";
+import { type Project } from "@modules/projects";
 import { SettingsProvider } from "@modules/settings";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -13,6 +13,7 @@ import { CreateProject } from "@/modules/admin/ui/CreateProject";
 import { ProjectList } from "@/modules/admin/ui/ProjectList";
 
 import AdminPage from "../../../pages/admin";
+import { sampleProjects } from "../../fixtures/projects";
 
 const catalogMock = vi.hoisted(() => ({
   projects: [] as Project[],
@@ -104,7 +105,7 @@ test("project creation opens in a cancellable dialog and constrains inputs", () 
 });
 
 test("project editor prepopulates the selected project and preserves its identifier", () => {
-  const project = { ...PROJECTS[0], title: "Editable example" };
+  const project = { ...sampleProjects[0], title: "Editable example" };
   const html = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <CreateProject project={project} onCancel={() => {}} onSaved={() => {}} />
@@ -122,8 +123,8 @@ test("project editor prepopulates the selected project and preserves its identif
 });
 test("ProjectList renders the Index header, drag handles, and sequential index badges", () => {
   catalogMock.projects = [
-    { ...PROJECTS[0], index: 1, title: "Zeta Project" },
-    { ...PROJECTS[1], index: 2, title: "Alpha Project" },
+    { ...sampleProjects[0], index: 1, title: "Zeta Project" },
+    { ...sampleProjects[1], index: 2, title: "Alpha Project" },
   ];
   try {
     const html = renderToStaticMarkup(
@@ -139,7 +140,7 @@ test("ProjectList renders the Index header, drag handles, and sequential index b
     assert.ok(html.includes('title="Drag to reorder projects"'));
     assert.ok(html.indexOf("Zeta Project") < html.indexOf("Alpha Project"));
 
-    catalogMock.projects = [{ ...PROJECTS[0], index: 1, title: "Single Project" }];
+    catalogMock.projects = [{ ...sampleProjects[0], index: 1, title: "Single Project" }];
     const singleHtml = renderToStaticMarkup(
       <I18nProvider initialLanguage="en">
         <ProjectList ref={null} />
@@ -267,7 +268,7 @@ test("account editor has a password action in the header and role controls for a
 });
 
 test("only administrators see the Student projects entry for each project on HomeDashboard", () => {
-  const project = PROJECTS[0];
+  const project = sampleProjects[0];
   for (const role of ["admin", "user"]) {
     const html = renderToStaticMarkup(
       <I18nProvider initialLanguage="en">

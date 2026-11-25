@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 import type { SettingsSection } from "../model/settings";
 
@@ -31,19 +31,6 @@ export function SettingsProvider({
   const [expandedSection, setExpandedSection] = useState<SettingsSection | null>(
     initialExpandedSection,
   );
-  useEffect(() => {
-    // Remove credentials saved by earlier versions without reading their values.
-    try {
-      const storage = window.localStorage;
-      for (let i = storage.length - 1; i >= 0; i--) {
-        const key = storage.key(i);
-        if (key && (key.endsWith(".githubToken") || key.includes(".githubToken.")))
-          storage.removeItem(key);
-      }
-    } catch {
-      // Browsers can disable local storage.
-    }
-  }, []);
 
   function openSettings() {
     setIsOpen(true);

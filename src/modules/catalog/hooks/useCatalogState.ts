@@ -1,8 +1,7 @@
-import type { Locale } from "@modules/i18n";
 import type { Project, ProjectWorkspaceStatus } from "@modules/projects";
 import { useCallback, useEffect, useState } from "react";
 
-export function useCatalogState(locale: Locale) {
+export function useCatalogState() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [workspaceStatuses, setWorkspaceStatuses] = useState<
     Record<string, ProjectWorkspaceStatus>
@@ -13,7 +12,7 @@ export function useCatalogState(locale: Locale) {
     const controller = new AbortController();
     async function load() {
       try {
-        const response = await fetch("/api/projects?locale=" + locale, {
+        const response = await fetch("/api/projects", {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -33,7 +32,7 @@ export function useCatalogState(locale: Locale) {
     }
     void load();
     return () => controller.abort();
-  }, [attempt, locale]);
+  }, [attempt]);
 
   const removeProject = useCallback((id: string) => {
     setProjects((current) =>

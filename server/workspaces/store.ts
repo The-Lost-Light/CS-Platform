@@ -14,10 +14,6 @@ import { userTable } from "../../.void/better-auth-schema";
 const workspaceKey = (userId: string, projectId: string) =>
   and(eq(workspaces.userId, userId), eq(workspaces.projectId, projectId));
 
-function normalizeUpdatedAt(value: number | null | undefined): number | null {
-  return typeof value === "number" && value > 0 ? value : null;
-}
-
 export async function loadWorkspace(
   userId: string,
   projectId: string,
@@ -50,7 +46,7 @@ export async function loadWorkspace(
   return {
     accountId: userId,
     revision: rows[0]?.revision ?? null,
-    updatedAt: rows[0] ? normalizeUpdatedAt(rows[0].updatedAt) : null,
+    updatedAt: rows[0]?.updatedAt ?? null,
     draft,
   };
 }
@@ -83,7 +79,7 @@ export async function listStudentWorkspaces(
     name: row.name,
     email: row.email,
     hasWorkspace: Boolean(row.revision),
-    updatedAt: row.revision ? normalizeUpdatedAt(row.updatedAt) : null,
+    updatedAt: row.revision ? row.updatedAt : null,
   }));
 }
 

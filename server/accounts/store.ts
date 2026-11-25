@@ -6,7 +6,7 @@ import {
   type AccountRole,
 } from "@shared/accountPolicy";
 import { isRecord } from "@shared/isRecord";
-import { isValidPasswordLength, MAX_CURRENT_PASSWORD_LENGTH } from "@shared/passwordPolicy";
+import { isValidPasswordLength } from "@shared/passwordPolicy";
 import { db, desc, eq, and, exists, sql } from "void/db";
 
 import { userTable, sessionTable, accountTable } from "../../.void/better-auth-schema";
@@ -141,12 +141,7 @@ export async function changeAccountPassword(
     targetAccount.scope === "admin" && id !== targetAccount.actorId && target.role !== "admin";
   const requiresCurrentPassword = !isAdminResettingStudent;
   if (requiresCurrentPassword) {
-    if (
-      typeof currentPassword !== "string" ||
-      !currentPassword ||
-      currentPassword.length > MAX_CURRENT_PASSWORD_LENGTH
-    )
-      return "invalidCurrentPassword";
+    if (!isValidPasswordLength(currentPassword)) return "invalidCurrentPassword";
     if (
       !target.credentialId ||
       !target.hash ||

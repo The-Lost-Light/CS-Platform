@@ -32,11 +32,10 @@ test("deadline state helpers classify open, dueSoon, overdue, and empty deadline
   assert.strictEqual(isProjectOverdue(dueDate, dueMs + 1), true);
 });
 
-test("isWorkspaceLate and Taipei formatters handle null, legacy 0, and valid timestamps", () => {
+test("isWorkspaceLate and Taipei formatters handle null and valid timestamps", () => {
   const dueDate = "2026-11-25 23:59";
   const dueMs = Date.parse("2026-11-25T23:59:00+08:00");
   assert.strictEqual(isWorkspaceLate(dueDate, null), false);
-  assert.strictEqual(isWorkspaceLate(dueDate, 0), false);
   assert.strictEqual(isWorkspaceLate(dueDate, dueMs), false);
   assert.strictEqual(isWorkspaceLate(dueDate, dueMs + 1), true);
   assert.strictEqual(isWorkspaceLate("", dueMs + 1), false);

@@ -9,8 +9,9 @@ import { hashPassword } from "better-auth/crypto";
 const base = "http://127.0.0.1:" + (Number(process.env.WORKSPACE_TEST_PORT) || 5173);
 const accounts = Array.from({ length: 2 }, () => {
   const id = randomUUID();
-  return { id, email: id + "@example.test", password: randomUUID() };
+  return { id, email: id + "@example.test", password: randomUUID().slice(0, 16) };
 });
+const testProjectIds = [randomUUID(), randomUUID()];
 const sqlFile = ".void/test-workspace-" + randomUUID() + ".sql";
 function executeLocal(sql) {
   writeFileSync(sqlFile, sql, { mode: 0o600 });
@@ -51,19 +52,26 @@ for (const { id, email, password } of accounts) {
     `INSERT INTO account (id,accountId,providerId,userId,password,createdAt,updatedAt) VALUES ('${randomUUID()}','${id}','credential','${id}','${hash}',${timestamp},${timestamp});`,
   );
 }
+for (const [offset, projectId] of testProjectIds.entries()) {
+  const data = JSON.stringify({
+    id: projectId,
+    title: `Workspace test project ${offset + 1}`,
+    dueDate: "",
+    points: 100,
+    content: "# Test",
+  }).replace(/'/g, "''");
+  setup.push(
+    `INSERT INTO course_project (id,project_index,data,created_by,created_at,deleted) VALUES ('${projectId}',(SELECT COALESCE(MAX(project_index),0)+1 FROM course_project WHERE deleted=0),'${data}','${accounts[0].id}',${timestamp},0);`,
+  );
+}
 try {
   executeLocal(setup.join("\n"));
   const [first, second] = accounts;
   const firstCookie = await login(first);
   const secondCookie = await login(second);
   assert.equal((await read("/api/session", firstCookie)).user.id, first.id);
-  const { projects } = await read("/api/projects", firstCookie);
-  const openProjects = projects.filter(
-    (p) => !p.dueDate || Date.parse(p.dueDate.replace(" ", "T") + ":00+08:00") > Date.now(),
-  );
-  assert.ok(openProjects.length >= 2, "Two open local course projects are required");
-  const [path, otherProject] = openProjects.map(
-    (p) => "/api/projects/" + encodeURIComponent(p.id) + "/workspace",
+  const [path, otherProject] = testProjectIds.map(
+    (id) => "/api/projects/" + encodeURIComponent(id) + "/workspace",
   );
   assert.deepEqual(await read(path, firstCookie), {
     accountId: first.id,
@@ -160,5 +168,7 @@ try {
     "Passed account and project isolation, multi-part Unicode C4 model, empty drafts, login restore, and simultaneous saves.",
   );
 } finally {
-  executeLocal(`DELETE FROM user WHERE id IN ('${accounts[0].id}', '${accounts[1].id}');`);
+  executeLocal(
+    `DELETE FROM course_project WHERE id IN ('${testProjectIds[0]}', '${testProjectIds[1]}');\nDELETE FROM user WHERE id IN ('${accounts[0].id}', '${accounts[1].id}');`,
+  );
 }

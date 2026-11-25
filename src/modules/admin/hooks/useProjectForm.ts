@@ -1,10 +1,8 @@
 import { useProjectCatalog } from "@modules/catalog";
-import { useI18n } from "@modules/i18n";
 import { attachmentsWithinLimit, type Project, type ProjectAttachment } from "@modules/projects";
 import { useState, type FormEvent } from "react";
 
 export function useProjectForm(original: Project | undefined, onSaved: (project: Project) => void) {
-  const { locale } = useI18n();
   const { addProject } = useProjectCatalog();
   const [attachments, setAttachments] = useState<(ProjectAttachment | File)[]>(
     original?.attachments ?? [],
@@ -33,13 +31,10 @@ export function useProjectForm(original: Project | undefined, onSaved: (project:
     setPending(true);
     setError(null);
     try {
-      const response = await fetch(
-        original ? `/api/projects/${original.id}?locale=${locale}` : "/api/projects",
-        {
-          method: original ? "PATCH" : "POST",
-          body: data,
-        },
-      );
+      const response = await fetch(original ? `/api/projects/${original.id}` : "/api/projects", {
+        method: original ? "PATCH" : "POST",
+        body: data,
+      });
       if (!response.ok) {
         setError(response.status === 400 ? "invalid" : "failed");
         return;

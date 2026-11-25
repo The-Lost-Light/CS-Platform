@@ -1,16 +1,13 @@
-import coursesEn from "./en/courses";
 import runtimeEn from "./en/runtime";
 import uiEn from "./en/ui";
-import coursesZh from "./zh-TW/courses";
 import runtimeZh from "./zh-TW/runtime";
 import uiZh from "./zh-TW/ui";
 
-export const englishMessages = { ...uiEn, ...coursesEn, ...runtimeEn };
+export const englishMessages = { ...uiEn, ...runtimeEn };
 export type MessageKey = keyof typeof englishMessages;
 type Messages = Record<MessageKey, string>;
 export const traditionalChineseMessages = {
   ...uiZh,
-  ...coursesZh,
   ...runtimeZh,
 } satisfies Messages;
 

@@ -1,11 +1,11 @@
 import { Buffer } from "node:buffer";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { DatabaseSync, type SQLInputValue } from "node:sqlite";
+import type { SQLInputValue } from "node:sqlite";
 
 import { projectAttachmentParts, projectAttachments, type StoredProjectData } from "@db/schema";
 import { downloadProjectAttachment, listProjects, saveProject } from "@server/projects";
 import { assert, beforeEach, test, vi } from "vite-plus/test";
+
+import { createMigratedDb } from "./fixtures/migratedDb";
 
 type SqlQuery = { sql: string; params: SQLInputValue[] };
 type SelectStatement = { toSQL: () => SqlQuery };
@@ -70,7 +70,12 @@ vi.mock("void/db", async (importOriginal) => {
       }),
       update: (table: unknown) => ({
         set: (value: Record<string, unknown>) => ({
-          where: () => ({ kind: "update" as const, table, value }),
+          where: () => ({
+            kind: "update" as const,
+            table,
+            value,
+            returning: () => ({ kind: "write" as const, table, value }),
+          }),
         }),
       }),
       batch: (statements: unknown[]) => dbState.batch(statements),
@@ -92,49 +97,7 @@ function isSelectStatement(statement: unknown): statement is SelectStatement {
   );
 }
 
-function readJournalTags() {
-  const journalPath = path.resolve("db/migrations/meta/_journal.json");
-  const journal = JSON.parse(readFileSync(journalPath, "utf8")) as {
-    entries: Array<{ tag: string }>;
-  };
-  return journal.entries.map((entry) => entry.tag);
-}
-
-function applyMigrationTag(sqlite: DatabaseSync, tag: string) {
-  const sqlText = readFileSync(path.resolve("db/migrations", `${tag}.sql`), "utf8");
-  for (const statement of sqlText.split("--> statement-breakpoint")) {
-    const trimmed = statement.trim();
-    if (trimmed) sqlite.exec(trimmed);
-  }
-}
-
-function seedLegacyProjects(sqlite: DatabaseSync) {
-  const insertProject = sqlite.prepare(
-    "INSERT INTO course_project (id, code_name, data, created_by, created_at) VALUES (?, ?, ?, ?, ?)",
-  );
-  const baseProject = {
-    dueDate: "2026-12-31 23:59",
-    points: 100,
-    tags: ["Architecture"],
-    content: "# Assignment",
-  };
-  insertProject.run(
-    "proj-a",
-    "CUSTOM-A",
-    JSON.stringify({ id: "proj-a", codeName: "CUSTOM-A", title: "Project A", ...baseProject }),
-    "admin-1",
-    2000,
-  );
-  insertProject.run(
-    "proj-b",
-    "CUSTOM-B",
-    JSON.stringify({ id: "proj-b", codeName: "CUSTOM-B", title: "Project B", ...baseProject }),
-    "admin-1",
-    1000,
-  );
-}
-
-function seedProjects(sqlite: DatabaseSync) {
+function seedProjects(sqlite: ReturnType<typeof createMigratedDb>) {
   const insertProject = sqlite.prepare(
     "INSERT INTO course_project (id, project_index, data, created_by, created_at, deleted) VALUES (?, ?, ?, ?, ?, ?)",
   );
@@ -185,10 +148,8 @@ function seedProjects(sqlite: DatabaseSync) {
   );
 }
 
-function createMigratedDb() {
-  const sqlite = new DatabaseSync(":memory:");
-  sqlite.exec("PRAGMA foreign_keys = ON;");
-  for (const tag of readJournalTags()) applyMigrationTag(sqlite, tag);
+function createSeededDb() {
+  const sqlite = createMigratedDb();
   seedProjects(sqlite);
 
   const insertAttachment = sqlite.prepare(
@@ -231,77 +192,24 @@ beforeEach(() => {
   dbState.get.mockResolvedValue({ 1: 1 });
 });
 
-test("table-split migration preserves existing metadata and chunks while enforcing cascade deletes", () => {
-  const tags = readJournalTags();
-  const splitTag = "20261124080327_gifted_major_mapleleaf";
-  const splitIndex = tags.indexOf(splitTag);
-  assert.ok(splitIndex >= 0, `Missing expected migration tag ${splitTag}`);
-
-  const sqlite = new DatabaseSync(":memory:");
-  sqlite.exec("PRAGMA foreign_keys = ON;");
+test("project attachment tables enforce cascade deletes for attachment and project removal", () => {
+  const sqlite = createSeededDb();
   try {
-    for (const tag of tags.slice(0, splitIndex)) applyMigrationTag(sqlite, tag);
-    seedLegacyProjects(sqlite);
-
-    const insertLegacyPart = sqlite.prepare(
-      "INSERT INTO project_attachment_part (project_id, attachment_id, part, name, size, content) VALUES (?, ?, ?, ?, ?, ?)",
-    );
-    insertLegacyPart.run("proj-a", "att-multi", 0, "big.bin", 400000, "AAAA");
-    insertLegacyPart.run("proj-a", "att-multi", 1, "big.bin", 400000, "BBBB");
-    insertLegacyPart.run("proj-a", "att-empty", 0, "empty.txt", 0, "");
-    insertLegacyPart.run("proj-b", "att-other", 0, "doc.pdf", 500, "CCCC");
-
-    sqlite.exec("BEGIN");
-    applyMigrationTag(sqlite, splitTag);
-    sqlite.exec("COMMIT");
-
-    assert.deepEqual(sqlite.prepare("PRAGMA foreign_key_check").all(), []);
-
     const partColumns = (
       sqlite.prepare("PRAGMA table_info(project_attachment_part)").all() as Array<{ name: string }>
     ).map((column) => column.name);
     assert.deepEqual(partColumns, ["project_id", "attachment_id", "part", "content"]);
 
-    const attachments = sqlite
-      .prepare(
-        "SELECT project_id, attachment_id, name, size FROM project_attachment ORDER BY project_id, attachment_id",
-      )
-      .all();
-    assert.deepEqual(
-      attachments.map((row) => ({ ...row })),
-      [
-        { project_id: "proj-a", attachment_id: "att-empty", name: "empty.txt", size: 0 },
-        { project_id: "proj-a", attachment_id: "att-multi", name: "big.bin", size: 400000 },
-        { project_id: "proj-b", attachment_id: "att-other", name: "doc.pdf", size: 500 },
-      ],
-    );
-
-    const parts = sqlite
-      .prepare(
-        "SELECT project_id, attachment_id, part, content FROM project_attachment_part ORDER BY project_id, attachment_id, part",
-      )
-      .all();
-    assert.deepEqual(
-      parts.map((row) => ({ ...row })),
-      [
-        { project_id: "proj-a", attachment_id: "att-empty", part: 0, content: "" },
-        { project_id: "proj-a", attachment_id: "att-multi", part: 0, content: "AAAA" },
-        { project_id: "proj-a", attachment_id: "att-multi", part: 1, content: "BBBB" },
-        { project_id: "proj-b", attachment_id: "att-other", part: 0, content: "CCCC" },
-      ],
-    );
-
     sqlite
       .prepare("DELETE FROM project_attachment WHERE project_id = ? AND attachment_id = ?")
-      .run("proj-a", "att-multi");
+      .run("proj-a", "att-b");
     assert.deepEqual(
       sqlite
         .prepare(
-          "SELECT attachment_id, part FROM project_attachment_part WHERE project_id = 'proj-a'",
+          "SELECT attachment_id, part FROM project_attachment_part WHERE project_id = 'proj-a' AND attachment_id = 'att-b'",
         )
-        .all()
-        .map((row) => ({ ...row })),
-      [{ attachment_id: "att-empty", part: 0 }],
+        .all(),
+      [],
     );
 
     sqlite.prepare("DELETE FROM course_project WHERE id = ?").run("proj-b");
@@ -319,17 +227,16 @@ test("table-split migration preserves existing metadata and chunks while enforci
 });
 
 test("listProjects reads attachment metadata via the covering index on project_attachment", async () => {
-  const sqlite = createMigratedDb();
+  const sqlite = createSeededDb();
   let capturedAttachmentQuery: SqlQuery | undefined;
 
   dbState.batch.mockImplementationOnce(async (statements) => {
-    assert.strictEqual(statements.length, 3);
+    assert.strictEqual(statements.length, 2);
     assert.ok(statements.every(isSelectStatement));
 
-    const [projectsStmt, attachmentsStmt, deletedStmt] = statements;
+    const [projectsStmt, attachmentsStmt] = statements;
     const projectsSql = projectsStmt.toSQL();
     const attachmentsSql = attachmentsStmt.toSQL();
-    const deletedSql = deletedStmt.toSQL();
     capturedAttachmentQuery = {
       ...attachmentsSql,
       params: toSqliteParams(attachmentsSql.params),
@@ -354,15 +261,11 @@ test("listProjects reads attachment metadata via the covering index on project_a
         size: Number(row.size),
       }));
 
-    const deletedRows = sqlite
-      .prepare(deletedSql.sql)
-      .all(...toSqliteParams(deletedSql.params))
-      .map((row) => ({ id: String(row.id) }));
-    return [projectRows, attachmentRows, deletedRows];
+    return [projectRows, attachmentRows];
   });
 
   try {
-    const catalog = await listProjects("en");
+    const catalog = await listProjects();
 
     assert.ok(capturedAttachmentQuery);
     assert.deepEqual(capturedAttachmentQuery.params, [0]);
@@ -407,7 +310,7 @@ test("listProjects reads attachment metadata via the covering index on project_a
 });
 
 test("saveProject soft-deletes omitted attachments, writes chunks separately, and reads back via covering index seek", async () => {
-  const sqlite = createMigratedDb();
+  const sqlite = createSeededDb();
   let capturedStatements: unknown[] = [];
   let capturedMetadataQuery: SqlQuery | undefined;
 
@@ -537,7 +440,7 @@ test("saveProject soft-deletes omitted attachments, writes chunks separately, an
 });
 
 test("downloadProjectAttachment uses PK left join and hides soft-deleted attachments and projects", async () => {
-  const sqlite = createMigratedDb();
+  const sqlite = createSeededDb();
   const capturedPlans: PlanRow[][] = [];
 
   dbState.select.mockImplementation(async (statement) => {

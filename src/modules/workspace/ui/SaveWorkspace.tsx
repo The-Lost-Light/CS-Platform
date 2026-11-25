@@ -37,7 +37,7 @@ export function SaveWorkspace({
   const neutral = status === "draft.empty" || status === "draft.unsaved";
   const isError = !saved && !saving && !neutral;
   const message =
-    saved && typeof updatedAt === "number" && updatedAt > 0
+    saved && updatedAt != null
       ? t("draft.savedAt", { time: formatTaipeiDateTime(updatedAt) })
       : t(status);
 

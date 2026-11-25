@@ -31,7 +31,7 @@ export function getDeadlineState(dueDate: string, now = Date.now()): DeadlineSta
 }
 
 export function isWorkspaceLate(dueDate: string, updatedAt: number | null | undefined): boolean {
-  if (typeof updatedAt !== "number" || updatedAt <= 0) return false;
+  if (updatedAt == null) return false;
   const due = parseProjectDueDate(dueDate);
   return due !== null && updatedAt > due;
 }

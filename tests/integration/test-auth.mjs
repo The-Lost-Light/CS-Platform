@@ -15,7 +15,7 @@ async function request(path, body, cookie = "", method = body ? "POST" : "GET", 
   });
 }
 const credentials = { email, password };
-assert.equal((await request("/projects/project-fullstack-web")).status, 302);
+assert.equal((await request("/projects/any-project-id")).status, 302);
 assert.equal((await request("/api/session")).status, 200);
 assert.ok(!(await (await request("/api/session")).json()).user);
 assert.ok(!(await request("/api/auth/sign-up/email", { ...credentials, name: "Test" })).ok);
@@ -75,7 +75,6 @@ const studentCookie = studentLogin.headers
   .getSetCookie()
   .map((c) => c.split(";")[0])
   .join("; ");
-assert.equal((await request("/projects/project-fullstack-web", null, studentCookie)).status, 200);
 assert.equal((await request("/projects/missing", null, studentCookie)).status, 404);
 assert.equal((await request("/admin", null, studentCookie)).status, 403);
 assert.ok(
@@ -138,9 +137,17 @@ const createdProjectResponse = await fetch(base + "/api/projects", {
 });
 assert.equal(createdProjectResponse.status, 201, await createdProjectResponse.clone().text());
 const { project } = await createdProjectResponse.json();
-writeFileSync(".void/crud-project-ids.json", JSON.stringify([project.id]));
+const secondProjectResponse = await request(
+  "/api/projects",
+  { ...projectInput, title: "Second integration project" },
+  adminCookie,
+);
+assert.equal(secondProjectResponse.status, 201, await secondProjectResponse.clone().text());
+const { project: secondProject } = await secondProjectResponse.json();
+writeFileSync(".void/crud-project-ids.json", JSON.stringify([project.id, secondProject.id]));
 assert.equal(project.title, projectInput.title);
-assert.ok(Number.isInteger(project.index) && project.index >= 3);
+assert.ok(Number.isInteger(project.index) && project.index >= 1);
+assert.equal((await request("/projects/" + secondProject.id, null, studentCookie)).status, 200);
 assert.equal(project.attachments.length, 1);
 const attachmentPath = "/api/projects/" + project.id + "/attachments/" + project.attachments[0].id;
 assert.equal((await request(attachmentPath)).status, 401);
@@ -210,9 +217,6 @@ assert.deepEqual(
   reorderedEn.projects.map((item) => item.id),
   movedFirstOrder,
 );
-const builtInEn = reorderedEn.projects.find((item) => item.id === "project-fullstack-web");
-const builtInZh = reorderedZh.projects.find((item) => item.id === "project-fullstack-web");
-assert.ok(builtInEn && builtInZh && builtInEn.title !== builtInZh.title);
 assert.equal(
   (await request("/api/projects", { orderedIds: initialOrderIds }, adminCookie, "PUT")).status,
   200,
@@ -286,12 +290,12 @@ console.log(
 );
 assert.equal((await request("/api/auth/sign-out", {}, studentCookie)).status, 200);
 assert.equal((await (await request("/api/session", null, studentCookie)).json()).user, null);
-assert.equal((await request("/projects/project-fullstack-web", null, studentCookie)).status, 302);
+assert.equal((await request("/projects/" + secondProject.id, null, studentCookie)).status, 302);
 console.log(
   "Passed: sign-up disabled, incorrect password, session restore, HttpOnly cookie, protected projects, admin create, student access, privilege escalation denied, cross-origin denied, logout revocation.",
 );
 
-// Management CRUD, with no mutations to pre-existing accounts or built-in projects.
+// Management CRUD, with no mutations to pre-existing accounts or projects.
 const accountList = await request("/api/admin/accounts", null, adminCookie);
 assert.equal(accountList.status, 200);
 const accountData = await accountList.json();
@@ -474,11 +478,14 @@ assert.equal(projectUpdate.status, 200, await projectUpdate.clone().text());
 const updated = (await projectUpdate.json()).project;
 assert.equal(updated.content, editedProject.content);
 assert.deepEqual(updated.attachments, project.attachments);
-const updatedList = await (await request("/api/projects?locale=zh-TW", null, adminCookie)).json();
+const updatedList = await (await request("/api/projects", null, adminCookie)).json();
 assert.equal(updatedList.projects.find((item) => item.id === project.id).title, "Updated project");
-assert.ok(updatedList.projects.some((item) => item.id === "project-fullstack-web"));
 assert.equal(
   (await request("/api/projects/" + project.id, null, adminCookie, "DELETE")).status,
+  200,
+);
+assert.equal(
+  (await request("/api/projects/" + secondProject.id, null, adminCookie, "DELETE")).status,
   200,
 );
 assert.equal((await request("/projects/" + project.id, null, adminCookie)).status, 404);

@@ -6,7 +6,6 @@ const valid = {
   title: " New project ",
   dueDate: "2026-12-20T23:59",
   points: 100,
-  tags: "React, React, D1",
   content: "    indented Markdown\n",
 };
 test("project creation normalizes fields and preserves Markdown without accepting student data or supplied IDs", () => {
@@ -17,14 +16,15 @@ test("project creation normalizes fields and preserves Markdown without acceptin
     codeName: "FORGED",
     createdBy: "forged",
     summary: "ignored",
+    tags: "React, D1",
     initialDesignDoc: "answer",
     repoUrl: "private",
   });
   assert.ok(project);
   assert.strictEqual(project.title, "New project");
-  assert.deepEqual(project.tags, ["React", "D1"]);
   assert.strictEqual(project.content, valid.content);
   assert.strictEqual("summary" in project, false);
+  assert.strictEqual("tags" in project, false);
   assert.strictEqual("initialDesignDoc" in project, false);
   assert.strictEqual("repoUrl" in project, false);
   assert.strictEqual("id" in project, false);
@@ -51,11 +51,9 @@ test("optional project fields can remain empty", () => {
   const project = parseProjectInput({
     ...valid,
     dueDate: "",
-    tags: "",
     content: "",
   });
   assert.ok(project);
-  assert.deepEqual(project.tags, []);
   assert.strictEqual(project.content, "");
 });
 

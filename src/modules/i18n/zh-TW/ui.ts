@@ -59,7 +59,6 @@ export default {
   "admin.projects.dueDate": "截止時間（選填）",
   "admin.projects.timezone": "時間以台北時間（UTC+8）為準；留白表示不設定截止時間。",
   "admin.projects.points": "配分",
-  "admin.projects.tags": "標籤（以半形逗號分隔）",
   "admin.projects.content": "專案內容（Markdown）",
   "project.attachments": "附加文件",
   "admin.projects.attachmentLimit": "最多 {count} 個檔案，合計上限 {size} MiB。",

@@ -30,14 +30,6 @@ export function parseProjectInput(
     title: fields.title,
     dueDate: fields.dueDate.replace("T", " "),
     points: value.points,
-    tags: [
-      ...new Set(
-        fields.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean),
-      ),
-    ],
     content: fields.content,
   };
 }

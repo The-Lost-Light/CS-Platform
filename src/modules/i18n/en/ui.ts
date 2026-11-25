@@ -61,7 +61,6 @@ export default {
   "admin.projects.dueDate": "Due date (optional)",
   "admin.projects.timezone": "Taipei time (UTC+8); leave blank for no deadline.",
   "admin.projects.points": "Points",
-  "admin.projects.tags": "Tags (comma-separated)",
   "admin.projects.content": "Project content (Markdown)",
   "project.attachments": "Attachments",
   "admin.projects.attachmentLimit": "Up to {count} files, {size} MiB total.",

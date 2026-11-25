@@ -64,17 +64,7 @@ export function AssignmentPanel({ project, now }: { project: Project; now?: numb
         }
       />
 
-      <div className="px-5 sm:px-8 py-6 space-y-4">
-        {project.tags.length > 0 && (
-          <ul className="flex flex-wrap gap-2">
-            {project.tags.map((tag) => (
-              <Chip key={tag} as="li" variant="neutral" className="break-all">
-                {tag}
-              </Chip>
-            ))}
-          </ul>
-        )}
-
+      <div className="px-5 sm:px-8 py-6">
         {project.content.trim() ? (
           <article className="ui-markdown">
             <Markdown remarkPlugins={[remarkGfm]}>{project.content}</Markdown>

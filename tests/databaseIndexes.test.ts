@@ -354,7 +354,6 @@ test("listProjects and listAccounts use sort/deleted indexes without TEMP B-TREE
   const baseProject = {
     dueDate: "2026-12-31 23:59",
     points: 100,
-    tags: ["Architecture"],
     content: "# Assignment",
   };
   insertProject.run(
@@ -515,7 +514,6 @@ test("reordered unedited built-in templates retain dynamic localization per loca
       title: "Deleted",
       dueDate: "",
       points: 100,
-      tags: [],
       content: "",
     }),
     "admin-1",
@@ -563,6 +561,114 @@ test("reordered unedited built-in templates retain dynamic localization per loca
     );
     assert.notStrictEqual(enCatalog[0].title, zhCatalog[0].title);
     assert.notStrictEqual(enCatalog[1].title, zhCatalog[1].title);
+  } finally {
+    sqlite.close();
+  }
+});
+
+test("remove_project_tags migration strips $.tags from stored project JSON and listProjects omits residual tags", async () => {
+  const sqlite = createMigratedDb("20261124154543_silly_emma_frost");
+  const insertProject = sqlite.prepare(
+    "INSERT INTO course_project (id, project_index, data, created_by, created_at, deleted) VALUES (?, ?, ?, ?, ?, ?)",
+  );
+  insertProject.run(
+    "proj-active-tags",
+    3,
+    JSON.stringify({
+      id: "proj-active-tags",
+      title: "Active With Tags",
+      dueDate: "2026-12-31 23:59",
+      points: 100,
+      tags: ["Architecture", "C4"],
+      content: "# Assignment",
+    }),
+    "admin-1",
+    1000,
+    0,
+  );
+  insertProject.run(
+    "proj-deleted-tags",
+    0,
+    JSON.stringify({
+      id: "proj-deleted-tags",
+      title: "Deleted With Tags",
+      dueDate: "",
+      points: 50,
+      tags: ["Legacy"],
+      content: "# Deleted",
+    }),
+    "admin-1",
+    2000,
+    1,
+  );
+  insertProject.run(
+    "project-fullstack-web",
+    1,
+    JSON.stringify({ id: "project-fullstack-web", customized: false }),
+    "admin-1",
+    3000,
+    0,
+  );
+
+  const migrationSql = readFileSync(
+    path.resolve("db/migrations/20261125023500_remove_project_tags.sql"),
+    "utf8",
+  );
+  for (const statement of migrationSql.split("--> statement-breakpoint")) {
+    const trimmed = statement.trim();
+    if (trimmed) sqlite.exec(trimmed);
+  }
+
+  try {
+    const rows = sqlite.prepare("SELECT id, data FROM course_project ORDER BY id").all() as Array<{
+      id: string;
+      data: string;
+    }>;
+    const byId = new Map(
+      rows.map((row) => [row.id, JSON.parse(row.data) as Record<string, unknown>]),
+    );
+
+    assert.deepEqual(byId.get("proj-active-tags"), {
+      id: "proj-active-tags",
+      title: "Active With Tags",
+      dueDate: "2026-12-31 23:59",
+      points: 100,
+      content: "# Assignment",
+    });
+    assert.deepEqual(byId.get("proj-deleted-tags"), {
+      id: "proj-deleted-tags",
+      title: "Deleted With Tags",
+      dueDate: "",
+      points: 50,
+      content: "# Deleted",
+    });
+    assert.deepEqual(byId.get("project-fullstack-web"), {
+      id: "project-fullstack-web",
+      customized: false,
+    });
+
+    dbState.batch.mockImplementationOnce(async () => [
+      [
+        {
+          id: "proj-legacy-residual",
+          index: 3,
+          data: {
+            id: "proj-legacy-residual",
+            title: "Residual Tags",
+            dueDate: "",
+            points: 100,
+            tags: ["ShouldBeStripped"],
+            content: "# Legacy",
+          } as unknown as StoredProjectData,
+        },
+      ],
+      [],
+      [],
+    ]);
+    const catalog = await listProjects("en");
+    const legacy = catalog.find((item) => item.id === "proj-legacy-residual");
+    assert.ok(legacy);
+    assert.strictEqual("tags" in legacy, false);
   } finally {
     sqlite.close();
   }

@@ -115,7 +115,6 @@ const projectInput = {
   title: "Integration project",
   points: 100,
   dueDate: "2026-12-20T23:59",
-  tags: "React,D1",
   content: "# Test",
 };
 assert.equal((await request("/api/projects")).status, 401);

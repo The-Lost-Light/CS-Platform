@@ -99,7 +99,7 @@ test("project creation opens in a cancellable dialog and constrains inputs", () 
     html,
     /<input(?=[^>]*type="file")(?=[^>]*multiple)(?=[^>]*name="attachments")[^>]*>/,
   );
-  assert.notMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc|summary)"/);
+  assert.notMatch(html, /name="(?:defaultRepoUrl|requirements|initialDesignDoc|summary|tags)"/);
   assert.match(html, /<input(?=[^>]*name="points")(?=[^>]*min="0")(?=[^>]*max="10000")[^>]*>/);
 });
 
@@ -118,6 +118,7 @@ test("project editor prepopulates the selected project and preserves its identif
   assert.ok(!html.includes('name="id"'));
   assert.ok(!html.includes('name="codeName"'));
   assert.ok(!html.includes('name="index"'));
+  assert.ok(!html.includes('name="tags"'));
 });
 test("ProjectList renders the Index header, drag handles, and sequential index badges", () => {
   catalogMock.projects = [

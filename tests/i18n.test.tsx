@@ -286,18 +286,16 @@ for (const [name, screen] of Object.entries(screens)) {
   });
 }
 
-test("HomeDashboard displays deadlines beneath titles and student status without index badges, points or tags", () => {
+test("HomeDashboard displays deadlines beneath titles and student status without index badges or points", () => {
   const dueSoonProject = {
     ...en.projects[0],
     dueDate: "2026-11-25 23:59",
     points: 200,
-    tags: ["ArchitectureTag", "C4Tag"],
   };
   const overdueProject = {
     ...en.projects[1],
     dueDate: "2026-11-20 12:00",
     points: 150,
-    tags: ["GitTag"],
   };
   const now = Date.parse("2026-11-25T10:00:00+08:00");
   const savedAt = Date.parse("2026-11-24T18:30:00+08:00");
@@ -330,9 +328,6 @@ test("HomeDashboard displays deadlines beneath titles and student status without
   assert.ok(studentHtml.includes("最後更新 2026-11-24 18:30"));
   assert.ok(studentHtml.includes("已逾期"));
   assert.ok(studentHtml.includes("尚未開始"));
-  assert.ok(!studentHtml.includes("ArchitectureTag"));
-  assert.ok(!studentHtml.includes("C4Tag"));
-  assert.ok(!studentHtml.includes("GitTag"));
   assert.ok(!studentHtml.includes("配分"));
   assert.ok(!studentHtml.includes(">200<"));
   assert.ok(!studentHtml.includes(">150<"));
@@ -356,7 +351,6 @@ test("HomeDashboard displays deadlines beneath titles and student status without
   assert.ok(!adminHtml.includes("ui-code-badge"));
   assert.ok(adminHtml.includes("Due soon"));
   assert.ok(adminHtml.includes("Student projects"));
-  assert.ok(!adminHtml.includes("ArchitectureTag"));
   assert.ok(!adminHtml.includes("Points"));
   assert.ok(!adminHtml.includes(">Saved<"));
   assert.ok(!adminHtml.includes(">Not started<"));

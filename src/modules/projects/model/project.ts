@@ -15,7 +15,6 @@ export interface Project {
   title: string;
   dueDate: string;
   points: number;
-  tags: string[];
   content: string;
   attachments: ProjectAttachment[];
 }
@@ -27,7 +26,6 @@ export const MAX_CONTENT_LENGTH = 40000;
 export const PROJECT_FIELD_LIMITS = {
   title: 120,
   dueDate: 16,
-  tags: 500,
   content: MAX_CONTENT_LENGTH,
 } as const;
 export const MAX_PROJECT_POINTS = 10000;

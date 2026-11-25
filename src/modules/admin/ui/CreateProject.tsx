@@ -79,13 +79,6 @@ export function CreateProject({
               />
             </FormField>
           </div>
-          <FormField label={t("admin.projects.tags")}>
-            <TextInput
-              name="tags"
-              defaultValue={original?.tags.join(", ")}
-              maxLength={PROJECT_FIELD_LIMITS.tags}
-            />
-          </FormField>
           <FormField label={t("admin.projects.content")}>
             <TextArea
               name="content"

@@ -35,7 +35,6 @@ function toStoredProjectData(
     title: project.title,
     dueDate: project.dueDate,
     points: project.points,
-    tags: project.tags,
     content: project.content,
   };
 }
@@ -98,11 +97,13 @@ function assembleCatalog(
       const {
         summary: _,
         codeName: __,
-        customized: ___,
+        tags: ___,
+        customized: ____,
         ...project
       } = data as CustomProjectData & {
         summary?: unknown;
         codeName?: unknown;
+        tags?: unknown;
         customized?: unknown;
       };
       return [{ ...project, id, index, attachments: rowAttachments }];

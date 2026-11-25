@@ -141,7 +141,6 @@ function seedProjects(sqlite: DatabaseSync) {
   const baseProject = {
     dueDate: "2026-12-31 23:59",
     points: 100,
-    tags: ["Architecture"],
     content: "# Assignment",
   };
   insertProject.run(
@@ -472,7 +471,6 @@ test("saveProject soft-deletes omitted attachments, writes chunks separately, an
           title: "Project Empty",
           dueDate: "2026-12-31 23:59",
           points: 100,
-          tags: ["Architecture"],
           content: "# Updated",
         },
         retained: [],

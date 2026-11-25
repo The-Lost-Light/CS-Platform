@@ -1,6 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { PageContainer, PageHeaderCard, SegmentedControl } from "@shared/ui";
-import { Link } from "@void/react";
+import { IconLink, PageContainer, PageHeaderCard, SegmentedControl } from "@shared/ui";
 import { FolderGit2, ShieldCheck, Users, X } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -39,14 +38,7 @@ export default function AdminPage() {
                 { value: "accounts", label: t("admin.title"), icon: Users },
               ]}
             />
-            <Link
-              href="/"
-              aria-label={t("common.backHome")}
-              title={t("common.backHome")}
-              className="ui-btn-icon w-8 h-8 shrink-0"
-            >
-              <X aria-hidden="true" className="w-4 h-4" />
-            </Link>
+            <IconLink href="/" icon={X} label={t("common.backHome")} withTitle />
           </>
         }
       />

@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { FeedbackBanner, FormDialog, FormDialogActions } from "@shared/ui";
+import { FormDialog } from "@shared/ui";
 import { AlertTriangle } from "lucide-react";
 import { useId } from "react";
 
@@ -30,23 +30,15 @@ export function ConfirmDelete({
       closeLabel={t("common.close")}
       onDismiss={onCancel}
       pending={pending}
+      error={error}
+      cancelLabel={t("admin.cancel")}
+      submitLabel={t(pending ? "common.loading" : "admin.delete")}
+      submitVariant="danger"
+      onConfirm={onConfirm}
     >
       <p id={descriptionId} className="text-sm leading-relaxed text-on-muted">
         {t(account ? "admin.deleteAccountHelp" : "admin.deleteProjectHelp")}
       </p>
-      {error && (
-        <FeedbackBanner kind="error">
-          <span>{error}</span>
-        </FeedbackBanner>
-      )}
-      <FormDialogActions
-        cancelLabel={t("admin.cancel")}
-        submitLabel={t(pending ? "common.loading" : "admin.delete")}
-        submitVariant="danger"
-        disabled={pending}
-        onDismiss={onCancel}
-        onSubmit={onConfirm}
-      />
     </FormDialog>
   );
 }

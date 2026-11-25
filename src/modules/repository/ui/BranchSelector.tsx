@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { Button, Menu, MenuItem, cn } from "@shared/ui";
+import { Button, Menu, MenuItem, cn, getRovingFocusIndex } from "@shared/ui";
 import { Check, ChevronDown, GitBranch, LoaderCircle } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -108,17 +108,9 @@ export function BranchSelector({
           onKeyDown={(event) => {
             const menuItems = items.current.slice(0, branchNames.length);
             const index = menuItems.indexOf(document.activeElement as HTMLButtonElement);
-            if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) && menuItems.length) {
+            const next = getRovingFocusIndex(event.key, index, menuItems.length);
+            if (next !== null) {
               event.preventDefault();
-              const next =
-                event.key === "Home"
-                  ? 0
-                  : event.key === "End"
-                    ? menuItems.length - 1
-                    : index === -1
-                      ? 0
-                      : (index + (event.key === "ArrowDown" ? 1 : -1) + menuItems.length) %
-                        menuItems.length;
               menuItems[next]?.focus();
             } else if (event.key === "Escape") {
               event.preventDefault();

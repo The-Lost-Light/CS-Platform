@@ -18,6 +18,8 @@ export {
   isProjectOverdue,
   isWorkspaceLate,
   parseProjectDueDate,
+  toDueDateInputValue,
+  toDueDateIsoString,
   toTaipeiIsoString,
 } from "./model/deadline";
 export { parseProjectInput } from "./model/projectInput";

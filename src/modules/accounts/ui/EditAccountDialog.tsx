@@ -1,5 +1,5 @@
 import { useI18n } from "@modules/i18n";
-import { FeedbackBanner, FormDialog, FormDialogActions } from "@shared/ui";
+import { FormDialog } from "@shared/ui";
 import { Pencil } from "lucide-react";
 
 import { useAccountUpdate } from "../hooks/useAccountUpdate";
@@ -61,24 +61,14 @@ export function EditAccountDialog({
       closeLabel={t("common.close")}
       onDismiss={onDismiss}
       pending={pending}
+      error={error ? t(error) : null}
+      cancelLabel={t("admin.cancel")}
+      submitLabel={t(pending ? "common.loading" : "admin.save")}
+      onSubmit={submit}
     >
-      <form onSubmit={submit}>
-        <fieldset disabled={pending} className="space-y-4">
-          <AccountProfileFields account={account} />
-          {management && <AccountRoleField role={management.role} isSelf={management.isSelf} />}
-          <p className="ui-field-help">{t("admin.accountEditHelp")}</p>
-          {error && (
-            <FeedbackBanner kind="error">
-              <span>{t(error)}</span>
-            </FeedbackBanner>
-          )}
-          <FormDialogActions
-            cancelLabel={t("admin.cancel")}
-            submitLabel={t(pending ? "common.loading" : "admin.save")}
-            onDismiss={onDismiss}
-          />
-        </fieldset>
-      </form>
+      <AccountProfileFields account={account} />
+      {management && <AccountRoleField role={management.role} isSelf={management.isSelf} />}
+      <p className="ui-field-help">{t("admin.accountEditHelp")}</p>
     </FormDialog>
   );
 }

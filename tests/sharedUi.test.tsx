@@ -1,16 +1,23 @@
 import {
   AvatarBadge,
   Button,
+  ButtonLink,
   Card,
   CardHeader,
+  CardList,
+  ChevronIndicator,
   Chip,
   DataTable,
+  Dialog,
   EmptyState,
   FeedbackBanner,
+  FormDialog,
   FormField,
   IconBadge,
   IconButton,
+  IconLink,
   LoadingPanel,
+  MarkdownContent,
   Menu,
   MenuItem,
   PageContainer,
@@ -23,8 +30,9 @@ import {
   Tooltip,
   TransientNotice,
   cn,
+  getRovingFocusIndex,
 } from "@shared/ui";
-import { Check, FolderGit2, Plus, Search, X } from "lucide-react";
+import { AlertTriangle, Check, FolderGit2, Plus, Search, X } from "lucide-react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
@@ -270,4 +278,139 @@ test("SegmentedControl, Tooltip, DataTable, Menu, FeedbackBanner, and LoadingPan
   const loadingHtml = renderToStaticMarkup(<LoadingPanel label="Loading..." />);
   assert.ok(loadingHtml.includes('role="status"'));
   assert.ok(loadingHtml.includes("Loading..."));
+});
+
+test("Dialog and FormDialog render shared shell, form fieldset, error banner, and confirm mode", () => {
+  const defaultDialog = renderToStaticMarkup(
+    <Dialog title="Preferences" icon={FolderGit2} closeLabel="Close" onDismiss={() => {}}>
+      <p>Body</p>
+    </Dialog>,
+  );
+  assert.match(defaultDialog, /<dialog\b[^>]*aria-labelledby=/);
+  assert.ok(defaultDialog.includes("max-w-md"));
+  assert.ok(defaultDialog.includes("Preferences"));
+  assert.ok(defaultDialog.includes('aria-label="Close"'));
+
+  const wideDialog = renderToStaticMarkup(
+    <Dialog title="Settings" icon={FolderGit2} closeLabel="Close" wide onDismiss={() => {}}>
+      <p>Body</p>
+    </Dialog>,
+  );
+  assert.ok(wideDialog.includes("max-w-2xl"));
+
+  const formDialog = renderToStaticMarkup(
+    <FormDialog
+      title="Edit item"
+      icon={FolderGit2}
+      closeLabel="Close"
+      pending
+      error="Save failed"
+      cancelLabel="Cancel"
+      submitLabel="Saving…"
+      onDismiss={() => {}}
+      onSubmit={() => {}}
+    >
+      <input name="title" />
+    </FormDialog>,
+  );
+  assert.match(formDialog, /<form>/);
+  assert.match(formDialog, /<fieldset disabled=""/);
+  assert.match(formDialog, /role="alert"[^>]*>[\s\S]*Save failed/);
+  assert.ok(formDialog.includes(">Cancel</button>"));
+  assert.match(formDialog, /<button type="submit"[^>]*disabled=""[^>]*>Saving…<\/button>/);
+
+  const confirmDialog = renderToStaticMarkup(
+    <FormDialog
+      role="alertdialog"
+      describedBy="confirm-desc"
+      title="Delete item?"
+      icon={AlertTriangle}
+      iconTone="danger"
+      closeLabel="Close"
+      pending={false}
+      cancelLabel="Cancel"
+      submitLabel="Delete"
+      submitVariant="danger"
+      onDismiss={() => {}}
+      onConfirm={() => {}}
+    >
+      <p id="confirm-desc">Permanent action</p>
+    </FormDialog>,
+  );
+  assert.match(
+    confirmDialog,
+    /<dialog\b[^>]*role="alertdialog"[^>]*aria-describedby="confirm-desc"/,
+  );
+  assert.ok(!confirmDialog.includes("<form"));
+  assert.ok(confirmDialog.includes("ui-icon-badge-danger"));
+  assert.match(confirmDialog, /<button type="button" class="ui-btn-danger">Delete<\/button>/);
+});
+
+test("ButtonLink, IconLink, CardList, ChevronIndicator, MarkdownContent, FeedbackBanner retry, and getRovingFocusIndex", () => {
+  const buttonLinkHtml = renderToStaticMarkup(
+    <ButtonLink href="/admin" variant="tonal" size="sm" icon={Plus}>
+      Manage
+    </ButtonLink>,
+  );
+  assert.match(buttonLinkHtml, /^<a\b[^>]*href="\/admin"/);
+  assert.ok(buttonLinkHtml.includes("ui-btn-tonal"));
+  assert.ok(buttonLinkHtml.includes(">Manage</a>"));
+
+  const iconLinkHtml = renderToStaticMarkup(
+    <IconLink href="/" icon={X} label="Back home" withTitle />,
+  );
+  assert.match(iconLinkHtml, /^<a\b[^>]*href="\/"/);
+  assert.ok(iconLinkHtml.includes('aria-label="Back home"'));
+  assert.ok(iconLinkHtml.includes('title="Back home"'));
+  assert.ok(iconLinkHtml.includes("ui-btn-icon"));
+
+  const emptyListHtml = renderToStaticMarkup(
+    <CardList isEmpty emptyMessage="No items">
+      <div>Item</div>
+    </CardList>,
+  );
+  assert.ok(emptyListHtml.includes("ui-empty"));
+  assert.ok(emptyListHtml.includes("No items"));
+  assert.ok(!emptyListHtml.includes("divide-y"));
+
+  const populatedListHtml = renderToStaticMarkup(
+    <CardList isEmpty={false} emptyMessage="No items">
+      <div>Item 1</div>
+    </CardList>,
+  );
+  assert.ok(populatedListHtml.includes("divide-y divide-outline-subtle"));
+  assert.ok(populatedListHtml.includes("Item 1"));
+
+  const staticChevron = renderToStaticMarkup(<ChevronIndicator />);
+  assert.match(staticChevron, /^<span class="ui-chevron-indicator">/);
+  const buttonChevron = renderToStaticMarkup(
+    <ChevronIndicator label="Open project" onClick={() => {}} />,
+  );
+  assert.match(buttonChevron, /^<button type="button" aria-label="Open project"/);
+  assert.ok(buttonChevron.includes("ui-chevron-indicator"));
+
+  const markdownHtml = renderToStaticMarkup(<MarkdownContent>{"# Title\n\nBody"}</MarkdownContent>);
+  assert.match(markdownHtml, /^<article class="ui-markdown"><h1>Title<\/h1>/);
+
+  const retryBanner = renderToStaticMarkup(
+    <FeedbackBanner kind="error" retryLabel="Retry" onRetry={() => {}}>
+      Load failed
+    </FeedbackBanner>,
+  );
+  assert.match(retryBanner, /role="alert"/);
+  assert.ok(retryBanner.includes("<span>Load failed</span>"));
+  assert.match(
+    retryBanner,
+    /<button type="button" class="ui-btn-outlined shrink-0">Retry<\/button>/,
+  );
+
+  assert.strictEqual(getRovingFocusIndex("ArrowDown", 0, 3), 1);
+  assert.strictEqual(getRovingFocusIndex("ArrowUp", 0, 3), 2);
+  assert.strictEqual(getRovingFocusIndex("ArrowRight", 1, 3, { horizontal: true }), 2);
+  assert.strictEqual(getRovingFocusIndex("ArrowLeft", 0, 3, { horizontal: true }), 2);
+  assert.strictEqual(getRovingFocusIndex("ArrowRight", 1, 3), null);
+  assert.strictEqual(getRovingFocusIndex("Home", 2, 3), 0);
+  assert.strictEqual(getRovingFocusIndex("End", 0, 3), 2);
+  assert.strictEqual(getRovingFocusIndex("ArrowDown", -1, 3, { fallbackIndex: 1 }), 2);
+  assert.strictEqual(getRovingFocusIndex("Enter", 0, 3), null);
 });

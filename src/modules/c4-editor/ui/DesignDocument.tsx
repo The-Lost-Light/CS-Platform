@@ -1,10 +1,8 @@
 import { useI18n } from "@modules/i18n";
-import { Button, Card, CardHeader, EmptyState, TextArea } from "@shared/ui";
+import { Button, Card, CardHeader, EmptyState, MarkdownContent, TextArea } from "@shared/ui";
 import { MAX_DESIGN_DOC_LENGTH } from "@shared/workspacePolicy";
 import { Code2, Eye, FileText } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 export function DesignDocument({
   designDoc,
@@ -65,9 +63,7 @@ export function DesignDocument({
         ) : readOnly && !designDoc.trim() ? (
           <EmptyState>{emptyReadOnlyMessage ?? t("workspace.studentNoReadme")}</EmptyState>
         ) : (
-          <article className="ui-markdown">
-            <Markdown remarkPlugins={[remarkGfm]}>{designDoc}</Markdown>
-          </article>
+          <MarkdownContent>{designDoc}</MarkdownContent>
         )}
       </div>
     </Card>

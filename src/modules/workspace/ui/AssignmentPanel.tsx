@@ -1,6 +1,6 @@
 import { useI18n } from "@modules/i18n";
-import { getDeadlineState, type Project } from "@modules/projects";
-import { Card, CardHeader, Chip } from "@shared/ui";
+import { getDeadlineState, toDueDateIsoString, type Project } from "@modules/projects";
+import { Card, CardHeader, Chip, MarkdownContent } from "@shared/ui";
 import {
   AlertCircle,
   Award,
@@ -11,8 +11,6 @@ import {
   Paperclip,
 } from "lucide-react";
 import { useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 export function AssignmentPanel({ project, now }: { project: Project; now?: number }) {
   const { t } = useI18n();
@@ -34,20 +32,21 @@ export function AssignmentPanel({ project, now }: { project: Project; now?: numb
               </dt>
               <dd className="flex flex-wrap items-center gap-1.5 font-semibold text-on-surface">
                 {project.dueDate ? (
-                  <time dateTime={project.dueDate.replace(" ", "T") + ":00+08:00"}>
+                  <time dateTime={toDueDateIsoString(project.dueDate)}>
                     {project.dueDate} (UTC+8)
                   </time>
                 ) : (
                   t("project.noDeadline")
                 )}
-                {deadlineState === "overdue" && (
-                  <Chip variant="danger" size="sm" icon={AlertCircle}>
-                    <span>{t("project.overdue")}</span>
-                  </Chip>
-                )}
-                {deadlineState === "dueSoon" && (
-                  <Chip variant="warning" size="sm" icon={Clock}>
-                    <span>{t("project.dueSoon")}</span>
+                {(deadlineState === "overdue" || deadlineState === "dueSoon") && (
+                  <Chip
+                    variant={deadlineState === "overdue" ? "danger" : "warning"}
+                    size="sm"
+                    icon={deadlineState === "overdue" ? AlertCircle : Clock}
+                  >
+                    <span>
+                      {t(deadlineState === "overdue" ? "project.overdue" : "project.dueSoon")}
+                    </span>
                   </Chip>
                 )}
               </dd>
@@ -66,9 +65,7 @@ export function AssignmentPanel({ project, now }: { project: Project; now?: numb
 
       <div className="px-5 sm:px-8 py-6">
         {project.content.trim() ? (
-          <article className="ui-markdown">
-            <Markdown remarkPlugins={[remarkGfm]}>{project.content}</Markdown>
-          </article>
+          <MarkdownContent>{project.content}</MarkdownContent>
         ) : (
           <p className="text-sm text-on-muted">{t("project.noContent")}</p>
         )}

@@ -1,5 +1,7 @@
-import { useTransientNotice } from "@shared/transientNotice";
-import { useEffect, useState } from "react";
+import { useAsyncLoad } from "@shared/useAsyncLoad";
+import { useState } from "react";
+
+import { useManagementDialogs } from "./useManagementDialogs";
 
 export type AccountListNotice = "admin.saved" | "admin.success";
 
@@ -12,124 +14,90 @@ interface Account {
 }
 
 export function useAccountList(initialNotice: AccountListNotice | null = null) {
-  const [users, setUsers] = useState<Account[]>([]);
-  const [selfId, setSelfId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [attempt, setAttempt] = useState(0);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const dialogs = useManagementDialogs<Account, AccountListNotice>({
+    initialNotice,
+    onClearError: () => setActionError(null),
+  });
+
   const {
-    notice,
-    show: showNotice,
-    clear: clearNotice,
-  } = useTransientNotice<AccountListNotice>(initialNotice);
-  const [editing, setEditing] = useState<Account | null>(null);
-  const [deleting, setDeleting] = useState<Account | null>(null);
-  const [search, setSearch] = useState("");
-  useEffect(() => {
-    const controller = new AbortController();
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/admin/accounts", {
-          signal: controller.signal,
-          cache: "no-store",
-        });
-        if (!response.ok) throw new Error("Load failed");
-        const data = (await response.json()) as { users: Account[]; currentUserId: string };
-        if (!controller.signal.aborted) {
-          setUsers(data.users);
-          setSelfId(data.currentUserId);
-        }
-      } catch {
-        if (!controller.signal.aborted) setError("failed");
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }
-    void load();
+    data,
+    loading,
+    error: loadError,
+    reload,
+  } = useAsyncLoad<{ users: Account[]; currentUserId: string }>(
+    async (signal) => {
+      const response = await fetch("/api/admin/accounts", {
+        signal,
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error("Load failed");
+      return (await response.json()) as { users: Account[]; currentUserId: string };
+    },
+    { preserveDataOnReload: true },
+  );
 
-    return () => controller.abort();
-  }, [attempt]);
-
-  function reload() {
-    setAttempt((current) => current + 1);
-  }
-
-  function finishEdit() {
-    setEditing(null);
-    setError(null);
-    showNotice("admin.saved");
-    reload();
-  }
+  const users = data?.users ?? [];
+  const selfId = data?.currentUserId ?? "";
 
   async function confirmDelete() {
-    if (!deleting || pending) return;
+    if (!dialogs.deleting || pending) return;
     setPending(true);
-    setError(null);
-    clearNotice();
+    setActionError(null);
+    dialogs.clearNotice();
     try {
-      const response = await fetch(`/api/admin/accounts/${encodeURIComponent(deleting.id)}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/admin/accounts/${encodeURIComponent(dialogs.deleting.id)}`,
+        { method: "DELETE" },
+      );
       const result = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setError(result.error ?? "failed");
+        setActionError(result.error ?? "failed");
         return;
       }
-      setDeleting(null);
-      showNotice("admin.saved");
+      dialogs.completeDelete("admin.saved");
       reload();
     } catch {
-      setError("failed");
+      setActionError("failed");
     } finally {
       setPending(false);
     }
   }
+
   const visible = users.filter((user) =>
-    `${user.name} ${user.email}`.toLowerCase().includes(search.toLowerCase()),
+    `${user.name} ${user.email}`.toLowerCase().includes(dialogs.search.toLowerCase()),
   );
 
-  function edit(user: Account) {
-    setEditing(user);
-    setError(null);
-    clearNotice();
-  }
-  function requestDelete(user: Account) {
-    setDeleting(user);
-    setError(null);
-    clearNotice();
-  }
   return {
     count: users.length,
     visible,
     selfId,
     pending,
-    notice,
-    error,
+    notice: dialogs.notice,
+    error: actionError ?? (loadError ? "failed" : null),
     loading,
-    editing,
-    deleting,
-    search,
-    setSearch,
-    finishEdit,
+    creating: dialogs.creating,
+    editing: dialogs.editing,
+    deleting: dialogs.deleting,
+    search: dialogs.search,
+    setSearch: dialogs.setSearch,
+    openCreate: dialogs.openCreate,
+    cancelCreate: dialogs.cancelCreate,
     finishCreate: () => {
-      setError(null);
-      showNotice("admin.success");
+      dialogs.finishCreate("admin.success");
       reload();
     },
-    edit,
-    requestDelete,
-    reload,
-    cancelEdit: () => {
-      setEditing(null);
-      setError(null);
+    edit: dialogs.edit,
+    cancelEdit: dialogs.cancelEdit,
+    finishEdit: () => {
+      dialogs.finishEdit("admin.saved");
+      reload();
     },
-    cancelDelete: () => {
-      setDeleting(null);
-      setError(null);
-    },
+    requestDelete: dialogs.requestDelete,
+    cancelDelete: dialogs.cancelDelete,
     confirmDelete,
+    resetDialogs: dialogs.resetDialogs,
+    reload,
   };
 }

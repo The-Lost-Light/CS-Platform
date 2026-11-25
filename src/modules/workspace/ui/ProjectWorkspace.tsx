@@ -17,12 +17,12 @@ import {
   Chip,
   FeedbackBanner,
   IconButton,
+  IconLink,
   PageContainer,
   PageHeaderCard,
   SegmentedControl,
   cn,
 } from "@shared/ui";
-import { Link } from "@void/react";
 import {
   AlertCircle,
   ChevronLeft,
@@ -239,8 +239,11 @@ export function ProjectWorkspace({
                 },
               ]}
             />
-            <Link
+            <IconLink
               href={closeHref ?? "/"}
+              icon={X}
+              label={backLabel}
+              withTitle
               onClick={
                 onClose
                   ? (event) => {
@@ -249,12 +252,7 @@ export function ProjectWorkspace({
                     }
                   : undefined
               }
-              aria-label={backLabel}
-              title={backLabel}
-              className="ui-btn-icon w-8 h-8 shrink-0"
-            >
-              <X aria-hidden="true" className="w-4 h-4" />
-            </Link>
+            />
           </>
         }
       >
@@ -279,11 +277,9 @@ export function ProjectWorkspace({
 
       {!readOnly && deadlineLocked && (
         <FeedbackBanner kind="error" className="mt-4">
-          <span>
-            {t("workspace.deadlineLockedNotice", { deadline: project.dueDate })}
-            {lastSavedAt !== null &&
-              ` · ${t("workspace.lastUpdatedAt", { time: formatTaipeiDateTime(lastSavedAt) })}`}
-          </span>
+          {t("workspace.deadlineLockedNotice", { deadline: project.dueDate })}
+          {lastSavedAt !== null &&
+            ` · ${t("workspace.lastUpdatedAt", { time: formatTaipeiDateTime(lastSavedAt) })}`}
         </FeedbackBanner>
       )}
 

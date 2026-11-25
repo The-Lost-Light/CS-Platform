@@ -26,7 +26,7 @@ export function FormField({
   children,
 }: FormFieldProps) {
   const field = (
-    <label className={cn("ui-field-label space-y-1.5", className)}>
+    <label className={cn("ui-field-label space-y-1.5", !(help && externalHelp) && className)}>
       <span>{label}</span>
       {children}
       {help && !externalHelp && (
@@ -39,12 +39,12 @@ export function FormField({
 
   if (help && externalHelp) {
     return (
-      <>
+      <div className={className}>
         {field}
         <p id={helpId} className="ui-field-help">
           {help}
         </p>
-      </>
+      </div>
     );
   }
 

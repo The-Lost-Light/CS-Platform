@@ -161,7 +161,7 @@ export function PersonalProject({
               </div>
             }
           >
-            <span>{t("draft.loadError")}</span>
+            {t("draft.loadError")}
           </FeedbackBanner>
         </Card>
       </PageContainer>

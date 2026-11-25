@@ -134,3 +134,13 @@ export interface RepoBundle {
   sourceType: "live-api";
   rateLimit: string;
 }
+
+export function appendUniqueBy<T>(
+  existing: readonly T[],
+  incoming: readonly T[],
+  keyOf: (item: T) => string,
+): T[] {
+  const seen = new Set(existing.map(keyOf));
+  const appended = incoming.filter((item) => !seen.has(keyOf(item)));
+  return appended.length > 0 ? [...existing, ...appended] : [...existing];
+}

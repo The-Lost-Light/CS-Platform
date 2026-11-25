@@ -1,6 +1,113 @@
 import { useI18n, type MessageKey } from "@modules/i18n";
-import { Button, CardHeader, TextInput, TransientNotice } from "@shared/ui";
+import {
+  Button,
+  Card,
+  CardHeader,
+  DataTable,
+  FeedbackBanner,
+  LoadingPanel,
+  TextInput,
+  TransientNotice,
+} from "@shared/ui";
 import { Plus, Search, type LucideIcon } from "lucide-react";
+import { useImperativeHandle, type ReactNode, type Ref } from "react";
+
+import { ConfirmDelete } from "./ConfirmDelete";
+import type { ManagementListHandle } from "./ManagementListHandle";
+
+export function ManagementSection({
+  ref,
+  onResetDialogs,
+  title,
+  icon,
+  notice,
+  onAdd,
+  search,
+  onSearchChange,
+  errorMessage,
+  onRetry,
+  pending,
+  loading = false,
+  headers,
+  isEmpty,
+  deleteConfirm,
+  dialogs,
+  children,
+}: {
+  ref: Ref<ManagementListHandle>;
+  onResetDialogs: () => void;
+  title: string;
+  icon: LucideIcon;
+  notice?: MessageKey | null;
+  onAdd: () => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  errorMessage?: string | null;
+  onRetry?: () => void;
+  pending: boolean;
+  loading?: boolean;
+  headers: readonly ReactNode[];
+  isEmpty: boolean;
+  deleteConfirm?: {
+    name: string;
+    account?: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+  };
+  dialogs?: ReactNode;
+  children: ReactNode;
+}) {
+  const { t } = useI18n();
+  useImperativeHandle(ref, () => ({ showList: onResetDialogs }));
+
+  return (
+    <Card overflowHidden>
+      <ManagementListHeader
+        title={title}
+        icon={icon}
+        disabled={Boolean(deleteConfirm)}
+        notice={notice}
+        onAdd={onAdd}
+      />
+
+      <div className="p-5 sm:p-6 space-y-4">
+        {errorMessage && !deleteConfirm && (
+          <FeedbackBanner
+            kind="error"
+            onRetry={onRetry}
+            retryLabel={t("auth.retry")}
+            retryDisabled={pending}
+          >
+            {errorMessage}
+          </FeedbackBanner>
+        )}
+
+        <ManagementSearch value={search} onChange={onSearchChange} />
+
+        {loading ? (
+          <LoadingPanel label={t("common.loading")} />
+        ) : (
+          <DataTable headers={headers} isEmpty={isEmpty} emptyMessage={t("admin.empty")}>
+            {children}
+          </DataTable>
+        )}
+      </div>
+
+      {dialogs}
+
+      {deleteConfirm && (
+        <ConfirmDelete
+          name={deleteConfirm.name}
+          account={deleteConfirm.account}
+          pending={pending}
+          error={errorMessage}
+          onCancel={deleteConfirm.onCancel}
+          onConfirm={deleteConfirm.onConfirm}
+        />
+      )}
+    </Card>
+  );
+}
 
 export function ManagementListHeader({
   title,

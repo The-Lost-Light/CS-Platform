@@ -8,24 +8,23 @@ import {
 } from "@modules/projects";
 import {
   AvatarBadge,
-  Button,
   Card,
   CardHeader,
+  CardList,
+  ChevronIndicator,
   Chip,
-  EmptyState,
   FeedbackBanner,
+  IconLink,
   LoadingPanel,
   PageContainer,
   PageHeaderCard,
   SegmentedControl,
   TextInput,
 } from "@shared/ui";
-import { Link } from "@void/react";
 import {
   AlertCircle,
   CalendarClock,
   CheckCircle2,
-  ChevronRight,
   Clock,
   FolderGit2,
   Search,
@@ -121,14 +120,7 @@ export function StudentWorkspaceList({
                 </span>
               </Chip>
             )}
-            <Link
-              href="/"
-              aria-label={t("common.backHome")}
-              title={t("common.backHome")}
-              className="ui-btn-icon w-8 h-8 shrink-0"
-            >
-              <X aria-hidden="true" className="w-4 h-4" />
-            </Link>
+            <IconLink href="/" icon={X} label={t("common.backHome")} withTitle />
           </>
         }
       />
@@ -153,17 +145,8 @@ export function StudentWorkspaceList({
 
         {error ? (
           <div className="p-5 sm:p-6">
-            <FeedbackBanner
-              kind="error"
-              action={
-                onRetry && (
-                  <Button variant="outlined" onClick={onRetry} className="shrink-0">
-                    {t("auth.retry")}
-                  </Button>
-                )
-              }
-            >
-              <span>{t("workspace.studentListError")}</span>
+            <FeedbackBanner kind="error" onRetry={onRetry} retryLabel={t("auth.retry")}>
+              {t("workspace.studentListError")}
             </FeedbackBanner>
           </div>
         ) : loading ? (
@@ -193,74 +176,66 @@ export function StudentWorkspaceList({
               />
             </div>
 
-            {visibleStudents.length > 0 ? (
-              <div className="divide-y divide-outline-subtle">
-                {visibleStudents.map((student) => {
-                  const lateSave =
-                    student.hasWorkspace && isWorkspaceLate(project.dueDate, student.updatedAt);
-                  const missingOverdue = !student.hasWorkspace && overdue;
-                  return (
-                    <button
-                      key={student.id}
-                      type="button"
-                      onClick={() => onSelectStudent(student.id)}
-                      className="ui-list-row group w-full text-left bg-transparent gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <AvatarBadge name={student.name} size="md" />
-                        <div className="min-w-0">
-                          <div className="font-semibold text-on-surface group-hover:text-primary truncate transition-colors">
-                            {student.name}
-                          </div>
-                          <div className="font-mono text-xs text-on-muted truncate">
-                            {student.email}
-                          </div>
+            <CardList isEmpty={visibleStudents.length === 0} emptyMessage={t("admin.empty")}>
+              {visibleStudents.map((student) => {
+                const lateSave =
+                  student.hasWorkspace && isWorkspaceLate(project.dueDate, student.updatedAt);
+                const missingOverdue = !student.hasWorkspace && overdue;
+                return (
+                  <button
+                    key={student.id}
+                    type="button"
+                    onClick={() => onSelectStudent(student.id)}
+                    className="ui-list-row group w-full text-left bg-transparent gap-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-primary"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <AvatarBadge name={student.name} size="md" />
+                      <div className="min-w-0">
+                        <div className="font-semibold text-on-surface group-hover:text-primary truncate transition-colors">
+                          {student.name}
+                        </div>
+                        <div className="font-mono text-xs text-on-muted truncate">
+                          {student.email}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center justify-end gap-2.5 shrink-0">
-                        {student.hasWorkspace && student.updatedAt !== null && (
-                          <span className="inline-flex items-center gap-1 font-mono text-xs text-on-muted">
-                            <Clock aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
-                            <time dateTime={toTaipeiIsoString(student.updatedAt)}>
-                              {formatTaipeiDateTime(student.updatedAt)}
-                            </time>
-                          </span>
-                        )}
-                        <Chip
-                          variant={student.hasWorkspace ? "success" : "neutral"}
-                          icon={student.hasWorkspace ? CheckCircle2 : undefined}
-                        >
-                          <span>
-                            {t(
-                              student.hasWorkspace
-                                ? "workspace.studentSaved"
-                                : "workspace.studentEmpty",
-                            )}
-                          </span>
-                        </Chip>
-                        {lateSave && (
-                          <Chip variant="danger" size="sm" icon={AlertCircle}>
-                            <span>{t("workspace.studentLate")}</span>
-                          </Chip>
-                        )}
-                        {missingOverdue && (
-                          <Chip variant="danger" size="sm" icon={AlertCircle}>
-                            <span>{t("project.overdue")}</span>
-                          </Chip>
-                        )}
-                        <span className="ui-chevron-indicator">
-                          <ChevronRight aria-hidden="true" className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2.5 shrink-0">
+                      {student.hasWorkspace && student.updatedAt !== null && (
+                        <span className="inline-flex items-center gap-1 font-mono text-xs text-on-muted">
+                          <Clock aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                          <time dateTime={toTaipeiIsoString(student.updatedAt)}>
+                            {formatTaipeiDateTime(student.updatedAt)}
+                          </time>
                         </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-5 sm:p-6">
-                <EmptyState>{t("admin.empty")}</EmptyState>
-              </div>
-            )}
+                      )}
+                      <Chip
+                        variant={student.hasWorkspace ? "success" : "neutral"}
+                        icon={student.hasWorkspace ? CheckCircle2 : undefined}
+                      >
+                        <span>
+                          {t(
+                            student.hasWorkspace
+                              ? "workspace.studentSaved"
+                              : "workspace.studentEmpty",
+                          )}
+                        </span>
+                      </Chip>
+                      {lateSave && (
+                        <Chip variant="danger" size="sm" icon={AlertCircle}>
+                          <span>{t("workspace.studentLate")}</span>
+                        </Chip>
+                      )}
+                      {missingOverdue && (
+                        <Chip variant="danger" size="sm" icon={AlertCircle}>
+                          <span>{t("project.overdue")}</span>
+                        </Chip>
+                      )}
+                      <ChevronIndicator />
+                    </div>
+                  </button>
+                );
+              })}
+            </CardList>
           </>
         )}
       </Card>

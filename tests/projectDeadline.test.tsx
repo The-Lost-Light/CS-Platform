@@ -5,6 +5,8 @@ import {
   isProjectOverdue,
   isWorkspaceLate,
   parseProjectDueDate,
+  toDueDateInputValue,
+  toDueDateIsoString,
   toTaipeiIsoString,
 } from "@modules/projects";
 import { assert, test } from "vite-plus/test";
@@ -43,4 +45,6 @@ test("isWorkspaceLate and Taipei formatters handle null and valid timestamps", (
   const sample = Date.parse("2026-11-25T00:05:00+08:00");
   assert.strictEqual(formatTaipeiDateTime(sample), "2026-11-25 00:05");
   assert.strictEqual(toTaipeiIsoString(sample), "2026-11-25T00:05:00+08:00");
+  assert.strictEqual(toDueDateInputValue(dueDate), "2026-11-25T23:59");
+  assert.strictEqual(toDueDateIsoString(dueDate), "2026-11-25T23:59:00+08:00");
 });

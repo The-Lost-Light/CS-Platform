@@ -2,9 +2,7 @@ import { useI18n } from "@modules/i18n";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@shared/passwordPolicy";
 import {
   Button,
-  FeedbackBanner,
   FormDialog,
-  FormDialogActions,
   FormField,
   TextInput,
   TransientNotice,
@@ -89,35 +87,25 @@ export function ChangeAccountPassword({
           closeLabel={t("common.close")}
           onDismiss={() => setOpen(false)}
           pending={pending}
+          error={error ? t(error, limits) : null}
+          cancelLabel={t("admin.cancel")}
+          submitLabel={t(pending ? "common.loading" : "admin.savePassword")}
+          onSubmit={submit}
         >
-          <form onSubmit={submit}>
-            <fieldset disabled={pending} className="space-y-4">
-              {requireCurrentPassword && (
-                <FormField label={t("admin.currentPassword")}>
-                  <TextInput
-                    name="currentPassword"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                  />
-                </FormField>
-              )}
-              <NewPasswordField name="newPassword" label={t("admin.newPassword")} />
-              <p className="ui-field-help">
-                {t(isSelf ? "admin.selfPasswordHelp" : "admin.accountEditHelp")}
-              </p>
-              {error && (
-                <FeedbackBanner kind="error">
-                  <span>{t(error, limits)}</span>
-                </FeedbackBanner>
-              )}
-              <FormDialogActions
-                cancelLabel={t("admin.cancel")}
-                submitLabel={t(pending ? "common.loading" : "admin.savePassword")}
-                onDismiss={() => setOpen(false)}
+          {requireCurrentPassword && (
+            <FormField label={t("admin.currentPassword")}>
+              <TextInput
+                name="currentPassword"
+                type="password"
+                autoComplete="current-password"
+                required
               />
-            </fieldset>
-          </form>
+            </FormField>
+          )}
+          <NewPasswordField name="newPassword" label={t("admin.newPassword")} />
+          <p className="ui-field-help">
+            {t(isSelf ? "admin.selfPasswordHelp" : "admin.accountEditHelp")}
+          </p>
         </FormDialog>
       )}
     </>

@@ -126,7 +126,7 @@ export function CommitHistory({
                       <>
                         {(c.diffError || !c.files) && (
                           <FeedbackBanner kind="error" className="text-xs">
-                            <span>{t("github.diff.loadFailed")}</span>
+                            {t("github.diff.loadFailed")}
                           </FeedbackBanner>
                         )}
                         {!c.diffError && c.files?.length === 0 && (

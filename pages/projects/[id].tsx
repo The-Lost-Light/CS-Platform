@@ -2,7 +2,7 @@ import { usePageNavigation } from "@app/usePageNavigation";
 import { useAuth } from "@modules/auth";
 import { useI18n } from "@modules/i18n";
 import { PersonalProject } from "@modules/workspace";
-import { LoadingPanel } from "@shared/ui/LoadingPanel";
+import { LoadingPanel } from "@shared/ui";
 
 export default function ProjectPage() {
   const { t } = useI18n();

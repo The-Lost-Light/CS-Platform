@@ -1,17 +1,12 @@
 import { useI18n } from "@modules/i18n";
-import { Card, Chip, DataTable, FeedbackBanner } from "@shared/ui";
+import { Chip, cn } from "@shared/ui";
 import { Link } from "@void/react";
 import { FolderGit2, GripVertical } from "lucide-react";
-import { useImperativeHandle, useState, type DragEvent, type Ref } from "react";
+import { useState, type DragEvent, type Ref } from "react";
 
 import { useProjectList, type ProjectListNotice } from "../hooks/useProjectList";
-import { ConfirmDelete } from "./ConfirmDelete";
 import { CreateProject } from "./CreateProject";
-import {
-  ManagementListHeader,
-  ManagementRowActions,
-  ManagementSearch,
-} from "./ManagementListControls";
+import { ManagementRowActions, ManagementSection } from "./ManagementListControls";
 import type { ManagementListHandle } from "./ManagementListHandle";
 
 export function ProjectList({
@@ -22,7 +17,6 @@ export function ProjectList({
   initialNotice?: ProjectListNotice | null;
 }) {
   const { t } = useI18n();
-  const [creating, setCreating] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const {
@@ -32,26 +26,23 @@ export function ProjectList({
     setSearch,
     notice,
     pending,
+    creating,
     editing,
     deleting,
     error,
     canReorder,
     remove,
     reorder,
+    openCreate,
+    cancelCreate,
+    finishCreate,
     edit,
-    requestDelete,
     cancelEdit,
     finishEdit,
-    finishCreate,
+    requestDelete,
     cancelDelete,
+    resetDialogs,
   } = useProjectList(initialNotice);
-  useImperativeHandle(ref, () => ({
-    showList() {
-      setCreating(false);
-      cancelEdit();
-      cancelDelete();
-    },
-  }));
 
   const draggingIndex = draggingId ? visible.findIndex((item) => item.id === draggingId) : -1;
 
@@ -71,142 +62,125 @@ export function ProjectList({
   }
 
   return (
-    <Card overflowHidden>
-      <ManagementListHeader
-        title={t("admin.allProjects", { count })}
-        icon={FolderGit2}
-        disabled={!!deleting}
-        notice={notice}
-        onAdd={() => setCreating(true)}
-      />
-
-      <div className="p-5 sm:p-6 space-y-4">
-        <ManagementSearch value={search} onChange={setSearch} />
-
-        {error && !deleting && (
-          <FeedbackBanner kind="error">
-            <span>{t("admin.operationFailed")}</span>
-          </FeedbackBanner>
-        )}
-
-        <DataTable
-          headers={[
-            t("admin.projects.index"),
-            t("admin.projects.name"),
-            t("admin.projects.dueDate"),
-            t("admin.actions"),
-          ]}
-          isEmpty={visible.length === 0}
-          emptyMessage={t("admin.empty")}
-        >
-          {visible.map((project, index) => {
-            const isDragging = draggingId === project.id;
-            const isDropTarget =
-              dragOverId === project.id && draggingIndex !== -1 && draggingIndex !== index;
-            const dropLineClass = isDropTarget
-              ? draggingIndex > index
-                ? "bg-primary-container/25 shadow-[inset_0_2px_0_0_var(--color-primary)]"
-                : "bg-primary-container/25 shadow-[inset_0_-2px_0_0_var(--color-primary)]"
-              : "";
-            return (
-              <tr
-                key={project.id}
-                draggable={canReorder}
-                title={canReorder ? t("admin.projects.dragHint") : undefined}
-                onDragStart={(event) => {
-                  if (!canReorder) {
-                    event.preventDefault();
-                    return;
-                  }
-                  setDraggingId(project.id);
-                  setDragOverId(null);
-                  if (event.dataTransfer) {
-                    event.dataTransfer.effectAllowed = "move";
-                    event.dataTransfer.setData("text/plain", project.id);
-                  }
-                }}
-                onDragOver={(event) => {
-                  if (!canReorder) return;
-                  event.preventDefault();
-                  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-                  if (dragOverId !== project.id) setDragOverId(project.id);
-                }}
-                onDragLeave={(event) => {
-                  if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-                  setDragOverId((current) => (current === project.id ? null : current));
-                }}
-                onDrop={(event) => handleDrop(project.id, event)}
-                onDragEnd={() => {
-                  setDraggingId(null);
-                  setDragOverId(null);
-                }}
-                className={[
-                  canReorder ? "cursor-grab active:cursor-grabbing" : "",
-                  isDragging ? "opacity-50" : "",
-                  dropLineClass,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                <td>
-                  <div className="inline-flex items-center gap-2">
-                    <GripVertical
-                      aria-hidden="true"
-                      className={`w-4 h-4 text-on-subtle shrink-0 ${canReorder ? "" : "opacity-35"}`}
-                    />
-                    <Chip variant="code">{project.index}</Chip>
-                  </div>
-                </td>
-                <td>
-                  <Link
-                    href={`/projects/${project.id}`}
-                    draggable={false}
-                    className="font-semibold text-on-surface hover:text-primary underline decoration-outline underline-offset-4 transition-colors"
-                  >
-                    {project.title}
-                  </Link>
-                </td>
-                <td className="whitespace-nowrap font-mono text-xs text-on-muted">
-                  {project.dueDate || "—"}
-                </td>
-                <ManagementRowActions
-                  disabled={!!deleting}
-                  onEdit={() => edit(project)}
-                  onDelete={() => requestDelete(project)}
+    <ManagementSection
+      ref={ref}
+      onResetDialogs={resetDialogs}
+      title={t("admin.allProjects", { count })}
+      icon={FolderGit2}
+      notice={notice}
+      onAdd={openCreate}
+      search={search}
+      onSearchChange={setSearch}
+      errorMessage={error ? t("admin.operationFailed") : null}
+      pending={pending}
+      headers={[
+        t("admin.projects.index"),
+        t("admin.projects.name"),
+        t("admin.projects.dueDate"),
+        t("admin.actions"),
+      ]}
+      isEmpty={visible.length === 0}
+      deleteConfirm={
+        deleting
+          ? {
+              name: deleting.title,
+              onCancel: cancelDelete,
+              onConfirm: () => {
+                void remove();
+              },
+            }
+          : undefined
+      }
+      dialogs={
+        <>
+          {creating && <CreateProject onCancel={cancelCreate} onSaved={finishCreate} />}
+          {editing && (
+            <CreateProject
+              key={editing.id}
+              project={editing}
+              onCancel={cancelEdit}
+              onSaved={finishEdit}
+            />
+          )}
+        </>
+      }
+    >
+      {visible.map((project, index) => {
+        const isDragging = draggingId === project.id;
+        const isDropTarget =
+          dragOverId === project.id && draggingIndex !== -1 && draggingIndex !== index;
+        const dropLineClass = isDropTarget
+          ? draggingIndex > index
+            ? "bg-primary-container/25 shadow-[inset_0_2px_0_0_var(--color-primary)]"
+            : "bg-primary-container/25 shadow-[inset_0_-2px_0_0_var(--color-primary)]"
+          : "";
+        return (
+          <tr
+            key={project.id}
+            draggable={canReorder}
+            title={canReorder ? t("admin.projects.dragHint") : undefined}
+            onDragStart={(event) => {
+              if (!canReorder) {
+                event.preventDefault();
+                return;
+              }
+              setDraggingId(project.id);
+              setDragOverId(null);
+              if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", project.id);
+              }
+            }}
+            onDragOver={(event) => {
+              if (!canReorder) return;
+              event.preventDefault();
+              if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+              if (dragOverId !== project.id) setDragOverId(project.id);
+            }}
+            onDragLeave={(event) => {
+              if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+              setDragOverId((current) => (current === project.id ? null : current));
+            }}
+            onDrop={(event) => handleDrop(project.id, event)}
+            onDragEnd={() => {
+              setDraggingId(null);
+              setDragOverId(null);
+            }}
+            className={cn(
+              canReorder && "cursor-grab active:cursor-grabbing",
+              isDragging && "opacity-50",
+              dropLineClass,
+            )}
+          >
+            <td>
+              <div className="inline-flex items-center gap-2">
+                <GripVertical
+                  aria-hidden="true"
+                  className={cn("w-4 h-4 text-on-subtle shrink-0", !canReorder && "opacity-35")}
                 />
-              </tr>
-            );
-          })}
-        </DataTable>
-      </div>
-      {creating && (
-        <CreateProject
-          onCancel={() => setCreating(false)}
-          onSaved={() => {
-            setCreating(false);
-            finishCreate();
-          }}
-        />
-      )}
-      {editing && (
-        <CreateProject
-          key={editing.id}
-          project={editing}
-          onCancel={cancelEdit}
-          onSaved={finishEdit}
-        />
-      )}
-      {deleting && (
-        <ConfirmDelete
-          name={deleting.title}
-          pending={pending}
-          error={error ? t("admin.operationFailed") : null}
-          onCancel={cancelDelete}
-          onConfirm={() => {
-            void remove();
-          }}
-        />
-      )}
-    </Card>
+                <Chip variant="code">{project.index}</Chip>
+              </div>
+            </td>
+            <td>
+              <Link
+                href={`/projects/${project.id}`}
+                draggable={false}
+                className="font-semibold text-on-surface hover:text-primary underline decoration-outline underline-offset-4 transition-colors"
+              >
+                {project.title}
+              </Link>
+            </td>
+            <td className="whitespace-nowrap font-mono text-xs text-on-muted">
+              {project.dueDate || "—"}
+            </td>
+            <ManagementRowActions
+              disabled={!!deleting}
+              onEdit={() => edit(project)}
+              onDelete={() => requestDelete(project)}
+            />
+          </tr>
+        );
+      })}
+    </ManagementSection>
   );
 }

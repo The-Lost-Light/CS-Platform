@@ -56,3 +56,24 @@ export function MenuItem({
     </button>
   );
 }
+
+export function getRovingFocusIndex(
+  key: string,
+  currentIndex: number,
+  count: number,
+  options?: { horizontal?: boolean; fallbackIndex?: number },
+): number | null {
+  if (count <= 0) return null;
+  const horizontal = options?.horizontal ?? false;
+  const isNext = key === "ArrowDown" || (horizontal && key === "ArrowRight");
+  const isPrev = key === "ArrowUp" || (horizontal && key === "ArrowLeft");
+  if (key === "Home") return 0;
+  if (key === "End") return count - 1;
+  if (!isNext && !isPrev) return null;
+  if (currentIndex < 0) {
+    return options?.fallbackIndex !== undefined
+      ? (options.fallbackIndex + (isNext ? 1 : -1) + count) % count
+      : 0;
+  }
+  return (currentIndex + (isNext ? 1 : -1) + count) % count;
+}

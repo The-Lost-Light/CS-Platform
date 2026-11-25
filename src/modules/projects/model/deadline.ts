@@ -54,6 +54,16 @@ export function formatTaipeiDateTime(timestamp: number): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+/** Format a `YYYY-MM-DD HH:mm` Taipei deadline for `<input type="datetime-local">`. */
+export function toDueDateInputValue(dueDate: string): string {
+  return dueDate.replace(" ", "T");
+}
+
+/** Format a `YYYY-MM-DD HH:mm` Taipei deadline as an ISO-8601 timestamp with `+08:00`. */
+export function toDueDateIsoString(dueDate: string): string {
+  return `${toDueDateInputValue(dueDate)}:00+08:00`;
+}
+
 export function toTaipeiIsoString(timestamp: number): string {
   const { year, month, day, hours, minutes } = taipeiParts(timestamp);
   return `${year}-${month}-${day}T${hours}:${minutes}:00+08:00`;

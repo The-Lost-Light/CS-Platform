@@ -61,28 +61,37 @@
     @apply rounded-xl bg-surface-elevated backdrop-blur-xl text-on-surface border border-outline-subtle p-1.5 shadow-m3-3;
   }
 
+  .ui-icon-badge,
+  .ui-icon-badge-tonal,
+  .ui-icon-badge-secondary,
+  .ui-icon-badge-success,
+  .ui-icon-badge-warning,
+  .ui-icon-badge-danger {
+    @apply inline-flex items-center justify-center rounded-lg shrink-0;
+  }
+
   .ui-icon-badge {
-    @apply inline-flex items-center justify-center rounded-lg bg-primary text-on-primary shadow-m3-1 shrink-0;
+    @apply bg-primary text-on-primary shadow-m3-1;
   }
 
   .ui-icon-badge-tonal {
-    @apply inline-flex items-center justify-center rounded-lg bg-primary-container text-on-primary-container shrink-0;
+    @apply bg-primary-container text-on-primary-container;
   }
 
   .ui-icon-badge-secondary {
-    @apply inline-flex items-center justify-center rounded-lg bg-secondary-container text-on-secondary-container shrink-0;
+    @apply bg-secondary-container text-on-secondary-container;
   }
 
   .ui-icon-badge-success {
-    @apply inline-flex items-center justify-center rounded-lg bg-success-container text-on-success-container shrink-0;
+    @apply bg-success-container text-on-success-container;
   }
 
   .ui-icon-badge-warning {
-    @apply inline-flex items-center justify-center rounded-lg bg-warning-container text-on-warning-container shrink-0;
+    @apply bg-warning-container text-on-warning-container;
   }
 
   .ui-icon-badge-danger {
-    @apply inline-flex items-center justify-center rounded-lg bg-danger-container text-on-danger-container shrink-0;
+    @apply bg-danger-container text-on-danger-container;
   }
 
   .ui-avatar {

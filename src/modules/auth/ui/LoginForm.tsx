@@ -27,11 +27,7 @@ export function LoginForm({ onLogin }: { onLogin: LoginHandler }) {
         <p className="text-xs sm:text-sm text-on-muted mt-1">{t("auth.description")}</p>
       </div>
 
-      {errorMessage && (
-        <FeedbackBanner kind="error">
-          <span>{t(errorMessage)}</span>
-        </FeedbackBanner>
-      )}
+      {errorMessage && <FeedbackBanner kind="error">{t(errorMessage)}</FeedbackBanner>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormField label={t("auth.accountLabel")}>

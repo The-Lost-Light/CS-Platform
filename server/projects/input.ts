@@ -5,23 +5,14 @@ import {
   parseProjectInput,
   type ProjectAttachment,
 } from "@modules/projects";
+import { createLimitedBodyResponse } from "@shared/http/readLimitedText";
 
 // Leave room for the UTF-8 Markdown, other fields and multipart headers.
 const MAX_BODY_BYTES = MAX_ATTACHMENT_BYTES + 256 * 1024;
 
 export async function readProjectInput(request: Request, existing: ProjectAttachment[] = []) {
-  if (!request.body || Number(request.headers.get("Content-Length")) > MAX_BODY_BYTES) return null;
-  let bytes = 0;
-  const bounded = request.body.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        bytes += chunk.byteLength;
-        if (bytes > MAX_BODY_BYTES) throw new Error("Project upload too large");
-        controller.enqueue(chunk);
-      },
-    }),
-  );
-  const body = new Response(bounded, { headers: request.headers });
+  const body = createLimitedBodyResponse(request, MAX_BODY_BYTES);
+  if (!body) return null;
   try {
     let fields: unknown;
     let entries: unknown[];

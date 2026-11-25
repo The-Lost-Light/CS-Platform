@@ -1,6 +1,68 @@
-import { IconBadge, cn } from "@shared/ui";
-import { Check, ChevronDown, type LucideIcon } from "lucide-react";
+import { IconBadge, cn, getRovingFocusIndex } from "@shared/ui";
+import { Check, ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 import { useRef, type ReactNode } from "react";
+
+function SettingRowLead({
+  icon,
+  title,
+  titleId,
+  description,
+  truncateDescription = false,
+}: {
+  icon: LucideIcon;
+  title: string;
+  titleId?: string;
+  description: string;
+  truncateDescription?: boolean;
+}) {
+  return (
+    <span className="flex items-center gap-3 min-w-0 flex-1">
+      <IconBadge as="span" tone="tonal" icon={icon} className="rounded-xl" />
+      <span className="min-w-0 flex-1">
+        <span id={titleId} className="block text-sm font-semibold text-on-surface leading-snug">
+          {title}
+        </span>
+        <span
+          className={cn(
+            "block text-xs text-on-muted leading-snug mt-0.5",
+            truncateDescription && "truncate",
+          )}
+        >
+          {description}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+export function SettingActionRow({
+  icon,
+  title,
+  description,
+  onAction,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  onAction: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="ui-setting-section">
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={onAction}
+        className="w-full flex items-center gap-3 p-4 text-left hover:bg-surface-hover cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+      >
+        <SettingRowLead icon={icon} title={title} description={description} truncateDescription />
+        <ChevronRight aria-hidden="true" className="w-4 h-4 text-on-subtle shrink-0" />
+      </button>
+      {children}
+    </div>
+  );
+}
 
 export function SettingSection({
   id,
@@ -35,14 +97,8 @@ export function SettingSection({
         onClick={onToggle}
         className="ui-setting-trigger"
       >
-        <span className="flex items-center gap-3 min-w-0 min-h-10">
-          <IconBadge as="span" tone="tonal" icon={icon} className="rounded-xl" />
-          <span className="min-w-0">
-            <span id={id} className="block text-sm font-semibold text-on-surface leading-snug">
-              {title}
-            </span>
-            <span className="block text-xs text-on-muted leading-snug mt-0.5">{description}</span>
-          </span>
+        <span className="flex items-center min-w-0 min-h-10">
+          <SettingRowLead icon={icon} title={title} titleId={id} description={description} />
         </span>
         <span className="ui-setting-value-cell">
           <span className={cn("ui-setting-value-pill", expanded && "ui-setting-value-pill-active")}>
@@ -95,23 +151,13 @@ export function SettingChoiceGroup<T extends string>({
       aria-labelledby={labelledBy}
       className={cn("grid grid-cols-1 gap-2", columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3")}
       onKeyDown={(event) => {
-        if (
-          !["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"].includes(event.key)
-        ) {
-          return;
-        }
-        event.preventDefault();
         const currentIndex = itemRefs.current.indexOf(document.activeElement as HTMLButtonElement);
-        const baseIndex = currentIndex >= 0 ? currentIndex : Math.max(selectedIndex, 0);
-        const nextIndex =
-          event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? options.length - 1
-              : (baseIndex +
-                  (event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1) +
-                  options.length) %
-                options.length;
+        const nextIndex = getRovingFocusIndex(event.key, currentIndex, options.length, {
+          horizontal: true,
+          fallbackIndex: Math.max(selectedIndex, 0),
+        });
+        if (nextIndex === null) return;
+        event.preventDefault();
         itemRefs.current[nextIndex]?.focus();
         onChange(options[nextIndex].value);
       }}

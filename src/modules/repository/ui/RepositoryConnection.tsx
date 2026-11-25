@@ -100,7 +100,7 @@ export function RepositoryConnection({
 
       {repoError && (
         <FeedbackBanner kind="error">
-          <span>{"key" in repoError ? t(repoError.key) : repoError.message}</span>
+          {"key" in repoError ? t(repoError.key) : repoError.message}
         </FeedbackBanner>
       )}
     </div>

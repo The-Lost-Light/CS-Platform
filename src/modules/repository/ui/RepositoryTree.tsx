@@ -56,33 +56,29 @@ export function RepositoryTree({
             onLoadMoreBranches={onLoadMoreBranches}
           />
 
-          <Tooltip label={t("github.branches")}>
-            <Chip
-              variant="neutral"
-              mono
-              icon={GitBranch}
-              iconClassName="text-success"
-              tabIndex={0}
-              aria-label={`${t("github.branches")}: ${branchCount}`}
-              className="text-[11px] font-bold cursor-default focus-visible:outline-2 focus-visible:outline-primary"
-            >
-              <span className="text-on-surface">{branchCount}</span>
-            </Chip>
-          </Tooltip>
-
-          <Tooltip label={t("github.tags")}>
-            <Chip
-              variant="neutral"
-              mono
-              icon={Tag}
-              iconClassName="text-secondary"
-              tabIndex={0}
-              aria-label={`${t("github.tags")}: ${tagCount}`}
-              className="text-[11px] font-bold cursor-default focus-visible:outline-2 focus-visible:outline-primary"
-            >
-              <span className="text-on-surface">{tagCount}</span>
-            </Chip>
-          </Tooltip>
+          {[
+            {
+              label: t("github.branches"),
+              count: branchCount,
+              icon: GitBranch,
+              iconClass: "text-success",
+            },
+            { label: t("github.tags"), count: tagCount, icon: Tag, iconClass: "text-secondary" },
+          ].map(({ label, count, icon, iconClass }) => (
+            <Tooltip key={label} label={label}>
+              <Chip
+                variant="neutral"
+                mono
+                icon={icon}
+                iconClassName={iconClass}
+                tabIndex={0}
+                aria-label={`${label}: ${count}`}
+                className="text-[11px] font-bold cursor-default focus-visible:outline-2 focus-visible:outline-primary"
+              >
+                <span className="text-on-surface">{count}</span>
+              </Chip>
+            </Tooltip>
+          ))}
         </div>
 
         <div className="flex items-center gap-1.5 text-xs font-bold text-on-primary-container shrink-0">

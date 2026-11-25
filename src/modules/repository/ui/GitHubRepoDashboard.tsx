@@ -1,13 +1,11 @@
 import { useRef, useState, type RefObject } from "react";
 
-import type { DiffMode } from "../model/diff";
-import type { RepoBundle, RepoCommit, RepoCommitDetails } from "../model/repository";
+import { useBranchPagination, useRepoCommitList } from "../hooks/useRepoDashboard";
+import type { RepoBundle, RepoCommitDetails } from "../model/repository";
 import {
   fetchGitHubBranchesPage,
   fetchGitHubCommitDetails,
   fetchGitHubCommitsPage,
-  getCachedCommitDetails,
-  getCommitCacheKey,
   type GitHubBranchesPageLoader,
   type GitHubCommitDetailsLoader,
   type GitHubCommitsPageLoader,
@@ -23,26 +21,6 @@ interface BranchControl {
   loadCommitsPage?: GitHubCommitsPageLoader;
 }
 
-function mergeCommitDetails(commit: RepoCommit, details?: RepoCommitDetails): RepoCommit {
-  if (!details) return commit;
-  return {
-    ...commit,
-    ...(details.stats !== undefined ? { stats: details.stats } : {}),
-    ...(details.files !== undefined ? { files: details.files } : {}),
-    diffError: details.diffError,
-    hasMoreFiles: details.hasMoreFiles,
-  };
-}
-
-function mergeCommitFiles(
-  existing: NonNullable<RepoCommit["files"]>,
-  incoming: NonNullable<RepoCommit["files"]>,
-) {
-  const seen = new Set(existing.map((file) => file.filename));
-  const appended = incoming.filter((file) => !seen.has(file.filename));
-  return appended.length > 0 ? [...existing, ...appended] : existing;
-}
-
 export function GitHubRepoDashboard({
   repoBundle,
   loadBranchesPage = fetchGitHubBranchesPage,
@@ -51,80 +29,46 @@ export function GitHubRepoDashboard({
   ...control
 }: { repoBundle: RepoBundle | null } & BranchControl) {
   const detailsCacheRef = useRef(new Map<string, RepoCommitDetails>());
-  const [branchPagination, setBranchPagination] = useState<{
-    source: RepoBundle["branches"];
-    branches: RepoBundle["branches"];
-    nextPage: number;
-    hasMore: boolean;
-  } | null>(null);
-  const [loadingBranchesSource, setLoadingBranchesSource] = useState<RepoBundle["branches"] | null>(
-    null,
-  );
-  const branchLoadRequest = useRef(0);
-
   if (!repoBundle?.repo) return null;
 
-  const initialBranchState = {
-    source: repoBundle.branches,
-    branches: repoBundle.branches,
-    nextPage: 2,
-    hasMore: Boolean(repoBundle.hasMoreBranches),
-  };
-  const activeBranchState =
-    branchPagination?.source === repoBundle.branches ? branchPagination : initialBranchState;
-  const resolvedTotalBranches = Math.max(
-    repoBundle.totalBranches ?? activeBranchState.branches.length,
-    activeBranchState.branches.length,
+  return (
+    <GitHubRepoDashboardContent
+      repoBundle={repoBundle}
+      detailsCacheRef={detailsCacheRef}
+      loadBranchesPage={loadBranchesPage}
+      loadCommitDetails={loadCommitDetails}
+      loadCommitsPage={loadCommitsPage}
+      {...control}
+    />
   );
-  const hasMoreBranches =
-    activeBranchState.hasMore &&
-    (repoBundle.totalBranches === undefined ||
-      activeBranchState.branches.length < resolvedTotalBranches);
-  const isLoadingMoreBranches = loadingBranchesSource === repoBundle.branches;
+}
 
-  const handleLoadMoreBranches = async () => {
-    if (isLoadingMoreBranches || !hasMoreBranches) return;
-    const source = repoBundle.branches;
-    const targetRepo = repoBundle.repo.full_name;
-    const pageToFetch = activeBranchState.nextPage;
-    const requestId = ++branchLoadRequest.current;
-    setLoadingBranchesSource(source);
-    try {
-      const pageResult = await loadBranchesPage(targetRepo, pageToFetch);
-      if (branchLoadRequest.current !== requestId) return;
-      setBranchPagination((prev) => {
-        const current = prev?.source === source ? prev : initialBranchState;
-        const seen = new Set(current.branches.map((b) => b.name));
-        const appended = pageResult.branches.filter((b) => !seen.has(b.name));
-        const merged = appended.length > 0 ? [...current.branches, ...appended] : current.branches;
-        const nextHasMore =
-          pageResult.hasMore &&
-          pageResult.branches.length > 0 &&
-          (repoBundle.totalBranches === undefined || merged.length < repoBundle.totalBranches);
-        return {
-          source,
-          branches: merged,
-          nextPage: current.nextPage + 1,
-          hasMore: nextHasMore,
-        };
-      });
-    } catch {
-      // Keep current branch list and allow retrying when loading more fails.
-    } finally {
-      if (branchLoadRequest.current === requestId) setLoadingBranchesSource(null);
-    }
-  };
+function GitHubRepoDashboardContent({
+  repoBundle,
+  detailsCacheRef,
+  loadBranchesPage,
+  loadCommitDetails,
+  loadCommitsPage,
+  ...control
+}: {
+  repoBundle: RepoBundle;
+  detailsCacheRef: RefObject<Map<string, RepoCommitDetails>>;
+  loadBranchesPage: GitHubBranchesPageLoader;
+  loadCommitDetails: GitHubCommitDetailsLoader;
+  loadCommitsPage: GitHubCommitsPageLoader;
+} & Omit<BranchControl, "loadBranchesPage" | "loadCommitDetails" | "loadCommitsPage">) {
+  const branchPagination = useBranchPagination(repoBundle, loadBranchesPage);
 
   return (
     <LoadedGitHubRepoDashboard
       key={`${repoBundle.repo.full_name}:${repoBundle.selectedBranch}:${repoBundle.commits[0]?.sha ?? ""}`}
       repoBundle={repoBundle}
-      branches={activeBranchState.branches}
-      totalBranches={resolvedTotalBranches}
-      hasMoreBranches={hasMoreBranches}
-      isLoadingMoreBranches={isLoadingMoreBranches}
+      branches={branchPagination.branches}
+      totalBranches={branchPagination.totalBranches}
+      hasMoreBranches={branchPagination.hasMoreBranches}
+      isLoadingMoreBranches={branchPagination.isLoadingMoreBranches}
       onLoadMoreBranches={() => {
-        void handleLoadMoreBranches();
+        void branchPagination.loadMoreBranches();
       }}
       detailsCacheRef={detailsCacheRef}
       loadCommitDetails={loadCommitDetails}
@@ -158,161 +102,13 @@ function LoadedGitHubRepoDashboard({
   loadCommitsPage: GitHubCommitsPageLoader;
 } & Omit<BranchControl, "loadBranchesPage" | "loadCommitDetails" | "loadCommitsPage">) {
   const { repo, tags, totalTags, fileTree, selectedBranch } = repoBundle;
-  const initialTotal = repoBundle.totalCommits ?? repoBundle.commits.length;
-
-  const [expandedCommitSha, setExpandedCommitSha] = useState<string | null>(null);
-  const [diffMode, setDiffMode] = useState<DiffMode>("unified");
   const [fileTreeSearch, setFileTreeSearch] = useState("");
-  const [commits, setCommits] = useState<RepoCommit[]>(() =>
-    repoBundle.commits.map((commit) =>
-      mergeCommitDetails(commit, getCachedCommitDetails(repo.full_name, commit.sha)),
-    ),
-  );
-  const [nextPage, setNextPage] = useState(2);
-  const [reachedEnd, setReachedEnd] = useState(() => repoBundle.commits.length >= initialTotal);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [loadingCommitShas, setLoadingCommitShas] = useState<Set<string>>(() => new Set());
-  const [commitFilePages, setCommitFilePages] = useState<Record<string, number>>({});
-  const [loadingMoreFilesShas, setLoadingMoreFilesShas] = useState<Set<string>>(() => new Set());
-
-  const totalCommits = Math.max(repoBundle.totalCommits ?? commits.length, commits.length);
-  const hasMoreCommits = !reachedEnd && commits.length < totalCommits;
-
-  const handleToggleCommit = async (nextSha: string | null) => {
-    setExpandedCommitSha(nextSha);
-    if (!nextSha) return;
-
-    const current = commits.find((c) => c.sha === nextSha);
-    if (current && Array.isArray(current.files) && !current.diffError) return;
-
-    const cacheKey = getCommitCacheKey(repo.full_name, nextSha);
-    const cached =
-      detailsCacheRef.current.get(cacheKey) ?? getCachedCommitDetails(repo.full_name, nextSha);
-    if (cached) {
-      setCommits((prev) =>
-        prev.map((c) => (c.sha === nextSha ? mergeCommitDetails(c, cached) : c)),
-      );
-      return;
-    }
-
-    if (loadingCommitShas.has(nextSha)) return;
-    setLoadingCommitShas((prev) => new Set(prev).add(nextSha));
-    try {
-      const details = await loadCommitDetails(repo.full_name, nextSha);
-      if (!details.diffError && Array.isArray(details.files)) {
-        detailsCacheRef.current.set(cacheKey, details);
-      }
-      setCommits((prev) =>
-        prev.map((c) => (c.sha === nextSha ? mergeCommitDetails(c, details) : c)),
-      );
-    } catch {
-      setCommits((prev) => prev.map((c) => (c.sha === nextSha ? { ...c, diffError: true } : c)));
-    } finally {
-      setLoadingCommitShas((prev) => {
-        if (!prev.has(nextSha)) return prev;
-        const next = new Set(prev);
-        next.delete(nextSha);
-        return next;
-      });
-    }
-  };
-
-  const handleLoadMoreCommitFiles = async (sha: string) => {
-    const current = commits.find((c) => c.sha === sha);
-    if (!current?.hasMoreFiles || loadingMoreFilesShas.has(sha)) return;
-
-    const pageToFetch =
-      commitFilePages[sha] ?? Math.max(2, Math.floor((current.files?.length ?? 0) / 100) + 1);
-    setLoadingMoreFilesShas((prev) => new Set(prev).add(sha));
-    try {
-      const details = await loadCommitDetails(repo.full_name, sha, pageToFetch);
-      if (details.diffError || !Array.isArray(details.files)) {
-        setCommits((prev) =>
-          prev.map((c) => (c.sha === sha ? { ...c, diffError: true, hasMoreFiles: true } : c)),
-        );
-        return;
-      }
-
-      const incomingFiles = details.files;
-      const hasMoreFiles = Boolean(details.hasMoreFiles);
-      const cacheKey = getCommitCacheKey(repo.full_name, sha);
-      const existingCached = detailsCacheRef.current.get(cacheKey);
-      const mergedFiles = mergeCommitFiles(
-        existingCached?.files ?? current.files ?? [],
-        incomingFiles,
-      );
-      detailsCacheRef.current.set(cacheKey, {
-        sha,
-        stats: details.stats ?? existingCached?.stats ?? current.stats,
-        files: mergedFiles,
-        hasMoreFiles,
-      });
-
-      setCommits((prev) =>
-        prev.map((c) =>
-          c.sha === sha
-            ? {
-                ...c,
-                ...(details.stats !== undefined ? { stats: details.stats } : {}),
-                files: mergeCommitFiles(c.files ?? [], incomingFiles),
-                diffError: undefined,
-                hasMoreFiles,
-              }
-            : c,
-        ),
-      );
-      setCommitFilePages((prev) => ({ ...prev, [sha]: pageToFetch + 1 }));
-    } catch {
-      setCommits((prev) =>
-        prev.map((c) => (c.sha === sha ? { ...c, diffError: true, hasMoreFiles: true } : c)),
-      );
-    } finally {
-      setLoadingMoreFilesShas((prev) => {
-        if (!prev.has(sha)) return prev;
-        const next = new Set(prev);
-        next.delete(sha);
-        return next;
-      });
-    }
-  };
-
-  const handleLoadMoreCommits = async () => {
-    if (isLoadingMore || reachedEnd) return;
-    setIsLoadingMore(true);
-    try {
-      const pageResult = await loadCommitsPage(repo.full_name, selectedBranch, nextPage);
-      const existingShas = new Set(commits.map((c) => c.sha));
-      const freshCommits = pageResult.commits
-        .filter((c) => !existingShas.has(c.sha))
-        .map((commit) =>
-          mergeCommitDetails(
-            commit,
-            detailsCacheRef.current.get(getCommitCacheKey(repo.full_name, commit.sha)) ??
-              getCachedCommitDetails(repo.full_name, commit.sha),
-          ),
-        );
-      const updatedCount = commits.length + freshCommits.length;
-      if (freshCommits.length > 0) {
-        setCommits((prev) => {
-          const seen = new Set(prev.map((c) => c.sha));
-          const appended = freshCommits.filter((c) => !seen.has(c.sha));
-          return appended.length > 0 ? [...prev, ...appended] : prev;
-        });
-      }
-      setNextPage((prev) => prev + 1);
-      if (
-        pageResult.commits.length === 0 ||
-        !pageResult.hasMore ||
-        (repoBundle.totalCommits !== undefined && updatedCount >= repoBundle.totalCommits)
-      ) {
-        setReachedEnd(true);
-      }
-    } catch {
-      // Keep current page and allow retrying when loading more fails.
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
+  const commitList = useRepoCommitList({
+    repoBundle,
+    detailsCacheRef,
+    loadCommitDetails,
+    loadCommitsPage,
+  });
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -333,30 +129,24 @@ function LoadedGitHubRepoDashboard({
         setFileTreeSearch={setFileTreeSearch}
       />
       <CommitHistory
-        commits={commits}
-        totalCommits={totalCommits}
-        expandedCommitSha={expandedCommitSha}
+        commits={commitList.commits}
+        totalCommits={commitList.totalCommits}
+        expandedCommitSha={commitList.expandedCommitSha}
         setExpandedCommitSha={(sha) => {
-          void handleToggleCommit(sha);
+          void commitList.toggleCommit(sha);
         }}
-        loadingCommitSha={
-          expandedCommitSha && loadingCommitShas.has(expandedCommitSha) ? expandedCommitSha : null
-        }
-        loadingMoreFilesCommitSha={
-          expandedCommitSha && loadingMoreFilesShas.has(expandedCommitSha)
-            ? expandedCommitSha
-            : null
-        }
+        loadingCommitSha={commitList.loadingCommitSha}
+        loadingMoreFilesCommitSha={commitList.loadingMoreFilesCommitSha}
         onLoadMoreCommitFiles={(sha) => {
-          void handleLoadMoreCommitFiles(sha);
+          void commitList.loadMoreCommitFiles(sha);
         }}
-        hasMoreCommits={hasMoreCommits}
-        isLoadingMore={isLoadingMore}
+        hasMoreCommits={commitList.hasMoreCommits}
+        isLoadingMore={commitList.isLoadingMore}
         onLoadMore={() => {
-          void handleLoadMoreCommits();
+          void commitList.loadMoreCommits();
         }}
-        diffMode={diffMode}
-        setDiffMode={setDiffMode}
+        diffMode={commitList.diffMode}
+        setDiffMode={commitList.setDiffMode}
       />
     </div>
   );

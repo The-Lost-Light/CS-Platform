@@ -1,4 +1,4 @@
-import { LoadingPanel } from "@shared/ui/LoadingPanel";
+import { LoadingPanel } from "@shared/ui";
 import { lazy, Suspense } from "react";
 
 import { useC4Editor } from "../hooks/useC4Editor";

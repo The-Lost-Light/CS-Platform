@@ -1,40 +1,39 @@
 import { useProjectCatalog } from "@modules/catalog";
 import type { Project } from "@modules/projects";
-import { useTransientNotice } from "@shared/transientNotice";
 import { useState } from "react";
+
+import { useManagementDialogs } from "./useManagementDialogs";
 
 export type ProjectListNotice = "admin.projects.success" | "admin.saved";
 
 export function useProjectList(initialNotice: ProjectListNotice | null = null) {
   const { projects, removeProject, replaceProjects } = useProjectCatalog();
-  const [editing, setEditing] = useState<Project | null>(null);
-  const [deleting, setDeleting] = useState<Project | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
-  const {
-    notice,
-    show: showNotice,
-    clear: clearNotice,
-  } = useTransientNotice<ProjectListNotice>(initialNotice);
-  const [search, setSearch] = useState("");
-  const canReorder = search.trim() === "" && !pending && !deleting && projects.length > 1;
+  const dialogs = useManagementDialogs<Project, ProjectListNotice>({
+    initialNotice,
+    onClearError: () => setError(false),
+  });
+  const canReorder =
+    dialogs.search.trim() === "" && !pending && !dialogs.deleting && projects.length > 1;
+
   async function remove() {
-    if (!deleting || pending) return;
+    if (!dialogs.deleting || pending) return;
     setPending(true);
     setError(false);
-    clearNotice();
+    dialogs.clearNotice();
     try {
-      const response = await fetch(`/api/projects/${deleting.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/projects/${dialogs.deleting.id}`, { method: "DELETE" });
       if (!response.ok && response.status !== 404) throw new Error("Delete failed");
-      removeProject(deleting.id);
-      setDeleting(null);
-      showNotice("admin.saved");
+      removeProject(dialogs.deleting.id);
+      dialogs.completeDelete("admin.saved");
     } catch {
       setError(true);
     } finally {
       setPending(false);
     }
   }
+
   async function reorder(orderedIds: string[]) {
     if (!canReorder || orderedIds.length !== projects.length) return;
     if (orderedIds.every((id, index) => projects[index]?.id === id)) return;
@@ -48,7 +47,7 @@ export function useProjectList(initialNotice: ProjectListNotice | null = null) {
     replaceProjects(reordered);
     setPending(true);
     setError(false);
-    clearNotice();
+    dialogs.clearNotice();
     try {
       const response = await fetch("/api/projects", {
         method: "PUT",
@@ -58,7 +57,7 @@ export function useProjectList(initialNotice: ProjectListNotice | null = null) {
       if (!response.ok) throw new Error("Reorder failed");
       const data = (await response.json()) as { projects: Project[] };
       replaceProjects(data.projects);
-      showNotice("admin.saved");
+      dialogs.showNotice("admin.saved");
     } catch {
       replaceProjects(previous);
       setError(true);
@@ -66,45 +65,33 @@ export function useProjectList(initialNotice: ProjectListNotice | null = null) {
       setPending(false);
     }
   }
+
   const visible = projects.filter((project) =>
-    `${project.index} ${project.title}`.toLowerCase().includes(search.toLowerCase()),
+    `${project.index} ${project.title}`.toLowerCase().includes(dialogs.search.toLowerCase()),
   );
+
   return {
     count: projects.length,
     visible,
-    search,
-    setSearch,
-    notice,
+    search: dialogs.search,
+    setSearch: dialogs.setSearch,
+    notice: dialogs.notice,
     pending,
-    editing,
-    deleting,
+    creating: dialogs.creating,
+    editing: dialogs.editing,
+    deleting: dialogs.deleting,
     error,
     canReorder,
     remove,
     reorder,
-    edit: (project: Project) => {
-      setEditing(project);
-      clearNotice();
-      setError(false);
-    },
-    requestDelete: (project: Project) => {
-      setDeleting(project);
-      clearNotice();
-      setError(false);
-    },
-    cancelEdit: () => setEditing(null),
-    finishCreate: () => {
-      setError(false);
-      showNotice("admin.projects.success");
-    },
-    finishEdit: () => {
-      setEditing(null);
-      setError(false);
-      showNotice("admin.saved");
-    },
-    cancelDelete: () => {
-      setDeleting(null);
-      setError(false);
-    },
+    openCreate: dialogs.openCreate,
+    cancelCreate: dialogs.cancelCreate,
+    finishCreate: () => dialogs.finishCreate("admin.projects.success"),
+    edit: dialogs.edit,
+    cancelEdit: dialogs.cancelEdit,
+    finishEdit: () => dialogs.finishEdit("admin.saved"),
+    requestDelete: dialogs.requestDelete,
+    cancelDelete: dialogs.cancelDelete,
+    resetDialogs: dialogs.resetDialogs,
   };
 }

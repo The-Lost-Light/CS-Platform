@@ -19,9 +19,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
         <Card as="div" className="w-full max-w-md p-6 space-y-4">
-          <FeedbackBanner kind="error">
-            <span>{t("auth.errors.unavailable")}</span>
-          </FeedbackBanner>
+          <FeedbackBanner kind="error">{t("auth.errors.unavailable")}</FeedbackBanner>
           <Button className="w-full" onClick={() => window.location.reload()}>
             {t("auth.retry")}
           </Button>

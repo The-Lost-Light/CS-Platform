@@ -1,5 +1,6 @@
+import { Link } from "@void/react";
 import { LoaderCircle, type LucideIcon } from "lucide-react";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from "react";
 
 import { cn } from "./cn";
 
@@ -22,36 +23,26 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "py-3 text-sm",
 };
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  icon?: LucideIcon;
-  trailingIcon?: LucideIcon;
-  iconClassName?: string;
-  loading?: boolean;
-}
-
-export function Button({
-  variant = "primary",
-  size = "md",
+function renderButtonContent({
   icon: Icon,
   trailingIcon: TrailingIcon,
   iconClassName,
+  size = "md",
   loading = false,
-  type = "button",
-  className,
   children,
-  ...props
-}: ButtonProps) {
+}: {
+  icon?: LucideIcon;
+  trailingIcon?: LucideIcon;
+  iconClassName?: string;
+  size?: ButtonSize;
+  loading?: boolean;
+  children?: ReactNode;
+}) {
   const defaultIconSize = size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4";
   const LeadingIcon = loading && !Icon ? LoaderCircle : Icon;
 
   return (
-    <button
-      type={type}
-      className={cn(variantClasses[variant], sizeClasses[size], className)}
-      {...props}
-    >
+    <>
       {LeadingIcon && (
         <LeadingIcon
           aria-hidden="true"
@@ -65,7 +56,67 @@ export function Button({
           className={cn(defaultIconSize, "shrink-0", iconClassName)}
         />
       )}
+    </>
+  );
+}
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  icon?: LucideIcon;
+  trailingIcon?: LucideIcon;
+  iconClassName?: string;
+  loading?: boolean;
+}
+
+export function Button({
+  variant = "primary",
+  size = "md",
+  icon,
+  trailingIcon,
+  iconClassName,
+  loading = false,
+  type = "button",
+  className,
+  children,
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cn(variantClasses[variant], sizeClasses[size], className)}
+      {...props}
+    >
+      {renderButtonContent({ icon, trailingIcon, iconClassName, size, loading, children })}
     </button>
+  );
+}
+
+type LinkProps = ComponentProps<typeof Link>;
+
+export interface ButtonLinkProps extends Omit<LinkProps, "className"> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  icon?: LucideIcon;
+  trailingIcon?: LucideIcon;
+  iconClassName?: string;
+  className?: string;
+}
+
+export function ButtonLink({
+  variant = "primary",
+  size = "md",
+  icon,
+  trailingIcon,
+  iconClassName,
+  className,
+  children,
+  ...props
+}: ButtonLinkProps) {
+  return (
+    <Link className={cn(variantClasses[variant], sizeClasses[size], className)} {...props}>
+      {renderButtonContent({ icon, trailingIcon, iconClassName, size, children })}
+    </Link>
   );
 }
 
@@ -114,5 +165,38 @@ export function IconButton({
     >
       <Icon aria-hidden="true" className={cn("w-4 h-4", iconClassName)} />
     </button>
+  );
+}
+
+export interface IconLinkProps extends Omit<LinkProps, "className"> {
+  icon: LucideIcon;
+  label: string;
+  withTitle?: boolean;
+  size?: IconButtonSize;
+  variant?: IconButtonVariant;
+  iconClassName?: string;
+  className?: string;
+}
+
+export function IconLink({
+  icon: Icon,
+  label,
+  withTitle = false,
+  size = "md",
+  variant = "ghost",
+  iconClassName,
+  title,
+  className,
+  ...props
+}: IconLinkProps) {
+  return (
+    <Link
+      aria-label={label}
+      title={title ?? (withTitle ? label : undefined)}
+      className={cn(iconButtonVariants[variant], iconButtonSizes[size], "shrink-0", className)}
+      {...props}
+    >
+      <Icon aria-hidden="true" className={cn("w-4 h-4", iconClassName)} />
+    </Link>
   );
 }

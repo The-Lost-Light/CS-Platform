@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test, vi } from "vite-plus/test";
 
+import { AccountList } from "@/modules/admin/ui/AccountList";
 import { AccountManagement } from "@/modules/admin/ui/AccountManagement";
 import { ConfirmDelete } from "@/modules/admin/ui/ConfirmDelete";
 import { CreateProject } from "@/modules/admin/ui/CreateProject";
@@ -153,10 +154,10 @@ test("ProjectList renders the Index header, drag handles, and sequential index b
   }
 });
 
-test("ProjectList renders reorder saved notice as a status chip before the Add button", () => {
-  for (const [locale, savedLabel, addButton] of [
-    ["zh-TW", "變更已儲存。", ">新增</button>"],
-    ["en", "Changes saved.", ">Add</button>"],
+test("ProjectList renders create and save notices as a status chip before the Add button", () => {
+  for (const [locale, createdLabel, savedLabel, addButton] of [
+    ["zh-TW", "專案已建立。", "變更已儲存。", ">新增</button>"],
+    ["en", "Project created.", "Changes saved.", ">Add</button>"],
   ] as const) {
     const idleHtml = renderToStaticMarkup(
       <I18nProvider initialLanguage={locale}>
@@ -165,21 +166,63 @@ test("ProjectList renders reorder saved notice as a status chip before the Add b
     );
     const idleHeader = idleHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
     assert.ok(!idleHeader.includes('role="status"'));
+    assert.ok(!idleHtml.includes(createdLabel));
     assert.ok(!idleHtml.includes(savedLabel));
 
-    const savedHtml = renderToStaticMarkup(
+    for (const [notice, expectedLabel] of [
+      ["admin.projects.success", createdLabel],
+      ["admin.saved", savedLabel],
+    ] as const) {
+      const savedHtml = renderToStaticMarkup(
+        <I18nProvider initialLanguage={locale}>
+          <ProjectList ref={null} initialNotice={notice} />
+        </I18nProvider>,
+      );
+      const savedHeader = savedHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+      assert.match(savedHeader, /role="status"/);
+      assert.ok(savedHeader.includes("ui-chip-success"));
+      assert.ok(savedHeader.includes("border-success-outline"));
+      assert.ok(savedHeader.includes(expectedLabel));
+      assert.ok(savedHeader.includes(addButton));
+      assert.ok(savedHeader.indexOf(expectedLabel) < savedHeader.indexOf(addButton));
+      assert.ok(!savedHtml.includes("ui-banner-success"));
+    }
+  }
+});
+
+test("AccountList renders create and save notices as a status chip before the Add button", () => {
+  for (const [locale, createdLabel, savedLabel, addButton] of [
+    ["zh-TW", "帳號已建立。", "變更已儲存。", ">新增</button>"],
+    ["en", "Account created.", "Changes saved.", ">Add</button>"],
+  ] as const) {
+    const idleHtml = renderToStaticMarkup(
       <I18nProvider initialLanguage={locale}>
-        <ProjectList ref={null} initialReorderSaved />
+        <AccountList ref={null} />
       </I18nProvider>,
     );
-    const savedHeader = savedHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
-    assert.match(savedHeader, /role="status"/);
-    assert.ok(savedHeader.includes("ui-chip-success"));
-    assert.ok(savedHeader.includes("border-success-outline"));
-    assert.ok(savedHeader.includes(savedLabel));
-    assert.ok(savedHeader.includes(addButton));
-    assert.ok(savedHeader.indexOf(savedLabel) < savedHeader.indexOf(addButton));
-    assert.ok(!savedHtml.includes("ui-banner-success"));
+    const idleHeader = idleHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+    assert.ok(!idleHeader.includes('role="status"'));
+    assert.ok(!idleHtml.includes(createdLabel));
+    assert.ok(!idleHtml.includes(savedLabel));
+
+    for (const [notice, expectedLabel] of [
+      ["admin.success", createdLabel],
+      ["admin.saved", savedLabel],
+    ] as const) {
+      const savedHtml = renderToStaticMarkup(
+        <I18nProvider initialLanguage={locale}>
+          <AccountList ref={null} initialNotice={notice} />
+        </I18nProvider>,
+      );
+      const savedHeader = savedHtml.match(/<header\b[^>]*>[\s\S]*?<\/header>/)?.[0] ?? "";
+      assert.match(savedHeader, /role="status"/);
+      assert.ok(savedHeader.includes("ui-chip-success"));
+      assert.ok(savedHeader.includes("border-success-outline"));
+      assert.ok(savedHeader.includes(expectedLabel));
+      assert.ok(savedHeader.includes(addButton));
+      assert.ok(savedHeader.indexOf(expectedLabel) < savedHeader.indexOf(addButton));
+      assert.ok(!savedHtml.includes("ui-banner-success"));
+    }
   }
 });
 test("deletion confirmation identifies the record and explains soft-delete retention and session revocation", () => {

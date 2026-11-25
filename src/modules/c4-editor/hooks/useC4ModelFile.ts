@@ -4,20 +4,14 @@ import {
   C4_FILE_MAX_BYTES,
   parseC4File,
 } from "@modules/c4-model";
-import { useEffect, useState } from "react";
+import { useTransientNotice } from "@shared/transientNotice";
+import { useState } from "react";
 
 import type { C4HistoryAction } from "../model/modelHistory";
 import type { DesignTab } from "../model/types";
 import { downloadC4Model } from "../services/c4Download";
 
 type C4FileStatus = "importSuccess" | "importError" | "fileTooLarge" | "exportError";
-
-const FILE_STATUS_DURATION_MS: Record<C4FileStatus, number> = {
-  importSuccess: 3500,
-  importError: 6000,
-  fileTooLarge: 5000,
-  exportError: 5000,
-};
 
 export function useC4ModelFile({
   nodes,
@@ -31,33 +25,26 @@ export function useC4ModelFile({
   onChangeDesignTab: (tab: DesignTab) => void;
 }) {
   const [importing, setImporting] = useState(false);
-  const [fileNotice, setFileNotice] = useState<{ status: C4FileStatus; id: number } | null>(null);
-  const fileStatus = fileNotice?.status ?? null;
-  const setFileStatus = (status: C4FileStatus | null) => {
-    setFileNotice((previous) => (status ? { status, id: (previous?.id ?? 0) + 1 } : null));
-  };
-  useEffect(() => {
-    if (!fileNotice) return;
-    const timer = setTimeout(() => {
-      setFileNotice((current) => (current?.id === fileNotice.id ? null : current));
-    }, FILE_STATUS_DURATION_MS[fileNotice.status]);
-    return () => clearTimeout(timer);
-  }, [fileNotice]);
+  const {
+    notice: fileStatus,
+    show: showFileStatus,
+    clear: clearFileStatus,
+  } = useTransientNotice<C4FileStatus>();
   const [importRevision, setImportRevision] = useState(0);
 
   const exportModel = () => {
     try {
       downloadC4Model(nodes, relationships);
-      setFileStatus(null);
+      clearFileStatus();
     } catch {
-      setFileStatus("exportError");
+      showFileStatus("exportError");
     }
   };
 
   const importModel = async (file: File) => {
-    setFileStatus(null);
+    clearFileStatus();
     if (file.size > C4_FILE_MAX_BYTES) {
-      setFileStatus("fileTooLarge");
+      showFileStatus("fileTooLarge");
       return;
     }
     setImporting(true);
@@ -66,9 +53,9 @@ export function useC4ModelFile({
       dispatchModel({ type: "edit", apply: () => model });
       setImportRevision((value) => value + 1);
       onChangeDesignTab("diagram");
-      setFileStatus("importSuccess");
+      showFileStatus("importSuccess");
     } catch {
-      setFileStatus("importError");
+      showFileStatus("importError");
     } finally {
       setImporting(false);
     }

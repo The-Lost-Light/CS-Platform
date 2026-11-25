@@ -21,6 +21,7 @@ import {
   TextArea,
   TextInput,
   Tooltip,
+  TransientNotice,
   cn,
 } from "@shared/ui";
 import { Check, FolderGit2, Plus, Search, X } from "lucide-react";
@@ -246,6 +247,25 @@ test("SegmentedControl, Tooltip, DataTable, Menu, FeedbackBanner, and LoadingPan
   );
   assert.ok(warningBanner.includes("ui-banner-warning"));
   assert.ok(warningBanner.includes('role="status"'));
+
+  assert.strictEqual(renderToStaticMarkup(<TransientNotice message={null} />), "");
+
+  const successChip = renderToStaticMarkup(<TransientNotice kind="success" message="Saved" />);
+  assert.ok(successChip.includes('role="status"'));
+  assert.ok(successChip.includes("ui-chip-success"));
+  assert.ok(successChip.includes("border-success-outline"));
+
+  const errorChip = renderToStaticMarkup(<TransientNotice kind="error" message="Failed" />);
+  assert.ok(errorChip.includes('role="alert"'));
+  assert.ok(errorChip.includes("ui-chip-danger"));
+  assert.ok(errorChip.includes("border-danger-outline"));
+
+  const warningChipStatus = renderToStaticMarkup(
+    <TransientNotice kind="warning" message="Attention" />,
+  );
+  assert.ok(warningChipStatus.includes('role="status"'));
+  assert.ok(warningChipStatus.includes("ui-chip-warning"));
+  assert.ok(warningChipStatus.includes("border-warning-outline"));
 
   const loadingHtml = renderToStaticMarkup(<LoadingPanel label="Loading..." />);
   assert.ok(loadingHtml.includes('role="status"'));

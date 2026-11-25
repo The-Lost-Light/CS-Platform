@@ -1,21 +1,18 @@
-import { useI18n } from "@modules/i18n";
-import { Button, CardHeader, TextInput } from "@shared/ui";
+import { useI18n, type MessageKey } from "@modules/i18n";
+import { Button, CardHeader, TextInput, TransientNotice } from "@shared/ui";
 import { Plus, Search, type LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
 
 export function ManagementListHeader({
   title,
   icon,
-  className,
   disabled,
-  status,
+  notice,
   onAdd,
 }: {
   title: string;
   icon: LucideIcon;
-  className: string;
   disabled: boolean;
-  status?: ReactNode;
+  notice?: MessageKey | null;
   onAdd: () => void;
 }) {
   const { t } = useI18n();
@@ -24,10 +21,10 @@ export function ManagementListHeader({
       as="header"
       icon={icon}
       title={title}
-      layoutClassName={className}
+      layoutClassName="flex flex-wrap items-center justify-between gap-3"
       actions={
         <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
-          {status}
+          <TransientNotice message={notice && t(notice)} />
           <Button
             icon={Plus}
             disabled={disabled}

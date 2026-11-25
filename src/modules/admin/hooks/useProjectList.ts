@@ -1,45 +1,34 @@
 import { useProjectCatalog } from "@modules/catalog";
 import type { Project } from "@modules/projects";
-import { useEffect, useState } from "react";
+import { useTransientNotice } from "@shared/transientNotice";
+import { useState } from "react";
 
-const REORDER_SAVED_DURATION_MS = 3500;
+export type ProjectListNotice = "admin.projects.success" | "admin.saved";
 
-export function useProjectList(initialReorderSaved = false) {
+export function useProjectList(initialNotice: ProjectListNotice | null = null) {
   const { projects, removeProject, replaceProjects } = useProjectCatalog();
   const [editing, setEditing] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState<Project | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
-  const [saved, setSaved] = useState<Project | "updated" | null>(null);
-  const [reorderNotice, setReorderNotice] = useState<{ id: number } | null>(
-    initialReorderSaved ? { id: 1 } : null,
-  );
-  const reorderSaved = reorderNotice !== null;
-  const showReorderSaved = () => {
-    setReorderNotice((previous) => ({ id: (previous?.id ?? 0) + 1 }));
-  };
-  const clearReorderSaved = () => setReorderNotice(null);
-  useEffect(() => {
-    if (!reorderNotice) return;
-    const timer = setTimeout(() => {
-      setReorderNotice((current) => (current?.id === reorderNotice.id ? null : current));
-    }, REORDER_SAVED_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [reorderNotice]);
+  const {
+    notice,
+    show: showNotice,
+    clear: clearNotice,
+  } = useTransientNotice<ProjectListNotice>(initialNotice);
   const [search, setSearch] = useState("");
   const canReorder = search.trim() === "" && !pending && !deleting && projects.length > 1;
   async function remove() {
     if (!deleting || pending) return;
     setPending(true);
     setError(false);
-    setSaved(null);
-    clearReorderSaved();
+    clearNotice();
     try {
       const response = await fetch(`/api/projects/${deleting.id}`, { method: "DELETE" });
       if (!response.ok && response.status !== 404) throw new Error("Delete failed");
       removeProject(deleting.id);
       setDeleting(null);
-      setSaved("updated");
+      showNotice("admin.saved");
     } catch {
       setError(true);
     } finally {
@@ -59,8 +48,7 @@ export function useProjectList(initialReorderSaved = false) {
     replaceProjects(reordered);
     setPending(true);
     setError(false);
-    setSaved(null);
-    clearReorderSaved();
+    clearNotice();
     try {
       const response = await fetch("/api/projects", {
         method: "PUT",
@@ -70,7 +58,7 @@ export function useProjectList(initialReorderSaved = false) {
       if (!response.ok) throw new Error("Reorder failed");
       const data = (await response.json()) as { projects: Project[] };
       replaceProjects(data.projects);
-      showReorderSaved();
+      showNotice("admin.saved");
     } catch {
       replaceProjects(previous);
       setError(true);
@@ -86,8 +74,7 @@ export function useProjectList(initialReorderSaved = false) {
     visible,
     search,
     setSearch,
-    saved,
-    reorderSaved,
+    notice,
     pending,
     editing,
     deleting,
@@ -97,25 +84,23 @@ export function useProjectList(initialReorderSaved = false) {
     reorder,
     edit: (project: Project) => {
       setEditing(project);
-      setSaved(null);
-      clearReorderSaved();
+      clearNotice();
       setError(false);
     },
     requestDelete: (project: Project) => {
       setDeleting(project);
-      setSaved(null);
-      clearReorderSaved();
+      clearNotice();
       setError(false);
     },
     cancelEdit: () => setEditing(null),
-    finishCreate: (project: Project) => {
-      clearReorderSaved();
-      setSaved(project);
+    finishCreate: () => {
+      setError(false);
+      showNotice("admin.projects.success");
     },
     finishEdit: () => {
       setEditing(null);
-      clearReorderSaved();
-      setSaved("updated");
+      setError(false);
+      showNotice("admin.saved");
     },
     cancelDelete: () => setDeleting(null),
   };

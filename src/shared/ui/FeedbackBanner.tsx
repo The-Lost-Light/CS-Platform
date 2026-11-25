@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import { cn } from "./cn";
 
+export type FeedbackKind = "error" | "success" | "warning";
+
 const bannerStyles = {
   error: { role: "alert", className: "ui-banner-danger", icon: AlertCircle },
   warning: { role: "status", className: "ui-banner-warning", icon: AlertTriangle },
@@ -15,7 +17,7 @@ export function FeedbackBanner({
   action,
   className,
 }: {
-  kind: "error" | "success" | "warning";
+  kind: FeedbackKind;
   children: ReactNode;
   action?: ReactNode;
   className?: string;

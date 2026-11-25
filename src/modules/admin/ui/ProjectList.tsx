@@ -1,10 +1,10 @@
 import { useI18n } from "@modules/i18n";
 import { Card, Chip, DataTable, FeedbackBanner } from "@shared/ui";
 import { Link } from "@void/react";
-import { CheckCircle2, FolderGit2, GripVertical } from "lucide-react";
+import { FolderGit2, GripVertical } from "lucide-react";
 import { useImperativeHandle, useState, type DragEvent, type Ref } from "react";
 
-import { useProjectList } from "../hooks/useProjectList";
+import { useProjectList, type ProjectListNotice } from "../hooks/useProjectList";
 import { ConfirmDelete } from "./ConfirmDelete";
 import { CreateProject } from "./CreateProject";
 import {
@@ -16,10 +16,10 @@ import type { ManagementListHandle } from "./ManagementListHandle";
 
 export function ProjectList({
   ref,
-  initialReorderSaved = false,
+  initialNotice = null,
 }: {
   ref: Ref<ManagementListHandle>;
-  initialReorderSaved?: boolean;
+  initialNotice?: ProjectListNotice | null;
 }) {
   const { t } = useI18n();
   const [creating, setCreating] = useState(false);
@@ -30,8 +30,7 @@ export function ProjectList({
     visible,
     search,
     setSearch,
-    saved,
-    reorderSaved,
+    notice,
     pending,
     editing,
     deleting,
@@ -45,7 +44,7 @@ export function ProjectList({
     finishEdit,
     finishCreate,
     cancelDelete,
-  } = useProjectList(initialReorderSaved);
+  } = useProjectList(initialNotice);
   useImperativeHandle(ref, () => ({
     showList() {
       setCreating(false);
@@ -74,42 +73,16 @@ export function ProjectList({
   return (
     <Card overflowHidden>
       <ManagementListHeader
-        className="flex flex-wrap items-center justify-between gap-3"
         title={t("admin.allProjects", { count })}
         icon={FolderGit2}
         disabled={!!deleting}
-        status={
-          reorderSaved && (
-            <Chip
-              variant="success"
-              icon={CheckCircle2}
-              role="status"
-              className="max-w-full sm:max-w-sm px-3.5 py-1.5 border border-success-outline transition-colors"
-            >
-              <span>{t("admin.saved")}</span>
-            </Chip>
-          )
-        }
+        notice={notice}
         onAdd={() => setCreating(true)}
       />
 
       <div className="p-5 sm:p-6 space-y-4">
         <ManagementSearch value={search} onChange={setSearch} />
 
-        {saved && (
-          <FeedbackBanner kind="success">
-            {saved === "updated" ? (
-              <span>{t("admin.saved")}</span>
-            ) : (
-              <>
-                <span>{t("admin.projects.success")}</span>
-                <Link href={`/projects/${saved.id}`} className="underline font-semibold">
-                  {t("admin.projects.open")} — {saved.title}
-                </Link>
-              </>
-            )}
-          </FeedbackBanner>
-        )}
         {error && (
           <FeedbackBanner kind="error">
             <span>{t("admin.operationFailed")}</span>
@@ -220,9 +193,9 @@ export function ProjectList({
       {creating && (
         <CreateProject
           onCancel={() => setCreating(false)}
-          onSaved={(project) => {
+          onSaved={() => {
             setCreating(false);
-            finishCreate(project);
+            finishCreate();
           }}
         />
       )}

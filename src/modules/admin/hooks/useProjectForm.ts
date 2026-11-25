@@ -2,7 +2,7 @@ import { useProjectCatalog } from "@modules/catalog";
 import { attachmentsWithinLimit, type Project, type ProjectAttachment } from "@modules/projects";
 import { useState, type FormEvent } from "react";
 
-export function useProjectForm(original: Project | undefined, onSaved: (project: Project) => void) {
+export function useProjectForm(original: Project | undefined, onSaved: () => void) {
   const { addProject } = useProjectCatalog();
   const [attachments, setAttachments] = useState<(ProjectAttachment | File)[]>(
     original?.attachments ?? [],
@@ -41,7 +41,7 @@ export function useProjectForm(original: Project | undefined, onSaved: (project:
       }
       const { project } = (await response.json()) as { project: Project };
       addProject(project);
-      onSaved(project);
+      onSaved();
     } catch {
       setError("failed");
     } finally {

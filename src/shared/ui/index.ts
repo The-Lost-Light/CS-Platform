@@ -35,7 +35,12 @@ export {
 } from "./Card";
 export { cn } from "./cn";
 export { DataTable, type DataTableProps } from "./DataTable";
-export { FeedbackBanner } from "./FeedbackBanner";
+export {
+  TRANSIENT_NOTICE_DURATION_MS,
+  TransientNotice,
+  useTransientNotice,
+} from "../transientNotice";
+export { FeedbackBanner, type FeedbackKind } from "./FeedbackBanner";
 export { FormDialog, FormDialogActions } from "./FormDialog";
 export {
   FormField,

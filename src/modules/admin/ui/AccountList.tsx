@@ -12,7 +12,7 @@ import {
 import { Users } from "lucide-react";
 import { useImperativeHandle, useState, type Ref } from "react";
 
-import { useAccountList } from "../hooks/useAccountList";
+import { useAccountList, type AccountListNotice } from "../hooks/useAccountList";
 import { AccountManagement } from "./AccountManagement";
 import { ConfirmDelete } from "./ConfirmDelete";
 import {
@@ -27,7 +27,13 @@ const accountErrors = new Map<string, MessageKey>([
   ["protected", "admin.protectedAccount"],
 ]);
 
-export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
+export function AccountList({
+  ref,
+  initialNotice = null,
+}: {
+  ref: Ref<ManagementListHandle>;
+  initialNotice?: AccountListNotice | null;
+}) {
   const { t } = useI18n();
   const [creating, setCreating] = useState(false);
   const {
@@ -35,7 +41,7 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
     visible,
     selfId,
     pending,
-    saved,
+    notice,
     error,
     loading,
     editing,
@@ -50,7 +56,7 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
     cancelEdit,
     cancelDelete,
     confirmDelete,
-  } = useAccountList();
+  } = useAccountList(initialNotice);
   useImperativeHandle(ref, () => ({
     showList() {
       setCreating(false);
@@ -61,19 +67,14 @@ export function AccountList({ ref }: { ref: Ref<ManagementListHandle> }) {
   return (
     <Card overflowHidden>
       <ManagementListHeader
-        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2"
         title={t("admin.allAccounts", { count })}
         icon={Users}
         disabled={!!deleting}
+        notice={notice}
         onAdd={() => setCreating(true)}
       />
 
       <div className="p-5 sm:p-6 space-y-4">
-        {saved && (
-          <FeedbackBanner kind="success">
-            <span>{t(saved)}</span>
-          </FeedbackBanner>
-        )}
         {error && (
           <FeedbackBanner
             kind="error"

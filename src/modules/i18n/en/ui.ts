@@ -70,7 +70,6 @@ export default {
   "admin.projects.failed":
     "Could not create the project. Check your administrator session and retry.",
   "admin.projects.success": "Project created.",
-  "admin.projects.open": "Open project",
   "admin.projects.loadError": "Could not load projects.",
   "admin.title": "Account management",
   "admin.role": "Administrator",

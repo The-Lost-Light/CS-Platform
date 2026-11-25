@@ -7,6 +7,8 @@ import {
   FormDialogActions,
   FormField,
   TextInput,
+  TransientNotice,
+  useTransientNotice,
 } from "@shared/ui";
 import { KeyRound } from "lucide-react";
 import { useState } from "react";
@@ -20,6 +22,7 @@ export function ChangeAccountPassword({
   isSelf,
   requireCurrentPassword = true,
   initialOpen = false,
+  initialNotice = null,
   disabled,
 }: {
   endpoint: string;
@@ -27,11 +30,16 @@ export function ChangeAccountPassword({
   isSelf: boolean;
   requireCurrentPassword?: boolean;
   initialOpen?: boolean;
+  initialNotice?: "admin.passwordChanged" | null;
   disabled: boolean;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(initialOpen);
-  const [saved, setSaved] = useState(false);
+  const {
+    notice: savedNotice,
+    show: showSavedNotice,
+    clear: clearSavedNotice,
+  } = useTransientNotice<"admin.passwordChanged">(initialNotice);
   const limits = { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH };
 
   const { pending, error, submit, clearError } = useAccountUpdate(
@@ -50,7 +58,7 @@ export function ChangeAccountPassword({
     },
     (signedOut) => {
       setOpen(false);
-      if (!signedOut) setSaved(true);
+      if (!signedOut) showSavedNotice("admin.passwordChanged");
     },
   );
 
@@ -63,18 +71,17 @@ export function ChangeAccountPassword({
         aria-haspopup="dialog"
         disabled={disabled}
         onClick={() => {
-          setSaved(false);
+          clearSavedNotice();
           clearError();
           setOpen(true);
         }}
       >
         <span>{t("admin.changePassword")}</span>
       </Button>
-      {saved && (
-        <FeedbackBanner kind="success" className="col-span-full mt-2">
-          <span>{t("admin.passwordChanged")}</span>
-        </FeedbackBanner>
-      )}
+      <TransientNotice
+        message={savedNotice && t(savedNotice)}
+        className="col-span-full justify-self-end mt-1"
+      />
       {open && (
         <FormDialog
           title={t("admin.changePasswordFor", { email })}

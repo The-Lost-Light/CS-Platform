@@ -1,4 +1,7 @@
+import { useTransientNotice } from "@shared/transientNotice";
 import { useEffect, useState } from "react";
+
+export type AccountListNotice = "admin.saved" | "admin.success";
 
 interface Account {
   id: string;
@@ -8,14 +11,18 @@ interface Account {
   banned: boolean | null;
 }
 
-export function useAccountList() {
+export function useAccountList(initialNotice: AccountListNotice | null = null) {
   const [users, setUsers] = useState<Account[]>([]);
   const [selfId, setSelfId] = useState("");
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<"admin.saved" | "admin.success" | null>(null);
+  const {
+    notice,
+    show: showNotice,
+    clear: clearNotice,
+  } = useTransientNotice<AccountListNotice>(initialNotice);
   const [editing, setEditing] = useState<Account | null>(null);
   const [deleting, setDeleting] = useState<Account | null>(null);
   const [search, setSearch] = useState("");
@@ -52,7 +59,8 @@ export function useAccountList() {
 
   function finishEdit() {
     setEditing(null);
-    setSaved("admin.saved");
+    setError(null);
+    showNotice("admin.saved");
     reload();
   }
 
@@ -60,7 +68,7 @@ export function useAccountList() {
     if (!deleting || pending) return;
     setPending(true);
     setError(null);
-    setSaved(null);
+    clearNotice();
     try {
       const response = await fetch(`/api/admin/accounts/${encodeURIComponent(deleting.id)}`, {
         method: "DELETE",
@@ -71,7 +79,7 @@ export function useAccountList() {
         return;
       }
       setDeleting(null);
-      setSaved("admin.saved");
+      showNotice("admin.saved");
       reload();
     } catch {
       setError("failed");
@@ -86,19 +94,19 @@ export function useAccountList() {
   function edit(user: Account) {
     setEditing(user);
     setError(null);
-    setSaved(null);
+    clearNotice();
   }
   function requestDelete(user: Account) {
     setDeleting(user);
     setError(null);
-    setSaved(null);
+    clearNotice();
   }
   return {
     count: users.length,
     visible,
     selfId,
     pending,
-    saved,
+    notice,
     error,
     loading,
     editing,
@@ -107,7 +115,8 @@ export function useAccountList() {
     setSearch,
     finishEdit,
     finishCreate: () => {
-      setSaved("admin.success");
+      setError(null);
+      showNotice("admin.success");
       reload();
     },
     edit,

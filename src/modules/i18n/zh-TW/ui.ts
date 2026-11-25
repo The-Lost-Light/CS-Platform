@@ -67,7 +67,6 @@ export default {
   "admin.projects.invalid": "請檢查必填欄位、截止時間、配分及附加文件。",
   "admin.projects.failed": "建立失敗，請確認管理員登入狀態並重試。",
   "admin.projects.success": "專案已建立。",
-  "admin.projects.open": "開啟專案",
   "admin.projects.loadError": "無法載入專案列表。",
   "admin.title": "帳號管理",
   "admin.role": "管理者",

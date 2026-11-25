@@ -1,6 +1,6 @@
 import { useI18n } from "@modules/i18n";
-import { Button, Chip, cn } from "@shared/ui";
-import { AlertCircle, CheckCircle2, Download, Upload } from "lucide-react";
+import { Button, TransientNotice } from "@shared/ui";
+import { Download, Upload } from "lucide-react";
 import { useRef } from "react";
 
 import type { C4ModelFile } from "../hooks/useC4ModelFile";
@@ -19,19 +19,10 @@ export function C4FileActions({
 
   return (
     <div className="ml-auto flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">
-      {fileStatus && (
-        <Chip
-          variant={isSuccess ? "success" : "danger"}
-          icon={isSuccess ? CheckCircle2 : AlertCircle}
-          role={isSuccess ? "status" : "alert"}
-          className={cn(
-            "max-w-full sm:max-w-sm px-3.5 py-1.5 border transition-colors",
-            isSuccess ? "border-success-outline" : "border-danger-outline",
-          )}
-        >
-          <span>{t(`c4.${fileStatus}`)}</span>
-        </Chip>
-      )}
+      <TransientNotice
+        kind={isSuccess ? "success" : "error"}
+        message={fileStatus && t(`c4.${fileStatus}`)}
+      />
       {!readOnly && (
         <Button
           variant="tonal"

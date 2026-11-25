@@ -116,3 +116,41 @@ test("EditAccountDialog sets requireCurrentPassword only for self or admin targe
     assert.strictEqual(capturedProps[0].requireCurrentPassword, testCase.expectedRequireCurrent);
   }
 });
+
+test("ChangeAccountPassword renders password updated notice as a TransientNotice instead of a banner", () => {
+  for (const [locale, expectedLabel] of [
+    ["zh-TW", "密碼已更新。"],
+    ["en", "Password updated."],
+  ] as const) {
+    const idleHtml = renderToStaticMarkup(
+      <I18nProvider initialLanguage={locale}>
+        <ChangeAccountPassword
+          endpoint="/api/account"
+          email="self@example.com"
+          isSelf
+          disabled={false}
+        />
+      </I18nProvider>,
+    );
+    assert.ok(!idleHtml.includes('role="status"'));
+    assert.ok(!idleHtml.includes(expectedLabel));
+    assert.ok(!idleHtml.includes("ui-banner-success"));
+
+    const savedHtml = renderToStaticMarkup(
+      <I18nProvider initialLanguage={locale}>
+        <ChangeAccountPassword
+          endpoint="/api/account"
+          email="self@example.com"
+          isSelf
+          initialNotice="admin.passwordChanged"
+          disabled={false}
+        />
+      </I18nProvider>,
+    );
+    assert.match(savedHtml, /role="status"/);
+    assert.ok(savedHtml.includes("ui-chip-success"));
+    assert.ok(savedHtml.includes("border-success-outline"));
+    assert.ok(savedHtml.includes(expectedLabel));
+    assert.ok(!savedHtml.includes("ui-banner-success"));
+  }
+});

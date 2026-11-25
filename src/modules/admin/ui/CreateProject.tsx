@@ -26,7 +26,7 @@ export function CreateProject({
   onCancel,
 }: {
   project?: Project;
-  onSaved: (project: Project) => void;
+  onSaved: () => void;
   onCancel: () => void;
 }) {
   const { t } = useI18n();

@@ -1,6 +1,22 @@
 import type source from "../en/ui";
 
 export default {
+  "history.added": "新增",
+  "history.removed": "移除",
+  "history.modified": "修改",
+  "history.previous": "{label}往前一版",
+  "history.next": "{label}往後一版",
+  "history.title": "設計歷程",
+  "history.heading": "設計歷程 · 共 {total} 版",
+  "history.from": "起始版本",
+  "history.to": "對照版本",
+  "history.version": "第 {version} 版",
+  "history.empty": "這位學生尚無設計修改紀錄。",
+  "history.error": "無法載入設計歷程。",
+  "history.blankReadme": "此版 README.md 為空白。",
+  "history.nodes": "節點（{count}）",
+  "history.edges": "關係（{count}）",
+  "history.viewDiagram": "查看此版圖面",
   "draft.empty": "尚未儲存作業",
   "draft.unsaved": "有未儲存的修改",
   "draft.saving": "儲存中…",

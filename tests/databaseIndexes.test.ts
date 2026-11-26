@@ -142,6 +142,37 @@ test("migrations create expected FK and sort/filter indexes cleanly", () => {
   }
 });
 
+test("design history migration keeps the original time and ordered parts when the workspace is replaced", () => {
+  const sqlite = createMigratedDb((database, tag) => {
+    if (!tag.startsWith("20261126111819_")) return;
+    database.exec(`
+      INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt,deleted) VALUES ('s','Student','s@example.test',0,1,1,0);
+      INSERT INTO course_project VALUES ('p',1,'{}','a',1,0);
+      INSERT INTO personal_workspace VALUES ('old','p','s',42);
+      INSERT INTO personal_workspace_part VALUES ('old',1,'稿📚"}'), ('old',0,'{"designDoc":"初');
+    `);
+  });
+  try {
+    sqlite.exec("DELETE FROM personal_workspace WHERE revision = 'old'");
+    const row = sqlite
+      .prepare(
+        "SELECT user_id, project_id, version, edited_at, checkpoint FROM design_version WHERE id='old'",
+      )
+      .get();
+    assert.deepEqual(
+      { ...row },
+      { user_id: "s", project_id: "p", version: 1, edited_at: 42, checkpoint: 1 },
+    );
+    const parts = sqlite
+      .prepare("SELECT content FROM design_version_part WHERE id='old' ORDER BY part")
+      .all();
+    assert.equal(parts.map((row) => row.content).join(""), '{"designDoc":"初稿📚"}');
+    assert.deepEqual(sqlite.prepare("PRAGMA foreign_key_check").all(), []);
+  } finally {
+    sqlite.close();
+  }
+});
+
 test("partial active index allows atomic reorders while keeping soft-deleted records", () => {
   const sqlite = createMigratedDb();
   try {

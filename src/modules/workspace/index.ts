@@ -1,4 +1,9 @@
 export {
+  emptyModel,
+  MAX_EDITS_PER_SAVE,
+  type DesignContent,
+  type DesignEdit,
+  type DesignVersion,
   type PersonalWorkspace,
   type StudentWorkspaceSummary,
   type WorkspaceSnapshot,

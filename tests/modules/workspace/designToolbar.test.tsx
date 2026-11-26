@@ -451,6 +451,7 @@ test("ProjectWorkspace locks edits when deadlineLocked and renders student navig
   assert.ok(lockedHtml.includes("截止前尚未撰寫 README 設計文件。"));
   assert.ok(lockedHtml.includes("截止前尚未綁定 GitHub 倉庫。"));
   assert.ok(!lockedHtml.includes("尚未儲存作業"));
+  assert.ok(!lockedHtml.includes("設計歷程"));
   assert.notMatch(lockedHtml, /type="file"/);
 
   const navHtml = renderToStaticMarkup(
@@ -480,6 +481,7 @@ test("ProjectWorkspace locks edits when deadlineLocked and renders student navig
     </ThemeProvider>,
   );
   assert.ok(navHtml.includes("Viewing: Bob"));
+  assert.ok(navHtml.includes("Design history"));
   assert.ok(navHtml.includes("Late · Updated 2026-11-26 01:15 (UTC+8)"));
   assert.ok(navHtml.includes("2 / 3"));
   assert.ok(navHtml.includes('aria-label="Previous student: Alice"'));

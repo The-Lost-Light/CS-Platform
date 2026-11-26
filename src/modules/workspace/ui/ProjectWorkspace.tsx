@@ -15,6 +15,7 @@ import {
 import { GitHubRepoDashboard, RepositoryConnection } from "@modules/repository";
 import {
   Chip,
+  Button,
   FeedbackBanner,
   IconButton,
   IconLink,
@@ -33,14 +34,17 @@ import {
   FileText,
   FolderGit2,
   GitBranch,
+  History,
   Lock,
   X,
 } from "lucide-react";
 import { useState } from "react";
 
 import { useProjectWorkspace, type WorkspaceTab } from "../hooks/useProjectWorkspace";
+import { useWorkspaceAutosave } from "../hooks/useWorkspaceAutosave";
 import type { WorkspaceSnapshot } from "../model/personalWorkspace";
 import { AssignmentPanel } from "./AssignmentPanel";
+import { DesignHistory } from "./DesignHistory";
 import { SaveWorkspace } from "./SaveWorkspace";
 
 const toolbarRowClass = "mt-4 -mx-5 sm:-mx-6 border-t border-outline-subtle px-5 sm:px-6 pt-4";
@@ -88,19 +92,22 @@ export function ProjectWorkspace({
   now?: number;
 }) {
   const { t } = useI18n();
-  const {
-    repository,
-    draft,
-    revision,
-    setRevision,
-    activeTab,
-    setActiveTab,
-    designTab,
-    setDesignTab,
-  } = useProjectWorkspace(snapshot, undefined, initialActiveTab, initialDesignTab);
-  const { history, dispatchModel, designDoc, setDesignDoc } = draft;
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(snapshot.updatedAt ?? null);
+  const [lastSavedAt, setLastSavedAt] = useState(snapshot.updatedAt);
   const effectiveReadOnly = readOnly || deadlineLocked;
+  const [showHistory, setShowHistory] = useState(false);
+  const autosave = useWorkspaceAutosave(
+    project.id,
+    snapshot,
+    !effectiveReadOnly,
+    (_, time) => {
+      setLastSavedAt(time);
+      onWorkspaceSaved?.(project.id, time);
+    },
+    onDeadlineLocked,
+  );
+  const { repository, draft, activeTab, setActiveTab, designTab, setDesignTab } =
+    useProjectWorkspace(snapshot, undefined, initialActiveTab, initialDesignTab, autosave.update);
+  const { history, dispatchModel, designDoc, setDesignDoc } = draft;
 
   function handleActiveTabChange(tab: WorkspaceTab) {
     setActiveTab(tab);
@@ -192,22 +199,7 @@ export function ProjectWorkspace({
                 <span>{t("workspace.deadlineLockedBadge")}</span>
               </Chip>
             ) : (
-              <SaveWorkspace
-                projectId={project.id}
-                accountId={snapshot.accountId}
-                revision={revision}
-                updatedAt={lastSavedAt}
-                onSaved={(nextRevision, nextUpdatedAt) => {
-                  setRevision(nextRevision);
-                  setLastSavedAt(nextUpdatedAt);
-                  onWorkspaceSaved?.(project.id, nextUpdatedAt);
-                }}
-                onDeadlineLocked={onDeadlineLocked}
-                designDoc={designDoc}
-                nodes={history.present.nodes}
-                relationships={history.present.relationships}
-                repoUrl={repository.repoUrl}
-              />
+              <SaveWorkspace status={autosave.status} updatedAt={lastSavedAt} />
             )}
             <SegmentedControl
               role="tablist"
@@ -258,10 +250,26 @@ export function ProjectWorkspace({
       >
         {activeTab === "design" && (
           <div className={cn(toolbarRowClass, "flex flex-wrap items-center justify-between gap-3")}>
-            <DesignTabs designTab={designTab} onChangeDesignTab={handleDesignTabChange} />
-            {designTab === "diagram" && (
-              <C4FileActions file={c4File} readOnly={effectiveReadOnly} />
-            )}
+            <DesignTabs
+              designTab={designTab}
+              onChangeDesignTab={handleDesignTabChange}
+              history={showHistory}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              {readOnly && (
+                <Button
+                  icon={History}
+                  variant={showHistory ? "tonal" : "outlined"}
+                  aria-pressed={showHistory}
+                  onClick={() => setShowHistory(!showHistory)}
+                >
+                  {t("history.title")}
+                </Button>
+              )}
+              {designTab === "diagram" && !showHistory && (
+                <C4FileActions file={c4File} readOnly={effectiveReadOnly} />
+              )}
+            </div>
           </div>
         )}
         <div className={toolbarRowClass} hidden={activeTab !== "github"}>
@@ -299,21 +307,31 @@ export function ProjectWorkspace({
         className="mt-6"
         hidden={activeTab !== "design"}
       >
-        <C4Architect
-          key={project.id}
-          history={history}
-          dispatchModel={dispatchModel}
-          designDoc={designDoc}
-          onChangeDesignDoc={setDesignDoc}
-          designTab={designTab}
-          onChangeDesignTab={handleDesignTabChange}
-          importing={c4File.importing}
-          importRevision={c4File.importRevision}
-          readOnly={effectiveReadOnly}
-          emptyReadOnlyMessage={
-            deadlineLocked && !readOnly ? t("workspace.lockedNoReadme") : undefined
-          }
-        />
+        {showHistory && readOnly ? (
+          <div
+            role="tabpanel"
+            id="design-history-panel"
+            aria-labelledby={`design-tab-${designTab}`}
+          >
+            <DesignHistory projectId={project.id} accountId={snapshot.accountId} tab={designTab} />
+          </div>
+        ) : (
+          <C4Architect
+            key={project.id}
+            history={history}
+            dispatchModel={dispatchModel}
+            designDoc={designDoc}
+            onChangeDesignDoc={setDesignDoc}
+            designTab={designTab}
+            onChangeDesignTab={handleDesignTabChange}
+            importing={c4File.importing}
+            importRevision={c4File.importRevision}
+            readOnly={effectiveReadOnly}
+            emptyReadOnlyMessage={
+              deadlineLocked && !readOnly ? t("workspace.lockedNoReadme") : undefined
+            }
+          />
+        )}
       </div>
       <div
         role="tabpanel"

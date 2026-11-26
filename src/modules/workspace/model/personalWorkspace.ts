@@ -13,6 +13,19 @@ export interface WorkspaceSnapshot {
   draft: PersonalWorkspace | null;
 }
 
+export type DesignContent = Pick<PersonalWorkspace, "designDoc" | "model">;
+export type DesignEdit = DesignContent & { editedAt: number };
+export type DesignVersion = DesignEdit & { version: number };
+export const MAX_EDITS_PER_SAVE = 12;
+export type PendingEdit = { draft: PersonalWorkspace; editedAt: number };
+export type SaveBatch = { writeId: string; edits: PendingEdit[] };
+export const emptyModel = (): PersonalWorkspace["model"] => ({
+  format: "cap-c4",
+  version: 1,
+  nodes: [],
+  relationships: [],
+});
+
 export interface StudentWorkspaceSummary {
   id: string;
   name: string;

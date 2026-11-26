@@ -102,3 +102,32 @@ export const workspaceParts = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.revision, table.part] })],
 );
+
+export const designVersions = sqliteTable(
+  "design_version",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    editedAt: integer("edited_at").notNull(),
+    checkpoint: integer("checkpoint", { mode: "boolean" }).notNull(),
+  },
+  (table) => [unique().on(table.projectId, table.userId, table.version)],
+);
+
+export const designVersionParts = sqliteTable(
+  "design_version_part",
+  {
+    id: text("id")
+      .notNull()
+      .references(() => designVersions.id, { onDelete: "cascade" }),
+    part: integer("part").notNull(),
+    content: text("content").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.id, table.part] })],
+);

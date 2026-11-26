@@ -131,7 +131,9 @@ test("saveWorkspace emits separate single-row part inserts bounded by UTF-8 byte
     },
   };
 
-  const result = await saveWorkspace("user-1", "proj-1", null, draft);
+  const result = await saveWorkspace("user-1", "proj-1", null, draft, null, [
+    { ...draft, editedAt: 1 },
+  ]);
   assert.strictEqual(result.status, "saved");
   if (result.status !== "saved") return;
 
@@ -139,7 +141,8 @@ test("saveWorkspace emits separate single-row part inserts bounded by UTF-8 byte
   const statements = dbState.batch.mock.calls[0][0];
   assert.ok(statements.length >= 6);
 
-  const [deleteStmt, insertWorkspaceStmt, ...partInserts] = statements;
+  const [deleteStmt, insertWorkspaceStmt] = statements;
+  const partInserts = statements.filter((stmt) => stmt.table === workspaceParts);
   assert.strictEqual(deleteStmt.kind, "delete");
   assert.strictEqual(deleteStmt.table, workspaces);
   assert.strictEqual(insertWorkspaceStmt.kind, "insert-select");
@@ -173,13 +176,13 @@ test("saveWorkspace maps unique violations to conflict and missing project error
   };
 
   dbState.batch.mockRejectedValueOnce(new Error("UNIQUE constraint failed: personal_workspace"));
-  assert.deepEqual(await saveWorkspace("user-1", "proj-1", "rev-1", draft), {
+  assert.deepEqual(await saveWorkspace("user-1", "proj-1", "rev-1", draft, null, []), {
     status: "conflict",
   });
 
   dbState.batch.mockRejectedValueOnce(new Error("FOREIGN KEY constraint failed"));
-  dbState.get.mockResolvedValueOnce(undefined);
-  assert.deepEqual(await saveWorkspace("user-1", "proj-1", null, draft), {
+  dbState.get.mockResolvedValueOnce({ version: 0 }).mockResolvedValueOnce(undefined);
+  assert.deepEqual(await saveWorkspace("user-1", "proj-1", null, draft, null, []), {
     status: "missing",
   });
 });

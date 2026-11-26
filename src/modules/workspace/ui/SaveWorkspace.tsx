@@ -3,7 +3,7 @@ import { formatTaipeiDateTime } from "@modules/projects";
 import { Tooltip, cn } from "@shared/ui";
 import { Cloud, CloudAlert, CloudCheck } from "lucide-react";
 
-import { useWorkspaceAutosave, type AutosaveOptions } from "../hooks/useWorkspaceAutosave";
+import type { SaveStatus } from "../services/saveQueue";
 
 function SavingUploadIcon({ className }: { className?: string }) {
   return (
@@ -28,10 +28,12 @@ function SavingUploadIcon({ className }: { className?: string }) {
 
 export function SaveWorkspace({
   updatedAt,
-  ...options
-}: AutosaveOptions & { updatedAt?: number | null }) {
+  status,
+}: {
+  status: SaveStatus;
+  updatedAt?: number | null;
+}) {
   const { t } = useI18n();
-  const status = useWorkspaceAutosave(options);
   const saved = status === "draft.saved";
   const saving = status === "draft.saving";
   const neutral = status === "draft.empty" || status === "draft.unsaved";

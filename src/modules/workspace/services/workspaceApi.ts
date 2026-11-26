@@ -1,7 +1,8 @@
 import { isRecord } from "@shared/isRecord";
 
 import type {
-  PersonalWorkspace,
+  DesignVersion,
+  SaveBatch,
   StudentWorkspaceSummary,
   WorkspaceSnapshot,
 } from "../model/personalWorkspace";
@@ -51,20 +52,55 @@ export type SaveError =
   | "draft.tooLarge"
   | "draft.invalidRepo"
   | "draft.saveError";
+
+export async function loadDesignHistory<T extends { total: number } | DesignVersion>(
+  projectId: string,
+  accountId: string,
+  version: number | null,
+  signal: AbortSignal,
+): Promise<T> {
+  const params = new URLSearchParams({ userId: accountId });
+  if (version !== null) params.set("version", String(version));
+  const response = await fetch(
+    `/api/projects/${encodeURIComponent(projectId)}/design-history?${params}`,
+    { cache: "no-store", signal },
+  );
+  if (!response.ok) throw new Error("History unavailable");
+  return response.json();
+}
 export type SaveResult =
   | { ok: true; revision: string; updatedAt: number }
-  | { ok: false; error: SaveError; retry: boolean };
+  | { ok: false; error: SaveError; retry: boolean; invalidContent?: boolean };
 
 export async function saveDraft(
   projectId: string,
   accountId: string,
   revision: string | null,
-  draft: PersonalWorkspace,
+  batch: SaveBatch,
 ): Promise<SaveResult> {
+  const { draft, editedAt } = batch.edits[batch.edits.length - 1];
+  const earlier = [];
+  let earlierBytes = 0;
+  for (let i = batch.edits.length - 2; i >= 0; i--) {
+    const edit = batch.edits[i];
+    const next = batch.edits[i + 1].draft;
+    const item = {
+      editedAt: edit.editedAt,
+      designDoc: edit.draft.designDoc === next.designDoc ? undefined : edit.draft.designDoc,
+      model: edit.draft.model === next.model ? undefined : edit.draft.model,
+    };
+    earlierBytes += new Blob([JSON.stringify(item)]).size;
+    if (earlierBytes > 1024 * 1024) return { ok: false, error: "draft.tooLarge", retry: false };
+    earlier.push(item);
+  }
+  const body = JSON.stringify({ revision, draft, editedAt, earlier, writeId: batch.writeId });
+  const bytes = new Blob([body]).size;
+  if (bytes > 6 * 1024 * 1024) return { ok: false, error: "draft.tooLarge", retry: false };
   const response = await fetch(workspaceUrl(projectId), {
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-Workspace-Account": accountId },
-    body: JSON.stringify({ revision, draft }),
+    body,
+    keepalive: bytes <= 60 * 1024 && document.visibilityState === "hidden",
   });
   if (response.ok) {
     const data: { revision: string; updatedAt: number } = await response.json();
@@ -82,5 +118,10 @@ export async function saveDraft(
     const body = await response.json().catch(() => null);
     if (isRecord(body) && body.error === "repo") error = "draft.invalidRepo";
   }
-  return { ok: false, error, retry: response.status >= 500 };
+  return {
+    ok: false,
+    error,
+    retry: response.status >= 500,
+    invalidContent: response.status === 400,
+  };
 }

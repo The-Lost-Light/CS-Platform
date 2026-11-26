@@ -1,6 +1,7 @@
 import { workspaces, workspaceParts } from "@db/schema";
 import { validateC4File } from "@modules/c4-model";
 import type {
+  DesignEdit,
   PersonalWorkspace,
   StudentWorkspaceSummary,
   WorkspaceSnapshot,
@@ -10,6 +11,8 @@ import { availableProject, projectExists } from "@server/projects";
 import { db, eq, sql, and } from "void/db";
 
 import { userTable } from "../../.void/better-auth-schema";
+import { designHistoryInserts, latestDesignVersion } from "./history";
+import { splitWorkspaceContent } from "./parts";
 
 const workspaceKey = (userId: string, projectId: string) =>
   and(eq(workspaces.userId, userId), eq(workspaces.projectId, projectId));
@@ -83,68 +86,20 @@ export async function listStudentWorkspaces(
   }));
 }
 
-export function getWorkspaceRevision(userId: string, projectId: string) {
-  const projectAvailable = availableProject(projectId);
-  return db.get<{ revision: string | null }>(sql`SELECT (
-    SELECT ${workspaces.revision} FROM ${workspaces} WHERE ${workspaceKey(userId, projectId)}
-  ) AS revision WHERE ${projectAvailable}`);
-}
-
-export const WORKSPACE_PART_MAX_BYTES = 384 * 1024;
-
-/** Split serialized workspace JSON into UTF-8 byte-bounded chunks without splitting surrogate pairs. */
-export function splitWorkspaceContent(
-  content: string,
-  maxBytes = WORKSPACE_PART_MAX_BYTES,
-): string[] {
-  if (!Number.isInteger(maxBytes) || maxBytes < 4) {
-    throw new RangeError("maxBytes must be an integer >= 4");
-  }
-  // Every UTF-16 code unit encodes to at most 3 UTF-8 bytes (surrogate pairs take 2 units -> 4 bytes).
-  if (content.length * 3 <= maxBytes) return [content];
-  const chunks: string[] = [];
-  let start = 0;
-  let bytes = 0;
-  for (let i = 0; i < content.length;) {
-    const code = content.charCodeAt(i);
-    let unitLen = 1;
-    let byteLen = 3;
-    if (code <= 0x7f) {
-      byteLen = 1;
-    } else if (code <= 0x7ff) {
-      byteLen = 2;
-    } else if (code >= 0xd800 && code <= 0xdbff && i + 1 < content.length) {
-      const next = content.charCodeAt(i + 1);
-      if (next >= 0xdc00 && next <= 0xdfff) {
-        unitLen = 2;
-        byteLen = 4;
-      }
-    }
-    if (bytes + byteLen > maxBytes) {
-      chunks.push(content.slice(start, i));
-      start = i;
-      bytes = byteLen;
-    } else {
-      bytes += byteLen;
-    }
-    i += unitLen;
-  }
-  chunks.push(content.slice(start));
-  return chunks;
-}
-
 export async function saveWorkspace(
   userId: string,
   projectId: string,
   previous: string | null,
   draft: PersonalWorkspace,
-  now = Date.now(),
+  base: PersonalWorkspace | null,
+  edits: DesignEdit[],
+  revision: string = crypto.randomUUID(),
 ) {
   const projectAvailable = sql`${availableProject(projectId)} AND EXISTS (
     SELECT 1 FROM ${userTable} WHERE ${userTable.id} = ${userId} AND ${userTable.deleted} = 0
   )`;
-  const revision = crypto.randomUUID();
-  const updatedAt = now;
+  const updatedAt = Date.now();
+  const version = await latestDesignVersion(userId, projectId);
   const content = JSON.stringify(draft);
   const partInserts = splitWorkspaceContent(content).map((chunk, part) =>
     db.insert(workspaceParts).values({ revision, part, content: chunk }),
@@ -162,9 +117,18 @@ export async function saveWorkspace(
           sql`SELECT ${revision}, ${projectId}, ${userId}, ${updatedAt} WHERE ${projectAvailable}`,
         ),
       ...partInserts,
+      ...designHistoryInserts(userId, projectId, version, base, edits),
     ]);
   } catch (error) {
-    if (isUniqueViolation(error)) return { status: "conflict" } as const;
+    if (isUniqueViolation(error)) {
+      // A retry may race the original batch before either request receives its receipt.
+      const accepted = await db.get<{ revision: string; updatedAt: number }>(
+        sql`SELECT revision, updated_at AS updatedAt FROM ${workspaces}
+          WHERE ${workspaceKey(userId, projectId)} AND revision = ${revision}`,
+      );
+      if (accepted?.revision === revision) return { status: "saved", ...accepted } as const;
+      return { status: "conflict" } as const;
+    }
     if (!(await projectExists(projectId))) return { status: "missing" } as const;
     throw error;
   }

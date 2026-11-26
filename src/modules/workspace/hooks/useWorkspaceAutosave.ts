@@ -1,58 +1,34 @@
-import type { C4Node, C4Relationship } from "@modules/c4-model";
-import { useEffect, useEffectEvent, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
-import type { PersonalWorkspace } from "../model/personalWorkspace";
+import { emptyModel, type WorkspaceSnapshot } from "../model/personalWorkspace";
 import { createSaveQueue, type SaveStatus } from "../services/saveQueue";
 import { saveDraft } from "../services/workspaceApi";
 
-export interface AutosaveOptions {
-  projectId: string;
-  accountId: string;
-  revision: string | null;
-  onSaved: (revision: string, updatedAt: number) => void;
-  onDeadlineLocked?: () => void;
-  designDoc: string;
-  nodes: C4Node[];
-  relationships: C4Relationship[];
-  repoUrl: string;
-}
-
-export function useWorkspaceAutosave({
-  projectId,
-  accountId,
-  revision,
-  onSaved,
-  onDeadlineLocked,
-  designDoc,
-  nodes,
-  relationships,
-  repoUrl,
-}: AutosaveOptions) {
-  const draft = useMemo<PersonalWorkspace>(
-    () => ({
-      designDoc,
-      model: { format: "cap-c4", version: 1, nodes, relationships },
-      repoUrl: repoUrl.trim(),
-    }),
-    [designDoc, nodes, relationships, repoUrl],
+export function useWorkspaceAutosave(
+  projectId: string,
+  snapshot: WorkspaceSnapshot,
+  enabled: boolean,
+  onSaved: (revision: string, updatedAt: number) => void,
+  onDeadlineLocked?: () => void,
+) {
+  const [status, setStatus] = useState<SaveStatus>(
+    snapshot.revision ? "draft.saved" : "draft.empty",
   );
-  const [status, setStatus] = useState<SaveStatus>(revision ? "draft.saved" : "draft.empty");
-  const notifyDeadlineLocked = useEffectEvent(() => {
-    onDeadlineLocked?.();
-  });
+  const notifyDeadlineLocked = useEffectEvent(() => onDeadlineLocked?.());
   useEffect(() => {
     if (status === "draft.deadlinePassed") notifyDeadlineLocked();
   }, [status]);
   const [queue] = useState(() =>
     createSaveQueue(
-      draft,
-      revision,
-      (version, next) => saveDraft(projectId, accountId, version, next),
+      snapshot.draft ?? { designDoc: "", model: emptyModel(), repoUrl: "" },
+      snapshot.revision,
+      (revision, batch) => saveDraft(projectId, snapshot.accountId, revision, batch),
       onSaved,
       setStatus,
     ),
   );
   useEffect(() => {
+    if (!enabled) return;
     const unmount = queue.mount();
     function onVisibilityChange() {
       if (document.visibilityState === "hidden") void queue.flush();
@@ -71,7 +47,6 @@ export function useWorkspaceAutosave({
       window.removeEventListener("beforeunload", beforeUnload);
       unmount();
     };
-  }, [queue]);
-  useEffect(() => queue.update(draft), [queue, draft]);
-  return status;
+  }, [enabled, queue]);
+  return { status, update: enabled ? queue.update : undefined };
 }

@@ -7,9 +7,11 @@ import type { DesignTab } from "../model/types";
 export function DesignTabs({
   designTab,
   onChangeDesignTab,
+  history = false,
 }: {
   designTab: DesignTab;
   onChangeDesignTab: (tab: DesignTab) => void;
+  history?: boolean;
 }) {
   const { t } = useI18n();
   return (
@@ -26,14 +28,14 @@ export function DesignTabs({
           label: "README.md",
           icon: FileText,
           id: "design-tab-readme",
-          ariaControls: "design-panel-readme",
+          ariaControls: history ? "design-history-panel" : "design-panel-readme",
         },
         {
           value: "diagram",
           label: "C4 Model",
           icon: Network,
           id: "design-tab-diagram",
-          ariaControls: "design-panel-diagram",
+          ariaControls: history ? "design-history-panel" : "design-panel-diagram",
         },
       ]}
     />

@@ -1,4 +1,9 @@
-import type { PersonalWorkspace } from "../model/personalWorkspace";
+import {
+  MAX_EDITS_PER_SAVE,
+  type PersonalWorkspace,
+  type PendingEdit,
+  type SaveBatch,
+} from "../model/personalWorkspace";
 import type { SaveError, SaveResult } from "./workspaceApi";
 
 export type SaveStatus =
@@ -8,50 +13,67 @@ export type SaveStatus =
   | "draft.saving"
   | "draft.unsaved";
 
-const AUTOSAVE_DELAY_MS = 1000;
-
-// A page may unmount while a write is in flight. Each subsequent write must use the last accepted revision.
 export function createSaveQueue(
-  draft: PersonalWorkspace,
+  initial: PersonalWorkspace,
   revision: string | null,
-  write: (revision: string | null, draft: PersonalWorkspace) => Promise<SaveResult>,
+  write: (revision: string | null, batch: SaveBatch) => Promise<SaveResult>,
   onSaved: (revision: string, updatedAt: number) => void,
   setStatus: (status: SaveStatus) => void,
 ) {
-  let latest = draft;
-  let saved = draft;
+  let latest = initial;
   let version = revision;
-  let mounted = false;
+  const pending: PendingEdit[] = [];
+  let batch: SaveBatch | undefined;
+  let batchLimit = MAX_EDITS_PER_SAVE;
   let busy = false;
   let blocked = false;
+  let rejected = false;
+  let mounted = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   function schedule(delay: number) {
-    clearTimeout(timer);
-    timer = setTimeout(() => void flush(), delay);
+    if (!timer) timer = setTimeout(() => void flush(), delay);
   }
   async function flush() {
     clearTimeout(timer);
-    if (busy || blocked || saved === latest) return;
+    timer = undefined;
+    if (busy || blocked || rejected || !pending.length) return;
     busy = true;
-    const writing = latest;
+    batch ??= { writeId: crypto.randomUUID(), edits: pending.slice(0, batchLimit) };
     if (mounted) setStatus("draft.saving");
     try {
-      const result = await write(version, writing);
+      const result = await write(version, batch);
       if (!result.ok) {
-        blocked =
-          result.error === "draft.conflict" ||
-          result.error === "draft.session" ||
-          result.error === "draft.deadlinePassed";
+        const invalid = result.error === "draft.tooLarge" || result.invalidContent;
+        if (invalid && batch.edits.length > 1) {
+          batchLimit = Math.ceil(batch.edits.length / 2);
+          batch = undefined;
+          schedule(0);
+          return;
+        }
         if (mounted) setStatus(result.error);
-        if (mounted && result.retry) schedule(5000);
+        if (invalid) {
+          batch = undefined;
+          // A rejected state cannot be committed. Let the next correction save normally.
+          if (pending.length > 1) {
+            pending.shift();
+            schedule(0);
+          } else rejected = true;
+        } else if (result.retry) {
+          if (mounted) schedule(5000);
+        } else {
+          blocked = true;
+        }
         return;
       }
+      pending.splice(0, batch.edits.length);
+      batch = undefined;
+      batchLimit = MAX_EDITS_PER_SAVE;
       version = result.revision;
-      saved = writing;
       if (mounted) {
-        onSaved(result.revision, result.updatedAt);
-        setStatus(latest === saved ? "draft.saved" : "draft.unsaved");
+        onSaved(version, result.updatedAt);
+        setStatus(pending.length ? "draft.unsaved" : "draft.saved");
       }
+      if (pending.length) schedule(0);
     } catch {
       if (mounted) {
         setStatus("draft.saveError");
@@ -59,12 +81,11 @@ export function createSaveQueue(
       }
     } finally {
       busy = false;
-      if (!blocked && latest !== writing) schedule(mounted ? AUTOSAVE_DELAY_MS : 0);
     }
   }
   return {
     flush,
-    hasPendingChanges: () => saved !== latest,
+    hasPendingChanges: () => pending.length > 0,
     mount() {
       mounted = true;
       return () => {
@@ -72,11 +93,23 @@ export function createSaveQueue(
         void flush();
       };
     },
-    update(next: PersonalWorkspace) {
-      if (latest === next || blocked) return;
+    update(this: void, change: Partial<PersonalWorkspace>) {
+      if (blocked) return;
+      const next = { ...latest, ...change };
+      if (
+        latest.designDoc === next.designDoc &&
+        latest.model === next.model &&
+        latest.repoUrl === next.repoUrl
+      )
+        return;
       latest = next;
-      setStatus("draft.unsaved");
-      schedule(AUTOSAVE_DELAY_MS);
+      if (rejected) {
+        pending.shift();
+        rejected = false;
+      }
+      pending.push({ draft: next, editedAt: Date.now() });
+      if (mounted) setStatus("draft.unsaved");
+      if (!busy) schedule(1000);
     },
   };
 }

@@ -7,9 +7,14 @@ import { hashPassword } from "better-auth/crypto";
 
 // Run against a local Void dev server with its local D1 migrations applied.
 const base = "http://127.0.0.1:" + (Number(process.env.WORKSPACE_TEST_PORT) || 5173);
-const accounts = Array.from({ length: 2 }, () => {
+const accounts = Array.from({ length: 3 }, (_, index) => {
   const id = randomUUID();
-  return { id, email: id + "@example.test", password: randomUUID().slice(0, 16) };
+  return {
+    id,
+    email: id + "@example.test",
+    password: randomUUID().slice(0, 16),
+    role: index === 2 ? "admin" : "user",
+  };
 });
 const testProjectIds = [randomUUID(), randomUUID()];
 const sqlFile = ".void/test-workspace-" + randomUUID() + ".sql";
@@ -45,10 +50,10 @@ async function read(path, cookie) {
 }
 const timestamp = Date.now();
 const setup = [];
-for (const { id, email, password } of accounts) {
+for (const { id, email, password, role } of accounts) {
   const hash = await hashPassword(password);
   setup.push(
-    `INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt,role,banned) VALUES ('${id}','Workspace test','${email}',0,${timestamp},${timestamp},'user',0);`,
+    `INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt,role,banned,deleted) VALUES ('${id}','Workspace test','${email}',0,${timestamp},${timestamp},'${role}',0,0);`,
     `INSERT INTO account (id,accountId,providerId,userId,password,createdAt,updatedAt) VALUES ('${randomUUID()}','${id}','credential','${id}','${hash}',${timestamp},${timestamp});`,
   );
 }
@@ -164,11 +169,96 @@ try {
     concurrentDrafts[writes.findIndex((r) => r.ok)],
   );
   assert.deepEqual((await read(path, secondCookie)).draft, empty);
+  const adminCookie = await login(accounts[2]);
+  const history = (workspace, account) =>
+    workspace.replace(/workspace$/, "design-history") + "?userId=" + account.id;
+  const url = history(path, first);
+  assert.equal((await request(url, restored)).status, 403);
+  assert.equal((await request(url + "&version=1", secondCookie)).status, 403);
+  assert.deepEqual(await read(history(otherProject, first), adminCookie), { total: 0 });
+  assert.deepEqual(await read(history(path, second), adminCookie), { total: 0 });
+  assert.deepEqual(await read(url, adminCookie), { total: 2 });
+  const initial = await read(url + "&version=1", adminCookie);
+  assert.equal(initial.designDoc, draft.designDoc);
+  assert.deepEqual(initial.model, draft.model);
+  assert.equal(initial.repoUrl, undefined);
+  const head = await read(path, restored);
+  const batch = {
+    revision: head.revision,
+    writeId: randomUUID(),
+    draft: { ...empty, designDoc: "定稿📚" },
+    earlier: [{ designDoc: "刪改中📚" }, { designDoc: "初稿📚" }],
+  };
+  const batchWrite = () => request(path, restored, "PUT", batch, first.id);
+  const [accepted, duplicate] = await Promise.all([batchWrite(), batchWrite()]);
+  assert.equal(accepted.status, 200);
+  const receipt = await accepted.json();
+  assert.deepEqual(await duplicate.json(), receipt);
+  assert.deepEqual(await (await batchWrite()).json(), receipt);
+  assert.deepEqual(await read(url, adminCookie), { total: 5 });
+  for (const [i, doc] of ["初稿📚", "刪改中📚", "定稿📚"].entries()) {
+    const item = await read(url + "&version=" + (i + 3), adminCookie);
+    assert.equal(item.designDoc, doc);
+    assert.deepEqual(item.model, empty.model);
+  }
+  assert.equal(
+    (await save(restored, first, receipt.revision, { ...batch.draft, repoUrl: "owner/repo" }))
+      .status,
+    200,
+  );
+  assert.deepEqual(await read(url, adminCookie), { total: 5 });
+  assert.equal((await request(url + "&version=6", adminCookie)).status, 404);
+  // Cross the periodic checkpoint while editing labels, geometry and relationships,
+  // then revisit each state in reverse order, including returns to the empty graph.
+  let parent = (await read(path, restored)).revision;
+  const versions = Array.from({ length: 36 }, (_, i) => ({
+    ...empty,
+    designDoc: "反覆修訂📚" + i,
+    model:
+      i % 3 === 0
+        ? empty.model
+        : {
+            ...draft.model,
+            nodes: hugeNodes
+              .slice(0, 2)
+              .map((node) => ({ ...node, label: node.id + i, x: node.x + i })),
+            relationships: draft.model.relationships.map((edge) => ({
+              ...edge,
+              label: "呼叫 " + i,
+            })),
+          },
+  }));
+  for (let offset = 0; offset < versions.length; offset += 12) {
+    const group = versions.slice(offset, offset + 12);
+    const response = await request(
+      path,
+      restored,
+      "PUT",
+      {
+        revision: parent,
+        draft: group.at(-1),
+        earlier: group.slice(0, -1).reverse(),
+      },
+      first.id,
+    );
+    assert.equal(response.status, 200);
+    parent = (await response.json()).revision;
+  }
+  assert.deepEqual(await read(url, adminCookie), { total: 41 });
+  for (let i = versions.length - 1; i >= 0; i--) {
+    const item = await read(url + "&version=" + (i + 6), adminCookie);
+    assert.equal(item.designDoc, versions[i].designDoc);
+    assert.deepEqual(item.model, versions[i].model);
+  }
+  assert.equal((await request(url + "&version=0", adminCookie)).status, 400);
+  assert.equal((await request(history(path, accounts[2]), adminCookie)).status, 404);
+  executeLocal(`UPDATE course_project SET deleted=1 WHERE id='${testProjectIds[0]}';`);
+  assert.equal((await request(url, adminCookie)).status, 404);
   console.log(
-    "Passed account and project isolation, multi-part Unicode C4 model, empty drafts, login restore, and simultaneous saves.",
+    "Passed workspace isolation, concurrent saves, teacher access, retries, and exact replay of 41 design versions.",
   );
 } finally {
   executeLocal(
-    `DELETE FROM course_project WHERE id IN ('${testProjectIds[0]}', '${testProjectIds[1]}');\nDELETE FROM user WHERE id IN ('${accounts[0].id}', '${accounts[1].id}');`,
+    `DELETE FROM course_project WHERE id IN ('${testProjectIds[0]}', '${testProjectIds[1]}');\nDELETE FROM user WHERE id IN ('${accounts[0].id}', '${accounts[1].id}', '${accounts[2].id}');`,
   );
 }

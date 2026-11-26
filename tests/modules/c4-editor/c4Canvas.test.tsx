@@ -1,11 +1,14 @@
 import { BOUNDARY_ID, createC4NodeInScope } from "@modules/c4-model";
 import { NodeChangeset } from "@xyflow/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { assert, test } from "vite-plus/test";
 
 import { canStartNodeDraw, completeNodeDraw } from "@/modules/c4-editor/hooks/useNodeDrawing";
 import { prepareC4CanvasChanges } from "@/modules/c4-editor/model/canvasChanges";
 import { applyCanvasLayout } from "@/modules/c4-editor/model/canvasLayout";
+import { buildFlowElements } from "@/modules/c4-editor/model/flowElements";
 import type { CanvasNode, FlowNode } from "@/modules/c4-editor/model/flowTypes";
+import { C4Canvas, nodeTypes } from "@/modules/c4-editor/ui/C4Canvas";
 
 function card(id: string, x: number, y: number): FlowNode {
   return {
@@ -225,6 +228,13 @@ test("node drawing only starts with left click in creation mode on empty canvas 
   assert.isTrue(canStartNodeDraw(true, 0, targetWith([".react-flow__pane"])));
   assert.isTrue(canStartNodeDraw(true, 0, targetWith([".react-flow__node-boundary"])));
   assert.isFalse(
+    canStartNodeDraw(
+      true,
+      0,
+      targetWith([".react-flow__node-boundary", ".react-flow__resize-control"]),
+    ),
+  );
+  assert.isFalse(
     canStartNodeDraw(true, 0, targetWith([".react-flow__pane", ".react-flow__node-c4"])),
   );
   assert.isFalse(
@@ -253,4 +263,32 @@ test("single left click uses default size while left drag clamps position and mi
     position: { x: 100, y: 100 },
     size: { width: 320, height: 240 },
   });
+});
+
+test("a non-selectable boundary exposes four resize edges and four corners only while draggable", () => {
+  const scope = createC4NodeInScope([], "", "scope", "System")!;
+  const { flowNodes } = buildFlowElements({
+    visible: [],
+    scope,
+    boundary: { x: 0, y: 0, width: 600, height: 360 },
+    relationships: [],
+    selectedId: "",
+    edgeId: "",
+    expandableIds: new Set(),
+    showTechnology: false,
+  });
+  assert.isFalse(flowNodes[0].selectable);
+  assert.notOk(flowNodes[0].selected);
+  function renderBoundary(draggable: boolean) {
+    return renderToStaticMarkup(
+      <C4Canvas nodes={flowNodes} nodeTypes={nodeTypes} nodesDraggable={draggable} />,
+    );
+  }
+  const editable = renderBoundary(true);
+  const targets = editable.match(/class="react-flow__resize-control [^"]+"/g) ?? [];
+  assert.lengthOf(targets.filter((classes) => classes.includes("line")), 4);
+  assert.lengthOf(targets.filter((classes) => classes.includes("handle")), 4);
+  const locked = renderBoundary(false);
+  assert.include(locked, "c4-boundary-card");
+  assert.notInclude(locked, "react-flow__resize-control");
 });

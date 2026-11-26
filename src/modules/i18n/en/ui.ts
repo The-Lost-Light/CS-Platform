@@ -207,7 +207,7 @@ export default {
   "c4.expandable": "Has child elements",
   "c4.leaf": "No child elements",
   "c4.levelsDescription":
-    "C1 shows people and systems. C2 shows applications and data stores, C3 shows components, and C4 shows classes and functions. The dashed boundary represents the current parent element; dragging it also moves the nodes that overlap it.",
+    "C1 shows people and systems. C2 shows applications and data stores, C3 shows components, and C4 shows classes and functions. The dashed boundary represents the current parent element. Move the pointer over an edge or corner, then drag when the resize cursor appears. Drag the interior to move the boundary and overlapping nodes together.",
   "c4.canvasInstructions":
     "Click “Create node” to enter creation mode, then left-click empty canvas for default size or left-drag to set position and size. Drag empty canvas with the left button or mouse wheel to pan. Double-click a node to explore (C1–C4 only); right-click a node to edit or delete it. Drag nodes to move; drag selected borders or corners to resize. Connect handles to create relationships.",
   "c4.uses": "Uses",

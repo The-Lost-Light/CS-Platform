@@ -29,6 +29,25 @@
   border-bottom: none !important;
 }
 
+/* Keep the dashed border visible and use React Flow's directional resize cursors. */
+.c4-boundary-card .react-flow__resize-control {
+  opacity: 0;
+}
+
+.c4-boundary-card .react-flow__resize-control.line:is(.left, .right) {
+  width: 10px;
+}
+
+.c4-boundary-card .react-flow__resize-control.line:is(.top, .bottom) {
+  height: 10px;
+}
+
+.c4-boundary-card .react-flow__resize-control.handle {
+  width: 18px;
+  height: 18px;
+  z-index: 1;
+}
+
 @layer components {
   .c4-node-card {
     @apply rounded-xl border-2 p-4 shadow-m3-1 transition-all flex flex-col justify-between text-on-surface;
@@ -39,6 +58,6 @@
   }
 
   .c4-boundary-card {
-    @apply h-full w-full rounded-2xl border-2 border-dashed border-primary/70 bg-primary/5 cursor-move;
+    @apply h-full w-full rounded-2xl border-2 border-dashed border-primary/70 bg-primary/5;
   }
 }

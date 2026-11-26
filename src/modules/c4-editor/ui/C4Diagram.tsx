@@ -1,7 +1,7 @@
 import { Button, Card, CardHeader, IconBadge, Menu, MenuItem } from "@shared/ui";
 import { Background, Controls, MiniMap } from "@xyflow/react";
 import { ChevronRight, HelpCircle, Layers, Pencil, Plus, Redo2, Trash2, Undo2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { C4Editor } from "../hooks/useC4Editor";
 import { C4Canvas, nodeTypes } from "./C4Canvas";
@@ -40,6 +40,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
     stepHistory,
     beginEditGroup,
   } = editor;
+  const [interactive, setInteractive] = useState(true);
   function dismissInspector(keep?: { nodeId?: string; edgeId?: string }) {
     if (!keep?.nodeId || keep.nodeId !== selected?.id) {
       setSelectedId("");
@@ -233,14 +234,13 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               nodes={flowNodes}
               edges={flowEdges}
               nodeTypes={nodeTypes}
-              // Keep the selected boundary behind its contents so nodes remain clickable.
               elevateNodesOnSelect={false}
               elementsSelectable={false}
               selectNodesOnDrag={false}
               nodesFocusable={false}
               edgesFocusable={false}
-              nodesDraggable={!readOnly}
-              nodesConnectable={!readOnly}
+              nodesDraggable={!readOnly && interactive}
+              nodesConnectable={!readOnly && interactive}
               fitView
               onInit={(instance) => {
                 flowInstance.current = instance;
@@ -252,7 +252,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               onNodeClick={(_, node) => {
                 setContextMenu(null);
                 if (readOnly) return;
-                dismissInspector(node.type === "boundary" ? undefined : { nodeId: node.id });
+                dismissInspector({ nodeId: node.id });
               }}
               onNodeDoubleClick={(_, node) => {
                 setContextMenu(null);
@@ -305,7 +305,7 @@ export function C4Diagram({ editor }: { editor: C4Editor }) {
               onConnect={connect}
             >
               <Background gap={24} color="var(--c4-grid)" />
-              <Controls />
+              <Controls showInteractive={!readOnly} onInteractiveChange={setInteractive} />
               <MiniMap nodeColor="var(--c4-node-bg)" pannable zoomable />
             </C4Canvas>
             {!readOnly && drawing.preview && (

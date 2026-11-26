@@ -192,7 +192,7 @@ export function useC4Editor({
     scope,
     boundary,
     relationships,
-    selectedId,
+    selectedId: readOnly ? "" : selectedId,
     edgeId,
     expandableIds,
     showTechnology,

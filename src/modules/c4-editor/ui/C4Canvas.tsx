@@ -65,10 +65,10 @@ function C4Card({ data, selected }: NodeProps<FlowNode>) {
   );
 }
 
-function C4BoundaryCard({ data, selected }: NodeProps<BoundaryNode>) {
+function C4BoundaryCard({ data, draggable }: NodeProps<BoundaryNode>) {
   return (
-    <div className="c4-boundary-drag c4-boundary-card">
-      <NodeResizer isVisible={selected} minWidth={360} minHeight={260} color="var(--primary)" />
+    <div className={cn("c4-boundary-drag c4-boundary-card", draggable && "cursor-move")}>
+      <NodeResizer isVisible={draggable} minWidth={360} minHeight={260} />
       <div className="px-4 py-3 text-sm font-bold text-primary">{data.title}</div>
     </div>
   );

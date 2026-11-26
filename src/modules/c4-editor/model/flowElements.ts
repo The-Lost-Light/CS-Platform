@@ -31,6 +31,7 @@ export function buildFlowElements({
       type: "c4",
       position: { x, y },
       zIndex: 1,
+      selectable: false,
       selected: node.id === selectedId,
       style: { width, height },
       data: {
@@ -49,7 +50,7 @@ export function buildFlowElements({
       position: { x: boundary.x, y: boundary.y },
       style: { width: boundary.width, height: boundary.height },
       data: { title: scope.label },
-      selected: selectedId === BOUNDARY_ID,
+      selectable: false,
       deletable: false,
       connectable: false,
       dragHandle: ".c4-boundary-drag",
@@ -62,6 +63,7 @@ export function buildFlowElements({
       ...edge,
       type: "smoothstep",
       label: edge.label,
+      selectable: false,
       selected: edge.id === edgeId,
       markerEnd: {
         type: MarkerType.ArrowClosed,

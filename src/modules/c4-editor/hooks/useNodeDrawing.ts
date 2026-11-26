@@ -12,7 +12,7 @@ export function canStartNodeDraw(
   return (
     Boolean(target.closest(".react-flow__pane, .react-flow__node-boundary")) &&
     !target.closest(
-      '.react-flow__node-c4, .react-flow__controls, .react-flow__minimap, [role="menu"]',
+      '.react-flow__node-c4, .react-flow__resize-control, .react-flow__controls, .react-flow__minimap, [role="menu"]',
     )
   );
 }

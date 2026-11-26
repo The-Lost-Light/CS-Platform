@@ -1,17 +1,17 @@
 # 課程作業平台測試清冊
 
-**最近同步**　已依 [AI 工作指引](AGENTS.md) 核對 `tests/` 的 30 個檔案，以及 159 個具名案例的名稱與來源位置。本次為文件核對，以下執行結果沿用前次測試紀錄。
+**最近同步**　2026-11-27 已核對 C4 虛線框直接縮放、點擊清除編輯狀態及建立節點的手勢衝突，並新增八個縮放區域的回歸案例。本次 Vite+ 全部 24 檔、160 案通過，兩支本機 HTTP 整合腳本未執行。
 
-`tests/` 共 30 個檔案。Vite+ 收集其中 24 個測試檔，實際登錄 **159 個案例**。另有 2 支以 HTTP 連本機服務的整合腳本，以及 4 個提供資料／資料庫的 fixture。本文逐一列出可獨立執行的具名案例。兩支腳本從頭執行到尾，另依斷言順序列出情境。架構與功能對照見 [Architecture.md](Architecture.md)。
+`tests/` 共 30 個檔案。Vite+ 收集其中 24 個測試檔，實際登錄 **160 個案例**。另有 2 支以 HTTP 連本機服務的整合腳本，以及 4 個提供資料／資料庫的 fixture。本文逐一列出可獨立執行的具名案例。兩支腳本從頭執行到尾，另依斷言順序列出情境。架構與功能對照見 [Architecture.md](Architecture.md)。
 
 | 範圍 | 檔案 | 案例與本次驗證 |
 | --- | ---: | --- |
 | `tests/*.test.ts`、`tests/*.test.tsx` | 15 | 102 案，通過。涵蓋模組邊界、驗證、資料庫、服務、領域模型與跨畫面行為。 |
-| `tests/modules/**/*.test.*` | 9 | 57 案，通過。涵蓋帳號、管理、設定、C4 編輯器、倉庫與工作區。 |
+| `tests/modules/**/*.test.*` | 9 | 58 案，通過。涵蓋帳號、管理、設定、C4 編輯器、倉庫與工作區。 |
 | `tests/integration/*.mjs` | 2 | 已逐段核對原始碼，未執行完整本機 HTTP 流程。工作區腳本的建帳 SQL 與 migration 不相容，已獨立驗證，詳見下方。 |
 | `tests/fixtures/*.ts` | 4 | 支援測試的輸入與 SQLite 工廠，未登錄獨立案例。 |
 
-**執行方式。** 在專案根目錄安裝鎖檔依賴並完成 `pnpm run Prepare` 後，可用以下指令。`vite.config.ts` 指定 Node 環境與 `tests/**/*.test.{ts,tsx}`。測試使用 `vite-plus/test`。最近一次記錄的 `vp test run` 結果為 **24/24 檔、159/159 案通過**。UI 案例主要檢查 React 靜態輸出，部分直接呼叫事件 handler。SQLite 查詢計畫使用記憶體資料庫，GitHub 服務使用可控的 HTTP 回應。
+**執行方式。** 在專案根目錄安裝鎖檔依賴並完成 `pnpm run Prepare` 後，可用以下指令。`vite.config.ts` 指定 Node 環境與 `tests/**/*.test.{ts,tsx}`。測試使用 `vite-plus/test`。最近一次記錄的 `vp test run` 結果為 **24/24 檔、160/160 案通過**。UI 案例主要檢查 React 靜態輸出，部分直接呼叫事件 handler。SQLite 查詢計畫使用記憶體資料庫，GitHub 服務使用可控的 HTTP 回應。
 
 ```sh
 pnpm exec vp test run
@@ -28,7 +28,7 @@ pnpm exec vp test run tests/modules/workspace/saveQueue.test.tsx
 | [跨模組、登入與帳號](#group-1) | 5 | 29 |
 | [專案、期限與資料庫](#group-2) | 5 | 16 |
 | [個人工作區與儲存](#group-3) | 4 | 21 |
-| [C4 模型與畫布](#group-4) | 5 | 35 |
+| [C4 模型與畫布](#group-4) | 5 | 36 |
 | [GitHub 服務與瀏覽介面](#group-5) | 2 | 29 |
 | [語系、設定與共用元件](#group-6) | 3 | 29 |
 
@@ -255,19 +255,22 @@ pnpm exec vp test run tests/modules/workspace/saveQueue.test.tsx
 | 2 | [resize updates from the same gesture form one step; a new gesture gets its own step](tests/modules/c4-editor/modelHistory.test.ts#L41) | 同一手勢的多次改寬用共同 group 合併，新手勢建立新步驟。逐步 undo 可回到前一手勢與初始尺寸，再 redo 到後一手勢。 |
 | 3 | [a no-op drag preserves redo and a new edge edit clears it](tests/modules/c4-editor/modelHistory.test.ts#L71) | 拖動後 undo，再傳入相同座標的空操作，原 redo 仍在。另行刪除邊會清除 future，節點集合保留。 |
 
-### 畫布事件與座標（7 案）
+### 畫布事件與座標（8 案）
 
-建立小型 FlowNode 與 NodeChangeset，直接測試畫布事件分類、模型位置換算及指標手勢。 [tests/modules/c4-editor/c4Canvas.test.tsx](tests/modules/c4-editor/c4Canvas.test.tsx)
+以 FlowNode 與 NodeChangeset 測試事件分類、模型座標與指標手勢，並以實際 C4Canvas 的靜態輸出核對縮放區域。 [tests/modules/c4-editor/c4Canvas.test.tsx](tests/modules/c4-editor/c4Canvas.test.tsx)
+
+本次另用無頭 Edge 在 C2 畫布逐一驗證四邊與四角。每個位置都顯示對應的縮放游標，可在未點選框的情況下直接拖曳。縮放後子節點維持原位，一次復原與重做可切換前後尺寸。另驗證框內群組拖移、建立節點模式下的框邊縮放、畫布鎖定與解鎖，以及唯讀模式停用縮放。
 
 | # | 原始案例名稱 | 輸入、操作與預期結果 |
 | ---: | --- | --- |
-| 1 | [canvas measurements and selection stay local while user resizes persist](tests/modules/c4-editor/c4Canvas.test.tsx#L25) | 測量與選取只改本地節點，不形成已完成位移。使用者調整尺寸才產生可保存的 320 × 240，原模型保持原值。 |
-| 2 | [node drags update the canvas immediately and persist only on completion](tests/modules/c4-editor/c4Canvas.test.tsx#L62) | 拖曳中本地座標即時改變，已完成位移清單為空。手勢結束才產生應保存的最終位置。 |
-| 3 | [boundary drags keep the original overlapping group and persist its final positions](tests/modules/c4-editor/c4Canvas.test.tsx#L100) | 開始拖框時記錄完全在內及部分相交的節點。中途維持原名單且不改輸入變更集，結束時清除名單並一次輸出整組終點。 |
-| 4 | [persisted geometry uses scope coordinates and leaves other levels alone](tests/modules/c4-editor/c4Canvas.test.tsx#L160) | 將 Flow 的位置／大小回寫當前 scope 的邊界與子節點座標，其他層物件與原始 scope 資料保持原值。 |
-| 5 | [resizing the boundary from the left leaves nodes in place](tests/modules/c4-editor/c4Canvas.test.tsx#L183) | 從左側調整框大小即使框原點有位移，子節點畫布座標仍與調整前相同。 |
-| 6 | [node drawing only starts with left click in creation mode on empty canvas or boundary](tests/modules/c4-editor/c4Canvas.test.tsx#L211) | 僅在建立模式於空畫布或框線按左鍵可開始。一般模式、中／右鍵、節點、控制項、縮圖、選單均不觸發。 |
-| 7 | [single left click uses default size while left drag clamps position and minimum size](tests/modules/c4-editor/c4Canvas.test.tsx#L239) | 微小位移採預設大小。向左上拖使用較小 x/y 當左上角且最小 120 × 100，向右下拖足夠距離採實際矩形尺寸。 |
+| 1 | [canvas measurements and selection stay local while user resizes persist](tests/modules/c4-editor/c4Canvas.test.tsx#L28) | 測量與選取只改本地節點，不形成已完成位移。使用者調整尺寸才產生可保存的 320 × 240，原模型保持原值。 |
+| 2 | [node drags update the canvas immediately and persist only on completion](tests/modules/c4-editor/c4Canvas.test.tsx#L65) | 拖曳中本地座標即時改變，已完成位移清單為空。手勢結束才產生應保存的最終位置。 |
+| 3 | [boundary drags keep the original overlapping group and persist its final positions](tests/modules/c4-editor/c4Canvas.test.tsx#L103) | 開始拖框時記錄完全在內及部分相交的節點。中途維持原名單且不改輸入變更集，結束時清除名單並一次輸出整組終點。 |
+| 4 | [persisted geometry uses scope coordinates and leaves other levels alone](tests/modules/c4-editor/c4Canvas.test.tsx#L163) | 將 Flow 的位置／大小回寫當前 scope 的邊界與子節點座標，其他層物件與原始 scope 資料保持原值。 |
+| 5 | [resizing the boundary from the left leaves nodes in place](tests/modules/c4-editor/c4Canvas.test.tsx#L186) | 從左側調整框大小即使框原點有位移，子節點畫布座標仍與調整前相同。 |
+| 6 | [node drawing only starts with left click in creation mode on empty canvas or boundary](tests/modules/c4-editor/c4Canvas.test.tsx#L214) | 建立模式下，在空白畫布或虛線框內按左鍵可開始畫節點。框邊與角落的縮放區、既有節點、控制項、縮圖及選單均不觸發建點。另驗證一般模式與中／右鍵。 |
+| 7 | [single left click uses default size while left drag clamps position and minimum size](tests/modules/c4-editor/c4Canvas.test.tsx#L249) | 微小位移採預設大小。向左上拖使用較小 x/y 當左上角且最小 120 × 100，向右下拖足夠距離採實際矩形尺寸。 |
+| 8 | [a non-selectable boundary exposes four resize edges and four corners only while draggable](tests/modules/c4-editor/c4Canvas.test.tsx#L268) | 確認框不可選取。可拖曳時直接具備四條框邊和四個角落的縮放區域。停用拖曳後仍顯示框體，八個縮放區域均移除。 |
 
 ### C4 工具列與屬性面板（8 案）
 
@@ -275,14 +278,14 @@ pnpm exec vp test run tests/modules/workspace/saveQueue.test.tsx
 
 | # | 原始案例名稱 | 輸入、操作與預期結果 |
 | ---: | --- | --- |
-| 1 | [C4FileActions renders import/export controls, hidden file input, and status banners](tests/modules/c4-editor/c4FileActions.test.tsx#L130) | 待機時呈現匯入／匯出與隱藏的 JSON input。匯入成功為 status、錯誤或超限為 alert，檢查雙語標籤。匯入期間兩個按鈕均停用。 |
-| 2 | [C4Diagram keeps canvas controls without import/export buttons or file input](tests/modules/c4-editor/c4FileActions.test.tsx#L207) | 圖內只放建立、Undo、Redo、Help 及層級導覽，檔案動作在外層。檢查建立模式的 aria-pressed、Flow 選取／焦點設定及四層麵包屑。 |
-| 3 | [only C2 and C3 show node technology in both the inspector and the canvas](tests/modules/c4-editor/c4FileActions.test.tsx#L255) | 逐層檢查節點名稱、職責及技術：C2、C3 才在面板和畫布顯示技術。關係面板顯示兩端名稱與描述，不提供節點欄位或刪除動作。 |
-| 4 | [C4Diagram renders a node context menu with Edit and Delete actions](tests/modules/c4-editor/c4FileActions.test.tsx#L303) | 給定節點選單座標與項目，HTML 在指定位置渲染具有 menuitem 角色的編輯與刪除。 |
-| 5 | [clicking outside the currently edited node closes the edit inspector while panning keeps it open](tests/modules/c4-editor/c4FileActions.test.tsx#L321) | 呼叫平移、同節點／其他節點點擊、空白處、框線及左右鍵邊事件。平移保留面板，點外部關閉，右鍵在目標上展開對應選單，單點邊不會自行開啟屬性面板。 |
-| 6 | [read-only C4Diagram hides editing toolbar actions, context menu, and inspector](tests/modules/c4-editor/c4FileActions.test.tsx#L533) | 唯讀空圖仍有層級、說明與空態。即使已有選取或右鍵目標，也不顯示建立、復原、重做、屬性面板或選單。 |
-| 7 | [editor UI enforces maxLength attributes and disables Create node at C4_MAX_NODES](tests/modules/c4-editor/c4FileActions.test.tsx#L561) | 節點名稱／職責／技術、關係描述及 README 輸入都套用相應 maxLength。節點達上限時建立按鈕停用。 |
-| 8 | [creating a node or connection opens C4Inspector for the new element](tests/modules/c4-editor/c4FileActions.test.tsx#L617) | 測試容器建立節點及建立連線後直接讀面板，新節點顯示預設名稱，新邊顯示兩端及預設 Uses，選取對象正確。 |
+| 1 | [C4FileActions renders import/export controls, hidden file input, and status banners](tests/modules/c4-editor/c4FileActions.test.tsx#L137) | 待機時呈現匯入／匯出與隱藏的 JSON input。匯入成功為 status、錯誤或超限為 alert，檢查雙語標籤。匯入期間兩個按鈕均停用。 |
+| 2 | [C4Diagram keeps canvas controls without import/export buttons or file input](tests/modules/c4-editor/c4FileActions.test.tsx#L214) | 圖內只放建立、Undo、Redo、Help 及層級導覽，檔案動作在外層。檢查建立模式的 aria-pressed、Flow 選取／焦點設定及四層麵包屑。 |
+| 3 | [only C2 and C3 show node technology in both the inspector and the canvas](tests/modules/c4-editor/c4FileActions.test.tsx#L262) | 逐層檢查節點名稱、職責及技術。C2、C3 才在面板和畫布顯示技術。關係面板顯示兩端名稱與描述，不提供節點欄位或刪除動作。 |
+| 4 | [C4Diagram renders a node context menu with Edit and Delete actions](tests/modules/c4-editor/c4FileActions.test.tsx#L310) | 給定節點選單座標與項目，HTML 在指定位置渲染具有 menuitem 角色的編輯與刪除。 |
+| 5 | [clicking outside the currently edited node closes the edit inspector while panning keeps it open](tests/modules/c4-editor/c4FileActions.test.tsx#L328) | 平移或點同一節點保留面板，點其他節點或空白處關閉。點虛線框會清除編輯中的節點及連線，並關閉面板與選單。右鍵節點或連線展開對應選單。 |
+| 6 | [read-only C4Diagram hides editing toolbar actions, context menu, and inspector](tests/modules/c4-editor/c4FileActions.test.tsx#L535) | 唯讀空圖仍有層級、說明與空態。已有選取或右鍵目標時，建立、復原、重做、屬性面板及選單皆隱藏。在 C2 點虛線框不會觸發選取。 |
+| 7 | [editor UI enforces maxLength attributes and disables Create node at C4_MAX_NODES](tests/modules/c4-editor/c4FileActions.test.tsx#L568) | 節點名稱／職責／技術、關係描述及 README 輸入都套用相應 maxLength。節點達上限時建立按鈕停用。 |
+| 8 | [creating a node or connection opens C4Inspector for the new element](tests/modules/c4-editor/c4FileActions.test.tsx#L624) | 測試容器建立節點及建立連線後直接讀面板，新節點顯示預設名稱，新邊顯示兩端及預設 Uses，選取對象正確。 |
 
 <a id="group-5"></a>
 
@@ -389,7 +392,7 @@ pnpm exec vp test run tests/modules/workspace/saveQueue.test.tsx
 
 ## 本機 HTTP 整合腳本
 
-兩支腳本使用 Node 原生 `assert`，任何一項失敗即中止後續流程。以下各列描述腳本的預期結果。它們有自己的前置資料及副作用，Vite+ 的 159 案通過數只計入上方六組。
+兩支腳本使用 Node 原生 `assert`，任何一項失敗即中止後續流程。以下各列描述腳本的預期結果。它們有自己的前置資料及副作用，Vite+ 的 160 案通過數只計入上方六組。
 
 ### 身分、管理、教材與個人帳號
 

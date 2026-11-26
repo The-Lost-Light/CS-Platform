@@ -1,5 +1,6 @@
 import { C4FileActions, createC4History, reduceC4History } from "@modules/c4-editor";
 import {
+  BOUNDARY_ID,
   C4_MAX_NODES,
   C4_NODE_FIELD_LIMITS,
   C4_RELATIONSHIP_FIELD_LIMITS,
@@ -38,6 +39,12 @@ interface FlowInteractions {
   edgesFocusable?: boolean;
 }
 let flowProps: FlowInteractions = {};
+const boundary: CanvasNode = {
+  id: BOUNDARY_ID,
+  type: "boundary",
+  position: { x: 0, y: 0 },
+  data: { title: "Boundary" },
+};
 
 vi.mock("@xyflow/react", () => ({
   Background: () => null,
@@ -374,13 +381,14 @@ test("clicking outside the currently edited node closes the edit inspector while
     let selectedNode: C4Node | undefined = node;
     let edge: C4Relationship | undefined = initialEdge;
     let menu: C4ContextMenu | null = { nodeId: node.id, x: 10, y: 20 };
+    const setSelectedId = vi.fn((id: string) => {
+      selectedNode = [node, other].find((item) => item.id === id);
+    });
     const html = renderInspectorState({
       selected: selectedNode,
       selectedEdge: edge,
       contextMenu: menu,
-      onClearSelected: (id) => {
-        if (!id) selectedNode = undefined;
-      },
+      onClearSelected: setSelectedId,
       onClearEdge: (id) => {
         if (!id) edge = undefined;
       },
@@ -391,6 +399,7 @@ test("clicking outside the currently edited node closes the edit inspector while
     assert.ok(html.includes("<aside"));
     return {
       state: () => ({ selectedNode, edge, menu }),
+      setSelectedId,
     };
   };
 
@@ -439,17 +448,10 @@ test("clicking outside the currently edited node closes the edit inspector while
     }).includes("<aside"),
   );
 
-  // Clicking the boundary closes the edit inspector.
+  // Clicking the frame dismisses the inspector and clears the edited node.
   const boundaryClickRun = setup(relationship);
-  flowProps.onNodeClick?.(
-    {},
-    {
-      id: "__c4_boundary__",
-      type: "boundary",
-      position: { x: 0, y: 0 },
-      data: { title: "Boundary" },
-    },
-  );
+  flowProps.onNodeClick?.({}, boundary);
+  assert.deepEqual(boundaryClickRun.setSelectedId.mock.calls, [[""]]);
   assert.strictEqual(boundaryClickRun.state().menu, null);
   assert.strictEqual(boundaryClickRun.state().selectedNode, undefined);
   assert.strictEqual(boundaryClickRun.state().edge, undefined);
@@ -532,6 +534,7 @@ test("clicking outside the currently edited node closes the edit inspector while
 
 test("read-only C4Diagram hides editing toolbar actions, context menu, and inspector", () => {
   const node = createC4NodeInScope([], "", "node-1", "System")!;
+  const setSelectedId = vi.fn();
   const readOnlyEmptyHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <TestC4Diagram readOnly />
@@ -547,8 +550,10 @@ test("read-only C4Diagram hides editing toolbar actions, context menu, and inspe
   const readOnlySelectedHtml = renderToStaticMarkup(
     <I18nProvider initialLanguage="en">
       <TestC4Diagram
-        nodes={[node]}
+        path={[node]}
         selected={node}
+        nodes={[node]}
+        setSelectedId={setSelectedId}
         contextMenu={{ nodeId: node.id, x: 20, y: 20 }}
         readOnly
       />
@@ -556,6 +561,8 @@ test("read-only C4Diagram hides editing toolbar actions, context menu, and inspe
   );
   assert.ok(!readOnlySelectedHtml.includes("<aside"));
   assert.ok(!readOnlySelectedHtml.includes('role="menu"'));
+  flowProps.onNodeClick?.({}, boundary);
+  assert.lengthOf(setSelectedId.mock.calls, 0);
 });
 
 test("editor UI enforces maxLength attributes and disables Create node at C4_MAX_NODES", () => {
